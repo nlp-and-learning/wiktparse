@@ -71,3 +71,9 @@ std::string read_file_to_string(const std::string& filename) {
     buffer << file.rdbuf();
     return buffer.str();
 }
+
+void saveToFile(const std::string &text, const std::string &filename) {
+    std::ofstream ofile(filename);
+    if (!ofile) throw std::runtime_error("Cannot open file: " + filename);
+    ofile << text;
+}

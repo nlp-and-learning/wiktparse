@@ -121,9 +121,6 @@ void Comments::searchForComments() {
         auto chunkStr = wikiFile.decompressChunkByIndex(i);
         auto objects =  allFromXML(chunkStr);
         for (auto &p : objects) {
-            auto titleType = getTitleType(p.first);
-            if (titleType.first == TitleType::Other)
-                continue;
             auto lines = splitLines(p.second);
             for (const auto& line : lines) {
                 auto trimmed = trim(line);

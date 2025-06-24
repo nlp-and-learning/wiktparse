@@ -31,11 +31,7 @@ int createPages() {
     auto terms_to_extract = readLines("../work/terms_to_extract.txt");
     for (auto term : terms_to_extract) {
         auto termValue = wikiFile.extractTerm(term);
-        std::ofstream ofile(correct_filename(term)+".page");
-        if (ofile) {
-            ofile << termValue;
-        } else {
-        }
+        saveToFile(termValue, correct_filename(term)+".page");
     }
     wikiFile.close();
     return 0;
@@ -43,5 +39,5 @@ int createPages() {
 
 
 int main() {
-    Comments::searchForComments();
+    collectAllTags();
 }

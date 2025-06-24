@@ -62,10 +62,7 @@ void collectAllTags() {
         auto chunkStr = wikiFile.decompressChunkByIndex(i);
         auto objects =  allFromXML(chunkStr);
         for (auto &p : objects) {
-                auto titleType = getTitleType(p.first);
-            if (titleType.first == TitleType::Other)
-                continue;
-                auto lines = splitLines(p.second);
+            auto lines = splitLines(p.second);
             for (const auto& line : lines) {
                 auto trimmed = trim(line);
                 if (trimmed.empty())
@@ -78,9 +75,7 @@ void collectAllTags() {
             }
         }
     }
-    // for (auto& tag : allTags) {
-    //     std::cout << tag << std::endl;
-    // }
     wikiFile.close();
+    saveToFile(allTags, "alltags.txt");
 }
 

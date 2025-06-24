@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "Comments.h"
+#include "tags.h"
 
 std::string extractFromXML(const std::string &term, const std::string &chunkStr) {
     std::string xmlStr = "<mediawiki>\n"+ chunkStr +"</mediawiki>\n";
@@ -47,6 +48,9 @@ std::vector<std::pair<std::string,std::string>> allFromXML(const std::string &ch
 
     for (pugi::xml_node page : doc.child("mediawiki").children("page")) {
         std::string title = page.child_value("title");
+        auto titleType = getTitleType(title);
+        if (titleType.first == TitleType::Other)
+            continue;
         pugi::xml_node revision = page.child("revision");
         if (revision) {
             pugi::xml_node text_node = revision.child("text");

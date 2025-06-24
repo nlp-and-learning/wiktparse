@@ -1,0 +1,2 @@
+# wiktparse
+Wiktionary parser

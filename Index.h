@@ -31,4 +31,5 @@ public:
     explicit Index(const std::string &lang);
     int readIndex();
     IndexedObject getIndexedObject(const std::string &term) const;
+    size_t size() {return indexVec.size()-1;}
 };

@@ -42,6 +42,5 @@ int createPages() {
 
 
 int main() {
-    //collectAllTags();
-    createPages();
+    collectAllTags();
 }

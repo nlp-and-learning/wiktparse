@@ -46,6 +46,11 @@ std::vector<std::string> split(std::string_view input, char delimiter) {
     return result;
 }
 
+std::vector<std::string> splitLines(std::string_view input) {
+    return split(input, '\n');
+}
+
+
 std::string join_from(const std::vector<std::string>& parts, size_t start, char delimiter) {
     std::ostringstream oss;
     bool first = true;

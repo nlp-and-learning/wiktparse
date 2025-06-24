@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -9,17 +10,18 @@
 #include "Bz2Liner.h"
 #include <ranges>
 #include <string_view>
+#include "xml.h"
 
 using namespace std;
 
 
-void decompressChunk(FILE *file, size_t start, int len) {
+string decompressChunk(FILE *file, size_t start, int len) {
     static double max  = 1;
     fseek(file, start, SEEK_SET);
     char *buf = new char[len];
     size_t readed = fread(buf, 1,len, file);
 
-    unsigned int decrypted_len = len * 25;
+    unsigned int decrypted_len = len * 15;
     char *bufD;
     int decrypted_ret;
     while (true) {
@@ -41,9 +43,11 @@ void decompressChunk(FILE *file, size_t start, int len) {
     //printf("%d %f %f ret=%d dlen =%d\n",len,(double)decrypted_len/len, max, decrypted_ret, decrypted_len);
     bufD[decrypted_len] = 0;
     //    printf("len = %f MB, decomp %f MB \n",len/1e6, decrypted_len/1e6);
-    printf("%s", bufD);
+    // printf("%s", bufD);
+    string result = bufD;
     delete[] bufD;
     delete[] buf;
+    return result;
 }
 
 string trimLeft(const string& str)
@@ -116,6 +120,11 @@ struct PosInfo {
 
 map<std::string,PosInfo> termPosMap;
 
+string correct_filename(std::string str) {
+    std::replace(str.begin(), str.end(), '/', '_');
+    return str;
+}
+
 int main() {
     std::string date = readDate();
     std::string IndexFile = "../dump/enwiktionary-"+ date+ "-pages-articles-multistream-index.txt.bz2";
@@ -144,7 +153,7 @@ int main() {
         string term = join_from(v, 2);
         if (terms_to_exrtract.contains(term)) {
             PosInfo termPos;
-            termPos.index = index.size();
+            termPos.index = index.size() - 1;
             termPos.number = trim(v[1]);
             termPos.term = term;
             termPosMap[termPos.term] = termPos;
@@ -172,10 +181,15 @@ int main() {
         return 1;
     }
     for (const auto& [key, value] : termPosMap) {
-        std::cout << key << " => " << value.index << "  " << value.number << '\n';
-        // for (int i=0; i<index.size()-1; i++)
+        cout << value.index << "  " << value.number <<"  " << value.term << endl;
         size_t i = value.index;
-        decompressChunk(file, index[i], index[i+1]-index[i]);
+        string chunkStr = decompressChunk(file, index[i], index[i+1]-index[i]);
+        string termValue = extractFromXML(value.term, chunkStr);
+        std::ofstream ofile(correct_filename(value.term)+".page");
+        if (ofile) {
+            ofile << termValue;
+        } else {
+        }
     }
     fclose(file);
 }

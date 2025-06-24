@@ -1,4 +1,6 @@
 *.bz2
+*multistream.xml
+*multistream-index.txt
 DATE
 getall.sh
 list.txt

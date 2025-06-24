@@ -5,6 +5,8 @@
 #include <sstream>
 #include <vector>
 
+#include "Comments.h"
+
 std::string extractFromXML(const std::string &term, const std::string &chunkStr) {
     std::string xmlStr = "<mediawiki>\n"+ chunkStr +"</mediawiki>\n";
     pugi::xml_document doc;
@@ -28,9 +30,11 @@ std::string extractFromXML(const std::string &term, const std::string &chunkStr)
             break;  // found and display, end loop
         }
     }
+    return "";
 }
 
 std::vector<std::pair<std::string,std::string>> allFromXML(const std::string &chunkStr) {
+    Comments comments;
     std::vector<std::pair<std::string,std::string>> v;
     std::string xmlStr = "<mediawiki>\n"+ chunkStr +"</mediawiki>\n";
     pugi::xml_document doc;
@@ -47,7 +51,7 @@ std::vector<std::pair<std::string,std::string>> allFromXML(const std::string &ch
         if (revision) {
             pugi::xml_node text_node = revision.child("text");
             if (text_node) {
-                v.emplace_back(title, text_node.text().as_string());
+                v.emplace_back(title, comments.clean(text_node.text().as_string()));
             }
         }
     }

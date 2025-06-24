@@ -63,3 +63,11 @@ std::string join_from(const std::vector<std::string>& parts, size_t start, char 
 
     return oss.str();
 }
+
+std::string read_file_to_string(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file) throw std::runtime_error("Cannot open file: " + filename);
+    std::ostringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}

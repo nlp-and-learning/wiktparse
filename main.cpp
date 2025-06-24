@@ -9,6 +9,7 @@
 #include <ranges>
 #include <string_view>
 
+#include "Comments.h"
 #include "Index.h"
 #include "tags.h"
 #include "WikiFile.h"
@@ -42,5 +43,5 @@ int createPages() {
 
 
 int main() {
-    collectAllTags();
+    Comments::searchForComments();
 }

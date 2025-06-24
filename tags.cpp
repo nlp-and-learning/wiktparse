@@ -58,16 +58,14 @@ void collectAllTags() {
     int onePercent = index.size() / 100;
     for (int i=0; i<index.size(); i++) {
         if (i % onePercent  == 0)
-        std::cout << i/onePercent << "%" << std::endl;
+            std::cout << i/onePercent << "%" << std::endl;
         auto chunkStr = wikiFile.decompressChunkByIndex(i);
         auto objects =  allFromXML(chunkStr);
         for (auto &p : objects) {
-            //if (p.first.find("Thesaurus:")==std::string::npos)
-            auto titleType = getTitleType(p.first);
+                auto titleType = getTitleType(p.first);
             if (titleType.first == TitleType::Other)
                 continue;
-            // std::cout<<p.first<<std::endl;
-            auto lines = splitLines(p.second);
+                auto lines = splitLines(p.second);
             for (const auto& line : lines) {
                 auto trimmed = trim(line);
                 if (trimmed.empty())
@@ -84,5 +82,5 @@ void collectAllTags() {
     //     std::cout << tag << std::endl;
     // }
     wikiFile.close();
-
 }
+

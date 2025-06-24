@@ -10,4 +10,5 @@ rock
 water
 water/translations
 window
-Thesaurus
+Thesaurus:dog
+Thesaurus:cat

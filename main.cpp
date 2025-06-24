@@ -95,6 +95,19 @@ std::vector<std::string> split(std::string_view input, char delimiter) {
     return result;
 }
 
+std::string join_from(const std::vector<std::string>& parts, size_t start, char delim = ':') {
+    std::ostringstream oss;
+    bool first = true;
+
+    for (const auto& part : parts | std::views::drop(start)) {
+        if (!first) oss << delim;
+        oss << part;
+        first = false;
+    }
+
+    return oss.str();
+}
+
 struct PosInfo {
     size_t index;
     string number;
@@ -128,11 +141,12 @@ int main() {
 
     for (std::string line; sl.getline(line);) {
         auto v = split(line, ':');
-        if (terms_to_exrtract.contains(v[2])) {
+        string term = join_from(v, 2);
+        if (terms_to_exrtract.contains(term)) {
             PosInfo termPos;
             termPos.index = index.size();
             termPos.number = trim(v[1]);
-            termPos.term = trim(v[2]);
+            termPos.term = term;
             termPosMap[termPos.term] = termPos;
         }
         long long n = stoll(line);

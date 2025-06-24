@@ -2,18 +2,22 @@
 #include <fstream>
 #include <vector>
 #include <bzlib.h>
+#include <map>
+#include <set>
 #include <sstream>
 #include <sys/stat.h>
 #include "Bz2Liner.h"
+#include <ranges>
+#include <string_view>
 
 using namespace std;
 
 
-void decompressChunk(FILE *file, long long start, int len) {
+void decompressChunk(FILE *file, size_t start, int len) {
     static double max  = 1;
     fseek(file, start, SEEK_SET);
     char *buf = new char[len];
-    fread(buf, 1,len, file);
+    size_t readed = fread(buf, 1,len, file);
 
     unsigned int decrypted_len = len * 25;
     char *bufD;
@@ -75,6 +79,30 @@ std::string readDate() {
     return trim(date);
 }
 
+
+
+void readLines_toSet(const string& filename, std::set<string>& terms) {
+    std::ifstream infile(filename);
+    for( std::string line; getline( infile, line ); )
+        terms.insert(trim(line));
+}
+
+std::vector<std::string> split(std::string_view input, char delimiter) {
+    std::vector<std::string> result;
+    for (auto part : input | std::views::split(delimiter)) {
+        result.emplace_back(part.begin(), part.end()); // konwersja z view na string
+    }
+    return result;
+}
+
+struct PosInfo {
+    size_t index;
+    string number;
+    string term;
+};
+
+map<std::string,PosInfo> termPosMap;
+
 int main() {
     std::string date = readDate();
     std::string IndexFile = "../dump/enwiktionary-"+ date+ "-pages-articles-multistream-index.txt.bz2";
@@ -95,7 +123,18 @@ int main() {
     const int BufLen = 512 * 1024;
     Bz2Liner sl(BufLen, bzfile);
     long long pn = 0;
+    std::set<string> terms_to_exrtract;
+    readLines_toSet("../work/terms_to_extract.txt", terms_to_exrtract);
+
     for (std::string line; sl.getline(line);) {
+        auto v = split(line, ':');
+        if (terms_to_exrtract.contains(v[2])) {
+            PosInfo termPos;
+            termPos.index = index.size();
+            termPos.number = trim(v[1]);
+            termPos.term = trim(v[2]);
+            termPosMap[termPos.term] = termPos;
+        }
         long long n = stoll(line);
         if (n != pn) {
             index.push_back(n);
@@ -118,8 +157,11 @@ int main() {
         std::cerr << "Could not open file " << WiktFile << "\n";
         return 1;
     }
-   // for (int i=0; i<index.size()-1; i++)
-    int i = index.size() - 2;
+    for (const auto& [key, value] : termPosMap) {
+        std::cout << key << " => " << value.index << "  " << value.number << '\n';
+        // for (int i=0; i<index.size()-1; i++)
+        size_t i = value.index;
         decompressChunk(file, index[i], index[i+1]-index[i]);
+    }
     fclose(file);
 }

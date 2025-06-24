@@ -1,0 +1,13 @@
+band
+book
+book/translations
+cat
+cat/translations
+dog
+dog/translations
+drop
+rock
+water
+water/translations
+window
+Thesaurus

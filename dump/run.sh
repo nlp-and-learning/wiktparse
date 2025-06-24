@@ -1,3 +1,4 @@
+#!/bin/bash
 curl -s https://mirror.accum.se/mirror/wikimedia.org/dumps/afwiktionary/ \
   | grep -o '<a href="20[0-9]\{6\}/"' \
   | cut -d'"' -f2 | cut -d'/' -f1 \

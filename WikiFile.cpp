@@ -1,11 +1,12 @@
 #include "WikiFile.h"
 
+#include <cmath>
 #include <iostream>
 
 #include "Bz2Liner.h"
 #include "xml.h"
 
-WikiFile::WikiFile(const Index &index): file(nullptr),index(index) {
+WikiFile::WikiFile(const Index &index): file(nullptr),index(index), wikiName(index.wikiName) {
 }
 
 std::string WikiFile::decompressChunk(size_t start, int len) {
@@ -14,7 +15,7 @@ std::string WikiFile::decompressChunk(size_t start, int len) {
     char *buf = new char[len];
     size_t readed = fread(buf, 1,len, file);
 
-    unsigned int decrypted_len = len * 15;
+    unsigned int decrypted_len = ceil(len * std::max(max, 15.0));
     char *bufD;
     int decrypted_ret;
     while (true) {
@@ -44,9 +45,9 @@ std::string WikiFile::decompressChunkByIndex(size_t n) {
 }
 
 int WikiFile::open() {
-    file = fopen(index.wiktPath.c_str(), "rb");
+    file = fopen(wikiName.wiktPath.c_str(), "rb");
     if (!file) {
-        std::cerr << "Could not open file " << index.wiktPath << "\n";
+        std::cerr << "Could not open file " << wikiName.wiktPath << "\n";
         return 1;
     }
     return 0;

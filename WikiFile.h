@@ -4,6 +4,7 @@
 class WikiFile {
     FILE *file;
     const Index &index;
+    const WikiName &wikiName;
 public:
     explicit WikiFile(const Index &index);
     std::string decompressChunk(size_t start, int len);

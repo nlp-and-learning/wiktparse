@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "textUtils.h"
+#include "WikiName.h"
 
 class Index {
 public:
@@ -22,13 +23,11 @@ public:
     };
 private:
     std::unordered_map<std::string, IndexedObject> objectMap;
-    std::string indexPath;
-    std::string wiktPath;
-    static std::string readDate();
     std::vector<long long int> indexVec;
     friend class WikiFile;
+    const WikiName &wikiName;
 public:
-    explicit Index(const std::string &lang);
+    explicit Index(const WikiName &wikiName): wikiName(wikiName){};
     int readIndex();
     IndexedObject getIndexedObject(const std::string &term) const;
     size_t size() {return indexVec.size()-1;}

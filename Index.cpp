@@ -6,16 +6,10 @@
 #include "Bz2Liner.h"
 #include "textUtils.h"
 
-Index::Index(const std::string &lang) {
-    std::string date = readDate();
-    indexPath = "../dump/" + lang + "wiktionary-"+ date+ "-pages-articles-multistream-index.txt.bz2";
-    wiktPath= "../dump/" + lang + "wiktionary-"+ date+ "-pages-articles-multistream.xml.bz2";
-}
-
 int Index::readIndex() {
-    FILE *file = fopen(indexPath.c_str(), "rb");
+    FILE *file = fopen(wikiName.indexPath.c_str(), "rb");
     if (!file) {
-        std::cerr << "Could not open file " << indexPath << "\n";
+        std::cerr << "Could not open file " << wikiName.indexPath << "\n";
         return 1;
     }
 
@@ -42,7 +36,7 @@ int Index::readIndex() {
         objectMap[indexedObject.title] = indexedObject;
     }
     struct stat statBuf{};
-    stat(wiktPath.c_str(), &statBuf);
+    stat(wikiName.wiktPath.c_str(), &statBuf);
     indexVec.push_back(statBuf.st_size);
     int bzerror;
     BZ2_bzReadClose(&bzerror, bzfile);
@@ -52,16 +46,4 @@ int Index::readIndex() {
 
 Index::IndexedObject Index::getIndexedObject(const std::string &term) const{
     return objectMap.at(term);
-}
-
-std::string Index::readDate() {
-    std::ifstream file("../dump/DATE");
-    std::string date;
-
-    if (file) {
-        std::getline(file, date);
-    } else
-        throw std::runtime_error("run dump.run.sh");
-
-    return trim(date);
 }

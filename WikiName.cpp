@@ -102,3 +102,34 @@ void WikiName::firstWikiDataFile() {
     wikiPath= directory/ wikiName;
     indexPath = directory/ wikiNameToIndexName(wikiName);
 }
+
+size_t WikiName::initAllWikiData() {
+    fs::path directory("../dumpWD");
+    fs::path listFile = directory / "list.txt";
+
+    if (!fs::exists(listFile)) {
+        wikiDataList();
+    }
+
+    std::ifstream infile(listFile);
+    if (!infile) {
+        throw std::runtime_error("can't crate list.txt");
+    }
+    fpairs.clear();
+    for( std::string line; getline( infile, line ); ) {
+        auto v = split(trimRight(line), ' ');
+        fpairs.emplace_back(trim(v[0]), trim(v[1]));
+    }
+    return fpairs.size();
+}
+
+void WikiName::closeAllWikiData() {
+    fpairs.clear();
+}
+
+void WikiName::setWikiDataFile(size_t n) {
+    auto p = fpairs[n];
+    symbolicName = p.first;
+    wikiPath = "../dumpWD/" + p.second;
+    indexPath = wikiNameToIndexName(wikiPath);
+}

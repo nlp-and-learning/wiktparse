@@ -24,9 +24,11 @@ void WikiData::testFirstChunkWikiData() {
 }
 
 void WikiData::search(const std::vector<std::string> &listTosearch, const std::string &outputFIle) {
-    /*WikiName wikiName;
-    int n = wikiName.initAllWikiData();
-    for (int i=0; i<n; i++)
-        wikiName.setWIkiDAtaFile(i)
-    wikiName.closeAllWikiData();*/
+    WikiName wikiName;
+    size_t n = wikiName.initAllWikiData();
+    for (size_t i=0; i<n; i++) {
+        wikiName.setWikiDataFile(i);
+        std::cout << wikiName.symbolicName << "  " << wikiName.wikiPath << std::endl;
+    }
+    wikiName.closeAllWikiData();
 }

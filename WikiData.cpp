@@ -1,11 +1,11 @@
-#include "wikiData.h"
+#include "WikiData.h"
 
 #include "Index.h"
 #include "WikiFile.h"
 #include "WikiName.h"
 #include "xml.h"
 
-void testFirstChunkWikiData() {
+void WikiData::testFirstChunkWikiData() {
     WikiName wikiName;
     wikiName.firstWikiDataFile();
     Index index(wikiName);

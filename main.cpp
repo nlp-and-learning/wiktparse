@@ -41,5 +41,5 @@ int createPages() {
 
 
 int main() {
-    collectAllTags();
+    WikiName::WikiDataList();
 }

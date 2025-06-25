@@ -45,9 +45,9 @@ std::string WikiFile::decompressChunkByIndex(size_t n) {
 }
 
 int WikiFile::open() {
-    file = fopen(wikiName.wiktPath.c_str(), "rb");
+    file = fopen(wikiName.wikiPath.c_str(), "rb");
     if (!file) {
-        std::cerr << "Could not open file " << wikiName.wiktPath << "\n";
+        std::cerr << "Could not open file " << wikiName.wikiPath << "\n";
         return 1;
     }
     return 0;

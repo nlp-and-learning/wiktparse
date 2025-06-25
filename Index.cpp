@@ -36,7 +36,7 @@ int Index::readIndex() {
         objectMap[indexedObject.title] = indexedObject;
     }
     struct stat statBuf{};
-    stat(wikiName.wiktPath.c_str(), &statBuf);
+    stat(wikiName.wikiPath.c_str(), &statBuf);
     indexVec.push_back(statBuf.st_size);
     int bzerror;
     BZ2_bzReadClose(&bzerror, bzfile);

@@ -41,5 +41,5 @@ int createPages() {
 
 
 int main() {
-    WikiName::WikiDataList();
+    WikiName::wikiDataList();
 }

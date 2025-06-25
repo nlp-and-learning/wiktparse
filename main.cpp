@@ -40,6 +40,16 @@ int createPages() {
     return 0;
 }
 
+void searchWikiDataWiktNeeded() {
+    vector<string> listTosearch;
+    listTosearch.emplace_back("\"P220\"");//ISO 639-1 code
+    listTosearch.emplace_back("\"Q82042\"");//part of speech
+    listTosearch.emplace_back("\"Q8162\"");//linguistics , Etymology
+    listTosearch.emplace_back("\"Q34770\"");//language
+    listTosearch.emplace_back("\"Q8171\"");//word
+    WikiData::search(listTosearch, "wiktNeeded.jsonl");
+}
+
 int main() {
-    WikiData::testFirstChunkWikiData();
+    searchWikiDataWiktNeeded();
 }

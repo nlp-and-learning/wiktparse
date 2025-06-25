@@ -17,6 +17,8 @@ add_executable(${PROJECT_NAME} main.cpp Bz2Liner.cpp AbstractLiner.cpp
         WikiFile.h
         Comments.cpp
         Comments.h
-        WikiName.h)
+        WikiName.h
+        wikiData.cpp
+        wikiData.h)
 
 target_link_libraries(${PROJECT_NAME} bz2 pugixml::pugixml)

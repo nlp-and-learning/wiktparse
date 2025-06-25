@@ -12,6 +12,7 @@
 #include "Comments.h"
 #include "Index.h"
 #include "tags.h"
+#include "wikiData.h"
 #include "WikiFile.h"
 #include "xml.h"
 
@@ -39,7 +40,6 @@ int createPages() {
     return 0;
 }
 
-
 int main() {
-    WikiName::wikiDataList();
+    testFirstChunkWikiData();
 }

@@ -114,8 +114,7 @@ public:
 
         std::vector<std::string> tokens = split(trim(line), ' ');
         std::string wikiName = tokens[1];
-        wikiPath= "../dump/" + wikiName;
-
-        indexPath = "../dump/" + wikiNameToIndexName(wikiName);
+        wikiPath= directory/ wikiName;
+        indexPath = directory/ wikiNameToIndexName(wikiName);
     }
 };

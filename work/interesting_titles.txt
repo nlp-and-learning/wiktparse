@@ -1,0 +1,9 @@
+en:
+base - no / and :
+WORD/translations
+Thesaurus:WORD
+Appendix:LANGUAGE/WORD
+Reconstruction:LANGUAGE/WORD
+
+fr:
+Annexe:Déclinaison en allemand/WORD

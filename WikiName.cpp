@@ -38,8 +38,6 @@ void WikiName::WiktName(const std::string &lang) {
     indexPath = "../dump/" + lang + "wiktionary-"+ date+ "-pages-articles-multistream-index.txt.bz2";
     wikiPath= "../dump/" + lang + "wiktionary-"+ date+ "-pages-articles-multistream.xml.bz2";
     auto indexPath2 = wikiNameToIndexName(wikiPath);
-    std::cout << indexPath << std::endl;
-    std::cout << indexPath2 << std::endl;
 }
 
 void WikiName::wikiDataList() {

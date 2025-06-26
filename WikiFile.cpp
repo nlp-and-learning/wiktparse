@@ -62,6 +62,8 @@ int WikiFile::close() {
 
 std::string WikiFile::extractTerm(std::string term) {
     auto iobj = index.getIndexedObject(term);
+    if (iobj.chunkIndex<0)
+        return "";
     auto chunkStr = decompressChunkByIndex(iobj.chunkIndex);
     auto termValue = extractFromXML(term, chunkStr);
     return termValue;

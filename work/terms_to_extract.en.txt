@@ -1,0 +1,59 @@
+band
+book
+book/translations
+cat
+cat/translations
+dog
+dog/translations
+drop
+rock
+water
+water/translations
+window
+bone
+bone/translations
+brother
+brother/translations
+Thesaurus:dog
+Thesaurus:cat
+Thesaurus:advice
+Thesaurus:advise
+Thesaurus:affectionate
+Thesaurus:afferrare
+Thesaurus:afraid
+Appendix:Interlingue/bove
+Appendix:Interlingue/bovo
+Appendix:Interlingue/boxa
+Appendix:Klingon/QIp
+Appendix:Klingon/QIt
+Appendix:Klingon/QIv
+Appendix:Lingua Franca Nova/avias
+Appendix:Lingua Franca Nova/balada
+Appendix:Lingua Franca Nova/baladas
+Appendix:Lingua Franca Nova/balador
+Appendix:Lingua Franca Nova/baladores
+Appendix:Lojban/bongu
+Appendix:Lojban/bor
+Appendix:Lojban/bot
+Appendix:Lojban/botpi
+Appendix:Lojban/boxfo
+Appendix:Lojban/boxna
+Reconstruction:Ancient Greek/-ϳω
+Reconstruction:Ancient Greek/φυλακέω
+Reconstruction:Ancient Greek/ϝαῦ
+Reconstruction:Latin/accognitare
+Reconstruction:Latin/accollare
+Reconstruction:Latin/accolligere
+Reconstruction:Middle Irish/cláirseóir
+Reconstruction:Middle Irish/cáelas
+Reconstruction:Old English/tieltan
+Reconstruction:Old English/tincere
+Reconstruction:Old English/tot
+Reconstruction:Old English/trust
+Reconstruction:Old English/tæle
+Reconstruction:Old English/tætte
+Reconstruction:Proto-Slavic/bičati
+Reconstruction:Proto-Slavic/bičevati
+Reconstruction:Proto-Slavic/bičь
+Reconstruction:Proto-Slavic/blazniti
+Reconstruction:Proto-Slavic/blaznъ

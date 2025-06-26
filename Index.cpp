@@ -22,7 +22,7 @@ int Index::readIndex() {
     const int BufLen = 512 * 1024;
     Bz2Liner sl(BufLen, bzfile);
     long long pn = -1;
-    std::set<std::string> terms_to_exrtract;
+    std::set<std::string> terms_to_extract;
 
     for (std::string line; sl.getline(line);) {
         long long n = stoll(line);
@@ -45,5 +45,13 @@ int Index::readIndex() {
 }
 
 Index::IndexedObject Index::getIndexedObject(const std::string &term) const{
-    return objectMap.at(term);
+    if (objectMap.contains(term))
+        return objectMap.at(term);
+    else {
+        Index::IndexedObject obj;
+        obj.chunkIndex = -1;
+        obj.id = "";
+        obj.title = term;
+        return obj;
+    }
 }

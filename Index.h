@@ -9,7 +9,7 @@
 class Index {
 public:
     struct IndexedObject {
-        size_t chunkIndex;
+        int chunkIndex;
         std::string id;
         std::string title;
         IndexedObject() {
@@ -21,12 +21,10 @@ public:
             title = join_from(parts, 2, ':');
         }
     };
-private:
     std::unordered_map<std::string, IndexedObject> objectMap;
     std::vector<long long int> indexVec;
-    friend class WikiFile;
     const WikiName &wikiName;
-public:
+
     explicit Index(const WikiName &wikiName): wikiName(wikiName){};
     int readIndex();
     IndexedObject getIndexedObject(const std::string &term) const;

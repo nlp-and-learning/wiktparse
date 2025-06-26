@@ -1,0 +1,13 @@
+groupe
+livre
+lire
+chat
+chien
+baisse
+pluie
+rocher
+échelle
+pierre
+eau
+os
+frère

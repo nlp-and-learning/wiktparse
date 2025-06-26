@@ -46,8 +46,9 @@ void searchWikiDataWiktNeeded() {
     listTosearch.emplace_back("\"Q82042\"");//part of speech
     listTosearch.emplace_back("\"Q8162\"");//linguistics , Etymology
     listTosearch.emplace_back("\"Q34770\"");//language
-    listTosearch.emplace_back("\"Q8171\"");//word
-    WikiData::search(listTosearch, "wiktNeeded.jsonl");
+    vector<string> listNotTosearch;
+    listNotTosearch.emplace_back("\"Q5\"");
+    WikiData::search(listTosearch,listNotTosearch, "wiktNeeded.jsonl");
 }
 
 int main() {

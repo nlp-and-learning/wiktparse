@@ -9,7 +9,7 @@ std::vector<std::string> extractTemplates(const std::string& text) {
 
     while ((pos = text.find("{{", pos)) != std::string::npos) {
         size_t start = pos;
-        size_t braceCount = 2; // mamy już {{
+        size_t braceCount = 2; // we have already {{
         pos += 2;
 
         while (pos < text.size()) {

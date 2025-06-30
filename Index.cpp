@@ -1,21 +1,24 @@
 #include <sys/stat.h>
-#include <bzlib.h>
 #include <fstream>
 #include <iostream>
 #include "Index.h"
-#include "Bz2Liner.h"
 #include "textUtils.h"
 
+Index::~Index() {
+    close();
+}
+
 int Index::readIndex() {
-    FILE *file = fopen(wikiName.indexPath.c_str(), "rb");
+    file = fopen(wikiName.indexPath.c_str(), "rb");
     if (!file) {
         std::cerr << "Could not open file " << wikiName.indexPath << "\n";
         return 1;
     }
 
-    BZFILE *bzfile = BZ2_bzReadOpen(nullptr, file, 0, 0, nullptr, 0);
+    bzfile = BZ2_bzReadOpen(nullptr, file, 0, 0, nullptr, 0);
     if (!bzfile) {
         std::cerr << "Could not open bz2 file\n";
+        fclose(file);
         return 1;
     }
 
@@ -42,6 +45,39 @@ int Index::readIndex() {
     BZ2_bzReadClose(&bzerror, bzfile);
     fclose(file);
     return 0;
+}
+
+int Index::open(WikiFile *wikiFile) {
+    this->wikiFile = wikiFile;
+    FILE *file = fopen(wikiName.indexPath.c_str(), "rb");
+    if (!file) {
+        std::cerr << "Could not open file " << wikiName.indexPath << "\n";
+        return 1;
+    }
+
+    BZFILE *bzfile = BZ2_bzReadOpen(nullptr, file, 0, 0, nullptr, 0);
+    if (!bzfile) {
+        std::cerr << "Could not open bz2 file\n";
+        fclose(file);
+        return 1;
+    }
+    return 0;
+}
+
+void Index::close() {
+    if (bzfile) {
+        int bzerror;
+        BZ2_bzReadClose(&bzerror, bzfile);
+        bzfile = nullptr;
+    }
+    if (file) {
+        fclose(file);
+        file = nullptr;
+    }
+}
+
+bool Index::getChunk(std::string &chunk) {
+    return false;
 }
 
 Index::IndexedObject Index::getIndexedObject(const std::string &term) const{

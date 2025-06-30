@@ -5,8 +5,13 @@
 
 #include "textUtils.h"
 #include "WikiName.h"
+#include "Bz2Liner.h"
+
+class WikiFile;
 
 class Index {
+    FILE *file;
+    BZFILE *bzfile;
 public:
     struct IndexedObject {
         int chunkIndex;
@@ -23,10 +28,15 @@ public:
     };
     std::unordered_map<std::string, IndexedObject> objectMap;
     std::vector<long long int> indexVec;
+    const WikiFile *wikiFile = nullptr;
     const WikiName &wikiName;
 
     explicit Index(const WikiName &wikiName): wikiName(wikiName){};
+    ~Index();
     int readIndex();
+    int open(WikiFile *wikiFile);
+    void close();
+    bool getChunk(std::string &chunk);
     IndexedObject getIndexedObject(const std::string &term) const;
     size_t size() {return indexVec.size()-1;}
 };

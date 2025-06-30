@@ -113,15 +113,12 @@ void Comments::searchForComments(const std::string &lang) {
     WikiName wikiName;
     wikiName.wiktName(lang);
     Index index(wikiName);
-    index.readIndex();
     WikiFile wikiFile(index);
     wikiFile.open();
-    int onePercent = index.size() / 100;
-    for (int i=0; i<index.size(); i++) {
-        if (i % onePercent  == 0)
-            std::cout << i/onePercent << "%" << std::endl;
-        auto chunkStr = wikiFile.decompressChunkByIndex(i);
-        auto objects =  allFromXML(chunkStr);
+    index.open(&wikiFile);
+    for( std::string chunk; index.getChunk(chunk);) {
+        std::cout << chunk.size();
+        auto objects =  allFromXML(chunk);
         for (auto &p : objects) {
             auto lines = splitLines(p.second);
             for (const auto& line : lines) {
@@ -132,5 +129,4 @@ void Comments::searchForComments(const std::string &lang) {
             }
         }
     }
-    wikiFile.close();
 }

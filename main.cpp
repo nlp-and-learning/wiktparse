@@ -18,6 +18,8 @@
 #include "xml.h"
 #include <nlohmann/json.hpp>
 
+#include "Templates.h"
+
 using json = nlohmann::json;
 
 using namespace std;
@@ -237,5 +239,23 @@ void splitWikiDataResult() {
     }
 }
 
+
+
+void testTemplates() {
+    const fs::path& dir = "../pages";
+    std::vector<fs::path> pagesFiles;
+
+    for (const auto& entry : fs::recursive_directory_iterator(dir)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".page") {
+            pagesFiles.push_back(entry.path());
+        }
+    }
+    for (const auto& path : pagesFiles) {
+        std::cout << path << "\n";
+        findTemplatesInFile(path);
+    }
+}
+
 int main() {
+    testTemplates();
 }

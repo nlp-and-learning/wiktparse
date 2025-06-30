@@ -10,8 +10,8 @@
 class WikiFile;
 
 class Index {
-    FILE *file;
-    BZFILE *bzfile;
+    FILE *file = nullptr;
+    BZFILE *bzfile = nullptr;
 public:
     struct IndexedObject {
         int chunkIndex;

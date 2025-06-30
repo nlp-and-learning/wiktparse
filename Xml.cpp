@@ -8,7 +8,7 @@
 #include "Comments.h"
 #include "tags.h"
 
-std::string extractFromXML(const std::string &term, const std::string &chunk) {
+std::string Xml::extractFromXML(const std::string &term, const std::string &chunk) {
     std::string xmlStr = "<mediawiki>\n"+ chunk +"</mediawiki>\n";
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_string(xmlStr.c_str());
@@ -34,7 +34,7 @@ std::string extractFromXML(const std::string &term, const std::string &chunk) {
     return "";
 }
 
-std::vector<std::pair<std::string,std::string>> allFromXML(const std::string &chunk) {
+std::vector<std::pair<std::string,std::string>> Xml::allFromXML(const std::string &chunk) {
     Comments comments;
     std::vector<std::pair<std::string,std::string>> v;
     std::string xmlStr = "<mediawiki>\n"+ chunk +"</mediawiki>\n";

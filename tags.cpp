@@ -58,11 +58,12 @@ void collectAllTags() {
     wikiFile.open();
     std::set<std::string> allTags;
     int onePercent = index.size() / 100;
+    Xml xml;
     for (int i=0; i<index.size(); i++) {
         if (i % onePercent  == 0)
             std::cout << i/onePercent << "%" << std::endl;
         auto chunkStr = wikiFile.decompressChunkByIndex(i);
-        auto objects =  allFromXML(chunkStr);
+        auto objects =  xml.allFromXML(chunkStr);
         for (auto &p : objects) {
             auto lines = splitLines(p.second);
             for (const auto& line : lines) {

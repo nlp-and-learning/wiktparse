@@ -116,9 +116,10 @@ void Comments::searchForComments(const std::string &lang) {
     WikiFile wikiFile(index);
     wikiFile.open();
     index.open(&wikiFile);
+    Xml xml;
     for( std::string chunk; index.getChunk(chunk);) {
         std::cout << chunk.size();
-        auto objects =  allFromXML(chunk);
+        auto objects =  xml.allFromXML(chunk);
         for (auto &p : objects) {
             auto lines = splitLines(p.second);
             for (const auto& line : lines) {

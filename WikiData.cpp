@@ -13,7 +13,8 @@ void WikiData::testFirstChunkWikiData() {
     WikiFile wikiFile(index);
     wikiFile.open();
     auto chunkStr = wikiFile.decompressChunkByIndex(0);
-    auto objects =  allFromXML(chunkStr);
+    Xml xml;
+    auto objects =  xml.allFromXML(chunkStr);
     std::ofstream ofile("firstChuknk");
     for (auto &p : objects) {
         std::cout << p.first << "\n";
@@ -42,6 +43,7 @@ void WikiData::search(const std::vector<std::string> &listTosearch, const std::v
     int foundCnt = 0;
     std::ofstream ofile(outputFile);
     if (!ofile) throw std::runtime_error("Cannot open file: " + outputFile);
+    Xml xml;
     for (size_t i=0; i<n; i++) {
         wikiName.setWikiDataFile(i);
         std::cout << wikiName.symbolicName << "  " << wikiName.wikiPath << std::endl;
@@ -54,7 +56,7 @@ void WikiData::search(const std::vector<std::string> &listTosearch, const std::v
             if (j % onePercent  == 0)
                 std::cout << j/onePercent << "%" << std::endl;
             auto chunkStr = wikiFile.decompressChunkByIndex(j);
-            auto objects =  allFromXML(chunkStr);
+            auto objects =  xml.allFromXML(chunkStr);
             for (auto &p : objects) {
                 int found = findSubstrings(p.second, listTosearch, listNotTosearch);
                 if (found>=0) {

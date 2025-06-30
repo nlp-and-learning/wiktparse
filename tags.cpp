@@ -4,7 +4,7 @@
 
 #include "Index.h"
 #include "WikiFile.h"
-#include "xml.h"
+#include "Xml.h"
 
 bool isClear(const std::string &str) {
     return str.find('/') == std::string::npos && str.find(':') == std::string::npos;

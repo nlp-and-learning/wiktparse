@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "Bz2Liner.h"
-#include "xml.h"
+#include "Xml.h"
 
 WikiFile::WikiFile(const Index &index): file(nullptr),index(index), wikiName(index.wikiName) {
 }

@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(pugixml REQUIRED)
 
 add_executable(${PROJECT_NAME} main.cpp Bz2Liner.cpp AbstractLiner.cpp
-        xml.cpp
-        xml.h
+        Xml.cpp
+        Xml.h
         tags.cpp
         tags.h
         Index.cpp

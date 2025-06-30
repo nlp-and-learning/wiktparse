@@ -15,7 +15,7 @@
 #include "tags.h"
 #include "WikiData.h"
 #include "WikiFile.h"
-#include "xml.h"
+#include "Xml.h"
 #include <nlohmann/json.hpp>
 
 #include "Template.h"

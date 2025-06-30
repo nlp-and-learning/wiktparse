@@ -3,7 +3,7 @@
 #include "Index.h"
 #include "WikiFile.h"
 #include "WikiName.h"
-#include "xml.h"
+#include "Xml.h"
 
 void WikiData::testFirstChunkWikiData() {
     WikiName wikiName;

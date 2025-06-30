@@ -6,7 +6,7 @@
 #include "Index.h"
 #include "tags.h"
 #include "WikiFile.h"
-#include "xml.h"
+#include "Xml.h"
 #include <sstream>
 
 

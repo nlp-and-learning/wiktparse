@@ -31,8 +31,8 @@ std::vector<std::string> extractTemplates(const std::string& text) {
     return templates;
 }
 
-void findTemplatesInFile(const fs::path &path) {
+std::vector<std::string> extractTemplatesFromFile(const fs::path &path) {
     auto content = read_file_to_string(path);
     auto templates = extractTemplates(Comments::clean(content));
-    std::cout << templates.size() << "\n";
+    return templates;
 }

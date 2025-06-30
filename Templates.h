@@ -1,8 +1,6 @@
 #pragma once
 #include <filesystem>
+#include <vector>
 namespace fs = std::filesystem;
-class Templates {
 
-};
-
-void findTemplatesInFile(const fs::path& path);
+std::vector<std::string> extractTemplatesFromFile(const fs::path& path);

@@ -18,6 +18,8 @@
 #include "xml.h"
 #include <nlohmann/json.hpp>
 
+#include "Template.h"
+#include "TemplateParser.h"
 #include "Templates.h"
 
 using json = nlohmann::json;
@@ -252,8 +254,14 @@ void testTemplates() {
     }
     for (const auto& path : pagesFiles) {
         std::cout << path << "\n";
-        findTemplatesInFile(path);
+        extractTemplatesFromFile(path);
     }
+
+    std::string input = "{{Infobox person|name=John|birth={{birth date|1990|1|1}}|known={{#if:1|Author|Unknown}}}}";
+    size_t pos = 0;
+    Template t = TemplateParser::parseTemplate(input, pos);
+    std::cout << t.toWikitext() << std::endl;
+    std::cout << t.toWikitext(FormatStyle::Multiline) << std::endl;
 }
 
 int main() {

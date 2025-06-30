@@ -14,7 +14,7 @@ void WikiData::testFirstChunkWikiData() {
     wikiFile.open();
     auto chunkStr = wikiFile.decompressChunkByIndex(0);
     Xml xml;
-    auto objects =  xml.allFromXML(chunkStr);
+    auto objects =  xml.allFromChunk(chunkStr);
     std::ofstream ofile("firstChuknk");
     for (auto &p : objects) {
         std::cout << p.first << "\n";
@@ -56,7 +56,7 @@ void WikiData::search(const std::vector<std::string> &listTosearch, const std::v
             if (j % onePercent  == 0)
                 std::cout << j/onePercent << "%" << std::endl;
             auto chunkStr = wikiFile.decompressChunkByIndex(j);
-            auto objects =  xml.allFromXML(chunkStr);
+            auto objects =  xml.allFromChunk(chunkStr);
             for (auto &p : objects) {
                 int found = findSubstrings(p.second, listTosearch, listNotTosearch);
                 if (found>=0) {

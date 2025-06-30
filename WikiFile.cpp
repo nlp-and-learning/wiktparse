@@ -66,7 +66,7 @@ std::string WikiFile::extractTerm(std::string term) {
         return "";
     auto chunkStr = decompressChunkByIndex(iobj.chunkIndex);
     Xml xml;
-    auto termValue = xml.extractFromXML(term, chunkStr);
+    auto termValue = xml.termFromChunk(term, chunkStr);
     return termValue;
 }
 

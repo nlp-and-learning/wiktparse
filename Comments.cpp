@@ -119,7 +119,7 @@ void Comments::searchForComments(const std::string &lang) {
     Xml xml;
     for( std::string chunk; index.getChunk(chunk);) {
         std::cout << chunk.size();
-        auto objects =  xml.allFromXML(chunk);
+        auto objects =  xml.allFromChunk(chunk);
         for (auto &p : objects) {
             auto lines = splitLines(p.second);
             for (const auto& line : lines) {

@@ -12,6 +12,6 @@ class Comments {
     static std::vector<std::pair<size_t, Marker>> classify_line(const std::string& line);
 public:
     static std::string clean(const std::string& input);
-    static void searchForComments();
+    static void searchForComments(const std::string &lang);
 };
 

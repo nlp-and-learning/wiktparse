@@ -265,5 +265,5 @@ void testTemplates() {
 }
 
 int main() {
-    testTemplates();
+    Comments::searchForComments("pl");
 }

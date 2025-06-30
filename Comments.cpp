@@ -109,9 +109,9 @@ std::string Comments::clean(const std::string &input) {
         return out.str();
 }
 
-void Comments::searchForComments() {
+void Comments::searchForComments(const std::string &lang) {
     WikiName wikiName;
-    wikiName.wiktName("en");
+    wikiName.wiktName(lang);
     Index index(wikiName);
     index.readIndex();
     WikiFile wikiFile(index);

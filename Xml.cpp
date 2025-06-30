@@ -4,8 +4,6 @@
 #include <pugixml.hpp>
 #include <sstream>
 #include <vector>
-
-#include "Comments.h"
 #include "tags.h"
 
 std::string Xml::termFromChunk(const std::string &term, const std::string &chunk) {
@@ -25,7 +23,10 @@ std::string Xml::termFromChunk(const std::string &term, const std::string &chunk
             if (revision) {
                 pugi::xml_node text_node = revision.child("text");
                 if (text_node) {
-                    return text_node.text().as_string();
+                    std::string text = text_node.text().as_string();
+                    if (cleanComments)
+                        text = Comments::clean(text);
+                    return text;
                 }
             }
             break;  // found and display, end loop
@@ -35,7 +36,6 @@ std::string Xml::termFromChunk(const std::string &term, const std::string &chunk
 }
 
 std::vector<std::pair<std::string,std::string>> Xml::allFromChunk(const std::string &chunk) {
-    Comments comments;
     std::vector<std::pair<std::string,std::string>> v;
     std::string xmlStr = "<mediawiki>\n"+ chunk +"</mediawiki>\n";
     pugi::xml_document doc;
@@ -55,7 +55,10 @@ std::vector<std::pair<std::string,std::string>> Xml::allFromChunk(const std::str
         if (revision) {
             pugi::xml_node text_node = revision.child("text");
             if (text_node) {
-                v.emplace_back(title, comments.clean(text_node.text().as_string()));
+                std::string text = text_node.text().as_string();
+                if (cleanComments)
+                    text = Comments::clean(text);
+                v.emplace_back(title, text);
             }
         }
     }

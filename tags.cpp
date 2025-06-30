@@ -51,7 +51,7 @@ std::pair<TitleType,std::string> getTitleType(const std::string &title) {
 
 void collectAllTags() {
     WikiName wikiName;
-    wikiName.WiktName("en");
+    wikiName.wiktName("en");
     Index index(wikiName);
     index.readIndex();
     WikiFile wikiFile(index);

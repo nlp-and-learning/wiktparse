@@ -16,6 +16,9 @@
 #include "WikiData.h"
 #include "WikiFile.h"
 #include "xml.h"
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 using namespace std;
 
@@ -32,13 +35,13 @@ void createPages() {
         fs::path directory = "../pages/"+lang;
         fs::create_directory(directory);
         WikiName wikiName;
-        wikiName.WiktName(lang);
+        wikiName.wiktName(lang);
         Index index(wikiName);
         index.readIndex();
         WikiFile wikiFile(index);
         wikiFile.open();
         auto terms_to_extract = readLines("../work/terms_to_extract." + lang + ".txt");
-        for (auto term : terms_to_extract) {
+        for (const auto& term : terms_to_extract) {
             cout << term << endl;
             auto termValue = wikiFile.extractTerm(term);
             if (!termValue.empty())
@@ -47,6 +50,26 @@ void createPages() {
         wikiFile.close();
     }
 }
+
+void createPagesWiki() {
+    fs::path directory = "../pages/enwiki";
+    fs::create_directory(directory);
+    WikiName wikiName;
+    wikiName.wikiName("en");
+    Index index(wikiName);
+    index.readIndex();
+    WikiFile wikiFile(index);
+    wikiFile.open();
+    auto terms_to_extract = readLines("../work/terms_to_extract.enwiki.txt");
+    for (const auto& term : terms_to_extract) {
+        cout << term << endl;
+        auto termValue = wikiFile.extractTerm(term);
+        if (!termValue.empty())
+            saveToFile(termValue, directory/ (correct_filename(term)+".page"));
+    }
+    wikiFile.close();
+}
+
 
 void searchWikiDataWiktNeeded() {
     vector<string> listTosearch;
@@ -71,7 +94,7 @@ void showTitleTypes() {
             if (match[1].str()=="en")continue;
             cout << match[1].str() << endl;
             WikiName wikiName;
-            wikiName.WiktName(match[1].str());
+            wikiName.wiktName(match[1].str());
             Index index(wikiName);
             index.readIndex();
             map<string, set<string>> setMap;
@@ -105,6 +128,114 @@ void showTitleTypes() {
     }
 }
 
+enum PropType {Iso, Glottolog, Gost, Lang, Pos, Other,  Pronun, Ling, LingNorm};
+
+std::optional<json> getNested(const json& j, std::vector<std::string> keys) {
+    const json* current = &j;
+    for (const auto& k : keys) {
+        if (!current->contains(k)) return std::nullopt;
+        current = &(*current)[k];
+    }
+    return *current;
+}
+
+PropType propType(const json& j) {
+    auto resIso = getNested(j, {"claims", "P220"});
+    if (resIso)
+        return Iso;
+    //
+    auto resGlottolog = getNested(j, {"claims", "P1394"});
+    if (resGlottolog)
+        return Glottolog;
+
+    auto resGost = getNested(j, {"claims", "P278"});
+    if (resGost)
+        return Gost;
+
+    auto res31 = getNested(j, {"claims", "P31"});
+    if (res31) {
+        if (!res31.value().is_array())
+            cout << "not an array" << endl;
+        for (const auto & i : res31.value()) {
+            auto resCode= getNested(i, {"mainsnak", "datavalue",
+            "value", "id"});
+            if (to_string(resCode.value())=="\"Q82042\"") {
+                return Pos;
+            } else if (to_string(resCode.value())=="\"Q34770\"") {
+                return Lang;
+            }
+        }
+    }
+    auto res361 = getNested(j, {"claims", "P361"});
+    if (res361) {
+        if (!res361.value().is_array())
+            cout << "not an array" << endl;
+        for (const auto & i : res361.value()) {
+            auto resCode= getNested(i, {"mainsnak", "datavalue",
+            "value", "id"});
+            if (to_string(resCode.value())=="\"Q34770\"") {
+                return Pronun;
+            }
+        }
+    }
+
+    auto res279 = getNested(j, {"claims", "P279"});
+    if (res279) {
+        if (!res279.value().is_array())
+            cout << "not an array" << endl;
+        for (const auto & i : res279.value()) {
+            auto resCode= getNested(i, {"mainsnak", "datavalue",
+            "value", "id"});
+            if (to_string(resCode.value())=="\"Q8162\"") {
+                return Ling;
+            } else if (to_string(resCode.value())=="\"Q1759988\"") {
+                return LingNorm;
+            }
+        }
+    }
+    return Other;
+}
+
+void removeEmptyLinesFromJSonl(const std::string& filename) {
+    std::ifstream infile(filename);
+    for( std::string line; getline( infile, line ); ) {
+        if (line.empty()) continue;
+        std::cout << line << std::endl;
+    }
+}
+
+void splitWikiDataResult() {
+    std::vector<std::string> lines;
+    std::ifstream infile("../cmake-build-release/wiktNeeded.jsonl");
+    int cnt = 0;
+    std::ofstream isofile("iso.jsonl");
+    std::ofstream otherfile("other.jsonl");
+    std::ofstream posfile("pos.jsonl");
+    std::ofstream glottologfile("glottolog.jsonl");
+    std::ofstream gostfile("gost.jsonl");
+    std::ofstream langfile("lang.jsonl");
+    std::ofstream pronunfile("pronun.jsonl");
+    std::ofstream lingfile("ling.jsonl");
+    std::ofstream lingnormfile("lingnorm.jsonl");
+    for( std::string line; getline( infile, line ); ) {
+        if (line.empty()) continue;
+        json j = json::parse(line);
+        auto prop = propType(j);
+        switch (prop) {
+            case Iso: isofile << line << '\n'; break;
+            case Glottolog: glottologfile << line << '\n'; break;
+            case Gost: gostfile << line << '\n'; break;
+            case Lang: langfile << line << '\n'; break;
+            case Pos: posfile << line << '\n'; break;
+            case Pronun: pronunfile << line << '\n'; break;
+            case Ling: lingfile << line << '\n'; break;
+            case LingNorm: lingnormfile << line << '\n'; break;
+            default: otherfile << line << '\n';
+        }
+        cnt++;
+        if (cnt % 200 ==0) cout << cnt << endl <<flush;
+    }
+}
+
 int main() {
-    createPages();
 }

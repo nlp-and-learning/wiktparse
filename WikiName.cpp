@@ -1,5 +1,7 @@
 #include "WikiName.h"
 
+#include <cassert>
+
 std::string WikiName::wikiNameToIndexName(const fs::path &wikiPath) {
     auto dir = wikiPath.parent_path();     // ../dumpWD
     auto wikiName = wikiPath.filename().string();
@@ -21,10 +23,9 @@ std::string WikiName::wikiNameToIndexName(const fs::path &wikiPath) {
     return dir/indexFile;
 }
 
-std::string WikiName::readDate() {
-    std::ifstream file("../dump/DATE");
+std::string WikiName::readDate(const fs::path &dir) {
+    std::ifstream file(dir / "DATE");
     std::string date;
-
     if (file) {
         std::getline(file, date);
     } else
@@ -33,11 +34,16 @@ std::string WikiName::readDate() {
     return trim(date);
 }
 
-void WikiName::WiktName(const std::string &lang) {
-    std::string date = readDate();
+void WikiName::wiktName(const std::string &lang) {
+    std::string date = readDate("../dump");
     indexPath = "../dump/" + lang + "wiktionary-"+ date+ "-pages-articles-multistream-index.txt.bz2";
     wikiPath= "../dump/" + lang + "wiktionary-"+ date+ "-pages-articles-multistream.xml.bz2";
-    auto indexPath2 = wikiNameToIndexName(wikiPath);
+}
+
+void WikiName::wikiName(const std::string &lang) {
+    std::string date = readDate("../wikidump");
+    wikiPath = "../wikidump/" + lang + "wiki-" + date + "-pages-articles-multistream.xml.bz2";
+    indexPath = "../wikidump/" + lang + "wiki-" + date + "-pages-articles-multistream-index.txt.bz2";
 }
 
 void WikiName::wikiDataList() {

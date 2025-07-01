@@ -113,6 +113,8 @@ void Comments::searchForComments(const std::string &lang) {
     WikiName wikiName;
     wikiName.wiktName(lang);
     Index index(wikiName);
+    index.readIndex();
+    return;
     WikiFile wikiFile(index);
     wikiFile.open();
     index.open(&wikiFile);

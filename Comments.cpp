@@ -9,6 +9,8 @@
 #include "Xml.h"
 #include <sstream>
 
+#include "Progress.h"
+
 
 std::vector<std::pair<size_t, Comments::Marker>> Comments::classify_line(const std::string &line) {
     std::vector<std::pair<size_t, Marker>> events;
@@ -117,10 +119,10 @@ void Comments::searchForComments(const std::string &lang) {
     wikiFile.open();
     index.open();
     Xml xml;
-    auto fSize = wikiFile.size();
+    Progress progress(wikiFile.size());
     for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
         auto chunkStr = wikiFile.decompressChunk(indexChunk);
-        std::cout << 100.0 * wikiFile.filePos() / fSize << std::endl;
+        progress.update(wikiFile.filePos());
         auto objects =  xml.allFromChunk(chunkStr);
         for (auto &p : objects) {
             auto lines = splitLines(p.second);

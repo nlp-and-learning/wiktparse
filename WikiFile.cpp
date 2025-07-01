@@ -60,7 +60,7 @@ int WikiFile::open() {
     return 0;
 }
 
-int64_t WikiFile::filePos() {
+size_t WikiFile::filePos() {
     return ftell(file);
 }
 

@@ -28,6 +28,8 @@ add_executable(${PROJECT_NAME} main.cpp Bz2Liner.cpp AbstractBufferedLiner.cpp
         Template.cpp
         Template.h
         TemplateParser.cpp
-        TemplateParser.h)
+        TemplateParser.h
+        Progress.cpp
+        Progress.h)
 
 target_link_libraries(${PROJECT_NAME} bz2 pugixml::pugixml)

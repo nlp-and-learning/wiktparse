@@ -23,11 +23,11 @@ int Index::readIndex() {
     }
 
     const int BufLen = 512 * 1024;
-    Bz2Liner sl(BufLen, bzfile);
+    Bz2Liner bz2_liner(BufLen, bzfile);
     long long pn = -1;
     std::set<std::string> terms_to_extract;
 
-    for (std::string line; sl.getline(line);) {
+    for (std::string line; bz2_liner.getline(line);) {
         long long n = stoll(line);
         if (n != pn) {
             indexVec.push_back(n);

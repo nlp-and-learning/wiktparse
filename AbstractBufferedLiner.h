@@ -3,7 +3,7 @@
 
 #include <string>
 
-class AbstractLiner {
+class AbstractBufferedLiner {
     bool findEolOne();
     void findNextEol();
     void setStartAfterEol();
@@ -21,8 +21,8 @@ protected:
     virtual void readBuffer() = 0;
 public:
     bool getline(std::string &line);
-    explicit AbstractLiner(int bufLen);
-    virtual ~AbstractLiner();
+    explicit AbstractBufferedLiner(int bufLen);
+    virtual ~AbstractBufferedLiner();
 };
 
 #endif //READER_ABSTRACTLINER_H

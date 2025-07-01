@@ -1,17 +1,17 @@
 #include <cassert>
-#include "AbstractLiner.h"
+#include "AbstractBufferedLiner.h"
 
 using namespace std;
 
-AbstractLiner::AbstractLiner(int bufLen) : bufLen(bufLen) {
+AbstractBufferedLiner::AbstractBufferedLiner(int bufLen) : bufLen(bufLen) {
     buffer = new char[bufLen];
 }
 
-AbstractLiner::~AbstractLiner() {
+AbstractBufferedLiner::~AbstractBufferedLiner() {
     delete buffer;
 }
 
-bool AbstractLiner::getline(std::string &line) {
+bool AbstractBufferedLiner::getline(std::string &line) {
     if (!initialized) {
         readBuffer();
         initialized = true;
@@ -34,7 +34,7 @@ bool AbstractLiner::getline(std::string &line) {
     return true;
 }
 
-bool AbstractLiner::findEolOne() {
+bool AbstractBufferedLiner::findEolOne() {
     eolPos = gcount;
     for (int i = startLine; i < gcount; i++) {
         if (isEol(buffer[i])) {
@@ -45,7 +45,7 @@ bool AbstractLiner::findEolOne() {
     return false;
 }
 
-void AbstractLiner::findNextEol() {
+void AbstractBufferedLiner::findNextEol() {
     while (!findEolOne() && gcount == bufLen) {
         assert(eolPos == gcount);
         string_view sv(buffer + startLine, eolPos - startLine);
@@ -55,7 +55,7 @@ void AbstractLiner::findNextEol() {
     }
 }
 
-void AbstractLiner::setStartAfterEol() {
+void AbstractBufferedLiner::setStartAfterEol() {
     assert(eolPos < gcount);
     startLine = eolPos;
     if (buffer[startLine] == '\n')
@@ -70,7 +70,7 @@ void AbstractLiner::setStartAfterEol() {
     }
 }
 
-void AbstractLiner::skipEol() {
+void AbstractBufferedLiner::skipEol() {
     startLine++;
     assert(gcount > 0);
     if (startLine == gcount && !eof) {
@@ -79,6 +79,6 @@ void AbstractLiner::skipEol() {
     }
 }
 
-bool AbstractLiner::isEol(char c) {
+bool AbstractBufferedLiner::isEol(char c) {
     return c == '\n' || c == '\r';
 }

@@ -1,9 +1,8 @@
-#ifndef READER_ABSTRACTLINER_H
-#define READER_ABSTRACTLINER_H
-
+#pragma once
 #include <string>
+#include "AbstractLiner.h"
 
-class AbstractBufferedLiner {
+class AbstractBufferedLiner: public AbstractLiner {
     bool findEolOne();
     void findNextEol();
     void setStartAfterEol();
@@ -20,9 +19,7 @@ protected:
     bool eof = false;
     virtual void readBuffer() = 0;
 public:
-    bool getline(std::string &line);
+    bool getline(std::string &line) override;
     explicit AbstractBufferedLiner(int bufLen);
-    virtual ~AbstractBufferedLiner();
+    ~AbstractBufferedLiner() override;
 };
-
-#endif //READER_ABSTRACTLINER_H

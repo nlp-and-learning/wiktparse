@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Index.h"
 #include "textUtils.h"
+#include "WikiChunker.h"
 
 Index::~Index() {
     close();
@@ -24,23 +25,16 @@ int Index::readIndex() {
 
     const int BufLen = 512 * 1024;
     Bz2Liner bz2_liner(BufLen, bzfile);
-    long long pn = -1;
-    std::set<std::string> terms_to_extract;
-
-    for (std::string line; bz2_liner.getline(line);) {
-        long long n = stoll(line);
-        if (n != pn) {
-            indexVec.push_back(n);
-            if (indexVec.size() % 10000 == 0)
-                std::cout << "." << std::flush;
-            pn = n;
-        }
-        IndexedObject indexedObject(line, indexVec.size()-1);
-        objectMap[indexedObject.title] = indexedObject;
-    }
     struct stat statBuf{};
     stat(wikiName.wikiPath.c_str(), &statBuf);
-    indexVec.push_back(statBuf.st_size);
+    WikiIndexChunk chunk;
+    WikiChunker chunker(bz2_liner, statBuf.st_size);
+    while (chunker.getChunk(chunk)) {
+        indexVec.push_back(chunk.startPos);
+        if (indexVec.size() % 10000 == 0)
+            std::cout << "." << std::flush;
+    }
+    indexVec.push_back(chunk.endPos);
     int bzerror;
     BZ2_bzReadClose(&bzerror, bzfile);
     bzfile = nullptr;

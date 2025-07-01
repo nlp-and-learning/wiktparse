@@ -43,7 +43,9 @@ int Index::readIndex() {
     indexVec.push_back(statBuf.st_size);
     int bzerror;
     BZ2_bzReadClose(&bzerror, bzfile);
+    bzfile = nullptr;
     fclose(file);
+    file = nullptr;
     return 0;
 }
 

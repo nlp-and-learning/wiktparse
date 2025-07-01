@@ -8,12 +8,11 @@
 #include "Bz2Liner.h"
 #include "WikiChunker.h"
 
-class WikiFile;
-
 class Index {
     FILE *file = nullptr;
     BZFILE *bzfile = nullptr;
-    WikiChunker * chunker;
+    Bz2Liner * bz2_liner = nullptr;
+    WikiChunker * chunker = nullptr;
 public:
     struct IndexedObject {
         int chunkIndex;
@@ -30,15 +29,14 @@ public:
     };
     std::unordered_map<std::string, IndexedObject> objectMap;
     std::vector<long long int> indexVec;
-    const WikiFile *wikiFile = nullptr;
     const WikiName &wikiName;
 
     explicit Index(const WikiName &wikiName): wikiName(wikiName){};
     ~Index();
     int readIndex();
-    int open(WikiFile *wikiFile);
+    int open();
     void close();
-    bool getChunk(std::string &chunk);
+    bool getChunk(WikiIndexChunk &chunk);
     IndexedObject getIndexedObject(const std::string &term) const;
     size_t size() {return indexVec.size()-1;}
 };

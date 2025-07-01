@@ -9,7 +9,11 @@
 WikiFile::WikiFile(const Index &index): file(nullptr),index(index), wikiName(index.wikiName) {
 }
 
-std::string WikiFile::decompressChunk(size_t start, int len) {
+std::string WikiFile::decompressChunk(WikiIndexChunk &chunk) {
+    return decompressChunk(chunk.startPos, chunk.endPos-chunk.startPos);
+}
+
+std::string WikiFile::decompressChunk(int64_t start, int64_t len) {
     static double max  = 1;
     fseek(file, start, SEEK_SET);
     char *buf = new char[len];
@@ -50,7 +54,14 @@ int WikiFile::open() {
         std::cerr << "Could not open file " << wikiName.wikiPath << "\n";
         return 1;
     }
+    fseek(file, 0L, SEEK_END);
+    m_size = ftell(file);
+    fseek(file, 0L, SEEK_SET);
     return 0;
+}
+
+int64_t WikiFile::filePos() {
+    return ftell(file);
 }
 
 int WikiFile::close() {

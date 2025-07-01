@@ -3,6 +3,8 @@
 #include <iostream>
 #include "Index.h"
 
+#include <cassert>
+
 Index::~Index() {
     close();
 }
@@ -22,7 +24,7 @@ int Index::readIndex() {
     }
 
     const int BufLen = 512 * 1024;
-    Bz2Liner bz2_liner(BufLen, bzfile);
+    bz2_liner = new Bz2Liner(BufLen, bzfile);
     struct stat statBuf{};
     stat(wikiName.wikiPath.c_str(), &statBuf);
     WikiIndexChunk chunk;
@@ -35,6 +37,8 @@ int Index::readIndex() {
     indexVec.push_back(chunk.endPos);
     delete chunker;
     chunker = nullptr;
+    delete bz2_liner;
+    bz2_liner = nullptr;
     int bzerror;
     BZ2_bzReadClose(&bzerror, bzfile);
     bzfile = nullptr;
@@ -43,26 +47,35 @@ int Index::readIndex() {
     return 0;
 }
 
-int Index::open(WikiFile *wikiFile) {
-    this->wikiFile = wikiFile;
-    FILE *file = fopen(wikiName.indexPath.c_str(), "rb");
+int Index::open() {
+    assert(file==nullptr && bzfile==nullptr && bz2_liner==nullptr && chunker==nullptr);
+    file = fopen(wikiName.indexPath.c_str(), "rb");
     if (!file) {
         std::cerr << "Could not open file " << wikiName.indexPath << "\n";
         return 1;
     }
 
-    BZFILE *bzfile = BZ2_bzReadOpen(nullptr, file, 0, 0, nullptr, 0);
+    bzfile = BZ2_bzReadOpen(nullptr, file, 0, 0, nullptr, 0);
     if (!bzfile) {
         std::cerr << "Could not open bz2 file\n";
         fclose(file);
         return 1;
     }
+
+    struct stat statBuf{};
+    stat(wikiName.wikiPath.c_str(), &statBuf);
+    const int BufLen = 512 * 1024;
+    bz2_liner = new Bz2Liner(BufLen, bzfile);
+    chunker = new WikiChunker(bz2_liner, statBuf.st_size);
+
     return 0;
 }
 
 void Index::close() {
     delete chunker;
     chunker = nullptr;
+    delete bz2_liner;
+    bz2_liner = nullptr;
     if (bzfile) {
         int bzerror;
         BZ2_bzReadClose(&bzerror, bzfile);
@@ -74,7 +87,8 @@ void Index::close() {
     }
 }
 
-bool Index::getChunk(std::string &chunk) {
+bool Index::getChunk(WikiIndexChunk &chunk) {
+    return chunker->getChunk(chunk);
     return false;
 }
 

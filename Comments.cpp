@@ -113,15 +113,15 @@ void Comments::searchForComments(const std::string &lang) {
     WikiName wikiName;
     wikiName.wiktName(lang);
     Index index(wikiName);
-    index.readIndex();
-    return;
     WikiFile wikiFile(index);
     wikiFile.open();
-    index.open(&wikiFile);
+    index.open();
     Xml xml;
-    for( std::string chunk; index.getChunk(chunk);) {
-        std::cout << chunk.size();
-        auto objects =  xml.allFromChunk(chunk);
+    auto fSize = wikiFile.size();
+    for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
+        auto chunkStr = wikiFile.decompressChunk(indexChunk);
+        std::cout << 100.0 * wikiFile.filePos() / fSize << std::endl;
+        auto objects =  xml.allFromChunk(chunkStr);
         for (auto &p : objects) {
             auto lines = splitLines(p.second);
             for (const auto& line : lines) {
@@ -132,4 +132,6 @@ void Comments::searchForComments(const std::string &lang) {
             }
         }
     }
+    index.close();
+    wikiFile.close();
 }

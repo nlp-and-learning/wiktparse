@@ -32,7 +32,7 @@ bool WikiChunker::getChunk(WikiIndexChunk &chunk) {
 
     std::string line;
     if (start) {
-        if (!liner.getline(line)) {
+        if (!liner->getline(line)) {
             eos = true;
             return false;
         }
@@ -42,7 +42,7 @@ bool WikiChunker::getChunk(WikiIndexChunk &chunk) {
     chunk.startPos = wikiIndexLine.startPos;
     WikiIndexLine wikiIndexLineLA;
     chunk.elems.push_back(wikiIndexLine.elem());
-    while (liner.getline(line)) {
+    while (liner->getline(line)) {
         wikiIndexLineLA = parseLine(line);
         if (wikiIndexLineLA.startPos == wikiIndexLine.startPos) {
             chunk.elems.push_back(wikiIndexLineLA.elem());

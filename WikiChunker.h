@@ -25,13 +25,13 @@ struct WikiIndexChunk {
 };
 
 class WikiChunker {
-    AbstractLiner &liner;
+    AbstractLiner *liner;
     bool eos = false;
     int64_t eosPos = 0;
     bool start = true;
     WikiIndexLine wikiIndexLine;
     static WikiIndexLine parseLine(const std::string &line);
 public :
-    WikiChunker(AbstractLiner &liner, int64_t eosPos): liner(liner), eosPos(eosPos) {}
+    WikiChunker(AbstractLiner *liner, int64_t eosPos): liner(liner), eosPos(eosPos) {}
     bool getChunk(WikiIndexChunk &chunk);
 };

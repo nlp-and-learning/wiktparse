@@ -2,8 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include "Index.h"
-#include "textUtils.h"
-#include "WikiChunker.h"
 
 Index::~Index() {
     close();
@@ -28,13 +26,15 @@ int Index::readIndex() {
     struct stat statBuf{};
     stat(wikiName.wikiPath.c_str(), &statBuf);
     WikiIndexChunk chunk;
-    WikiChunker chunker(bz2_liner, statBuf.st_size);
-    while (chunker.getChunk(chunk)) {
+    chunker = new WikiChunker(bz2_liner, statBuf.st_size);
+    while (chunker->getChunk(chunk)) {
         indexVec.push_back(chunk.startPos);
         if (indexVec.size() % 10000 == 0)
             std::cout << "." << std::flush;
     }
     indexVec.push_back(chunk.endPos);
+    delete chunker;
+    chunker = nullptr;
     int bzerror;
     BZ2_bzReadClose(&bzerror, bzfile);
     bzfile = nullptr;
@@ -61,6 +61,8 @@ int Index::open(WikiFile *wikiFile) {
 }
 
 void Index::close() {
+    delete chunker;
+    chunker = nullptr;
     if (bzfile) {
         int bzerror;
         BZ2_bzReadClose(&bzerror, bzfile);

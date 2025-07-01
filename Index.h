@@ -6,12 +6,14 @@
 #include "textUtils.h"
 #include "WikiName.h"
 #include "Bz2Liner.h"
+#include "WikiChunker.h"
 
 class WikiFile;
 
 class Index {
     FILE *file = nullptr;
     BZFILE *bzfile = nullptr;
+    WikiChunker * chunker;
 public:
     struct IndexedObject {
         int chunkIndex;

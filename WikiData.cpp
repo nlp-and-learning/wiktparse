@@ -1,9 +1,9 @@
 #include "WikiData.h"
 
-#include "Index.h"
-#include "WikiFile.h"
-#include "WikiName.h"
-#include "Xml.h"
+#include "reader/Index.h"
+#include "reader/WikiFile.h"
+#include "reader/WikiName.h"
+#include "xml/Xml.h"
 
 void WikiData::testFirstChunkWikiData() {
     WikiName wikiName;

@@ -4,8 +4,8 @@
 #include <pugixml.hpp>
 #include <sstream>
 #include <vector>
-#include "tags.h"
-#include "titles.h"
+#include "../tag/tags.h"
+#include "../titles.h"
 
 std::string Xml::termFromChunk(const std::string &term, const std::string &chunk) {
     std::string xmlStr = "<mediawiki>\n"+ chunk +"</mediawiki>\n";

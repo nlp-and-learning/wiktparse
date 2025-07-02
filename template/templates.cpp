@@ -1,7 +1,7 @@
 #include "templates.h"
 #include <iostream>
 #include "../util/textUtils.h"
-#include "../Comments.h"
+#include "../xml/Comments.h"
 
 std::vector<std::string> extractTemplates(const std::string& text) {
     std::vector<std::string> templates;

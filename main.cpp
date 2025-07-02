@@ -10,15 +10,15 @@
 #include <string_view>
 #include <sys/stat.h>
 
-#include "Comments.h"
-#include "Index.h"
-#include "tags.h"
+#include "xml/Comments.h"
+#include "reader/Index.h"
+#include "tag/tags.h"
 #include "WikiData.h"
-#include "WikiFile.h"
-#include "Xml.h"
+#include "reader/WikiFile.h"
+#include "xml/Xml.h"
 #include <nlohmann/json.hpp>
 
-#include "tagTree.h"
+#include "tag/tagTree.h"
 #include "template/Template.h"
 #include "template/TemplateParser.h"
 #include "template/templates.h"

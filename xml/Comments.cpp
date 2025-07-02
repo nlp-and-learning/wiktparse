@@ -3,13 +3,13 @@
 #include <algorithm>
 #include <iostream>
 
-#include "Index.h"
-#include "tags.h"
-#include "WikiFile.h"
+#include "../reader/Index.h"
+#include "../tag/tags.h"
+#include "../reader/WikiFile.h"
 #include "Xml.h"
 #include <sstream>
 
-#include "util/Progress.h"
+#include "../util/Progress.h"
 
 
 std::vector<std::pair<size_t, Comments::Marker>> Comments::classify_line(const std::string &line) {

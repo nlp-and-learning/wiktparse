@@ -7,22 +7,22 @@ find_package(pugixml REQUIRED)
 add_executable(${PROJECT_NAME} main.cpp liner/Bz2Liner.cpp liner/AbstractBufferedLiner.cpp
         WikiChunker.cpp
         WikiChunker.h
-        Xml.cpp
-        Xml.h
-        tags.cpp
-        tags.h
-        Index.cpp
-        Index.h
+        xml/Xml.cpp
+        xml/Xml.h
+        tag/tags.cpp
+        tag/tags.h
+        reader/Index.cpp
+        reader/Index.h
         util/textUtils.cpp
         util/textUtils.h
-        WikiFile.cpp
-        WikiFile.h
-        Comments.cpp
-        Comments.h
-        WikiName.h
+        reader/WikiFile.cpp
+        reader/WikiFile.h
+        xml/Comments.cpp
+        xml/Comments.h
+        reader/WikiName.h
         WikiData.cpp
         WikiData.h
-        WikiName.cpp
+        reader/WikiName.cpp
         template/templates.cpp
         template/templates.h
         template/Template.cpp
@@ -33,7 +33,7 @@ add_executable(${PROJECT_NAME} main.cpp liner/Bz2Liner.cpp liner/AbstractBuffere
         util/Progress.h
         titles.cpp
         titles.h
-        tagTree.cpp
-        tagTree.h)
+        tag/tagTree.cpp
+        tag/tagTree.h)
 
 target_link_libraries(${PROJECT_NAME} bz2 pugixml::pugixml)

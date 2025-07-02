@@ -3,10 +3,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "util/textUtils.h"
+#include "../util/textUtils.h"
 #include "WikiName.h"
-#include "liner/Bz2Liner.h"
-#include "WikiChunker.h"
+#include "../liner/Bz2Liner.h"
+#include "../WikiChunker.h"
 
 class Index {
     FILE *file = nullptr;

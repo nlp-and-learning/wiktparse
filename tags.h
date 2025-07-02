@@ -1,8 +1,6 @@
 #pragma once
 #include <string>
-#include <utility>
 
-enum class TitleType {Main, Translations, Thesaurus, Other};
-
-void collectAllTags();
-std::pair<TitleType,std::string> getTitleType(const std::string &title);
+int count_levelL(const std::string &line);
+int count_levelR(const std::string &line);
+std::string trim_tag(const std::string& line);

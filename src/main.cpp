@@ -22,6 +22,7 @@
 #include "template/Template.h"
 #include "template/TemplateParser.h"
 #include "template/templates.h"
+#include "util/Progress.h"
 
 using json = nlohmann::json;
 
@@ -293,40 +294,62 @@ void testTemplates() {
     std::cout << t.toWikitext(FormatStyle::Multiline) << std::endl;
 }
 
-void collectAllTags() {
+void searchForComments(const std::string &lang) {
     WikiName wikiName;
-    wikiName.wiktName("en");
+    wikiName.wiktName(lang);
     Index index(wikiName);
-    index.readIndex();
     WikiFile wikiFile(index);
     wikiFile.open();
-    std::set<std::string> allTags;
-    int onePercent = index.size() / 100;
+    index.open();
     Xml xml;
-    for (int i=0; i<index.size(); i++) {
-        if (i % onePercent  == 0)
-            std::cout << i/onePercent << "%" << std::endl;
-        auto chunkStr = wikiFile.decompressChunkByIndex(i);
+    Progress progress(wikiFile.size());
+    for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
+        auto chunkStr = wikiFile.decompressChunk(indexChunk);
+        progress.update(wikiFile.filePos());
         auto objects =  xml.allFromChunk(chunkStr);
         for (auto &p : objects) {
             auto lines = splitLines(p.second);
             for (const auto& line : lines) {
                 auto trimmed = trim(line);
-                if (trimmed.empty())
-                    continue;
-                if (trimmed[0] == '=') {
-                    if (count_levelL(trimmed)!=count_levelR(trimmed))
-                        std::cout << p.first << " : " << trimmed << std::endl;
-                    allTags.insert(trimmed);
+                if (trimmed.find("<!--")!=std::string::npos) {
+                    std::cout << p.first << " : " << trimmed << std::endl;
                 }
             }
         }
     }
+    index.close();
+    wikiFile.close();
+}
+
+void collectAllTags() {
+    WikiName wikiName;
+    wikiName.wiktName("en");
+    Index index(wikiName);
+    WikiFile wikiFile(index);
+    wikiFile.open();
+    index.open();
+    std::set<std::string> allTags;
+    Xml xml;
+    Progress progress(wikiFile.size());
+    for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
+        auto chunkStr = wikiFile.decompressChunk(indexChunk);
+        progress.update(wikiFile.filePos());
+        auto objects =  xml.allFromChunk(chunkStr);
+        for (auto &p : objects) {
+            auto lines = splitLines(p.second);
+            for (const auto& line : lines) {
+                if (count_levelL(line)>1) {
+                    allTags.insert(trim_tag(trim(line)));
+                }
+            }
+        }
+    }
+    index.close();
     wikiFile.close();
     saveToFile(allTags, "alltags.txt");
 }
 
 
 int main() {
-    Comments::searchForComments("pl");
+    collectAllTags();
 }

@@ -110,30 +110,3 @@ std::string Comments::clean(const std::string &input) {
         }
         return out.str();
 }
-
-void Comments::searchForComments(const std::string &lang) {
-    WikiName wikiName;
-    wikiName.wiktName(lang);
-    Index index(wikiName);
-    WikiFile wikiFile(index);
-    wikiFile.open();
-    index.open();
-    Xml xml;
-    Progress progress(wikiFile.size());
-    for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
-        auto chunkStr = wikiFile.decompressChunk(indexChunk);
-        progress.update(wikiFile.filePos());
-        auto objects =  xml.allFromChunk(chunkStr);
-        for (auto &p : objects) {
-            auto lines = splitLines(p.second);
-            for (const auto& line : lines) {
-                auto trimmed = trim(line);
-                if (trimmed.find("<!--")!=std::string::npos) {
-                    std::cout << p.first << " : " << trimmed << std::endl;
-                }
-            }
-        }
-    }
-    index.close();
-    wikiFile.close();
-}

@@ -3,7 +3,7 @@
 #include <cassert>
 
 std::string WikiName::wikiNameToIndexName(const fs::path &wikiPath) {
-    auto dir = wikiPath.parent_path();     // ../dumpWD
+    auto dir = wikiPath.parent_path();
     auto wikiName = wikiPath.filename().string();
     auto pos = wikiName.find("multistream");
     if (pos == std::string::npos) {
@@ -35,22 +35,24 @@ std::string WikiName::readDate(const fs::path &dir) {
 }
 
 void WikiName::wiktName(const std::string &lang) {
-    std::string date = readDate("../dump");
-    indexPath = "../dump/" + lang + "wiktionary-"+ date+ "-pages-articles-multistream-index.txt.bz2";
-    wikiPath= "../dump/" + lang + "wiktionary-"+ date+ "-pages-articles-multistream.xml.bz2";
+    fs::path wiktDir = "../dump/Wiktionary";
+    std::string date = readDate(wiktDir);
+    indexPath = wiktDir /  (lang + "wiktionary-"+ date+ "-pages-articles-multistream-index.txt.bz2");
+    wikiPath = wiktDir /  (lang + "wiktionary-"+ date+ "-pages-articles-multistream.xml.bz2");
 }
 
 void WikiName::wikiName(const std::string &lang) {
-    std::string date = readDate("../dumpWP");
-    wikiPath = "../dumpWP/" + lang + "wiki-" + date + "-pages-articles-multistream.xml.bz2";
-    indexPath = "../dumpWP/" + lang + "wiki-" + date + "-pages-articles-multistream-index.txt.bz2";
+    fs::path wikiDir = "../dump/Wikipedia";
+    std::string date = readDate(wikiDir);
+    wikiPath = wikiDir / (lang + "wiki-" + date + "-pages-articles-multistream.xml.bz2");
+    indexPath = wikiDir / (lang + "wiki-" + date + "-pages-articles-multistream-index.txt.bz2");
 }
 
 void WikiName::wikiDataList() {
     const std::regex pattern(
         R"(wikidatawiki-.*-pages-articles-multistream.*\.xml-p(\d+)p\d+\.bz2$)");
 
-    fs::path directory("../dumpWD");
+    fs::path directory("../dump/Wikidata");
 
     std::vector<std::pair<uint64_t, fs::path>> matched_files;
 

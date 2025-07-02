@@ -4,7 +4,7 @@ project(wiktparse)
 set(CMAKE_CXX_STANDARD 20)
 find_package(pugixml REQUIRED)
 
-add_executable(${PROJECT_NAME} main.cpp Bz2Liner.cpp AbstractBufferedLiner.cpp
+add_executable(${PROJECT_NAME} main.cpp liner/Bz2Liner.cpp liner/AbstractBufferedLiner.cpp
         WikiChunker.cpp
         WikiChunker.h
         Xml.cpp
@@ -13,8 +13,8 @@ add_executable(${PROJECT_NAME} main.cpp Bz2Liner.cpp AbstractBufferedLiner.cpp
         tags.h
         Index.cpp
         Index.h
-        textUtils.cpp
-        textUtils.h
+        util/textUtils.cpp
+        util/textUtils.h
         WikiFile.cpp
         WikiFile.h
         Comments.cpp
@@ -23,14 +23,14 @@ add_executable(${PROJECT_NAME} main.cpp Bz2Liner.cpp AbstractBufferedLiner.cpp
         WikiData.cpp
         WikiData.h
         WikiName.cpp
-        Templates.cpp
-        Templates.h
-        Template.cpp
-        Template.h
-        TemplateParser.cpp
-        TemplateParser.h
-        Progress.cpp
-        Progress.h
+        template/templates.cpp
+        template/templates.h
+        template/Template.cpp
+        template/Template.h
+        template/TemplateParser.cpp
+        template/TemplateParser.h
+        util/Progress.cpp
+        util/Progress.h
         titles.cpp
         titles.h
         tagTree.cpp

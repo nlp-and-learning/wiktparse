@@ -3,9 +3,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "textUtils.h"
+#include "util/textUtils.h"
 #include "WikiName.h"
-#include "Bz2Liner.h"
+#include "liner/Bz2Liner.h"
 #include "WikiChunker.h"
 
 class Index {

@@ -8,7 +8,7 @@
 #include <cstring>
 #include <format>
 
-#include "textUtils.h"
+#include "util/textUtils.h"
 
 namespace fs = std::filesystem;
 

@@ -19,9 +19,9 @@
 #include <nlohmann/json.hpp>
 
 #include "tagTree.h"
-#include "Template.h"
-#include "TemplateParser.h"
-#include "Templates.h"
+#include "template/Template.h"
+#include "template/TemplateParser.h"
+#include "template/templates.h"
 
 using json = nlohmann::json;
 

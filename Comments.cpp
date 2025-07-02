@@ -9,7 +9,7 @@
 #include "Xml.h"
 #include <sstream>
 
-#include "Progress.h"
+#include "util/Progress.h"
 
 
 std::vector<std::pair<size_t, Comments::Marker>> Comments::classify_line(const std::string &line) {

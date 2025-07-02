@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "Bz2Liner.h"
+#include "liner/Bz2Liner.h"
 #include "Xml.h"
 
 WikiFile::WikiFile(const Index &index): file(nullptr),index(index), wikiName(index.wikiName) {

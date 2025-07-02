@@ -41,9 +41,9 @@ void WikiName::wiktName(const std::string &lang) {
 }
 
 void WikiName::wikiName(const std::string &lang) {
-    std::string date = readDate("../wikidump");
-    wikiPath = "../wikidump/" + lang + "wiki-" + date + "-pages-articles-multistream.xml.bz2";
-    indexPath = "../wikidump/" + lang + "wiki-" + date + "-pages-articles-multistream-index.txt.bz2";
+    std::string date = readDate("../dumpWP");
+    wikiPath = "../dumpWP/" + lang + "wiki-" + date + "-pages-articles-multistream.xml.bz2";
+    indexPath = "../dumpWP/" + lang + "wiki-" + date + "-pages-articles-multistream-index.txt.bz2";
 }
 
 void WikiName::wikiDataList() {

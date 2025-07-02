@@ -3,7 +3,7 @@
 #include <fstream>
 #include <vector>
 
-#include "AbstractLiner.h"
+#include "liner/AbstractLiner.h"
 
 struct WikiIndexElem {
     int64_t id;

@@ -18,6 +18,7 @@
 #include "Xml.h"
 #include <nlohmann/json.hpp>
 
+#include "tagTree.h"
 #include "Template.h"
 #include "TemplateParser.h"
 #include "Templates.h"
@@ -53,6 +54,34 @@ void createPages() {
         }
         wikiFile.close();
     }
+}
+
+void processPagetoTree(const fs::path& inputPath, const fs::path& outputPath) {
+    std::ifstream in(inputPath);
+    if (!in) {
+        std::cerr << "can't open " + inputPath.string() + "\n";
+        return;
+    }
+    auto root = parseIndentedTree(in);
+    std::ofstream out(outputPath);
+    printTree(root, out);
+}
+
+void createTreeForPages() {
+    fs::path root = "../pages";
+    if (!fs::exists(root) || !fs::is_directory(root)) {
+        std::cerr << "is not directory: " << root << "\n";
+        return;
+    }
+    for (const auto& entry : fs::recursive_directory_iterator(root)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".page") {
+            fs::path new_path = entry.path();
+            new_path.replace_extension(".tree");
+            std::cout << new_path << "\n";
+            processPagetoTree(entry.path(), new_path);
+        }
+    }
+
 }
 
 void createPagesWiki() {

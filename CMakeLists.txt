@@ -32,6 +32,8 @@ add_executable(${PROJECT_NAME} main.cpp Bz2Liner.cpp AbstractBufferedLiner.cpp
         Progress.cpp
         Progress.h
         titles.cpp
-        titles.h)
+        titles.h
+        tagTree.cpp
+        tagTree.h)
 
 target_link_libraries(${PROJECT_NAME} bz2 pugixml::pugixml)

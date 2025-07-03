@@ -23,6 +23,7 @@
 #include "template/TemplateParser.h"
 #include "template/templates.h"
 #include "util/Progress.h"
+#include "util/structs.h"
 
 using json = nlohmann::json;
 
@@ -328,7 +329,7 @@ void collectAllTags() {
     WikiFile wikiFile(index);
     wikiFile.open();
     index.open();
-    std::set<std::string> allTags;
+    LimitedListMap<string,string> allTags;
     Xml xml;
     Progress progress(wikiFile.size());
     for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
@@ -339,16 +340,18 @@ void collectAllTags() {
             auto lines = splitLines(p.second);
             for (const auto& line : lines) {
                 if (count_levelL(line)>1) {
-                    allTags.insert(trim_tag(trim(line)));
+                    auto tag = trim_tag(trim(line));
+                    allTags.add(tag,p.first);
                 }
             }
         }
     }
     index.close();
     wikiFile.close();
-    saveToFile(allTags, "alltags.txt");
+    std::ofstream out("allTagsWhere.txt");
+    if (!out) throw std::runtime_error("Cannot open file");
+    allTags.print(out);
 }
-
 
 int main() {
     collectAllTags();

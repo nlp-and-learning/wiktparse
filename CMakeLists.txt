@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/titles.cpp
         src/titles.h
         src/tag/tagTree.cpp
-        src/tag/tagTree.h)
+        src/tag/tagTree.h
+        src/util/structs.h)
 
 target_link_libraries(${PROJECT_NAME} bz2 pugixml::pugixml)

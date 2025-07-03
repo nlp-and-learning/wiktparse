@@ -10,7 +10,7 @@ void TemplateParser::skipWhitespace(const std::string& text, size_t& pos) {
     while (pos < text.size() && std::isspace(text[pos])) ++pos;
 }
 
-ParserFunction TemplateParser::parseParserFunction(const std::string& text, size_t& pos) {
+std::unique_ptr<ParserFunction>  TemplateParser::parseParserFunction(const std::string& text, size_t& pos) {
     if (text.compare(pos, 3, "{{#") != 0)
         throw std::runtime_error("Expected parser function at pos " + std::to_string(pos));
     pos += 3;
@@ -24,22 +24,20 @@ ParserFunction TemplateParser::parseParserFunction(const std::string& text, size
         throw std::runtime_error("Missing ':' after parser function name");
     ++pos;
 
-    ParserFunction func;
-    func.functionName = fname.str();
-
+    auto func = std::make_unique<ParserFunction>();
+    func->functionName = fname.str();
     while (pos < text.size()) {
         if (text.compare(pos, 2, "}}") == 0) {
             pos += 2;
             break;
         }
         if (text[pos] == '|') ++pos;
-        func.arguments.push_back(parseTemplateValue(text, pos));
+        func->arguments.push_back(parseCompositeText(text, pos, true));
     }
-
     return func;
 }
 
-Template TemplateParser::parseTemplate(const std::string& text, size_t& pos) {
+ std::unique_ptr<Template>  TemplateParser::parseTemplate(const std::string& text, size_t& pos) {
     if (text.compare(pos, 2, "{{") != 0)
         throw std::runtime_error("Expected {{ at pos " + std::to_string(pos));
     pos += 2;
@@ -54,8 +52,8 @@ Template TemplateParser::parseTemplate(const std::string& text, size_t& pos) {
         name << text[pos++];
     }
 
-    Template tmpl;
-    tmpl.name = name.str();
+    auto tmpl = std::make_unique<Template>();
+    tmpl->name = name.str();
 
     while (pos < text.size()) {
         skipWhitespace(text, pos);
@@ -69,33 +67,18 @@ Template TemplateParser::parseTemplate(const std::string& text, size_t& pos) {
         size_t eq = text.find('=', pos);
         size_t nextSep = text.find_first_of("|{", pos);
 
+        std::optional<std::string> optKey;;
         if (eq != std::string::npos && eq < nextSep) {
             size_t spacePos = eq;
             while (spacePos>0 && text[spacePos-1] == ' ') spacePos--;
             std::string key = text.substr(pos, spacePos - pos);
             pos = eq + 1;
             skipWhitespace(text, pos);
-            tmpl.parameters.emplace_back(key, parseTemplateValue(text, pos));
+            optKey = key;
         } else {
-            tmpl.parameters.emplace_back(std::nullopt, parseTemplateValue(text, pos));
+            optKey = std::nullopt;
         }
+        tmpl->parameters.emplace_back(optKey, parseCompositeText(text, pos, true));
     }
     return tmpl;
-}
-
-std::unique_ptr<TemplateValue> TemplateParser::parseTemplateValue(const std::string& text, size_t& pos) {
-    if (text.compare(pos, 3, "{{#") == 0) {
-        return std::make_unique<ParserFunction>(parseParserFunction(text, pos));
-    }
-    if (text.compare(pos, 2, "{{") == 0) {
-        return std::make_unique<Template>(parseTemplate(text, pos));
-    }
-
-    std::ostringstream val;
-    while (pos < text.size()) {
-        if (text.compare(pos, 2, "{{") == 0 || text.compare(pos, 2, "}}") == 0 || text[pos] == '|')
-            break;
-        val << text[pos++];
-    }
-    return std::make_unique<RawText>(trimRight(val.str()));
 }

@@ -20,6 +20,7 @@
 
 #include "tag/tagTree.h"
 #include "template/Template.h"
+#include "template/text.h"
 #include "template/TemplateParser.h"
 #include "template/templates.h"
 #include "util/Progress.h"
@@ -273,7 +274,6 @@ void splitWikiDataResult() {
 }
 
 
-
 void testTemplates() {
     const fs::path& dir = "../pages";
     std::vector<fs::path> pagesFiles;
@@ -290,9 +290,9 @@ void testTemplates() {
 
     std::string input = "{{Infobox person|name=John|birth={{birth date|1990|1|1}}|known={{#if:1|Author|Unknown}}}}";
     size_t pos = 0;
-    Template t = TemplateParser::parseTemplate(input, pos);
-    std::cout << t.toWikitext() << std::endl;
-    std::cout << t.toWikitext(FormatStyle::Multiline) << std::endl;
+    auto t = TemplateParser::parseTemplate(input, pos);
+    std::cout << t->toWikitext(FormatStyle::Compact) << std::endl;
+    std::cout << t->toWikitext(FormatStyle::Multiline) << std::endl;
 }
 
 void wikipediaInfoboxes(){
@@ -308,10 +308,8 @@ void wikipediaInfoboxes(){
         auto templates = extractTemplatesFromFile(path);
         for (auto &tstr: templates) {
             size_t pos = 0;
-            Template t = TemplateParser::parseTemplate(tstr, pos);
-            if (t.name == "Infobox language") {
-                cout << t.toWikitext() << std::endl;
-            }
+            auto t = TemplateParser::parseTemplate(tstr, pos);
+            cout << t->toWikitext(FormatStyle::Compact) << std::endl;
         }
     }
 

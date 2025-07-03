@@ -4,40 +4,24 @@
 #include <memory>
 #include <optional>
 
-enum class FormatStyle {
-    Compact,   // {{name|a|b|c}}
-    Multiline  // {{name\n|a\n|b\n|c\n}}
-};
+#include "text.h"
 
-struct TemplateValue {
-    [[nodiscard]] virtual std::string toWikitext(FormatStyle style = FormatStyle::Compact) const = 0;
-    virtual ~TemplateValue() = default;
-};
-
-struct RawText : TemplateValue {
-    std::string text;
-    explicit RawText(std::string t) : text(std::move(t)) {}
-    [[nodiscard]] std::string toWikitext(FormatStyle style = FormatStyle::Compact) const override { return text; }
-};
-
-struct ParserFunction : TemplateValue {
+struct ParserFunction: TextFragment {
     std::string functionName;
-    std::vector<std::unique_ptr<TemplateValue>> arguments;
-    [[nodiscard]] std::string toWikitext(FormatStyle style = FormatStyle::Compact) const override;
+    std::vector<std::unique_ptr<CompositeText>> arguments;
+    [[nodiscard]] std::string toWikitext(FormatStyle style) const;
 };
 
 struct TemplateParameter {
     std::optional<std::string> name; // nullopt = pozycyjny
-    std::unique_ptr<TemplateValue> value;
-    TemplateParameter(std::optional<std::string> name, std::unique_ptr<TemplateValue> value)
+    std::unique_ptr<CompositeText> value;
+    TemplateParameter(std::optional<std::string> name, std::unique_ptr<CompositeText> value)
         : name(std::move(name)), value(std::move(value)) {}
-    std::string toWikitext(FormatStyle style = FormatStyle::Compact) const;
+    std::string toWikitext(FormatStyle style) const;
 };
 
-struct Template : TemplateValue {
+struct Template: TextFragment {
     std::string name;
     std::vector<TemplateParameter> parameters;
-    std::string toWikitext(FormatStyle style = FormatStyle::Compact) const override;
+    std::string toWikitext(FormatStyle style) const;
 };
-
-std::unique_ptr<TemplateValue> parseTemplateValue(const std::string& text, size_t& pos);

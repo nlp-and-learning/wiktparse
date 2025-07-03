@@ -295,6 +295,28 @@ void testTemplates() {
     std::cout << t.toWikitext(FormatStyle::Multiline) << std::endl;
 }
 
+void wikipediaInfoboxes(){
+    const fs::path& dir = "../pages";
+    std::vector<fs::path> pagesFiles;
+
+    for (const auto& entry : fs::recursive_directory_iterator(dir)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".page") {
+            pagesFiles.push_back(entry.path());
+        }
+    }
+    for (const auto& path : pagesFiles) {
+        auto templates = extractTemplatesFromFile(path);
+        for (auto &tstr: templates) {
+            size_t pos = 0;
+            Template t = TemplateParser::parseTemplate(tstr, pos);
+            if (t.name == "Infobox language") {
+                cout << t.toWikitext() << std::endl;
+            }
+        }
+    }
+
+}
+
 void searchForComments(const std::string &lang) {
     WikiName wikiName;
     wikiName.wiktName(lang);
@@ -354,5 +376,5 @@ void collectAllTags() {
 }
 
 int main() {
-    collectAllTags();
+    wikipediaInfoboxes();
 }

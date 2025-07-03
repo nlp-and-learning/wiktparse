@@ -14,7 +14,7 @@ std::string trimLeft(const std::string& str)
 
 std::string trimRight(const std::string& str)
 {
-    const auto strEnd = str.find_last_not_of(" \t\r");
+    const auto strEnd = str.find_last_not_of(" \t\r\n");
     if (strEnd == std::string::npos)
         return ""; // no content
     return str.substr(0, strEnd + 1);

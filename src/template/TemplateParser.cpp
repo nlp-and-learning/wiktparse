@@ -4,6 +4,7 @@
 #include <string>
 
 #include "Template.h"
+#include "../util/textUtils.h"
 
 void TemplateParser::skipWhitespace(const std::string& text, size_t& pos) {
     while (pos < text.size() && std::isspace(text[pos])) ++pos;
@@ -45,8 +46,13 @@ Template TemplateParser::parseTemplate(const std::string& text, size_t& pos) {
     skipWhitespace(text, pos);
 
     std::ostringstream name;
-    while (pos < text.size() && text[pos] != '|' && text.compare(pos, 2, "}}") != 0)
+    while (pos < text.size() &&
+       text[pos] != '|' &&
+       text[pos] != '\n' &&
+       text.compare(pos, 2, "}}") != 0)
+    {
         name << text[pos++];
+    }
 
     Template tmpl;
     tmpl.name = name.str();
@@ -59,11 +65,14 @@ Template TemplateParser::parseTemplate(const std::string& text, size_t& pos) {
         }
         if (text[pos] == '|') ++pos;
 
+        skipWhitespace(text, pos);
         size_t eq = text.find('=', pos);
         size_t nextSep = text.find_first_of("|{", pos);
 
         if (eq != std::string::npos && eq < nextSep) {
-            std::string key = text.substr(pos, eq - pos);
+            size_t spacePos = eq;
+            while (spacePos>0 && text[spacePos-1] == ' ') spacePos--;
+            std::string key = text.substr(pos, spacePos - pos);
             pos = eq + 1;
             skipWhitespace(text, pos);
             tmpl.parameters.emplace_back(key, parseTemplateValue(text, pos));
@@ -88,5 +97,5 @@ std::unique_ptr<TemplateValue> TemplateParser::parseTemplateValue(const std::str
             break;
         val << text[pos++];
     }
-    return std::make_unique<RawText>(val.str());
+    return std::make_unique<RawText>(trimRight(val.str()));
 }

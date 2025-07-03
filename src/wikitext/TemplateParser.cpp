@@ -65,7 +65,7 @@ std::unique_ptr<ParserFunction>  TemplateParser::parseParserFunction(const std::
 
         skipWhitespace(text, pos);
         size_t eq = text.find('=', pos);
-        size_t nextSep = text.find_first_of("|{", pos);
+        size_t nextSep = text.find_first_of("|{\n", pos);
 
         std::optional<std::string> optKey;;
         if (eq != std::string::npos && eq < nextSep) {

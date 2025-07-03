@@ -19,10 +19,10 @@
 #include <nlohmann/json.hpp>
 
 #include "tag/tagTree.h"
-#include "template/Template.h"
-#include "template/text.h"
-#include "template/TemplateParser.h"
-#include "template/templates.h"
+#include "wikitext/Template.h"
+#include "wikitext/text.h"
+#include "wikitext/TemplateParser.h"
+#include "wikitext/templates.h"
 #include "util/Progress.h"
 #include "util/structs.h"
 

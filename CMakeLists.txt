@@ -23,12 +23,12 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/WikiData.cpp
         src/WikiData.h
         src/reader/WikiName.cpp
-        src/template/templates.cpp
-        src/template/templates.h
-        src/template/Template.cpp
-        src/template/Template.h
-        src/template/TemplateParser.cpp
-        src/template/TemplateParser.h
+        src/wikitext/templates.cpp
+        src/wikitext/templates.h
+        src/wikitext/Template.cpp
+        src/wikitext/Template.h
+        src/wikitext/TemplateParser.cpp
+        src/wikitext/TemplateParser.h
         src/util/Progress.cpp
         src/util/Progress.h
         src/titles.cpp
@@ -36,7 +36,7 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/tag/tagTree.cpp
         src/tag/tagTree.h
         src/util/structs.h
-        src/template/text.h
-        src/template/text.cpp)
+        src/wikitext/text.h
+        src/wikitext/text.cpp)
 
 target_link_libraries(${PROJECT_NAME} bz2 pugixml::pugixml)

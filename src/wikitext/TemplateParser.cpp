@@ -37,23 +37,26 @@ std::unique_ptr<ParserFunction>  TemplateParser::parseParserFunction(const std::
     return func;
 }
 
+std::string TemplateParser::parseName(const std::string &text, size_t &pos) {
+    std::ostringstream name;
+    while (pos < text.size() &&
+           text[pos] != '|' &&
+           text[pos] != '\n' &&
+           text.compare(pos, 2, "}}") != 0)
+    {
+        name << text[pos++];
+    }
+    return name.str();
+}
+
  std::unique_ptr<Template>  TemplateParser::parseTemplate(const std::string& text, size_t& pos) {
     if (text.compare(pos, 2, "{{") != 0)
         throw std::runtime_error("Expected {{ at pos " + std::to_string(pos));
     pos += 2;
     skipWhitespace(text, pos);
 
-    std::ostringstream name;
-    while (pos < text.size() &&
-       text[pos] != '|' &&
-       text[pos] != '\n' &&
-       text.compare(pos, 2, "}}") != 0)
-    {
-        name << text[pos++];
-    }
-
     auto tmpl = std::make_unique<Template>();
-    tmpl->name = name.str();
+    tmpl->name = parseName(text, pos);
 
     while (pos < text.size()) {
         skipWhitespace(text, pos);
@@ -67,7 +70,7 @@ std::unique_ptr<ParserFunction>  TemplateParser::parseParserFunction(const std::
         size_t eq = text.find('=', pos);
         size_t nextSep = text.find_first_of("|{\n", pos);
 
-        std::optional<std::string> optKey;;
+        std::optional<std::string> optKey;
         if (eq != std::string::npos && eq < nextSep) {
             size_t spacePos = eq;
             while (spacePos>0 && text[spacePos-1] == ' ') spacePos--;

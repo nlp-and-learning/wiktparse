@@ -1,16 +1,16 @@
-#include "TemplateParser.h"
+#include "old_TemplateParser.h"
 
 #include <sstream>
 #include <string>
 
-#include "Template.h"
+#include "old_Template.h"
 #include "../util/textUtils.h"
 
-void TemplateParser::skipWhitespace(const std::string& text, size_t& pos) {
+void old_TemplateParser::skipWhitespace(const std::string& text, size_t& pos) {
     while (pos < text.size() && std::isspace(text[pos])) ++pos;
 }
 
-std::unique_ptr<ParserFunction>  TemplateParser::parseParserFunction(const std::string& text, size_t& pos) {
+std::unique_ptr<old_ParserFunction>  old_TemplateParser::parseParserFunction(const std::string& text, size_t& pos) {
     if (text.compare(pos, 3, "{{#") != 0)
         throw std::runtime_error("Expected parser function at pos " + std::to_string(pos));
     pos += 3;
@@ -24,7 +24,7 @@ std::unique_ptr<ParserFunction>  TemplateParser::parseParserFunction(const std::
         throw std::runtime_error("Missing ':' after parser function name");
     ++pos;
 
-    auto func = std::make_unique<ParserFunction>();
+    auto func = std::make_unique<old_ParserFunction>();
     func->functionName = fname.str();
     while (pos < text.size()) {
         if (text.compare(pos, 2, "}}") == 0) {
@@ -37,7 +37,7 @@ std::unique_ptr<ParserFunction>  TemplateParser::parseParserFunction(const std::
     return func;
 }
 
-std::string TemplateParser::parseName(const std::string &text, size_t &pos) {
+std::string old_TemplateParser::parseName(const std::string &text, size_t &pos) {
     std::ostringstream name;
     while (pos < text.size() &&
            text[pos] != '|' &&
@@ -49,13 +49,13 @@ std::string TemplateParser::parseName(const std::string &text, size_t &pos) {
     return name.str();
 }
 
- std::unique_ptr<Template>  TemplateParser::parseTemplate(const std::string& text, size_t& pos) {
+ std::unique_ptr<old_Template>  old_TemplateParser::parseTemplate(const std::string& text, size_t& pos) {
     if (text.compare(pos, 2, "{{") != 0)
         throw std::runtime_error("Expected {{ at pos " + std::to_string(pos));
     pos += 2;
     skipWhitespace(text, pos);
 
-    auto tmpl = std::make_unique<Template>();
+    auto tmpl = std::make_unique<old_Template>();
     tmpl->name = parseName(text, pos);
 
     while (pos < text.size()) {

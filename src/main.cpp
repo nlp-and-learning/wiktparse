@@ -19,9 +19,9 @@
 #include <nlohmann/json.hpp>
 
 #include "tag/tagTree.h"
-#include "wikitext/Template.h"
-#include "wikitext/text.h"
-#include "wikitext/TemplateParser.h"
+#include "wikitext/old_Template.h"
+#include "wikitext/old_text.h"
+#include "wikitext/old_TemplateParser.h"
 #include "wikitext/templates.h"
 #include "util/Progress.h"
 #include "util/structs.h"
@@ -297,7 +297,7 @@ void testTemplates() {
 
     std::string input = "{{Infobox person|name=John|birth={{birth date|1990|1|1}}|known={{#if:1|Author|Unknown}}}}";
     size_t pos = 0;
-    auto t = TemplateParser::parseTemplate(input, pos);
+    auto t = old_TemplateParser::parseTemplate(input, pos);
     std::cout << t->toWikitext(FormatStyle::Compact) << std::endl;
     std::cout << t->toWikitext(FormatStyle::Multiline) << std::endl;
 }
@@ -320,7 +320,7 @@ void wikipediaInfoboxes() {
             for (auto &tstr: templates) {
                 size_t pos = 0;
                 cout << format("parseTemplate {} {}\n",p.first, tstr);
-                auto t = TemplateParser::parseTemplate(tstr, pos);
+                auto t = old_TemplateParser::parseTemplate(tstr, pos);
                 auto name = trim(t->name);
                 if (name == "Infobox language")
                     cout << format("{}\n",p.first);
@@ -345,7 +345,7 @@ void pagesInfoboxes() {
         for (auto &tstr: templates) {
             size_t pos = 0;
             cout << format("parse: {}\n",tstr) << flush;
-            auto t = TemplateParser::parseTemplate(tstr, pos);
+            auto t = old_TemplateParser::parseTemplate(tstr, pos);
             cout << t->toWikitext(FormatStyle::Compact) << std::endl;
         }
     }

@@ -1,9 +1,9 @@
-#include "text.h"
+#include "old_text.h"
 
 #include <format>
 #include <iostream>
 
-#include "TemplateParser.h"
+#include "old_TemplateParser.h"
 
 std::unique_ptr<WikiLink> parseWikiLink(const std::string& text, size_t& pos) {
     if (text.compare(pos, 2, "[[") != 0)
@@ -75,9 +75,9 @@ std::unique_ptr<TextFragment> parseCompositeText(const std::string& text, size_t
         }
         switch (startFragment) {
             case StartFragment::Function:
-                composite->parts.push_back(TemplateParser::parseParserFunction(text, pos));break;
+                composite->parts.push_back(old_TemplateParser::parseParserFunction(text, pos));break;
             case StartFragment::Template:
-                composite->parts.push_back(TemplateParser::parseTemplate(text, pos));break;
+                composite->parts.push_back(old_TemplateParser::parseTemplate(text, pos));break;
             case StartFragment::WikiLink:
                 composite->parts.push_back(parseWikiLink(text, pos));break;
             default:buffer << text[pos++];

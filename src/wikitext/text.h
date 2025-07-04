@@ -38,9 +38,9 @@ struct WikiLink : TextFragment {
     }
 };
 
-struct CompositeText {
+struct CompositeText : TextFragment {
     std::vector<std::unique_ptr<TextFragment>> parts;
-    [[nodiscard]] std::string toWikitext(FormatStyle style) const {
+    [[nodiscard]] std::string toWikitext(FormatStyle style) const override{
         std::string out;
         for (const auto& p : parts)
             out += p->toWikitext(style);
@@ -49,4 +49,4 @@ struct CompositeText {
 };
 
 std::unique_ptr<WikiLink> parseWikiLink(const std::string& text, size_t& pos);
-std::unique_ptr<CompositeText> parseCompositeText(const std::string& text, size_t& pos, bool insideParam=false);
+std::unique_ptr<TextFragment> parseCompositeText(const std::string& text, size_t& pos, bool insideParam=false);

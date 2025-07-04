@@ -1,5 +1,8 @@
 #include "text.h"
 
+#include <format>
+#include <iostream>
+
 #include "TemplateParser.h"
 
 std::unique_ptr<WikiLink> parseWikiLink(const std::string& text, size_t& pos) {
@@ -55,7 +58,7 @@ StartFragment getStartFragment(const std::string& text, size_t& pos) {
     return StartFragment::Plain;
 }
 
-std::unique_ptr<CompositeText> parseCompositeText(const std::string& text, size_t& pos, bool insideParam) {
+std::unique_ptr<TextFragment> parseCompositeText(const std::string& text, size_t& pos, bool insideParam) {
     auto composite = std::make_unique<CompositeText>();
     std::ostringstream buffer;
     while (pos < text.size()) {
@@ -82,5 +85,10 @@ std::unique_ptr<CompositeText> parseCompositeText(const std::string& text, size_
     }
     if (!buffer.str().empty())
         composite->parts.push_back(std::make_unique<PlainText>(buffer.str()));
-    return composite;
+    if (composite->parts.empty())
+        return std::make_unique<PlainText>("");
+    else if (composite->parts.size() == 1)
+        return std::move(composite->parts[0]);
+    else
+        return composite;
 }

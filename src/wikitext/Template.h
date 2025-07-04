@@ -8,14 +8,14 @@
 
 struct ParserFunction: TextFragment {
     std::string functionName;
-    std::vector<std::unique_ptr<CompositeText>> arguments;
+    std::vector<std::unique_ptr<TextFragment>> arguments;
     [[nodiscard]] std::string toWikitext(FormatStyle style) const;
 };
 
 struct TemplateParameter {
     std::optional<std::string> name; // nullopt = pozycyjny
-    std::unique_ptr<CompositeText> value;
-    TemplateParameter(std::optional<std::string> name, std::unique_ptr<CompositeText> value)
+    std::unique_ptr<TextFragment> value;
+    TemplateParameter(std::optional<std::string> name, std::unique_ptr<TextFragment> value)
         : name(std::move(name)), value(std::move(value)) {}
     std::string toWikitext(FormatStyle style) const;
 };

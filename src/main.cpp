@@ -12,13 +12,13 @@
 
 #include "xml/Comments.h"
 #include "reader/Index.h"
-#include "tag/headers.h"
+#include "headers/headers.h"
 #include "WikiData.h"
 #include "reader/WikiFile.h"
 #include "xml/Xml.h"
 #include <nlohmann/json.hpp>
 
-#include "tag/headerTree.h"
+#include "headers/headerTree.h"
 #include "wikitext/old_Template.h"
 #include "wikitext/old_text.h"
 #include "wikitext/old_TemplateParser.h"

@@ -12,8 +12,8 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/WikiChunker.h
         src/xml/Xml.cpp
         src/xml/Xml.h
-        src/tag/headers.cpp
-        src/tag/headers.h
+        src/headers/headers.cpp
+        src/headers/headers.h
         src/reader/Index.cpp
         src/reader/Index.h
         src/util/textUtils.cpp
@@ -36,8 +36,8 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/util/Progress.h
         src/titles.cpp
         src/titles.h
-        src/tag/headerTree.cpp
-        src/tag/headerTree.h
+        src/headers/headerTree.cpp
+        src/headers/headerTree.h
         src/util/structs.h
         src/wikitext/old_text.h
         src/wikitext/old_text.cpp)

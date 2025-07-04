@@ -3,27 +3,32 @@
 #include "TemplateParser.h"
 
 std::unique_ptr<WikiLink> parseWikiLink(const std::string& text, size_t& pos) {
-    size_t start = pos;
+    if (text.compare(pos, 2, "[[") != 0)
+        throw std::runtime_error("Expected [[ at pos " + std::to_string(pos));
+
     pos += 2;
-    std::ostringstream target, display;
-    bool hasPipe = false;
+    std::ostringstream current;
+    auto link = std::make_unique<WikiLink>();
+
     while (pos < text.size()) {
         if (text.compare(pos, 2, "]]") == 0) {
+            if (link->target.empty())
+                link->target = current.str();
+            else
+                link->parameters.push_back(current.str());
             pos += 2;
             break;
-        }
-        if (text[pos] == '|' && !hasPipe) {
-            hasPipe = true;
+        } else if (text[pos] == '|') {
+            if (link->target.empty())
+                link->target = current.str();
+            else
+                link->parameters.push_back(current.str());
+            current.str("");
             ++pos;
-            continue;
+        } else {
+            current << text[pos++];
         }
-        if (hasPipe) display << text[pos];
-        else target << text[pos];
-        ++pos;
     }
-    auto link = std::make_unique<WikiLink>();
-    link->target = target.str();
-    if (hasPipe) link->displayText = display.str();
     return link;
 }
 

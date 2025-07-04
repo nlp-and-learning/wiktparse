@@ -23,13 +23,18 @@ struct PlainText : TextFragment {
 
 struct WikiLink : TextFragment {
     std::string target;
-    std::optional<std::string> displayText;
+    std::vector<std::string> parameters;
+
     [[nodiscard]] std::string toWikitext(FormatStyle style) const override {
         std::string out = "[[" + target;
-        if (displayText && *displayText != target)
-            out += "|" + *displayText;
+        for (const auto& p : parameters) {
+            out += "|" + p;
+        }
         out += "]]";
         return out;
+    }
+    [[nodiscard]] std::optional<std::string> getCaption() const {
+        return parameters.empty() ? std::nullopt : std::make_optional(parameters.back());
     }
 };
 

@@ -50,10 +50,14 @@ void createPages() {
         wikiFile.open();
         auto terms_to_extract = readLines("../work/terms_to_extract." + lang + ".txt");
         for (const auto& term : terms_to_extract) {
-            cout << term << endl;
+            cout << term;
             auto termValue = wikiFile.extractTerm(term);
-            if (!termValue.empty())
+            if (!termValue.empty()) {
                 saveToFile(termValue, directory/ (correct_filename(term)+".page"));
+                cout << " ok" << endl;
+            }
+            else
+                cout << " failed" << endl;
         }
         wikiFile.close();
     }
@@ -98,10 +102,13 @@ void createPagesWiki() {
     wikiFile.open();
     auto terms_to_extract = readLines("../work/terms_to_extract.enwiki.txt");
     for (const auto& term : terms_to_extract) {
-        cout << term << endl;
+        cout << term;
         auto termValue = wikiFile.extractTerm(term);
-        if (!termValue.empty())
+        if (!termValue.empty()) {
             saveToFile(termValue, directory/ (correct_filename(term)+".page"));
+            cout << " ok" << endl;
+        } else
+            cout << " failed" << endl;
     }
     wikiFile.close();
 }
@@ -295,12 +302,41 @@ void testTemplates() {
     std::cout << t->toWikitext(FormatStyle::Multiline) << std::endl;
 }
 
-void wikipediaInfoboxes(){
+void wikipediaInfoboxes() {
+    WikiName wikiName;
+    wikiName.wikiName("en");
+    Index index(wikiName);
+    WikiFile wikiFile(index);
+    wikiFile.open();
+    index.open();
+    Xml xml;
+    Progress progress(wikiFile.size(), 0.001);
+    for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
+        auto chunkStr = wikiFile.decompressChunk(indexChunk);
+        progress.update(wikiFile.filePos());
+        auto objects =  xml.allFromChunk(chunkStr);
+        for (auto &p : objects) {
+            auto templates = extractTemplates(Comments::clean(p.second));
+            for (auto &tstr: templates) {
+                size_t pos = 0;
+                cout << format("parseTemplate {} {}\n",p.first, tstr);
+                auto t = TemplateParser::parseTemplate(tstr, pos);
+                auto name = trim(t->name);
+                if (name == "Infobox language")
+                    cout << format("{}\n",p.first);
+            }
+        }
+    }
+    index.close();
+    wikiFile.close();
+}
+
+void pagesInfoboxes() {
     const fs::path& dir = "../pages";
     std::vector<fs::path> pagesFiles;
 
     for (const auto& entry : fs::recursive_directory_iterator(dir)) {
-        if (entry.is_regular_file() && entry.path().extension() == ".page") {
+        if (entry.is_regular_file() && entry.path().extension() == ".page1") {
             pagesFiles.push_back(entry.path());
         }
     }
@@ -308,6 +344,7 @@ void wikipediaInfoboxes(){
         auto templates = extractTemplatesFromFile(path);
         for (auto &tstr: templates) {
             size_t pos = 0;
+            cout << format("parse: {}\n",tstr) << flush;
             auto t = TemplateParser::parseTemplate(tstr, pos);
             cout << t->toWikitext(FormatStyle::Compact) << std::endl;
         }

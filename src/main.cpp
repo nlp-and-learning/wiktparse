@@ -379,14 +379,14 @@ void searchForComments(const std::string &lang) {
     wikiFile.close();
 }
 
-void collectAllTags() {
+void collectAllHeaders() {
     WikiName wikiName;
     wikiName.wiktName("en");
     Index index(wikiName);
     WikiFile wikiFile(index);
     wikiFile.open();
     index.open();
-    LimitedListMap<string,string> allTags;
+    LimitedListMap<string,string> allHeaders;
     Xml xml;
     Progress progress(wikiFile.size());
     for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
@@ -398,16 +398,16 @@ void collectAllTags() {
             for (const auto& line : lines) {
                 if (count_levelL(line)>1) {
                     auto tag = trim_header(trim(line));
-                    allTags.add(tag,p.first);
+                    allHeaders.add(tag,p.first);
                 }
             }
         }
     }
     index.close();
     wikiFile.close();
-    std::ofstream out("allTagsWhere.txt");
+    std::ofstream out("allHeadersWhere.txt");
     if (!out) throw std::runtime_error("Cannot open file");
-    allTags.print(out);
+    allHeaders.print(out);
 }
 
 int main() {

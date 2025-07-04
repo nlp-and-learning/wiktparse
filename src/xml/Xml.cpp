@@ -4,7 +4,6 @@
 #include <pugixml.hpp>
 #include <sstream>
 #include <vector>
-#include "../tag/tags.h"
 #include "../titles.h"
 
 std::string Xml::termFromChunk(const std::string &term, const std::string &chunk) {

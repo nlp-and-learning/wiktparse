@@ -4,9 +4,6 @@
 #include <iostream>
 
 #include "../reader/Index.h"
-#include "../tag/tags.h"
-#include "../reader/WikiFile.h"
-#include "Xml.h"
 #include <sstream>
 
 #include "../util/Progress.h"

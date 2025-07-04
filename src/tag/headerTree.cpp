@@ -1,9 +1,9 @@
-#include "tagTree.h"
+#include "headerTree.h"
 #include <format>
 #include <stack>
 #include <fstream>
 
-#include "tags.h"
+#include "headers.h"
 
 // parsing to tree
 std::shared_ptr<Node> parseIndentedTree(std::istream& in) {
@@ -24,7 +24,7 @@ std::shared_ptr<Node> parseIndentedTree(std::istream& in) {
             stack.top().second->lines.push_back(line);
             continue;
         }
-        std::string trimmed = trim_tag(line);
+        std::string trimmed = trim_header(line);
 
         auto node = std::make_shared<Node>();
         node->value = trimmed;

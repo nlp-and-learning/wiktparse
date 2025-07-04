@@ -12,13 +12,13 @@
 
 #include "xml/Comments.h"
 #include "reader/Index.h"
-#include "tag/tags.h"
+#include "tag/headers.h"
 #include "WikiData.h"
 #include "reader/WikiFile.h"
 #include "xml/Xml.h"
 #include <nlohmann/json.hpp>
 
-#include "tag/tagTree.h"
+#include "tag/headerTree.h"
 #include "wikitext/old_Template.h"
 #include "wikitext/old_text.h"
 #include "wikitext/old_TemplateParser.h"
@@ -397,7 +397,7 @@ void collectAllTags() {
             auto lines = splitLines(p.second);
             for (const auto& line : lines) {
                 if (count_levelL(line)>1) {
-                    auto tag = trim_tag(trim(line));
+                    auto tag = trim_header(trim(line));
                     allTags.add(tag,p.first);
                 }
             }

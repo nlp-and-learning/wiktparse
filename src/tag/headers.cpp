@@ -1,4 +1,4 @@
-#include "tags.h"
+#include "headers.h"
 
 int count_levelL(const std::string &line) {
     int  pos = 0;
@@ -15,7 +15,7 @@ int count_levelR(const std::string &line) {
     return line.size() - 1 - pos;
 }
 
-std::string trim_tag(const std::string& line) {
+std::string trim_header(const std::string& line) {
     int countL = count_levelL(line);
     int countR = count_levelR(line);
     return line.substr(countL, line.size() - countR - countL);

@@ -15,16 +15,15 @@ class Index {
     WikiChunker * chunker = nullptr;
 public:
     struct IndexedObject {
-        int chunkIndex;
-        std::string id;
+        int64_t id;
         std::string title;
+        int chunkIndex;
         IndexedObject() {
             chunkIndex = 0;
         }
-        explicit IndexedObject(const std::string &line, size_t chunkIndex):chunkIndex(chunkIndex) {
-            auto parts = split(trim(line), ':');
-            id = trim(parts[1]);
-            title = join_from(parts, 2, ':');
+        explicit IndexedObject(const WikiIndexElem &indexElem, size_t chunkIndex):chunkIndex(chunkIndex) {
+            id = indexElem.id;
+            title = indexElem.title;
         }
     };
     std::unordered_map<std::string, IndexedObject> objectMap;

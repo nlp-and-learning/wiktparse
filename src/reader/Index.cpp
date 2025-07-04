@@ -33,6 +33,10 @@ int Index::readIndex() {
         indexVec.push_back(chunk.startPos);
         if (indexVec.size() % 10000 == 0)
             std::cout << "." << std::flush;
+        for (auto &el: chunk.elems) {
+            IndexedObject indexedObject(el, indexVec.size()-1);
+            objectMap[indexedObject.title] = indexedObject;
+        }
     }
     indexVec.push_back(chunk.endPos);
     delete chunker;
@@ -98,7 +102,7 @@ Index::IndexedObject Index::getIndexedObject(const std::string &term) const{
     else {
         Index::IndexedObject obj;
         obj.chunkIndex = -1;
-        obj.id = "";
+        obj.id = 0;
         obj.title = term;
         return obj;
     }

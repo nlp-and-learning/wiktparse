@@ -19,8 +19,8 @@ WikiIndexLine WikiChunker::parseLine(const std::string &line) {
     WikiIndexLine indexLine;
     auto pos1 = line.find(':');
     auto pos2 = line.find(':', pos1+1);
-    indexLine.startPos = stoi(line);
-    indexLine.id = stoi(line.substr(pos1+1, pos2-pos1-1));
+    indexLine.startPos = stoll(line);
+    indexLine.id = stoll(line.substr(pos1+1, pos2-pos1-1));
     indexLine.title = line.substr(pos2+1);
     return indexLine;
 }

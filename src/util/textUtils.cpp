@@ -32,10 +32,18 @@ std::vector<std::string> readLines(const std::string& filename) {
     return lines;
 }
 
-void readLines_toSet(const std::string& filename, std::set<std::string>& terms) {
-    std::ifstream infile(filename);
-    for( std::string line; getline( infile, line ); )
-        terms.insert(trim(line));
+std::set<std::string> readLinesToSet(const std::string& filename) {
+    std::ifstream in(filename);
+    if (!in)
+        throw std::runtime_error("Cannot open file: " + filename);
+
+    std::set<std::string> lines;
+    std::string line;
+    while (std::getline(in, line)) {
+        if (!line.empty())
+            lines.insert(line);
+    }
+    return lines;
 }
 
 std::vector<std::string> split(std::string_view input, char delimiter) {

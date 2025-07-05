@@ -8,6 +8,9 @@ add_executable(test_templates test_templates.cpp
         ../src/wikitext/old_text.cpp
         ../src/xml/Comments.cpp
         CommentsTest.cpp
+        ../src/wikitext/CompositeText.h
+        CompositeTextTest.cpp
+        ../src/wikitext/TextParser.h
 )
 target_link_libraries(test_templates
         PRIVATE

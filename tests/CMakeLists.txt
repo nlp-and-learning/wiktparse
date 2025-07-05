@@ -11,6 +11,9 @@ add_executable(test_templates test_templates.cpp
         ../src/wikitext/CompositeText.h
         CompositeTextTest.cpp
         ../src/wikitext/TextParser.h
+        ../src/wikitext/Tag.h
+        ../src/wikitext/TagParser.h
+        TagTest.cpp
 )
 target_link_libraries(test_templates
         PRIVATE

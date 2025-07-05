@@ -5,6 +5,16 @@ See Help:Template#Whitespace handling.
 
 Whitespace handling
 
+To expand on that: for named parameters, such as all of those you list above, whitespace is insignificant:
+* after the pipe that precedes the parameter name
+* after the parameter name
+* after the equals
+* after the parameter value.
+Whitespace is always significant within the parameter name
+Whitespace may be significant within the parameter value
+But for unnamed (positional) parameters, all whitespace is significant.
+
+
 Leading and trailing whitespace (including line breaks) 
 around named parameters and values is collapsed 
 automatically, but spaces in the middle of the value
@@ -46,5 +56,8 @@ Leading and trailing whitespace around the function name (before the colon) is t
 {{#invoke:Chart|...}} → function name: "invoke"
 ```
 
+One \n is replaced by space, but two \n (one empty line) 
+is replaced by \n; n+1 breaks (=n empty lines) is replaced 
+by n breaks
 
 Infobox language: https://en.wikipedia.org/wiki/Template:Infobox_language

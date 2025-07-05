@@ -23,7 +23,7 @@ TEST(TemplateParserTest, NestedTemplate) {
 TEST(TemplateParserTest, ParserFunction) {
     std::string input = "{{#expr: 2+2}}";
     std::string expected = "{{#expr:2+2}}";
-//    EXPECT_EQ(expected, parseAndPrint(input));
+    EXPECT_EQ(expected, parseAndPrint(input));
 }
 
 TEST(TemplateParserTest, WikiLinkSimple) {

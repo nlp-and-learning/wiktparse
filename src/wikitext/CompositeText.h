@@ -24,7 +24,7 @@ struct TextFragment: public Fragment {
 };
 
 
-struct CompositeTextTest: public Fragment {
+struct CompositeText: public Fragment {
     std::vector<std::unique_ptr<Fragment>> parts;
     [[nodiscard]] std::string displayText() const override {
         std::ostringstream ss;

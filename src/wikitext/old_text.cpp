@@ -5,13 +5,13 @@
 
 #include "old_TemplateParser.h"
 
-std::unique_ptr<WikiLink> parseWikiLink(const std::string& text, size_t& pos) {
+std::unique_ptr<old_WikiLink> old_parseWikiLink(const std::string& text, size_t& pos) {
     if (text.compare(pos, 2, "[[") != 0)
         throw std::runtime_error("Expected [[ at pos " + std::to_string(pos));
 
     pos += 2;
     std::ostringstream current;
-    auto link = std::make_unique<WikiLink>();
+    auto link = std::make_unique<old_WikiLink>();
 
     while (pos < text.size()) {
         if (text.compare(pos, 2, "]]") == 0) {
@@ -58,8 +58,8 @@ StartFragment getStartFragment(const std::string& text, size_t& pos) {
     return StartFragment::Plain;
 }
 
-std::unique_ptr<TextFragment> parseCompositeText(const std::string& text, size_t& pos, bool insideParam) {
-    auto composite = std::make_unique<CompositeText>();
+std::unique_ptr<old_TextFragment> old_parseCompositeText(const std::string& text, size_t& pos, bool insideParam) {
+    auto composite = std::make_unique<old_CompositeText>();
     std::ostringstream buffer;
     while (pos < text.size()) {
         if (insideParam) {
@@ -69,7 +69,7 @@ std::unique_ptr<TextFragment> parseCompositeText(const std::string& text, size_t
         auto startFragment = getStartFragment(text, pos);
         if (startFragment != StartFragment::Plain) {
             if (!buffer.str().empty()) {
-                composite->parts.push_back(std::make_unique<PlainText>(buffer.str()));
+                composite->parts.push_back(std::make_unique<old_PlainText>(buffer.str()));
                 buffer.str("");
             }
         }
@@ -79,14 +79,14 @@ std::unique_ptr<TextFragment> parseCompositeText(const std::string& text, size_t
             case StartFragment::Template:
                 composite->parts.push_back(old_TemplateParser::parseTemplate(text, pos));break;
             case StartFragment::WikiLink:
-                composite->parts.push_back(parseWikiLink(text, pos));break;
+                composite->parts.push_back(old_parseWikiLink(text, pos));break;
             default:buffer << text[pos++];
         }
     }
     if (!buffer.str().empty())
-        composite->parts.push_back(std::make_unique<PlainText>(buffer.str()));
+        composite->parts.push_back(std::make_unique<old_PlainText>(buffer.str()));
     if (composite->parts.empty())
-        return std::make_unique<PlainText>("");
+        return std::make_unique<old_PlainText>("");
     else if (composite->parts.size() == 1)
         return std::move(composite->parts[0]);
     else

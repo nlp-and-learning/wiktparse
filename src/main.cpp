@@ -298,8 +298,8 @@ void testTemplates() {
     std::string input = "{{Infobox person|name=John|birth={{birth date|1990|1|1}}|known={{#if:1|Author|Unknown}}}}";
     size_t pos = 0;
     auto t = old_TemplateParser::parseTemplate(input, pos);
-    std::cout << t->toWikitext(FormatStyle::Compact) << std::endl;
-    std::cout << t->toWikitext(FormatStyle::Multiline) << std::endl;
+    std::cout << t->toWikitext(old_FormatStyle::Compact) << std::endl;
+    std::cout << t->toWikitext(old_FormatStyle::Multiline) << std::endl;
 }
 
 void wikipediaInfoboxes() {
@@ -346,7 +346,7 @@ void pagesInfoboxes() {
             size_t pos = 0;
             cout << format("parse: {}\n",tstr) << flush;
             auto t = old_TemplateParser::parseTemplate(tstr, pos);
-            cout << t->toWikitext(FormatStyle::Compact) << std::endl;
+            cout << t->toWikitext(old_FormatStyle::Compact) << std::endl;
         }
     }
 

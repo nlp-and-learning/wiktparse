@@ -32,7 +32,7 @@ std::unique_ptr<old_ParserFunction>  old_TemplateParser::parseParserFunction(con
             break;
         }
         if (text[pos] == '|') ++pos;
-        func->arguments.push_back(parseCompositeText(text, pos, true));
+        func->arguments.push_back(old_parseCompositeText(text, pos, true));
     }
     return func;
 }
@@ -81,7 +81,7 @@ std::string old_TemplateParser::parseName(const std::string &text, size_t &pos) 
         } else {
             optKey = std::nullopt;
         }
-        tmpl->parameters.emplace_back(optKey, parseCompositeText(text, pos, true));
+        tmpl->parameters.emplace_back(optKey, old_parseCompositeText(text, pos, true));
     }
     return tmpl;
 }

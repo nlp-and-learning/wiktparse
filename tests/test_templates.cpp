@@ -5,7 +5,7 @@
 std::string parseAndPrint(const std::string& input) {
     size_t pos = 0;
     auto result = old_TemplateParser::parseTemplate(input, pos);
-    return result->toWikitext(FormatStyle::Compact);
+    return result->toWikitext(old_FormatStyle::Compact);
 }
 
 TEST(TemplateParserTest, BasicTemplate) {
@@ -29,20 +29,20 @@ TEST(TemplateParserTest, ParserFunction) {
 TEST(TemplateParserTest, WikiLinkSimple) {
     std::string input = "[[France]]";
     size_t pos = 0;
-    auto result = parseWikiLink(input, pos);
-    EXPECT_EQ("[[France]]", result->toWikitext(FormatStyle::Compact));
+    auto result = old_parseWikiLink(input, pos);
+    EXPECT_EQ("[[France]]", result->toWikitext(old_FormatStyle::Compact));
 }
 
 TEST(TemplateParserTest, WikiLinkWithAlias) {
     std::string input = "[[France|French Republic]]";
     size_t pos = 0;
-    auto result = parseWikiLink(input, pos);
-    EXPECT_EQ("[[France|French Republic]]", result->toWikitext(FormatStyle::Compact));
+    auto result = old_parseWikiLink(input, pos);
+    EXPECT_EQ("[[France|French Republic]]", result->toWikitext(old_FormatStyle::Compact));
 }
 
 TEST(TemplateParserTest, CompositeWithMultipleLinks) {
     std::string input = "[[France]], [[Belgium]] and [[Canada]]";
     size_t pos = 0;
-    auto result = parseCompositeText(input, pos, false);
-    EXPECT_EQ("[[France]], [[Belgium]] and [[Canada]]", result->toWikitext(FormatStyle::Compact));
+    auto result = old_parseCompositeText(input, pos, false);
+    EXPECT_EQ("[[France]], [[Belgium]] and [[Canada]]", result->toWikitext(old_FormatStyle::Compact));
 }

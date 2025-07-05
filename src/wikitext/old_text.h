@@ -5,27 +5,27 @@
 #include <sstream>
 #include <vector>
 
-enum class FormatStyle {
+enum class old_FormatStyle {
     Compact,   // {{name|a|b|c}}
     Multiline  // {{name\n|a\n|b\n|c\n}}
 };
 
-struct TextFragment {
-    virtual ~TextFragment() = default;
-    [[nodiscard]] virtual std::string toWikitext(FormatStyle style) const = 0;
+struct old_TextFragment {
+    virtual ~old_TextFragment() = default;
+    [[nodiscard]] virtual std::string toWikitext(old_FormatStyle style) const = 0;
 };
 
-struct PlainText : TextFragment {
+struct old_PlainText : old_TextFragment {
     std::string text;
-    explicit PlainText(std::string t) : text(std::move(t)) {}
-    [[nodiscard]] std::string toWikitext(FormatStyle style) const override { return text; }
+    explicit old_PlainText(std::string t) : text(std::move(t)) {}
+    [[nodiscard]] std::string toWikitext(old_FormatStyle style) const override { return text; }
 };
 
-struct WikiLink : TextFragment {
+struct old_WikiLink : old_TextFragment {
     std::string target;
     std::vector<std::string> parameters;
 
-    [[nodiscard]] std::string toWikitext(FormatStyle style) const override {
+    [[nodiscard]] std::string toWikitext(old_FormatStyle style) const override {
         std::string out = "[[" + target;
         for (const auto& p : parameters) {
             out += "|" + p;
@@ -38,9 +38,9 @@ struct WikiLink : TextFragment {
     }
 };
 
-struct CompositeText : TextFragment {
-    std::vector<std::unique_ptr<TextFragment>> parts;
-    [[nodiscard]] std::string toWikitext(FormatStyle style) const override{
+struct old_CompositeText : old_TextFragment {
+    std::vector<std::unique_ptr<old_TextFragment>> parts;
+    [[nodiscard]] std::string toWikitext(old_FormatStyle style) const override{
         std::string out;
         for (const auto& p : parts)
             out += p->toWikitext(style);
@@ -48,5 +48,5 @@ struct CompositeText : TextFragment {
     }
 };
 
-std::unique_ptr<WikiLink> parseWikiLink(const std::string& text, size_t& pos);
-std::unique_ptr<TextFragment> parseCompositeText(const std::string& text, size_t& pos, bool insideParam=false);
+std::unique_ptr<old_WikiLink> old_parseWikiLink(const std::string& text, size_t& pos);
+std::unique_ptr<old_TextFragment> old_parseCompositeText(const std::string& text, size_t& pos, bool insideParam=false);

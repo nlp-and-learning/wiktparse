@@ -15,6 +15,7 @@ add_executable(gtests test_templates.cpp
         ../src/wikitext/TagParser.h
         TagTest.cpp
         HeaderTest.cpp
+        ../src/wikitext/Parser.h
 )
 
 target_link_libraries(gtests

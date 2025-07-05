@@ -4,8 +4,8 @@
 
 TEST(TagTest, SelfClosing) {
     std::string input = "<br  />";
-    size_t pos = 0;
-    auto tag = TagParser::parse(input,pos);
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
     EXPECT_EQ(TagType::SelfClosing, tag->type);
     EXPECT_EQ("br", tag->name);
     EXPECT_EQ(0, tag->attributes.size());
@@ -13,8 +13,8 @@ TEST(TagTest, SelfClosing) {
 
 TEST(TagTest, Attributes) {
     std::string input = R"(<span style="color:red;" class="highlight" title="example">)";
-    size_t pos = 0;
-    auto tag = TagParser::parse(input,pos);
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
     EXPECT_EQ(TagType::Open, tag->type);
     EXPECT_EQ("span", tag->name);
     EXPECT_EQ(3, tag->attributes.size());
@@ -30,7 +30,7 @@ TEST(TagTest, CommentStart) {
 
 TEST(TagTest, CommentAsInvalidTag) {
     std::string input = "<!--";
-    size_t pos = 0;
-    auto tag = TagParser::parse(input,pos);
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
     EXPECT_EQ(TagType::Invalid, tag->type);
 }

@@ -1,42 +1,10 @@
 #pragma once
 #include "CompositeText.h"
+#include "Parser.h"
 
-
-enum class StartFragment {
-    Plain,
-    Comment,
-    Tag,
-    Function,
-    Template,
-    WikiLink,
-};
-
-class TextParser {
-    size_t lineCount = 0;
-    size_t currentLineStart = 0;
-    const std::string& text;
-    size_t pos;
+class TextParser: public Parser {
 public:
-    explicit TextParser(const std::string& text, size_t pos) : text(text),pos(pos) {}
-
-    void skipLineBreaks() {
-        int countCR = 0;
-        int countLF = 0;
-        while (pos < text.size()) {
-            if (text[pos] == '\r') {
-                ++countCR;
-                ++pos;
-            } else if (text[pos] == '\n') {
-                ++countLF;
-                ++pos;
-            } else {
-                break;
-            }
-        }
-        currentLineStart = pos;
-        lineCount += std::max(countCR, countLF);
-    }
-
+    TextParser(const std::string& text, size_t pos) : Parser(text, pos) {}
     std::unique_ptr<Fragment> parse() {
         auto composite = std::make_unique<CompositeText>();
         std::ostringstream ss;

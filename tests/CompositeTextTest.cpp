@@ -9,3 +9,11 @@ TEST(CommentsTest, PlainText) {
     auto fragment = TextParser::parse(input,pos);
     EXPECT_EQ(expected, fragment->displayText());
 }
+
+TEST(CommentsTest, CompactWhitespaces) {
+    std::string input = "This\nis  \t plain  \t  text\n ";
+    std::string expected = "This is plain text";
+    size_t pos = 0;
+    auto fragment = TextParser::parse(input,pos);
+    EXPECT_EQ(expected, fragment->displayText());
+}

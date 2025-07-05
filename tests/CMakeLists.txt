@@ -7,7 +7,7 @@ add_executable(test_templates test_templates.cpp
         ../src/wikitext/old_Template.cpp
         ../src/wikitext/old_text.cpp
         ../src/xml/Comments.cpp
-        CommentsTest.cpp
+        CommentTest.cpp
         ../src/wikitext/CompositeText.h
         CompositeTextTest.cpp
         ../src/wikitext/TextParser.h

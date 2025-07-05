@@ -25,8 +25,13 @@ public:
         } else
             return false;
     }
+    bool isNameChar(unsigned char c) {
+        return std::isalnum(text[pos]) || text[pos] == ':' || text[pos] == '-' || text[pos] == '_';
+    }
+
     std::unique_ptr<Tag> parse() {
-        assert(pos < text.size() && text[pos] == '<');
+        if (pos >= text.size() || text[pos] != '<')
+            throw std::logic_error("Unexpected end of input or not start with <");
         size_t start = pos;
         ++pos; // skip '<'
 
@@ -45,13 +50,13 @@ public:
 
         // Parse tag name
         std::ostringstream name;
-        while (pos < text.size() && (std::isalnum(text[pos]) || text[pos] == ':' || text[pos] == '-' || text[pos] == '_')) {
+        while (pos < text.size() && isNameChar(text[pos])) {
             name << text[pos++];
         }
         tag->name = name.str();
         if (tag->name.empty()) {
             tag->type = TagType::Invalid;
-            pos = std::max(pos, start + 1); // move forward to avoid infinite loop
+            assert(pos > start);
             return tag;
         }
 
@@ -67,7 +72,8 @@ public:
                 ++pos;
                 return tag;
             }
-
+            while (pos < text.size() && !isNameChar(text[pos]))
+                ++pos;
             // Parse attribute name
             std::ostringstream attrName;
             while (pos < text.size() && (std::isalnum(text[pos]) || text[pos] == ':' || text[pos] == '-' || text[pos] == '_')) {
@@ -97,12 +103,12 @@ public:
                     value = val.str();
                 }
             }
-            tag->attributes.emplace_back(std::pmr::string(attrName.str()), std::pmr::string(value));
+            tag->attributes.emplace_back(std::string(attrName.str()), std::string(value));
         }
 
         // If we reach here, tag was not properly closed
         tag->type = TagType::Invalid;
-        pos = std::max(pos, start + 1); // move forward to avoid infinite loop
+        assert(pos > start);
         return tag;
     }
 };

@@ -21,6 +21,16 @@ TEST(TagTest, Attributes) {
     EXPECT_EQ("example", tag->attributes[2].second);
 }
 
+TEST(TagTest, Attributes1) {
+    std::string input = R"(<span style='color:red' class=highlight>)";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Open, tag->type);
+    EXPECT_EQ("span", tag->name);
+    EXPECT_EQ(2, tag->attributes.size());
+    EXPECT_EQ("class", tag->attributes[1].first);
+}
+
 
 TEST(TagTest, CommentStart) {
     std::string input = "<!--";
@@ -33,4 +43,28 @@ TEST(TagTest, CommentAsInvalidTag) {
     TagParser parser(input, 0);
     auto tag = parser.parse();
     EXPECT_EQ(TagType::Invalid, tag->type);
+}
+
+TEST(TagTest, SpanTag) {
+    std::string input = "<span style=color:red class=highlight>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Open, tag->type);
+    EXPECT_EQ("span", tag->name);
+}
+
+TEST(TagTest, UsualLt) {
+    std::string input = "m<n && m>a";
+    TagParser parser(input, 1);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Invalid, tag->type);
+    EXPECT_EQ("n", tag->name);
+}
+
+TEST(TagTest, LtWithName) {
+    std::string input = "m<span && m>a";
+    TagParser parser(input, 1);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Open, tag->type);
+    EXPECT_EQ("span", tag->name);
 }

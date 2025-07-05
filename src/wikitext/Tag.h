@@ -13,5 +13,5 @@ enum class TagType {
 struct Tag {
     TagType type;
     std::string name;
-    std::vector<std::pair<std::pmr::string, std::pmr::string>> attributes;
+    std::vector<std::pair<std::string, std::string>> attributes;
 };

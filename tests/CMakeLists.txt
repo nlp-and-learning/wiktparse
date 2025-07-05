@@ -16,6 +16,7 @@ add_executable(gtests test_templates.cpp
         TagTest.cpp
         HeaderTest.cpp
 )
+
 target_link_libraries(gtests
         PRIVATE
         GTest::GTest

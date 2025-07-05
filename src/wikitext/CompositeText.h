@@ -13,7 +13,7 @@ struct Fragment {
     [[nodiscard]] virtual std::string displayText() const = 0;
 };
 
-struct TextFragment : Fragment {
+struct TextFragment: public Fragment {
     std::string text;
     FontStyle fontStyle = FontStyle::Proportional;
     int fontSize = 0; //0: normal, 1 - big, -1 small, 2-bigger etc

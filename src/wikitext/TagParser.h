@@ -14,6 +14,22 @@ class TagParser {
             ++pos;
     }
 public:
+    static bool startComment(const std::string &text, size_t &pos) {
+        const std::string start = "<!--";
+        if (text.starts_with(start)) {
+            pos += start.size();
+            return true;
+        } else
+            return false;
+    }
+    static bool endComment(const std::string &text, size_t &pos) {
+        const std::string end = "-->";
+        if (text.starts_with(end)) {
+            pos += end.size();
+            return true;
+        } else
+            return false;
+    }
     static std::unique_ptr<Tag> parse(const std::string &text, size_t &pos) {
         assert(pos < text.size() && text[pos] == '<');
         size_t start = pos;
@@ -38,6 +54,11 @@ public:
             name << text[pos++];
         }
         tag->name = name.str();
+        if (tag->name.empty()) {
+            tag->type = TagType::Invalid;
+            pos = std::max(pos, start + 1); // move forward to avoid infinite loop
+            return tag;
+        }
 
         // Parse attributes
         while (pos < text.size()) {
@@ -86,7 +107,7 @@ public:
 
         // If we reach here, tag was not properly closed
         tag->type = TagType::Invalid;
-        pos = start + 1; // move forward to avoid infinite loop
+        pos = std::max(pos, start + 1); // move forward to avoid infinite loop
         return tag;
     }
 };

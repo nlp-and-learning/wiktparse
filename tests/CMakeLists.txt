@@ -14,6 +14,7 @@ add_executable(test_templates test_templates.cpp
         ../src/wikitext/Tag.h
         ../src/wikitext/TagParser.h
         TagTest.cpp
+        ../src/wikitext/Comment.h
 )
 target_link_libraries(test_templates
         PRIVATE

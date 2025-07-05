@@ -62,13 +62,18 @@ protected:
     static bool isWikiSpace(char c) {
         return std::strchr(" \t\f\v", static_cast<unsigned char>(c)) != nullptr;
     }
-    void skipWhitespace() {
+    static bool isBreak(char c) {
+        return c=='\r' || c=='\n';
+    }
+    size_t skipWhitespace() {
+        auto start = pos;
         while (pos < text.size() && isWikiSpace(text[pos]))
             ++pos;
+        return pos - start;
     }
-    void skipLineBreaks() {
-        int countCR = 0;
-        int countLF = 0;
+    size_t skipLineBreaks() {
+        size_t countCR = 0;
+        size_t countLF = 0;
         while (pos < text.size()) {
             if (text[pos] == '\r') {
                 ++countCR;
@@ -81,7 +86,21 @@ protected:
             }
         }
         currentLineStart = pos;
-        lineCount += std::max(countCR, countLF);
+        auto countBreak = std::max(countCR, countLF);
+        lineCount += countBreak;
+        return countBreak;
+    }
+    std::pair<size_t, size_t> skipWhiteBreaks() {
+        size_t breakCounter = 0;
+        size_t whiteCounter = 0;
+        while(pos < text.size()) {
+            if (isBreak(text[pos]))
+                breakCounter += skipLineBreaks();
+            else if (isWikiSpace(text[pos]))
+                whiteCounter += skipWhitespace();
+            else break;
+        }
+        return {breakCounter, whiteCounter};
     }
 public:
     Parser(const std::string& text, size_t pos) : text(text),pos(pos) {}

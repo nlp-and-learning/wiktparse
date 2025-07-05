@@ -8,19 +8,17 @@ public:
     std::unique_ptr<Fragment> parse() {
         auto composite = std::make_unique<CompositeText>();
         std::ostringstream ss;
-        int spacesLen = 0;
-        while (pos < text.size()) {
+        while (true) {
+            auto p = skipWhiteBreaks();
+            if (pos >= text.size()) break;
+            if (p.first > 1) {
+                std::string breaks(p.first-1, '\n');
+                ss << breaks;
+            } else if (p.first + p.second > 0)
+                ss << ' ';
             unsigned char c = text[pos];
             //if (c == '<') - need specialAt
-            if (isspace(c))
-                spacesLen++;
-            else {
-                if (spacesLen>0) {
-                    ss << ' ';
-                    spacesLen = 0;
-                }
-                ss << c;
-            }
+            ss << c;
             pos++;
         }
         auto textFragment = std::make_unique<TextFragment>(ss.str());

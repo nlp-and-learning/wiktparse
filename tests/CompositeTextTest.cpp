@@ -43,8 +43,8 @@ TEST(CompositeTest, Breaks3) {
 }
 
 TEST(CompositeTest, Breaks4) {
-    std::string input = "abc\n\n\ndef";
-    std::string expected = "abc\n\n\n\ndef";
+    std::string input = "abc\n\n\n\ndef";
+    std::string expected = "abc\n\n\ndef";
     TextParser parser(input, 0);
     auto fragment = parser.parse();
     EXPECT_EQ(expected, fragment->displayText());

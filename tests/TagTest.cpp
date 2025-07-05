@@ -10,3 +10,15 @@ TEST(TagTest, SelfClosing) {
     EXPECT_EQ("br", tag->name);
     EXPECT_EQ(0, tag->attributes.size());
 }
+
+TEST(TagTest, Attributes) {
+    std::string input = "<span style=\"color:red;\" class=\"highlight\" title=\"example\">";
+    size_t pos = 0;
+    auto tag = TagParser::parse(input,pos);
+    EXPECT_EQ(TagType::Open, tag->type);
+    EXPECT_EQ("span", tag->name);
+    EXPECT_EQ(3, tag->attributes.size());
+    EXPECT_EQ("example", tag->attributes[2].second);
+}
+
+

@@ -3,19 +3,20 @@ enable_testing()
 find_package(GTest REQUIRED)
 
 add_executable(gtests test_templates.cpp
+        CommentTest.cpp
+        CompositeTextTest.cpp
+        TagTest.cpp
+        HeaderTest.cpp
         ../src/wikitext/old_TemplateParser.cpp
         ../src/wikitext/old_Template.cpp
         ../src/wikitext/old_text.cpp
         ../src/xml/Comments.cpp
-        CommentTest.cpp
         ../src/wikitext/CompositeText.h
-        CompositeTextTest.cpp
         ../src/wikitext/TextParser.h
         ../src/wikitext/Tag.h
         ../src/wikitext/TagParser.h
-        TagTest.cpp
-        HeaderTest.cpp
         ../src/wikitext/Parser.h
+        ../src/wikitext/TagFactory.h
 )
 
 target_link_libraries(gtests

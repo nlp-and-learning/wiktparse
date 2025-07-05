@@ -5,8 +5,10 @@
 #include <memory>
 #include "Parser.h"
 #include "Tag.h"
+#include "TagFactory.h"
 
 class TagParser: public Parser {
+    TagFactory tagFactory = TagFactory::instance();
 public:
     TagParser(const std::string& text, size_t pos) : Parser(text, pos) {}
     static bool startComment(const std::string &text, size_t &pos) {
@@ -67,9 +69,13 @@ public:
                 if (tag->type == TagType::Open)
                     tag->type = TagType::SelfClosing;
                 pos += 2;
+                if (!tagFactory.has(tag->name))
+                    tag->type = TagType::Invalid;
                 return tag;
             } else if (text[pos] == '>') {
                 ++pos;
+                if (!tagFactory.has(tag->name))
+                    tag->type = TagType::Invalid;
                 return tag;
             }
             while (pos < text.size() && !isNameChar(text[pos]))

@@ -2,7 +2,7 @@
 #include "../src/wikitext/CompositeText.h"
 #include "../src/wikitext/TextParser.h"
 
-TEST(CommentsTest, PlainText) {
+TEST(CompositeTest, PlainText) {
     std::string input = "This is plain text";
     std::string expected = "This is plain text";
     size_t pos = 0;
@@ -10,7 +10,7 @@ TEST(CommentsTest, PlainText) {
     EXPECT_EQ(expected, fragment->displayText());
 }
 
-TEST(CommentsTest, CompactWhitespaces) {
+TEST(CompositeTest, CompactWhitespaces) {
     std::string input = "This\nis  \t plain  \t  text\n ";
     std::string expected = "This is plain text";
     size_t pos = 0;

@@ -13,8 +13,8 @@ std::vector<std::string> readLines(const std::string& filename);
 std::set<std::string> readLinesToSet(const std::string& filename);
 std::vector<std::string> split(std::string_view input, char delimiter);
 std::vector<std::string> splitLines(std::string_view input);
-std::string join_from(const std::vector<std::string>& parts, size_t start, char delimiter);
-std::string read_file_to_string(const std::string& filename);
+std::string joinFrom(const std::vector<std::string>& parts, size_t start, char delimiter);
+std::string readFileToString(const std::string& filename);
 void saveToFile(const std::string &text, const std::string &filename);
 
 template<typename Container>

@@ -32,7 +32,7 @@ std::vector<std::string> extractTemplates(const std::string& text) {
 }
 
 std::vector<std::string> extractTemplatesFromFile(const fs::path &path) {
-    auto content = read_file_to_string(path);
+    auto content = readFileToString(path);
     auto templates = extractTemplates(Comments::clean(content));
     return templates;
 }

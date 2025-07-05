@@ -11,7 +11,7 @@ public:
         int spacesLen = 0;
         while (pos < text.size()) {
             unsigned char c = text[pos];
-            if (c == '<')
+            //if (c == '<') - need specialAt
             if (isspace(c))
                 spacesLen++;
             else {

@@ -2,7 +2,7 @@ enable_testing()
 
 find_package(GTest REQUIRED)
 
-add_executable(test_templates test_templates.cpp
+add_executable(gtests test_templates.cpp
         ../src/wikitext/old_TemplateParser.cpp
         ../src/wikitext/old_Template.cpp
         ../src/wikitext/old_text.cpp
@@ -16,11 +16,11 @@ add_executable(test_templates test_templates.cpp
         TagTest.cpp
         HeaderTest.cpp
 )
-target_link_libraries(test_templates
+target_link_libraries(gtests
         PRIVATE
         GTest::GTest
         GTest::Main
 )
 
 include(GoogleTest)
-gtest_discover_tests(test_templates)
+gtest_discover_tests(gtests)

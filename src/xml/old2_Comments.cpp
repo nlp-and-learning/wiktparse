@@ -1,4 +1,4 @@
-#include "Comments.h"
+#include "old2_Comments.h"
 
 #include <algorithm>
 #include <iostream>
@@ -9,7 +9,7 @@
 #include "../util/Progress.h"
 
 
-std::vector<std::pair<size_t, Comments::Marker>> Comments::classify_line(const std::string &line) {
+std::vector<std::pair<size_t, old2_Comments::Marker>> old2_Comments::classify_line(const std::string &line) {
     std::vector<std::pair<size_t, Marker>> events;
     size_t pos = 0;
     while ((pos = line.find("<nowiki>", pos)) != std::string::npos) {
@@ -39,7 +39,7 @@ std::vector<std::pair<size_t, Comments::Marker>> Comments::classify_line(const s
     return events;
 }
 
-std::string Comments::clean(const std::string &input) {
+std::string old2_Comments::clean(const std::string &input) {
     std::istringstream in(input);
         std::ostringstream out;
         std::string line;

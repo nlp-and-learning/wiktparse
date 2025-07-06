@@ -25,7 +25,7 @@ std::string Xml::termFromChunk(const std::string &term, const std::string &chunk
                 if (text_node) {
                     std::string text = text_node.text().as_string();
                     if (cleanComments)
-                        text = Comments::clean(text);
+                        text = old2_Comments::clean(text);
                     return text;
                 }
             }
@@ -57,7 +57,7 @@ std::vector<std::pair<std::string,std::string>> Xml::allFromChunk(const std::str
             if (text_node) {
                 std::string text = text_node.text().as_string();
                 if (cleanComments)
-                    text = Comments::clean(text);
+                    text = old2_Comments::clean(text);
                 v.emplace_back(title, text);
             }
         }

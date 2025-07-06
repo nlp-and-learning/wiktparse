@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "Comments.h"
+#include "old2_Comments.h"
 
 class Xml {
-    Comments comments;
+    old2_Comments comments;
     bool cleanComments;
 public:
     explicit Xml(bool cleanComments = true) : cleanComments(cleanComments) {}

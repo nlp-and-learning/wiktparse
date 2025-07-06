@@ -1,7 +1,7 @@
 #include "templates.h"
 #include <iostream>
 #include "../util/textUtils.h"
-#include "../xml/Comments.h"
+#include "../xml/old2_Comments.h"
 
 std::vector<std::string> extractTemplates(const std::string& text) {
     std::vector<std::string> templates;
@@ -33,6 +33,6 @@ std::vector<std::string> extractTemplates(const std::string& text) {
 
 std::vector<std::string> extractTemplatesFromFile(const fs::path &path) {
     auto content = readFileToString(path);
-    auto templates = extractTemplates(Comments::clean(content));
+    auto templates = extractTemplates(old2_Comments::clean(content));
     return templates;
 }

@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-class Comments {
+class old2_Comments {
     enum class Marker {
         StartNowiki,
         EndNowiki,

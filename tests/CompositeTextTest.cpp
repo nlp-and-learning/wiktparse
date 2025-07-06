@@ -15,6 +15,7 @@ TEST(CompositeTest, CompactWhitespaces) {
     std::string expected = "This is plain text";
     TextParser parser(input, 0);
     auto fragment = parser.parse();
+    EXPECT_EQ(input, fragment->dump());
     EXPECT_EQ(expected, fragment->displayText());
 }
 
@@ -55,6 +56,7 @@ TEST(CompositeTest, CommentBreakA) {
     std::string expected = "a b";
     TextParser parser(input, 0);
     auto fragment = parser.parse();
+    EXPECT_EQ(input, fragment->dump());
     EXPECT_EQ(expected, fragment->displayText());
 }
 
@@ -63,6 +65,7 @@ TEST(CompositeTest, CommentBreakB) {
     std::string expected = "a\n\nb";
     TextParser parser(input, 0);
     auto fragment = parser.parse();
+    EXPECT_EQ(input, fragment->dump());
     EXPECT_EQ(expected, fragment->displayText());
 }
 
@@ -71,6 +74,16 @@ TEST(CompositeTest, CommentBreakC) {
     std::string expected = "a\n\nb";
     TextParser parser(input, 0);
     auto fragment = parser.parse();
+    EXPECT_EQ(input, fragment->dump());
+    EXPECT_EQ(expected, fragment->displayText());
+}
+
+TEST(CompositeTest, CommentBreakD) {
+    std::string input = "a\n<!-- -->\n<!-- -->\nb";
+    std::string expected = "a b";
+    TextParser parser(input, 0);
+    auto fragment = parser.parse();
+    EXPECT_EQ(input, fragment->dump());
     EXPECT_EQ(expected, fragment->displayText());
 }
 

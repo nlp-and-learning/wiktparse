@@ -16,6 +16,7 @@ enum class CommentStatus {
 struct Fragment {
     virtual ~Fragment() = default;
     [[nodiscard]] virtual std::string displayText() const = 0;
+    [[nodiscard]] virtual std::string dump() const = 0;
 };
 
 struct TextFragment: public Fragment {
@@ -31,6 +32,10 @@ struct TextFragment: public Fragment {
         else
             return "";
     };
+
+    [[nodiscard]] std::string dump() const override {
+        return text;
+    };
 };
 
 
@@ -40,6 +45,12 @@ struct CompositeText: public Fragment {
         std::ostringstream ss;
         for (auto &framgent: parts)
             ss << framgent->displayText();
+        return ss.str();
+    };
+    [[nodiscard]] std::string dump() const override {
+        std::ostringstream ss;
+        for (auto &framgent: parts)
+            ss << framgent->dump();
         return ss.str();
     };
 };

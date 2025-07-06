@@ -15,7 +15,7 @@ add_executable(gtests test_templates.cpp
         ../src/wikitext/TextParser.h
         ../src/tags/Tag.h
         ../src/tags/TagParser.h
-        ../src/tags/Parser.h
+        ../src/tags/BaseParser.h
         ../src/tags/TagFactory.h
 )
 

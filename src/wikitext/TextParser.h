@@ -1,11 +1,11 @@
 #pragma once
 #include "CompositeText.h"
-#include "../tags/Parser.h"
+#include "../tags/BaseParser.h"
 
-class TextParser: public Parser {
+class TextParser: public BaseParser {
     CommentStatus commentStatus = CommentStatus::Displayed;
 public:
-    TextParser(const std::string& text, size_t pos) : Parser(text, pos) {}
+    TextParser(const std::string& text, size_t pos) : BaseParser(text, pos) {}
     std::unique_ptr<Fragment> parse() {
         auto composite = std::make_unique<CompositeText>();
         std::ostringstream ss;

@@ -13,7 +13,7 @@ enum class StartSpecial {
     Other,
 };
 
-class Parser {
+class BaseParser {
 protected:
     size_t lineCount = 0;
     size_t currentLineStart = 0;
@@ -109,5 +109,5 @@ protected:
         return {breakCounter, whiteCounter};
     }
 public:
-    Parser(const std::string& text, size_t pos) : text(text),pos(pos) {}
+    BaseParser(const std::string& text, size_t pos) : text(text),pos(pos) {}
 };

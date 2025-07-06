@@ -9,13 +9,7 @@ enum class StartTagSpecial {
     Other,
 };
 
-class TagStreamParser {
-    const std::string& text;
-    size_t pos;
-    bool startsWithFrom(const std::string& prefix) { //todo remove redundant
-        return text.size() >= pos + prefix.size() &&
-               text.compare(pos, prefix.size(), prefix) == 0;
-    }
+class TagStreamParser: public BaseParser {
     StartTagSpecial specialTagAt() {
         switch (text[pos]) {
             case '<':
@@ -36,7 +30,7 @@ class TagStreamParser {
     }
     CommentStatus commentStatus = CommentStatus::Displayed;
 public:
-    TagStreamParser(const std::string& text, size_t pos) : text(text) , pos(pos) {}
+    TagStreamParser(const std::string& text, size_t pos) : BaseParser(text, pos) {}
     std::unique_ptr<TagBase> parse() {
         auto composite = std::make_unique<TagStream>();
         std::ostringstream ss;

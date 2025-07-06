@@ -3,16 +3,16 @@
 #include <sstream>
 #include <cassert>
 #include <memory>
+
+#include "BaseParser.h"
 #include "Tag.h"
 #include "TagFactory.h"
 #include "../util/Whitespace.h"
 
-class TagParser {
+class TagParser: public BaseParser {
     TagFactory tagFactory = TagFactory::instance();
-    const std::string& text;
-    size_t pos;
 public:
-    TagParser(const std::string& text, size_t pos) : text(text) , pos(pos) {}
+    TagParser(const std::string& text, size_t pos) : BaseParser(text, pos) {}
     static bool startComment(const std::string &text, size_t &pos) {
         const std::string start = "<!--";
         if (text.starts_with(start)) {

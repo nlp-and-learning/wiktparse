@@ -3,14 +3,16 @@
 #include <sstream>
 #include <cassert>
 #include <memory>
-#include "../wikitext/Parser.h"
 #include "Tag.h"
 #include "TagFactory.h"
+#include "../util/Whitespace.h"
 
-class TagParser: public Parser {
+class TagParser {
     TagFactory tagFactory = TagFactory::instance();
+    const std::string& text;
+    size_t pos;
 public:
-    TagParser(const std::string& text, size_t pos) : Parser(text, pos) {}
+    TagParser(const std::string& text, size_t pos) : text(text) , pos(pos) {}
     static bool startComment(const std::string &text, size_t &pos) {
         const std::string start = "<!--";
         if (text.starts_with(start)) {
@@ -37,7 +39,7 @@ public:
         size_t start = pos;
         ++pos; // skip '<'
 
-        skipWhitespace();
+        Whitespace::skipWhitespace(text, pos);
 
         auto tag = std::make_unique<Tag>();
         tag->type = TagType::Open;
@@ -48,7 +50,7 @@ public:
             ++pos;
         }
 
-        skipWhitespace();
+        Whitespace::skipWhitespace(text, pos);
 
         // Parse tag name
         std::ostringstream name;
@@ -64,7 +66,7 @@ public:
 
         // Parse attributes
         while (pos < text.size()) {
-            skipWhitespace();
+            Whitespace::skipWhitespace(text, pos);
             if (text[pos] == '/' && text[pos + 1] == '>') {
                 if (tag->type == TagType::Open)
                     tag->type = TagType::SelfClosing;
@@ -85,12 +87,12 @@ public:
             while (pos < text.size() && (std::isalnum(text[pos]) || text[pos] == ':' || text[pos] == '-' || text[pos] == '_')) {
                 attrName << text[pos++];
             }
-            skipWhitespace();
+            Whitespace::skipWhitespace(text, pos);
 
             std::string value;
             if (pos < text.size() && text[pos] == '=') {
                 ++pos;
-                skipWhitespace();
+                Whitespace::skipWhitespace(text, pos);
                 if (pos < text.size() && (text[pos] == '"' || text[pos] == '\'')) {
                     char quote = text[pos++];
                     std::ostringstream val;

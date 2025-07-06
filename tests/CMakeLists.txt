@@ -13,10 +13,10 @@ add_executable(gtests test_templates.cpp
         ../src/xml/Comments.cpp
         ../src/wikitext/CompositeText.h
         ../src/wikitext/TextParser.h
-        ../src/wikitext/Tag.h
-        ../src/wikitext/TagParser.h
+        ../src/tags/Tag.h
+        ../src/tags/TagParser.h
         ../src/wikitext/Parser.h
-        ../src/wikitext/TagFactory.h
+        ../src/tags/TagFactory.h
 )
 
 target_link_libraries(gtests

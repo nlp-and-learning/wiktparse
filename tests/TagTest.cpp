@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../src/wikitext/Tag.h"
-#include "../src/wikitext/TagParser.h"
+#include "../src/tags/Tag.h"
+#include "../src/tags/TagParser.h"
 
 TEST(TagTest, SelfClosing) {
     std::string input = "<br  />";

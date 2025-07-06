@@ -3,7 +3,7 @@
 #include <sstream>
 #include <cassert>
 #include <memory>
-#include "Parser.h"
+#include "../wikitext/Parser.h"
 #include "Tag.h"
 #include "TagFactory.h"
 

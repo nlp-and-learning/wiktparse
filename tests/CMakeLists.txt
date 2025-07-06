@@ -17,6 +17,7 @@ add_executable(gtests test_templates.cpp
         ../src/tags/TagParser.h
         ../src/tags/BaseParser.h
         ../src/tags/TagFactory.h
+        ../src/comments/Comments.h
 )
 
 target_link_libraries(gtests

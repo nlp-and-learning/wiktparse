@@ -1,10 +1,17 @@
 #include <gtest/gtest.h>
 #include "../src/wikitext/CompositeText.h"
 #include "../src/wikitext/TextParser.h"
+#include "../src/tags/TagStreamParser.h"
 
 TEST(CommentTest, HideComments) {
     std::string input = "This is<!--comment 1--> simple <!--comment 2-->text";
     std::string expected = "This is simple text";
+    std::string comments = "<!--comment 1--><!--comment 2-->";
+    TagStreamParser tagParser(input, 0);
+    auto tagFragment = tagParser.parse();
+    EXPECT_EQ(input, tagFragment->dump(DUMP_ALL));
+    EXPECT_EQ(expected, tagFragment->dump(DUMP_DISPLAY));
+    EXPECT_EQ(comments, tagFragment->dump(DUMP_COMMENT));
     TextParser parser(input, 0);
     auto fragment = parser.parse();
     EXPECT_EQ(expected, fragment->displayText());
@@ -13,7 +20,10 @@ TEST(CommentTest, HideComments) {
 TEST(CommentTest, CommentAtEnd) {
     std::string input = "This is simple --> text<!--comment";
     std::string expected = "This is simple --> text";
-    std::string expectedDump = "This is simple --> text<!--comment-->";
+    TagStreamParser tagParser(input, 0);
+    auto tagFragment = tagParser.parse();
+    EXPECT_EQ(input, tagFragment->dump(DUMP_ALL));
+    EXPECT_EQ(expected, tagFragment->dump(DUMP_DISPLAY));
     TextParser parser(input, 0);
     auto fragment = parser.parse();
     EXPECT_EQ(expected, fragment->displayText());
@@ -22,6 +32,10 @@ TEST(CommentTest, CommentAtEnd) {
 TEST(CommentTest, CommentInsideNowiki) {
     std::string input = "This is <nowiki><!--comment--></nowiki> text";
     std::string expected = "This is <!--comment--> text ";
+    TagStreamParser tagParser(input, 0);
+    auto tagFragment = tagParser.parse();
+    EXPECT_EQ(input, tagFragment->dump(DUMP_ALL));
+    EXPECT_EQ(expected, tagFragment->dump(DUMP_DISPLAY));
     TextParser parser(input, 0);
     auto fragment = parser.parse();
     EXPECT_EQ(expected, fragment->displayText());

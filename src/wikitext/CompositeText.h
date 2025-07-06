@@ -1,16 +1,12 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include "../tags/Tag.h"
 
 enum class FontStyle {
     Proportional,
     Monospaced,
     Latex,
-};
-
-enum class CommentStatus {
-    Displayed,
-    Commented,
 };
 
 struct Fragment {

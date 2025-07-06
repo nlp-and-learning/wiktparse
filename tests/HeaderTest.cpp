@@ -88,3 +88,19 @@ TEST(HeaderTest, Alone) {
         EXPECT_EQ(expecteds[i], fragment->displayText());
     }
 }
+
+TEST(HeaderTest, Commented1) {
+    std::string input = "<!-- tr -->===444==";
+    std::string expected = "444";
+    TextParser parser(input, 0);
+    auto fragment = parser.parse();
+    EXPECT_EQ(expected, fragment->displayText());
+}
+
+TEST(HeaderTest, Commented2) {
+    std::string input = "==<!-- tr -->444==";
+    std::string expected = "444";
+    TextParser parser(input, 0);
+    auto fragment = parser.parse();
+    EXPECT_EQ(expected, fragment->displayText());
+}

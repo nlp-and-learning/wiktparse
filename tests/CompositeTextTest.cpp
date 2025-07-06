@@ -50,6 +50,30 @@ TEST(CompositeTest, Breaks4) {
     EXPECT_EQ(expected, fragment->displayText());
 }
 
+TEST(CompositeTest, CommentBreakA) {
+    std::string input = "a\n<!--comment -->\nb";
+    std::string expected = "a b";
+    TextParser parser(input, 0);
+    auto fragment = parser.parse();
+    EXPECT_EQ(expected, fragment->displayText());
+}
+
+TEST(CompositeTest, CommentBreakB) {
+    std::string input = "a\n\n<!--comment -->\nb";
+    std::string expected = "a\n\nb";
+    TextParser parser(input, 0);
+    auto fragment = parser.parse();
+    EXPECT_EQ(expected, fragment->displayText());
+}
+
+TEST(CompositeTest, CommentBreakC) {
+    std::string input = "a\n<!--comment -->\n\nb";
+    std::string expected = "a\n\nb";
+    TextParser parser(input, 0);
+    auto fragment = parser.parse();
+    EXPECT_EQ(expected, fragment->displayText());
+}
+
 TEST(TaggedTextTest, InvalidTag) {
     std::string input = "This is\n <!!> plain text";
     std::string expected = "This is <!!> plain text";

@@ -34,6 +34,12 @@ protected:
                 else
                     return StartSpecial::ConsiderTag;
             }
+            case '-': {
+                if (startsWithFrom("-->"))
+                    return StartSpecial::CommentClose;
+                else
+                    return StartSpecial::Other;
+            }
             case '{': {
                 if (startsWithFrom("{{")) {
                     if (startsWithFrom("{{#"))

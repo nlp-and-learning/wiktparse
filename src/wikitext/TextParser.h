@@ -1,6 +1,6 @@
 #pragma once
 #include "CompositeText.h"
-#include "Parser.h"
+#include "../tags/Parser.h"
 
 class TextParser: public Parser {
     CommentStatus commentStatus = CommentStatus::Displayed;

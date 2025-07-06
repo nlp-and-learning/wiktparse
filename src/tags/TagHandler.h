@@ -7,6 +7,11 @@ struct TagHandler {
     virtual void handle(const Tag& tag) const = 0;
 };
 
+struct NowikiHandler : TagHandler {
+    [[nodiscard]] std::string name() const override { return "nowiki"; }
+    void handle(const Tag& tag) const override {}
+};
+
 struct AbbrHandler : TagHandler {
     [[nodiscard]] std::string name() const override { return "abbr"; }
     void handle(const Tag& tag) const override {}

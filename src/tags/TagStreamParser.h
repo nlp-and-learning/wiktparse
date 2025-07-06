@@ -1,5 +1,6 @@
 #pragma once
 #include "Tag.h"
+#include "TagParser.h"
 
 enum class StartTagSpecial {
     CommentOpen,
@@ -59,6 +60,12 @@ public:
                     ss.str("");
                     commentStatus = CommentStatus::Displayed;
                     if (pos >= text.size()) break;
+                }
+            } else if (spec == StartTagSpecial::ConsiderTag) {
+                TagParser tagParser(text, pos);
+                auto tag = tagParser.parse();
+                if (tag->type!=TagType::Invalid) {
+                    std::string str = tag->dump(DUMP_ALL);
                 }
             }
             ss << text[pos];

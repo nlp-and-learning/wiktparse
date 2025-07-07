@@ -10,33 +10,6 @@ void old_TemplateParser::skipWhitespace(const std::string& text, size_t& pos) {
     while (pos < text.size() && std::isspace(text[pos])) ++pos;
 }
 
-std::unique_ptr<old_ParserFunction>  old_TemplateParser::parseParserFunction(const std::string& text, size_t& pos) {
-    if (text.compare(pos, 3, "{{#") != 0)
-        throw std::runtime_error("Expected parser function at pos " + std::to_string(pos));
-    pos += 3;
-    skipWhitespace(text, pos);
-
-    std::ostringstream fname;
-    while (pos < text.size() && text[pos] != ':' && text.compare(pos, 2, "}}") != 0)
-        fname << text[pos++];
-
-    if (pos >= text.size() || text[pos] != ':')
-        throw std::runtime_error("Missing ':' after parser function name");
-    ++pos;
-
-    auto func = std::make_unique<old_ParserFunction>();
-    func->functionName = fname.str();
-    while (pos < text.size()) {
-        if (text.compare(pos, 2, "}}") == 0) {
-            pos += 2;
-            break;
-        }
-        if (text[pos] == '|') ++pos;
-        func->arguments.push_back(old_parseCompositeText(text, pos, true));
-    }
-    return func;
-}
-
 std::string old_TemplateParser::parseName(const std::string &text, size_t &pos) {
     std::ostringstream name;
     while (pos < text.size() &&

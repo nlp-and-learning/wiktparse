@@ -74,9 +74,7 @@ std::unique_ptr<old_TextFragment> old_parseCompositeText(const std::string& text
             }
         }
         switch (startFragment) {
-            case StartFragment::Function:
-                composite->parts.push_back(old_TemplateParser::parseParserFunction(text, pos));break;
-            case StartFragment::Template:
+            case StartFragment::Function: case StartFragment::Template:
                 composite->parts.push_back(old_TemplateParser::parseTemplate(text, pos));break;
             case StartFragment::WikiLink:
                 composite->parts.push_back(old_parseWikiLink(text, pos));break;

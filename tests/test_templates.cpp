@@ -46,3 +46,27 @@ TEST(TemplateParserTest, CompositeWithMultipleLinks) {
     auto result = old_parseCompositeText(input, pos, false);
     EXPECT_EQ("[[France]], [[Belgium]] and [[Canada]]", result->toWikitext(old_FormatStyle::Compact));
 }
+
+TEST(TemplateParserTest, Function) {
+    std::string input = R"({{#invoke:Chart|pie chart
+| slices =
+    ( 82.42 : UK : blue )
+| units suffix = _bill._AMD
+| percent = true
+}})";
+    size_t pos = 0;
+    auto result = old_parseCompositeText(input, pos, false);
+}
+
+TEST(TemplateParserTest, FunctionInsideTemplate) {
+    std::string input = R"({{align|right|
+{{#invoke:Chart|pie chart
+| slices =
+    ( 82.42 : UK : blue )
+| units suffix = _bill._AMD
+| percent = true
+}}
+}})";
+    size_t pos = 0;
+    auto result = old_parseCompositeText(input, pos, false);
+}

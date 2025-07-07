@@ -6,12 +6,6 @@
 
 #include "old_text.h"
 
-struct old_ParserFunction: old_TextFragment {
-    std::string functionName;
-    std::vector<std::unique_ptr<old_TextFragment>> arguments;
-    [[nodiscard]] std::string toWikitext(old_FormatStyle style) const;
-};
-
 struct old_TemplateParameter {
     std::optional<std::string> name; // nullopt = pozycyjny
     std::unique_ptr<old_TextFragment> value;

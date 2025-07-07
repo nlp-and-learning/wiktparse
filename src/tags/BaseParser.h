@@ -2,8 +2,6 @@
 #include <cstring>
 
 enum class StartSpecial {
-    CommentOpen,
-    CommentClose,
     ConsiderTag,
     Function,
     Template,
@@ -29,16 +27,7 @@ protected:
         switch (text[pos]) {
             case '<':
             {
-                if (startsWithFrom("<!--"))
-                    return StartSpecial::CommentOpen;
-                else
-                    return StartSpecial::ConsiderTag;
-            }
-            case '-': {
-                if (startsWithFrom("-->"))
-                    return StartSpecial::CommentClose;
-                else
-                    return StartSpecial::Other;
+                return StartSpecial::ConsiderTag;
             }
             case '{': {
                 if (startsWithFrom("{{")) {

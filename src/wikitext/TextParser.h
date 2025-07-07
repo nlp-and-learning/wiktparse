@@ -11,26 +11,6 @@ public:
         std::ostringstream ss;
         while (pos < text.size()) {
             auto spec = specialAt();
-            if (spec == StartSpecial::CommentOpen) {
-                if (commentStatus == CommentStatus::Displayed) {
-                    auto displayed = ss.str();
-                    composite->parts.emplace_back(std::make_unique<TextFragment>(displayed, commentStatus));
-                    ss.str("");
-                    commentStatus = CommentStatus::Commented;
-                }
-            } else if (spec == StartSpecial::CommentClose) {
-                if (commentStatus == CommentStatus::Commented) {
-                    for (int i=0; i<3; i++) {
-                        ss << text[pos];
-                        pos++;
-                    }
-                    auto commented = ss.str();
-                    composite->parts.emplace_back(std::make_unique<TextFragment>(commented, commentStatus));
-                    ss.str("");
-                    commentStatus = CommentStatus::Displayed;
-                    if (pos >= text.size()) break;
-                }
-            }
             ss << text[pos];
             pos++;
         }

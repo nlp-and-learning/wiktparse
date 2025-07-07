@@ -95,7 +95,7 @@ public:
         // Parse attributes
         while (pos < text.size()) {
             Whitespace::skipWhitespace(text, pos);
-            if (text[pos] == '/' && text[pos + 1] == '>') {
+            if (text[pos] == '/' && pos+1 < text.size() && text[pos + 1] == '>') {
                 if (tag->type == TagType::Open)
                     tag->type = TagType::SelfClosing;
                 pos += 2;

@@ -95,4 +95,5 @@ protected:
     }
 public:
     BaseParser(const std::string& text, size_t pos) : text(text),pos(pos) {}
+    [[nodiscard]] size_t getPos() const { return pos;}
 };

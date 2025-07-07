@@ -68,3 +68,39 @@ TEST(TagTest, LtWithName) {
     EXPECT_EQ(TagType::Open, tag->type);
     EXPECT_EQ("span", tag->name);
 }
+
+TEST(TagTest, Badname) {
+    std::string input = "<badname>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Invalid, tag->type);
+    EXPECT_EQ("badname", tag->name);
+    EXPECT_EQ(1, parser.getPos());
+}
+
+TEST(TagTest, Long) {
+    std::string input = "<span long text with \n end text>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Open, tag->type);
+    EXPECT_EQ("span", tag->name);
+    EXPECT_EQ(input.size(), parser.getPos());
+}
+
+TEST(TagTest, NoGt) {
+    std::string input = "<span long text with \n end text";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Invalid, tag->type);
+    EXPECT_EQ("span", tag->name);
+    EXPECT_EQ(1, parser.getPos());
+}
+
+TEST(TagTest, OtherLt) {
+    std::string input = "<span long text <with \n end text>>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Invalid, tag->type);
+    EXPECT_EQ("span", tag->name);
+    EXPECT_EQ(1, parser.getPos());
+}

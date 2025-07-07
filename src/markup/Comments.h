@@ -55,6 +55,8 @@ class Comments {
                 auto closingPos = findMarker(pairs, "-->", startPos + 1);
                 if (closingPos < pairs.size())
                     startSegment = pairs[closingPos].first + len("-->");
+                else
+                    startSegment = textLen;
                 if (closingPos >= pairs.size() - 1)
                     break;
                 startPos = closingPos + 1;

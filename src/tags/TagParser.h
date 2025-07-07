@@ -53,11 +53,11 @@ public:
         Whitespace::skipWhitespace(text, pos);
 
         // Parse tag name
-        std::ostringstream name;
+        std::ostringstream ss_name;
         while (pos < text.size() && isNameChar(text[pos])) {
-            name << text[pos++];
+            ss_name << text[pos++];
         }
-        tag->name = name.str();
+        tag->name = ss_name.str();
         if (tag->name.empty()) {
             tag->type = TagType::Invalid;
             assert(pos == start+1);
@@ -84,35 +84,36 @@ public:
             while (pos < text.size() && !isNameChar(text[pos]))
                 ++pos;
             // Parse attribute name
-            std::ostringstream attrName;
-            while (pos < text.size() && (std::isalnum(text[pos]) || text[pos] == ':' || text[pos] == '-' || text[pos] == '_')) {
-                attrName << text[pos++];
-            }
+            std::ostringstream ss_attrName;
+            while (pos < text.size() && isNameChar(text[pos]))
+                ss_attrName << text[pos++];
+            std::string attrName = ss_attrName.str();
+
             Whitespace::skipWhitespace(text, pos);
 
+            std::ostringstream ss_value;
             std::string value;
             if (pos < text.size() && text[pos] == '=') {
                 ++pos;
                 Whitespace::skipWhitespace(text, pos);
                 if (pos < text.size() && (text[pos] == '"' || text[pos] == '\'')) {
                     char quote = text[pos++];
-                    std::ostringstream val;
+
                     while (pos < text.size() && text[pos] != quote) {
-                        val << text[pos++];
+                        ss_value << text[pos++];
                     }
                     if (pos < text.size() && text[pos] == quote)
                         ++pos;
-                    value = val.str();
+                    value = ss_value.str();
                 } else {
                     // unquoted attribute value
-                    std::ostringstream val;
                     while (pos < text.size() && !std::isspace(text[pos]) && text[pos] != '/' && text[pos] != '>') {
-                        val << text[pos++];
+                        ss_value << text[pos++];
                     }
-                    value = val.str();
+                    value = ss_value.str();
                 }
             }
-            tag->attributes.emplace_back(std::string(attrName.str()), std::string(value));
+            tag->attributes.emplace_back(attrName, value);
         }
 
         // If we reach here, tag was not properly closed

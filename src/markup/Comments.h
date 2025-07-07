@@ -53,9 +53,10 @@ class Comments {
                 if (pairs[startPos].first > startSegment)
                     segments.emplace_back(startSegment, pairs[startPos].first);
                 auto closingPos = findMarker(pairs, "-->", startPos + 1);
+                if (closingPos < pairs.size())
+                    startSegment = pairs[closingPos].first + len("-->");
                 if (closingPos >= pairs.size() - 1)
                     break;
-                startSegment = pairs[closingPos].first + len("-->");
                 startPos = closingPos + 1;
             }
             else

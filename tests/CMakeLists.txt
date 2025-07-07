@@ -3,7 +3,7 @@ enable_testing()
 find_package(GTest REQUIRED)
 
 add_executable(gtests test_templates.cpp
-        oldCommentTest.cpp
+        CommentTest.cpp
         CompositeTextTest.cpp
         TagTest.cpp
         HeaderTest.cpp

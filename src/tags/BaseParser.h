@@ -12,8 +12,6 @@ enum class StartSpecial {
 
 class BaseParser {
 protected:
-    size_t lineCount = 0;
-    size_t currentLineStart = 0;
     const std::string& text;
     size_t pos;
 
@@ -35,7 +33,7 @@ protected:
                     return StartSpecial::Other;
             }
             case '=': {
-                if (pos == currentLineStart)
+                if (pos == 0 || isBreak(text[pos - 1]))
                     return StartSpecial::Header;
                 else
                     return StartSpecial::Other;
@@ -76,9 +74,7 @@ protected:
                 break;
             }
         }
-        currentLineStart = pos;
         auto countBreak = std::max(countCR, countLF);
-        lineCount += countBreak;
         return countBreak;
     }
     std::pair<size_t, size_t> skipWhiteBreaks() {

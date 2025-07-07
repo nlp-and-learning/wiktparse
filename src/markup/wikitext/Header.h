@@ -3,5 +3,5 @@
 
 struct Header {
     std::string name;
-    int level;
+    size_t level;
 };

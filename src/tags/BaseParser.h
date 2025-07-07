@@ -2,8 +2,7 @@
 #include <cstring>
 
 enum class StartSpecial {
-    ConsiderTag,
-    Function,
+    Tag,
     Template,
     WikiLink,
     ExternalLink,
@@ -27,15 +26,12 @@ protected:
         switch (text[pos]) {
             case '<':
             {
-                return StartSpecial::ConsiderTag;
+                return StartSpecial::Tag;
             }
             case '{': {
-                if (startsWithFrom("{{")) {
-                    if (startsWithFrom("{{#"))
-                        return StartSpecial::Function;
-                    else
-                        return StartSpecial::Template;
-                } else
+                if (startsWithFrom("{{"))
+                    return StartSpecial::Template;
+                else
                     return StartSpecial::Other;
             }
             case '=': {

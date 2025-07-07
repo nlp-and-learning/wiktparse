@@ -3,7 +3,6 @@
 #include "../markup/BaseParser.h"
 
 class TextParser: public BaseParser {
-    CommentStatus commentStatus = CommentStatus::Displayed;
 public:
     TextParser(const std::string& text, size_t pos) : BaseParser(text, pos) {}
     std::unique_ptr<Fragment> parse() {
@@ -16,10 +15,10 @@ public:
         }
         if (!ss.str().empty()) {
             auto rest = ss.str();
-            composite->parts.emplace_back(std::make_unique<TextFragment>(rest, commentStatus));
+            composite->parts.emplace_back(std::make_unique<TextFragment>(rest));
         }
         if (composite->parts.empty())
-            return std::make_unique<TextFragment>("", CommentStatus::Displayed);
+            return std::make_unique<TextFragment>("");
         else if (composite->parts.size() == 1)
             return std::move(composite->parts[0]);
         else

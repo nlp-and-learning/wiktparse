@@ -19,14 +19,10 @@ struct TextFragment: public Fragment {
     std::string text;
     FontStyle fontStyle = FontStyle::Proportional;
     int fontSize = 0; //0: normal, 1 - big, -1 small, 2-bigger etc
-    CommentStatus commentStatus;
-    TextFragment(std::string t, CommentStatus commentStatus)
-        : text(std::move(t)), commentStatus(commentStatus) {}
+    TextFragment(std::string t)
+        : text(std::move(t)) {}
     [[nodiscard]] std::string displayText() const override {
-        if (commentStatus == CommentStatus::Displayed)
-            return text;
-        else
-            return "";
+        return text;
     };
 
     [[nodiscard]] std::string dump() const override {

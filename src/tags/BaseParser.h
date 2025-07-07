@@ -21,6 +21,15 @@ protected:
                text.compare(pos, prefix.size(), prefix) == 0;
     }
 
+    size_t trimmedEolPos() {
+        auto posEol = text.find_first_of("\r\n", pos);
+        if (posEol == std::string::npos)
+            posEol = text.size();
+        while (posEol>pos && Whitespace::isWikiSpace(text[posEol-1]))
+            --posEol;
+        return posEol;
+    }
+
     StartSpecial specialAt() {
         switch (text[pos]) {
             case '<':

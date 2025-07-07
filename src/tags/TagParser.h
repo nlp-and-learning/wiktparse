@@ -95,17 +95,24 @@ public:
         // Parse attributes
         while (pos < text.size()) {
             Whitespace::skipWhitespace(text, pos);
-            if (text[pos] == '/' && pos+1 < text.size() && text[pos + 1] == '>') {
-                if (tag->type == TagType::Open)
-                    tag->type = TagType::SelfClosing;
-                pos += 2;
-                return tag;
-            } else if (text[pos] == '>') {
+            while (pos < text.size() && !isNameChar(text[pos])) {
+                if (text[pos] == '/' && pos+1 < text.size() && text[pos + 1] == '>') {
+                    if (tag->type == TagType::Open)
+                        tag->type = TagType::SelfClosing;
+                    pos += 2;
+                    return tag;
+                }
+                if (text[pos] == '>') {
+                    ++pos;
+                    return tag;
+                }
+                if (text[pos] == '<') {
+                    tag->type = TagType::Invalid;
+                    pos = start + 1;
+                    return tag;
+                }
                 ++pos;
-                return tag;
             }
-            while (pos < text.size() && !isNameChar(text[pos]))
-                ++pos;
             std::string attrName = parseName();
 
             Whitespace::skipWhitespace(text, pos);

@@ -13,7 +13,7 @@ add_executable(gtests test_templates.cpp
         ../src/xml/old2_Comments.cpp
         ../src/wikitext/CompositeText.h
         ../src/wikitext/TextParser.h
-        ../src/tags/Tag.h
+        ../src/markup/tags/Tag.h
         ../src/markup/tags/TagParser.h
         ../src/markup/BaseParser.h
         ../src/markup/tags/TagFactory.h

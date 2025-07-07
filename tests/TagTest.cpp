@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/tags/Tag.h"
+#include "../src/markup/tags/Tag.h"
 #include "../src/markup/tags/TagParser.h"
 
 TEST(TagTest, SelfClosing) {

@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "../BaseParser.h"
-#include "../../tags/Tag.h"
+#include "Tag.h"
 #include "TagFactory.h"
 #include "../Whitespace.h"
 

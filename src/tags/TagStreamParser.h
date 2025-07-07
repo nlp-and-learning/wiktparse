@@ -1,6 +1,6 @@
 #pragma once
 #include "Tag.h"
-#include "TagParser.h"
+#include "../markup/tags/TagParser.h"
 
 enum class StartTagSpecial {
     CommentOpen,

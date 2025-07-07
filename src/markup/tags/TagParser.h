@@ -4,10 +4,10 @@
 #include <cassert>
 #include <memory>
 
-#include "BaseParser.h"
-#include "Tag.h"
+#include "../BaseParser.h"
+#include "../../tags/Tag.h"
 #include "TagFactory.h"
-#include "../markup/Whitespace.h"
+#include "../Whitespace.h"
 
 class TagParser: public BaseParser {
     TagFactory tagFactory = TagFactory::instance();

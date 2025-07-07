@@ -1,6 +1,6 @@
 #pragma once
 #include <cstring>
-#include "../markup/Whitespace.h"
+#include "Whitespace.h"
 
 enum class StartSpecial {
     Tag,

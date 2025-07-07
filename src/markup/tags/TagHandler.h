@@ -1,5 +1,5 @@
 #pragma once
-#include "Tag.h"
+#include "../../tags/Tag.h"
 
 struct TagHandler {
     virtual ~TagHandler() = default;

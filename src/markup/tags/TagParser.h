@@ -13,22 +13,7 @@ class TagParser: public BaseParser {
     TagFactory tagFactory = TagFactory::instance();
 public:
     TagParser(const std::string& text, size_t pos) : BaseParser(text, pos) {}
-    static bool startComment(const std::string &text, size_t &pos) {
-        const std::string start = "<!--";
-        if (text.starts_with(start)) {
-            pos += start.size();
-            return true;
-        } else
-            return false;
-    }
-    static bool endComment(const std::string &text, size_t &pos) {
-        const std::string end = "-->";
-        if (text.starts_with(end)) {
-            pos += end.size();
-            return true;
-        } else
-            return false;
-    }
+
     bool isNameChar(unsigned char c) {
         return std::isalnum(text[pos]) || text[pos] == ':' || text[pos] == '-' || text[pos] == '_';
     }

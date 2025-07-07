@@ -40,13 +40,6 @@ TEST(TagTest, Attributes1) {
     EXPECT_EQ("class", tag->attributes[1].first);
 }
 
-
-TEST(TagTest, CommentStart) {
-    std::string input = "<!--";
-    size_t pos = 0;
-    EXPECT_EQ(true, TagParser::startComment(input,pos));
-}
-
 TEST(TagTest, CommentAsInvalidTag) {
     std::string input = "<!--";
     TagParser parser(input, 0);

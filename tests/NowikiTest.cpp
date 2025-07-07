@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/comments/Comments.h"
+#include "../src/markup/Comments.h"
 
 TEST(NowikiTest, CommentInsideNowiki) {
     std::string input = "<nowiki><!-- comment--></nowiki>";

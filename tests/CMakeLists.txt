@@ -17,7 +17,7 @@ add_executable(gtests test_templates.cpp
         ../src/tags/TagParser.h
         ../src/tags/BaseParser.h
         ../src/tags/TagFactory.h
-        ../src/comments/Comments.h
+        ../src/markup/Comments.h
         NowikiTest.cpp
 )
 

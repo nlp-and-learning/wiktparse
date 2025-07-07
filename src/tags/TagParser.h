@@ -7,7 +7,7 @@
 #include "BaseParser.h"
 #include "Tag.h"
 #include "TagFactory.h"
-#include "../util/Whitespace.h"
+#include "../markup/Whitespace.h"
 
 class TagParser: public BaseParser {
     TagFactory tagFactory = TagFactory::instance();

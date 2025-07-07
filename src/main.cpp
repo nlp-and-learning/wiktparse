@@ -319,7 +319,6 @@ void wikipediaInfoboxes() {
             auto templates = extractTemplates(old2_Comments::clean(p.second));
             for (auto &tstr: templates) {
                 size_t pos = 0;
-                cout << format("parseTemplate {} {}\n",p.first, tstr);
                 auto t = old_TemplateParser::parseTemplate(tstr, pos);
                 auto name = trim(t->name);
                 if (name == "Infobox language")

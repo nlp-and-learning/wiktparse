@@ -60,7 +60,12 @@ public:
         tag->name = name.str();
         if (tag->name.empty()) {
             tag->type = TagType::Invalid;
-            assert(pos > start);
+            assert(pos == start+1);
+            return tag;
+        }
+        if (!tagFactory.has(tag->name)) {
+            tag->type = TagType::Invalid;
+            pos = start + 1;
             return tag;
         }
 
@@ -71,13 +76,9 @@ public:
                 if (tag->type == TagType::Open)
                     tag->type = TagType::SelfClosing;
                 pos += 2;
-                if (!tagFactory.has(tag->name))
-                    tag->type = TagType::Invalid;
                 return tag;
             } else if (text[pos] == '>') {
                 ++pos;
-                if (!tagFactory.has(tag->name))
-                    tag->type = TagType::Invalid;
                 return tag;
             }
             while (pos < text.size() && !isNameChar(text[pos]))

@@ -104,3 +104,12 @@ TEST(TagTest, OtherLt) {
     EXPECT_EQ("span", tag->name);
     EXPECT_EQ(1, parser.getPos());
 }
+
+TEST(TagTest, EmptyName) {
+    std::string input = "<=>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Invalid, tag->type);
+    EXPECT_EQ("", tag->name);
+    EXPECT_EQ(1, parser.getPos());
+}

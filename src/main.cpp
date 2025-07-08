@@ -10,7 +10,6 @@
 #include <string_view>
 #include <sys/stat.h>
 
-#include "xml/old2_Comments.h"
 #include "reader/Index.h"
 #include "headers/headers.h"
 #include "WikiData.h"
@@ -19,6 +18,7 @@
 #include <nlohmann/json.hpp>
 
 #include "headers/headerTree.h"
+#include "markup/Comments.h"
 #include "wikitext/old_Template.h"
 #include "wikitext/old_text.h"
 #include "wikitext/old_TemplateParser.h"
@@ -317,7 +317,7 @@ void wikipediaInfoboxes() {
         progress.update(wikiFile.filePos());
         auto objects =  xml.allFromChunk(chunkStr);
         for (auto &p : objects) {
-            auto templates = extractTemplates(old2_Comments::clean(p.second));
+            auto templates = extractTemplates(Comments::clean(p.second));
             for (auto &tstr: templates) {
                 size_t pos = 0;
                 auto t = old_TemplateParser::parseTemplate(tstr, pos);

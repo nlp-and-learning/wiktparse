@@ -20,8 +20,6 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/util/textUtils.h
         src/reader/WikiFile.cpp
         src/reader/WikiFile.h
-        src/xml/old2_Comments.cpp
-        src/xml/old2_Comments.h
         src/reader/WikiName.h
         src/WikiData.cpp
         src/WikiData.h

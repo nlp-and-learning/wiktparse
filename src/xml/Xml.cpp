@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include "../titles.h"
+#include "../markup/Comments.h"
 
 std::string Xml::termFromChunk(const std::string &term, const std::string &chunk) {
     std::string xmlStr = "<mediawiki>\n"+ chunk +"</mediawiki>\n";
@@ -25,7 +26,7 @@ std::string Xml::termFromChunk(const std::string &term, const std::string &chunk
                 if (text_node) {
                     std::string text = text_node.text().as_string();
                     if (cleanComments)
-                        text = old2_Comments::clean(text);
+                        text = Comments::clean(text);
                     return text;
                 }
             }
@@ -57,7 +58,7 @@ std::vector<std::pair<std::string,std::string>> Xml::allFromChunk(const std::str
             if (text_node) {
                 std::string text = text_node.text().as_string();
                 if (cleanComments)
-                    text = old2_Comments::clean(text);
+                    text = Comments::clean(text);
                 v.emplace_back(title, text);
             }
         }

@@ -10,7 +10,6 @@ add_executable(gtests test_templates.cpp
         ../src/wikitext/old_TemplateParser.cpp
         ../src/wikitext/old_Template.cpp
         ../src/wikitext/old_text.cpp
-        ../src/xml/old2_Comments.cpp
         ../src/wikitext/CompositeText.h
         ../src/wikitext/TextParser.h
         ../src/markup/tags/Tag.h

@@ -1,10 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "old2_Comments.h"
 
 class Xml {
-    old2_Comments comments;
     bool cleanComments;
 public:
     explicit Xml(bool cleanComments = true) : cleanComments(cleanComments) {}

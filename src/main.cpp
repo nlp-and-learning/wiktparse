@@ -311,6 +311,7 @@ void wikipediaInfoboxes() {
     index.open();
     Xml xml;
     Progress progress(wikiFile.size(), 0.001);
+    std::ofstream out("infoboxes.txt");
     for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
         auto chunkStr = wikiFile.decompressChunk(indexChunk);
         progress.update(wikiFile.filePos());
@@ -322,7 +323,7 @@ void wikipediaInfoboxes() {
                 auto t = old_TemplateParser::parseTemplate(tstr, pos);
                 auto name = trim(t->name);
                 if (name == "Infobox language")
-                    cout << format("{}\n",p.first);
+                    out << tstr << endl << endl;
             }
         }
     }

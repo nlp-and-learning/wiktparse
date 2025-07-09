@@ -2,6 +2,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "../Markup.h"
 
 enum class TagType {
     Open,
@@ -10,7 +11,7 @@ enum class TagType {
     Invalid,
 };
 
-struct Tag {
+struct Tag: public Markup {
     TagType type;
     std::string name;
     std::vector<std::pair<std::string, std::string>> attributes;

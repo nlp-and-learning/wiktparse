@@ -53,8 +53,6 @@ public:
         size_t start = pos;
         ++pos; // skip '<'
 
-        Whitespace::skipWhitespace(text, pos);
-
         auto tag = std::make_unique<Tag>();
         tag->type = TagType::Open;
 
@@ -64,14 +62,13 @@ public:
             ++pos;
         }
 
-        Whitespace::skipWhitespace(text, pos);
         tag->name = parseName();
         if (tag->name.empty()) {
             tag->type = TagType::Invalid;
             assert(pos == start+1);
             return tag;
         }
-        if (!tagFactory.has(tag->name)) {
+        if (tag->name!="nowiki" && !tagFactory.has(tag->name)) {
             tag->type = TagType::Invalid;
             pos = start + 1;
             return tag;

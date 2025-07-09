@@ -11,6 +11,95 @@ TEST(TagTest, SelfClosing) {
     EXPECT_EQ(0, tag->attributes.size());
 }
 
+TEST(TagTest, SelfClosing1) {
+    std::string input = "<span/>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::SelfClosing, tag->type);
+    EXPECT_EQ("span", tag->name);
+}
+
+TEST(TagTest, SelfClosing2) {
+    std::string input = "<nowiki/>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::SelfClosing, tag->type);
+    EXPECT_EQ("nowiki", tag->name);
+}
+
+TEST(TagTest, SelfClosing3) {
+    std::string input = "< span/>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Invalid, tag->type);
+}
+
+TEST(TagTest, SelfClosing4) {
+    std::string input = "< nowiki/>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Invalid, tag->type);
+}
+
+
+TEST(TagTest, SelfClosing5) {
+    std::string input = "<span  />";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::SelfClosing, tag->type);
+    EXPECT_EQ("span", tag->name);
+}
+
+TEST(TagTest, SelfClosing6) {
+    std::string input = "<nowiki  />";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::SelfClosing, tag->type);
+    EXPECT_EQ("nowiki", tag->name);
+}
+
+
+TEST(TagTest, SelfClosing7) {
+    std::string input = "<span/ >";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Open, tag->type);
+    EXPECT_EQ("span", tag->name);
+}
+
+TEST(TagTest, SelfClosing8) {
+    std::string input = "<nowiki/ >";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Open, tag->type);
+    EXPECT_EQ("nowiki", tag->name);
+}
+
+TEST(TagTest, SelfClosing9) {
+    std::string input = "<span/ \n >";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::Open, tag->type);
+    EXPECT_EQ("span", tag->name);
+}
+
+TEST(TagTest, SelfClosing10) {
+    std::string input = "<span \n />";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::SelfClosing, tag->type);
+    EXPECT_EQ("span", tag->name);
+}
+
+TEST(TagTest, SelfClosing11) {
+    std::string input = "<nowiki \n />";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ(TagType::SelfClosing, tag->type);
+    EXPECT_EQ("nowiki", tag->name);
+}
+
+
 TEST(TagTest, OtherChar) {
     std::string input = "<br  !/>";
     TagParser parser(input, 0);

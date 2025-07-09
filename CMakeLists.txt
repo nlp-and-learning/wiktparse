@@ -42,6 +42,8 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/markup/Whitespace.h
         src/markup/Comments.h
         src/markup/wikitext/Header.h
-        src/markup/wikitext/HeaderParser.h)
+        src/markup/wikitext/HeaderParser.h
+        src/markup/wikitext/WikiLink.h
+        src/markup/wikitext/WikiLinkParser.h)
 
 target_link_libraries(${PROJECT_NAME} bz2 pugixml::pugixml)

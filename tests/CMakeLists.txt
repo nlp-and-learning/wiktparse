@@ -18,6 +18,7 @@ add_executable(gtests test_templates.cpp
         ../src/markup/tags/TagFactory.h
         ../src/markup/Comments.h
         NowikiTest.cpp
+        WikiLinkTest.cpp
 )
 
 target_link_libraries(gtests

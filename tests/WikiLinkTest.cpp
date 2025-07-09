@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/markup/wikitext/WikiLinkParser.h"
+#include "../src/markup/wikinodes/WikiLinkParser.h"
 
 TEST(WikiLinkTest, Simple) {
     std::string input = "[[abc|def]]";

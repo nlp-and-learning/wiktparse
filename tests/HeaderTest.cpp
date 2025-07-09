@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <vector>
-#include "../src/markup/wikitext/HeaderParser.h"
+#include "../src/markup/wikinodes/HeaderParser.h"
 
 TEST(HeaderTest, HeaderSize) {
     std::string input = "=header=";

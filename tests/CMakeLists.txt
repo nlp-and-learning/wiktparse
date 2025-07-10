@@ -18,6 +18,8 @@ add_executable(gtests test_templates.cpp
         ../src/markup/tags/TagFactory.h
         ../src/markup/Comments.h
         ../src/markup/WikiText.h
+        ../src/markup/wikinodes/TemplateParser.cpp
+        ../src/markup/MarkupParser.cpp
         NowikiTest.cpp
         WikiLinkTest.cpp
 )

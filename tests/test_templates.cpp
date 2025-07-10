@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include "../src/wikitext/old_TemplateParser.h"
+#include "../src/markup/wikinodes/TemplateParser.h"
 
-// Pomocnik: zwraca wynik jako tekst w stylu zwiniętym
 std::string parseAndPrint(const std::string& input) {
-    size_t pos = 0;
-    auto result = old_TemplateParser::parseTemplate(input, pos);
-    return result->toWikitext(old_FormatStyle::Compact);
+    TemplateParser parser(input, 0);
+    auto result = parser.parse();
+    return result->dump();
 }
 
 TEST(TemplateParserTest, BasicTemplate) {

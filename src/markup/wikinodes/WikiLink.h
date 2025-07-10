@@ -6,4 +6,10 @@ class WikiLink: public Markup {
 public:
     std::string target;
     std::string display;
+    [[nodiscard]] std::string dump() const override {
+        std::string out = "[[" + target;
+        out += "|" + display;
+        out += "]]";
+        return out;
+    }
 };

@@ -36,3 +36,17 @@ TEST(NowikiTest, NotClosed) {
     std::string expected = "abc<nowiki>a<nowiki>";
     EXPECT_EQ(expected, Comments::clean(input));
 }
+
+TEST(NowikiTest, Templates) {
+    std::string input = "{{name|a|b}}<nowiki>{{name|a|b}}</nowiki>";
+    std::string expected = "{{name|a|b}}{{name|a|b}}";
+    auto wikiText = Comments::preparse(input);
+    auto wikiGroup = dynamic_cast<WikiGroup*>(wikiText.get());
+    EXPECT_TRUE(wikiGroup);
+    EXPECT_TRUE(wikiGroup->parts.size()==2);
+    auto wikiFragment = dynamic_cast<WikiFragment*>(wikiGroup->parts[0].get());
+    EXPECT_TRUE(wikiFragment->isActive);
+    wikiFragment = dynamic_cast<WikiFragment*>(wikiGroup->parts[1].get());
+    EXPECT_FALSE(wikiFragment->isActive);
+    EXPECT_EQ(expected, wikiText->str());
+}

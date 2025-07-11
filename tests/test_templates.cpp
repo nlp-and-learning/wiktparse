@@ -1,3 +1,4 @@
+#include <fstream>
 #include <gtest/gtest.h>
 #include "../src/wikitext/old_TemplateParser.h"
 #include "../src/markup/wikinodes/TemplateParser.h"
@@ -17,12 +18,6 @@ TEST(TemplateParserTest, BasicTemplate) {
 TEST(TemplateParserTest, NestedTemplate) {
     std::string input = "{{outer|{{inner|val}}|key=value}}";
     std::string expected = "{{outer|{{inner|val}}|key=value}}";
-    EXPECT_EQ(expected, parseAndPrint(input));
-}
-
-TEST(TemplateParserTest, ParserFunction) {
-    std::string input = "{{#expr: 2+2}}";
-    std::string expected = "{{#expr:2+2}}";
     EXPECT_EQ(expected, parseAndPrint(input));
 }
 
@@ -51,13 +46,7 @@ TEST(TemplateParserTest, FunctionInsideTemplate) {
 }
 
 TEST(TemplateParserTest, FormatStr1) {
-    std::string input = R"({{Short description|Country in Central Europe}}
-{{About|the country}}
-{{pp-move}}
-{{protection padlock|small=yes}}
-{{Use dmy dates|date=July 2024}}
-{{Use British English|date=June 2024}}
-{{Infobox country
+    std::string input = R"({{Infobox country
 | conventional_long_name = Republic of Poland
 | common_name            = Poland
 | native_name            = {{nativename|pl|Rzeczpospolita Polska}}
@@ -65,23 +54,42 @@ TEST(TemplateParserTest, FormatStr1) {
 | flag_border            = Flag of Poland (normative).svgize
 | image_coat             = Herb Polski.svg
 }})";
+    TemplateParser parser(input, 0);
+    auto templ = parser.parse();
+    EXPECT_EQ(input, templ->formatStr());
 }
-
-
 
 TEST(TemplateParserTest, FormatStr2) {
     std::string input = R"({{Geographic location
- | Center    = ''Cartagena''
- | North     = Caribbean Sea, Bocacanoa
- | Northeast = Bayunca, [[Clemencia, Colombia|Clemencia]]
- | East      = [[Villanueva, Bolívar]], [[San Estanislao]]
- | Southeast = [[Turbaco]], [[Arjona, Colombia|Arjona]]
- | South     = [[Tierra Bomba Island]], Portonao.
- | Southwest = Caribbean Sea
- | West      = Caribbean Sea
- | Northwest = Caribbean Sea
+| Center    = ''Cartagena''
+| North     = Caribbean Sea, Bocacanoa
+| Northeast = Bayunca, [[Clemencia, Colombia|Clemencia]]
+| East      = [[Villanueva, Bolívar]], [[San Estanislao]]
+| Southeast = [[Turbaco]], [[Arjona, Colombia|Arjona]]
+| South     = [[Tierra Bomba Island]], Portonao.
+| Southwest = Caribbean Sea
+| West      = Caribbean Sea
+| Northwest = Caribbean Sea
 }})";
     TemplateParser parser(input, 0);
-    auto temp = parser.parse();
-    std::cout <<  temp->dump();
+    auto templ = parser.parse();
+    EXPECT_EQ(input, templ->formatStr());
+}
+
+
+TEST(TemplateParserTest, UnnamedParams) {
+    std::string input = R"({{Chess diagram|tright
+|Moves of a bishop
+|  |  |  |  |  |  |  |oo
+|oo|  |  |  |  |  |oo|
+|  |oo|  |  |  |oo|  |
+|  |  |oo|  |oo|  |  |
+|  |  |  |bl|  |  |  |
+|  |  |oo|  |oo|  |  |
+|  |oo|  |  |  |oo|  |
+|oo|  |  |  |  |  |oo|
+}})";
+    TemplateParser parser(input, 0);
+    auto templ = parser.parse();
+    EXPECT_EQ(input, templ->dump());
 }

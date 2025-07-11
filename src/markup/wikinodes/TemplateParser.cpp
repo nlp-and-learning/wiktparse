@@ -28,13 +28,14 @@ std::unique_ptr<Template> TemplateParser::parse() {
         }
         if (text[pos] == '|') ++pos;
 
-        Whitespace::skipWhitespace(text, pos);
         size_t eq_nextSep = text.find_first_of("|{=", pos);
         std::optional<std::string> optKey;
         if (eq_nextSep != std::string::npos && text[eq_nextSep] == '=') {
             size_t spacePos = eq_nextSep;
-            while (spacePos>0 && text[spacePos-1] == ' ') spacePos--;
-            std::string key = text.substr(pos, spacePos - pos);
+            while (spacePos>0 && Whitespace::isWikiSpace(text[spacePos-1])) spacePos--;
+            auto keyStart = pos;
+            while (keyStart < spacePos && Whitespace::isWikiSpace(text[keyStart])) keyStart++;
+            std::string key = text.substr(keyStart, spacePos - keyStart);
             pos = eq_nextSep + 1;
             optKey = key;
         } else {

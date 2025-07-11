@@ -8,59 +8,48 @@ public:
     WikiLinkParser(const std::string& text, size_t pos) : BaseParser(text, pos) {}
     std::unique_ptr<WikiLink> parse() {
         if (!startsWithFrom("[[")) return nullptr;
-        size_t startPos = pos;
         pos += 2;
-
-        std::stringstream targetStream;
-        std::stringstream displayStream;
-
-        enum class State { Target, Display };
-        State state = State::Target;
+        size_t startPos = pos;
+        auto link = std::make_unique<WikiLink>();
+        std::string currentPart;
 
         while (pos + 1 < text.size()) {
-            char c = text[pos];
-            char next = text[pos + 1];
-
-            // WikiLink end
-            if (c == ']' && next == ']') {
+            // Detecting ]] termination without consuming the suffix
+            if (text[pos] == ']' && text[pos + 1] == ']') {
+                link->parts.push_back(std::move(currentPart));
                 pos += 2;
+
+                // Suffix parsing: ASCII letters only
+                while (pos < text.size() && std::isalpha(static_cast<unsigned char>(text[pos]))) {
+                    link->suffix.push_back(text[pos]);
+                    ++pos;
+                }
                 break;
             }
 
-            // Not allowed: nested [[
-            if (c == '[' && next == '[') {
-                return nullptr;
-            }
-
-            // Separator
-            if (c == '|' && state == State::Target) {
+            // New part after '|'
+            if (text[pos] == '|') {
+                link->parts.push_back(std::move(currentPart));
+                currentPart.clear();
                 ++pos;
-                state = State::Display;
                 continue;
             }
 
-            // Addition chars
-            if (state == State::Target) {
-                targetStream << c;
-            } else {
-                displayStream << c;
-            }
-
+            // Normal character (including \n, spaces, whatever)
+            currentPart.push_back(text[pos]);
             ++pos;
         }
 
-        if (pos == startPos + 2) return nullptr; // empty [[ ]]
-
-        // Suffice (ascii stream after ]])
-        std::string suffix;
-        while (pos < text.size() && isalpha(text[pos])) {
-            suffix += text[pos++];
+        // If there was no closure ]], treat as one part
+        if (pos + 1 >= text.size()) {
+            link->parts.clear();
+            link->parts.push_back(text.substr(startPos));
+            link->suffix.clear();
         }
-
-        auto link = std::make_unique<WikiLink>();
-        link->target = targetStream.str();
-        link->display = (state == State::Display ? displayStream.str() : link->target) + suffix;
-
+        if (!link->parts.empty()) {
+            link->target = link->parts[0];
+            link->display = link->parts.back() + link->suffix;
+        }
         return link;
     }
 };

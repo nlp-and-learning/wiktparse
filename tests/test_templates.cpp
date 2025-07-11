@@ -4,8 +4,8 @@
 
 std::string parseAndPrint(const std::string& input) {
     TemplateParser parser(input, 0);
-    auto result = parser.parse();
-    return result->dump();
+    auto temp = parser.parse();
+    return temp->dump();
 }
 
 TEST(TemplateParserTest, BasicTemplate) {
@@ -24,27 +24,6 @@ TEST(TemplateParserTest, ParserFunction) {
     std::string input = "{{#expr: 2+2}}";
     std::string expected = "{{#expr:2+2}}";
     EXPECT_EQ(expected, parseAndPrint(input));
-}
-
-TEST(TemplateParserTest, WikiLinkSimple) {
-    std::string input = "[[France]]";
-    size_t pos = 0;
-    auto result = old_parseWikiLink(input, pos);
-    EXPECT_EQ("[[France]]", result->toWikitext(old_FormatStyle::Compact));
-}
-
-TEST(TemplateParserTest, WikiLinkWithAlias) {
-    std::string input = "[[France|French Republic]]";
-    size_t pos = 0;
-    auto result = old_parseWikiLink(input, pos);
-    EXPECT_EQ("[[France|French Republic]]", result->toWikitext(old_FormatStyle::Compact));
-}
-
-TEST(TemplateParserTest, CompositeWithMultipleLinks) {
-    std::string input = "[[France]], [[Belgium]] and [[Canada]]";
-    size_t pos = 0;
-    auto result = old_parseCompositeText(input, pos, false);
-    EXPECT_EQ("[[France]], [[Belgium]] and [[Canada]]", result->toWikitext(old_FormatStyle::Compact));
 }
 
 TEST(TemplateParserTest, Function) {
@@ -69,4 +48,40 @@ TEST(TemplateParserTest, FunctionInsideTemplate) {
 }})";
     size_t pos = 0;
     auto result = old_parseCompositeText(input, pos, false);
+}
+
+TEST(TemplateParserTest, FormatStr1) {
+    std::string input = R"({{Short description|Country in Central Europe}}
+{{About|the country}}
+{{pp-move}}
+{{protection padlock|small=yes}}
+{{Use dmy dates|date=July 2024}}
+{{Use British English|date=June 2024}}
+{{Infobox country
+| conventional_long_name = Republic of Poland
+| common_name            = Poland
+| native_name            = {{nativename|pl|Rzeczpospolita Polska}}
+| image_flag             = Flag of Poland.svg
+| flag_border            = Flag of Poland (normative).svgize
+| image_coat             = Herb Polski.svg
+}})";
+}
+
+
+
+TEST(TemplateParserTest, FormatStr2) {
+    std::string input = R"({{Geographic location
+ | Center    = ''Cartagena''
+ | North     = Caribbean Sea, Bocacanoa
+ | Northeast = Bayunca, [[Clemencia, Colombia|Clemencia]]
+ | East      = [[Villanueva, Bolívar]], [[San Estanislao]]
+ | Southeast = [[Turbaco]], [[Arjona, Colombia|Arjona]]
+ | South     = [[Tierra Bomba Island]], Portonao.
+ | Southwest = Caribbean Sea
+ | West      = Caribbean Sea
+ | Northwest = Caribbean Sea
+}})";
+    TemplateParser parser(input, 0);
+    auto temp = parser.parse();
+    std::cout <<  temp->dump();
 }

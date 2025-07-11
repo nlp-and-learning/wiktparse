@@ -21,7 +21,7 @@ std::unique_ptr<Template> TemplateParser::parse() {
     auto templ = std::make_unique<Template>();
     templ->name = parseName();
     while (pos < text.size()) {
-        Whitespace::skipWhitespace(text, pos);
+        Whitespace::skipWhiteBreaks(text, pos);
         if (text.compare(pos, 2, "}}") == 0) {
             pos += 2;
             break;
@@ -30,7 +30,7 @@ std::unique_ptr<Template> TemplateParser::parse() {
 
         Whitespace::skipWhitespace(text, pos);
         size_t eq = text.find('=', pos);
-        size_t nextSep = text.find_first_of("|{\n", pos);
+        size_t nextSep = text.find_first_of("|{", pos);
 
         std::optional<std::string> optKey;
         if (eq != std::string::npos && eq < nextSep) {
@@ -38,13 +38,12 @@ std::unique_ptr<Template> TemplateParser::parse() {
             while (spacePos>0 && text[spacePos-1] == ' ') spacePos--;
             std::string key = text.substr(pos, spacePos - pos);
             pos = eq + 1;
-            Whitespace::skipWhitespace(text, pos);
             optKey = key;
         } else {
             optKey = std::nullopt;
         }
         MarkupParser parser(text, pos);
-        templ->parameters.emplace_back(optKey, parser.parse(true));
+        templ->parameters.emplace_back(optKey, parser.parse(optKey?2:1));
         pos = parser.getPos();
     }
     return templ;

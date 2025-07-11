@@ -5,15 +5,26 @@
 #include "wikinodes/TemplateParser.h"
 #include "wikinodes/WikiLinkParser.h"
 
-std::unique_ptr<Markup> MarkupParser::parse(bool insideParam) {
+//asParamValue: 0: none; 1: unnamed; 2: named->trim
+std::unique_ptr<Markup> MarkupParser::parse(int asParamValue) {
     auto composite = std::make_unique<Markups>();
     std::ostringstream buffer;
+    if (asParamValue == 2)
+        Whitespace::skipWhiteBreaks(text, pos);
     while (pos < text.size()) {
-        if (insideParam) {
-            if (text.compare(pos, 2, "}}") == 0 || text[pos] == '|' || text[pos] == '\n')
+        if (asParamValue > 0) {
+            if (text.compare(pos, 2, "}}") == 0 || text[pos] == '|')
+                break;
+            if (asParamValue == 2 && text[pos] == '\n')
                 break;
         }
         auto startFragment = specialAt();
+        if (startFragment!=StartSpecial::Other) {
+            if (!buffer.str().empty()) {
+                composite->parts.push_back(std::make_unique<RichText>(buffer.str()));
+                buffer.str("");
+            }
+        }
         switch (startFragment) {
             case StartSpecial::Template: {
                 TemplateParser templateParser(text, pos);

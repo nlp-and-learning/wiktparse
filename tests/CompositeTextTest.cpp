@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+
+#include "../src/markup/MarkupParser.h"
 #include "../src/wikitext/CompositeText.h"
 #include "../src/wikitext/TextParser.h"
 
@@ -149,4 +151,12 @@ TEST(TaggedTextTest, LtWithName1) {
     TextParser parser(input, 0);
     auto fragment = parser.parse();
     EXPECT_EQ(expected, fragment->displayText());
+}
+
+
+TEST(CompositeTest, CompositeWithMultipleLinks) {
+    std::string input = "[[France]], [[Belgium]] and [[Canada]]";
+    MarkupParser parser(input, 0);
+    auto composite = parser.parse(false);
+    EXPECT_EQ("[[France]], [[Belgium]] and [[Canada]]", composite->dump());
 }

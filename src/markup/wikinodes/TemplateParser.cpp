@@ -29,15 +29,13 @@ std::unique_ptr<Template> TemplateParser::parse() {
         if (text[pos] == '|') ++pos;
 
         Whitespace::skipWhitespace(text, pos);
-        size_t eq = text.find('=', pos);
-        size_t nextSep = text.find_first_of("|{", pos);
-
+        size_t eq_nextSep = text.find_first_of("|{=", pos);
         std::optional<std::string> optKey;
-        if (eq != std::string::npos && eq < nextSep) {
-            size_t spacePos = eq;
+        if (eq_nextSep != std::string::npos && text[eq_nextSep] == '=') {
+            size_t spacePos = eq_nextSep;
             while (spacePos>0 && text[spacePos-1] == ' ') spacePos--;
             std::string key = text.substr(pos, spacePos - pos);
-            pos = eq + 1;
+            pos = eq_nextSep + 1;
             optKey = key;
         } else {
             optKey = std::nullopt;

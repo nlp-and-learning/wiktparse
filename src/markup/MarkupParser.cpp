@@ -26,12 +26,6 @@ std::unique_ptr<Markup> MarkupParser::parse(CalledFrom asParamValue) {
                 break;
         }
         auto startFragment = specialAt();
-        if (startFragment!=StartSpecial::Other) {
-            if (!buffer.str().empty()) {
-                composite->parts.push_back(std::make_unique<RichText>(buffer.str()));
-                buffer.str("");
-            }
-        }
         switch (startFragment) {
             case StartSpecial::Tag: {
                 TagParser tagParser(text, pos);
@@ -39,6 +33,10 @@ std::unique_ptr<Markup> MarkupParser::parse(CalledFrom asParamValue) {
                 if (tag->type == TagType::Invalid) {
                     buffer << text[pos++];
                 } else {
+                    if (!buffer.str().empty()) {
+                        composite->parts.push_back(std::make_unique<RichText>(buffer.str()));
+                        buffer.str("");
+                    }
                     composite->parts.push_back(std::move(tag));
                     pos = tagParser.getPos();
                 }
@@ -46,20 +44,43 @@ std::unique_ptr<Markup> MarkupParser::parse(CalledFrom asParamValue) {
             }
             case StartSpecial::Template: {
                 TemplateParser templateParser(text, pos);
-                composite->parts.push_back(templateParser.parse());
-                pos = templateParser.getPos();
+                auto templ = templateParser.parse();
+                if (templ->invalid) {
+                    buffer << text[pos++];
+                } else {
+                    if (!buffer.str().empty()) {
+                        composite->parts.push_back(std::make_unique<RichText>(buffer.str()));
+                        buffer.str("");
+                    }
+                    composite->parts.push_back(std::move(templ));
+                    pos = templateParser.getPos();
+                }
                 break;
             }
             case StartSpecial::WikiLink: {
                 WikiLinkParser wikiLinkParser(text, pos);
-                composite->parts.push_back(wikiLinkParser.parse());
+                auto link = wikiLinkParser.parse();
+                if (!buffer.str().empty()) {
+                    composite->parts.push_back(std::make_unique<RichText>(buffer.str()));
+                    buffer.str("");
+                }
+                composite->parts.push_back(std::move(link));
                 pos = wikiLinkParser.getPos();
                 break;
             }
             case StartSpecial::Header: {
                 HeaderParser headerParser(text, pos);
-                composite->parts.push_back(headerParser.parse());
-                pos = headerParser.getPos();
+                auto header = headerParser.parse();
+                if (header->level == 0) {
+                    buffer << text[pos++];
+                } else {
+                    if (!buffer.str().empty()) {
+                        composite->parts.push_back(std::make_unique<RichText>(buffer.str()));
+                        buffer.str("");
+                    }
+                    composite->parts.push_back(std::move(header));
+                    pos = headerParser.getPos();
+                }
                 break;
             }
             default:buffer << text[pos++];

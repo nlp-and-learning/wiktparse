@@ -19,9 +19,7 @@
 
 #include "headers/headerTree.h"
 #include "markup/Comments.h"
-#include "wikitext/old_Template.h"
-#include "wikitext/old_text.h"
-#include "wikitext/old_TemplateParser.h"
+#include "markup/wikinodes/TemplateParser.h"
 #include "wikitext/templates.h"
 #include "util/Progress.h"
 #include "util/structs.h"
@@ -294,12 +292,6 @@ void testTemplates() {
         std::cout << path << "\n";
         extractTemplatesFromFile(path);
     }
-
-    std::string input = "{{Infobox person|name=John|birth={{birth date|1990|1|1}}|known={{#if:1|Author|Unknown}}}}";
-    size_t pos = 0;
-    auto t = old_TemplateParser::parseTemplate(input, pos);
-    std::cout << t->toWikitext(old_FormatStyle::Compact) << std::endl;
-    std::cout << t->toWikitext(old_FormatStyle::Multiline) << std::endl;
 }
 
 void wikipediaInfoboxes() {
@@ -320,7 +312,8 @@ void wikipediaInfoboxes() {
             auto templates = extractTemplates(Comments::clean(p.second));
             for (auto &tstr: templates) {
                 size_t pos = 0;
-                auto t = old_TemplateParser::parseTemplate(tstr, pos);
+                TemplateParser parser(tstr, 0);
+                auto t = parser.parse();
                 auto name = trim(t->name);
                 if (name == "Infobox language")
                     out << tstr << endl << endl;
@@ -345,8 +338,9 @@ void pagesInfoboxes() {
         for (auto &tstr: templates) {
             size_t pos = 0;
             cout << format("parse: {}\n",tstr) << flush;
-            auto t = old_TemplateParser::parseTemplate(tstr, pos);
-            cout << t->toWikitext(old_FormatStyle::Compact) << std::endl;
+            TemplateParser parser(tstr, 0);
+            auto t = parser.parse();
+            cout << t->dump() << std::endl;
         }
     }
 

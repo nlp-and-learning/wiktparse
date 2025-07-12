@@ -7,11 +7,6 @@ add_executable(gtests test_templates.cpp
         CompositeTextTest.cpp
         TagTest.cpp
         HeaderTest.cpp
-        ../src/wikitext/old_TemplateParser.cpp
-        ../src/wikitext/old_Template.cpp
-        ../src/wikitext/old_text.cpp
-        ../src/wikitext/CompositeText.h
-        ../src/wikitext/TextParser.h
         ../src/markup/tags/Tag.h
         ../src/markup/tags/TagParser.h
         ../src/markup/BaseParser.h

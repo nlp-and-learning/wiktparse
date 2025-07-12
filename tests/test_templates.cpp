@@ -1,6 +1,5 @@
 #include <fstream>
 #include <gtest/gtest.h>
-#include "../src/wikitext/old_TemplateParser.h"
 #include "../src/markup/wikinodes/TemplateParser.h"
 
 std::string parseAndPrint(const std::string& input) {
@@ -28,8 +27,9 @@ TEST(TemplateParserTest, Function) {
 | units suffix = _bill._AMD
 | percent = true
 }})";
-    size_t pos = 0;
-    auto result = old_parseCompositeText(input, pos, false);
+    TemplateParser parser(input, 0);
+    auto templ = parser.parse();
+    EXPECT_EQ(input, templ->formatStr());
 }
 
 TEST(TemplateParserTest, FunctionInsideTemplate) {
@@ -41,8 +41,9 @@ TEST(TemplateParserTest, FunctionInsideTemplate) {
 | percent = true
 }}
 }})";
-    size_t pos = 0;
-    auto result = old_parseCompositeText(input, pos, false);
+    TemplateParser parser(input, 0);
+    auto templ = parser.parse();
+    EXPECT_EQ(input, templ->formatStr());
 }
 
 TEST(TemplateParserTest, FormatStr1) {

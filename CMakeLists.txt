@@ -26,10 +26,6 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/reader/WikiName.cpp
         src/wikitext/templates.cpp
         src/wikitext/templates.h
-        src/wikitext/old_Template.cpp
-        src/wikitext/old_Template.h
-        src/wikitext/old_TemplateParser.cpp
-        src/wikitext/old_TemplateParser.h
         src/util/Progress.cpp
         src/util/Progress.h
         src/titles.cpp
@@ -37,8 +33,6 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/headers/headerTree.cpp
         src/headers/headerTree.h
         src/util/structs.h
-        src/wikitext/old_text.h
-        src/wikitext/old_text.cpp
         src/markup/Whitespace.h
         src/markup/Comments.h
         src/markup/wikinodes/Header.h

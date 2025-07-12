@@ -1,6 +1,4 @@
 #include <gtest/gtest.h>
-#include "../src/wikitext/CompositeText.h"
-#include "../src/wikitext/TextParser.h"
 #include "../src/markup/Comments.h"
 
 TEST(CommentTest, HideComments) {

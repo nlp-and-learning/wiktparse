@@ -1,7 +1,7 @@
 #include "TemplateParser.h"
 #include "../MarkupParser.h"
 
- bool TemplateParser::parseName(std::string &name) {
+bool TemplateParser::parseName(std::string &name) {
     std::ostringstream ss;
     while (pos < text.size() &&
            text[pos] != '|' &&
@@ -11,7 +11,12 @@
     {
         ss << text[pos++];
     }
-    if (text[pos] == '\n' || startsWithFrom("{{"))
+    if (text[pos] == '\n') {
+        Whitespace::skipWhiteBreaks(text, pos);
+        if (text[pos] != '|' && !startsWithFrom("}}"))
+            return false;
+    }
+    if (startsWithFrom("{{"))
         return false;
     name = ss.str();
     return true;

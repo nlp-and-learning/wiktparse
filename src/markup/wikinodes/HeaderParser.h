@@ -46,6 +46,7 @@ public:
                 header->name = "==";
             header->level = (lineLen - header->name.size()) / 2;
         }
+        pos = endPos;
         return header;
     }
 };

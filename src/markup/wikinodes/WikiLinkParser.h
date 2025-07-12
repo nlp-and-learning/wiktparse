@@ -27,7 +27,7 @@ public:
 
             // Parse one part with subparser
             MarkupParser subparser(text, pos);
-            auto part = subparser.parse(1);  // tryb 1: zakończ na '|'
+            auto part = subparser.parse(CalledFrom::WikiLink);
             pos = subparser.getPos();
 
             if (part) {

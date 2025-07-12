@@ -94,3 +94,17 @@ TEST(TemplateParserTest, UnnamedParams) {
     auto templ = parser.parse();
     EXPECT_EQ(input, templ->dump());
 }
+
+TEST(TemplateParserTest, WikiLinkInTemplate) {
+    std::string input = "{{chset-cell1 | 61 U+003D: EQUALS SIGN | [[=]] }}";
+    TemplateParser parser(input, 0);
+    auto templ = parser.parse();
+    EXPECT_EQ(input, templ->dump());
+}
+
+TEST(TemplateParserTest, InvalidWikilink) {
+    std::string input = "{{chset-cell1 | 61 U+003D: EQUALS SIGN | ]] }}";
+    TemplateParser parser(input, 0);
+    auto templ = parser.parse();
+    EXPECT_EQ(input, templ->dump());
+}

@@ -7,17 +7,22 @@
 #include "wikinodes/TemplateParser.h"
 #include "wikinodes/WikiLinkParser.h"
 
-//asParamValue: 0: none; 1: unnamed; 2: named->trim
-std::unique_ptr<Markup> MarkupParser::parse(int asParamValue) {
+std::unique_ptr<Markup> MarkupParser::parse(CalledFrom asParamValue) {
     auto composite = std::make_unique<Markups>();
     std::ostringstream buffer;
-    if (asParamValue == 2)
+    if (asParamValue == CalledFrom::NamedParam)
         Whitespace::skipWhiteBreaks(text, pos);
     while (pos < text.size()) {
-        if (asParamValue > 0) {
-            if (text.compare(pos, 2, "}}") == 0 || text.compare(pos, 2, "]]") == 0 ||  text[pos] == '|')
-                break;
-            if (asParamValue == 2 && text[pos] == '\n')
+        if (asParamValue != CalledFrom::Top) {
+            if (asParamValue == CalledFrom::WikiLink) {
+                if (text.compare(pos, 2, "]]") == 0 ||  text[pos] == '|')
+                    break;
+            }
+            else {
+                if (text.compare(pos, 2, "}}") == 0 ||  text[pos] == '|')
+                    break;
+            }
+            if (asParamValue == CalledFrom::NamedParam && text[pos] == '\n')
                 break;
         }
         auto startFragment = specialAt();
@@ -63,7 +68,7 @@ std::unique_ptr<Markup> MarkupParser::parse(int asParamValue) {
     if (!buffer.str().empty())
         composite->parts.push_back(std::make_unique<RichText>(buffer.str()));
     if (composite->parts.empty())
-        return std::make_unique<RichText>("");
+        return nullptr;
     else if (composite->parts.size() == 1)
         return std::move(composite->parts[0]);
     else

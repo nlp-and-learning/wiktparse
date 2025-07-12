@@ -7,6 +7,7 @@ struct TagHandler {
     [[nodiscard]] virtual std::string process(const Tag& tag, const std::string& content) const {
         return content;
     }
+    [[nodiscard]] virtual bool isSelfClosingOnly() const { return false; }
 };
 
 struct NowikiHandler : TagHandler {
@@ -42,6 +43,7 @@ struct BrHandler : TagHandler {
     [[nodiscard]] std::string process(const Tag& tag, const std::string& content) const override{
         return content + "\n";
     }
+    [[nodiscard]] bool isSelfClosingOnly() const override { return true; }
 };
 
 struct CaptionHandler : TagHandler {

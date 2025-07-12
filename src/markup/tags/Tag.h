@@ -25,4 +25,7 @@ struct Tag: public Markup {
     [[nodiscard]] std::string rawText() const override {
         return "";
     }
+    [[nodiscard]] bool matchesClose(const Tag& closeTag) const {
+        return type == TagType::Open && closeTag.type == TagType::Close && name == closeTag.name;
+    }
 };

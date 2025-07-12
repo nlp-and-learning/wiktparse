@@ -160,6 +160,6 @@ TEST(TaggedTextTest, LtWithName1) {
 TEST(CompositeTest, CompositeWithMultipleLinks) {
     std::string input = "[[France]], [[Belgium]] and [[Canada]]";
     MarkupParser parser(input, 0);
-    auto composite = parser.parse(false);
+    auto composite = parser.parse(CalledFrom::Top);
     EXPECT_EQ("[[France]], [[Belgium]] and [[Canada]]", composite->dump());
 }

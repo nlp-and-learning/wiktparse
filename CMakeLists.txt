@@ -45,6 +45,7 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/markup/wikinodes/TemplateParser.h
         src/markup/wikinodes/TemplateParser.cpp
         src/markup/MarkupParser.h
-        src/markup/MarkupParser.cpp)
+        src/markup/MarkupParser.cpp
+        src/markup/tags/TaggedContent.h)
 
 target_link_libraries(${PROJECT_NAME} bz2 pugixml::pugixml)

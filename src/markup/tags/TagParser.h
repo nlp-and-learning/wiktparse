@@ -68,7 +68,7 @@ public:
             assert(pos == start+1);
             return tag;
         }
-        if (tag->name!="nowiki" && !tagFactory.has(tag->name)) {
+        if (!tagFactory.has(tag->name)) {
             tag->type = TagType::Invalid;
             pos = start + 1;
             return tag;

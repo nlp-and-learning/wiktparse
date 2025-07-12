@@ -9,6 +9,10 @@ struct TagHandler {
     }
 };
 
+struct NowikiHandler : TagHandler {
+    [[nodiscard]] std::string name() const override { return "nowiki"; }
+};
+
 struct AbbrHandler : TagHandler {
     [[nodiscard]] std::string name() const override { return "abbr"; }
 };

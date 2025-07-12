@@ -27,6 +27,7 @@ public:
 private:
     TagFactory() {
         map = {
+            { "nowiki", [] { return std::make_unique<NowikiHandler>(); } },
             { "abbr", [] { return std::make_unique<AbbrHandler>(); } },
             { "b", [] { return std::make_unique<BHandler>(); } },
             { "bdi", [] { return std::make_unique<BdiHandler>(); } },

@@ -60,7 +60,7 @@ public:
         return out;
     }
 
-    [[nodiscard]] std::string displayText() const override {
+    [[nodiscard]] std::string rawText() const override {
         std::string out = name;
         for (const auto& p : parameters)
             out += p.dump();

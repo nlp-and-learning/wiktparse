@@ -30,8 +30,13 @@ std::unique_ptr<Markup> MarkupParser::parse(int asParamValue) {
         switch (startFragment) {
             case StartSpecial::Tag: {
                 TagParser tagParser(text, pos);
-                composite->parts.push_back(tagParser.parse());
-                pos = tagParser.getPos();
+                auto tag = tagParser.parse();
+                if (tag->type == TagType::Invalid) {
+                    buffer << text[pos++];
+                } else {
+                    composite->parts.push_back(std::move(tag));
+                    pos = tagParser.getPos();
+                }
                 break;
             }
             case StartSpecial::Template: {

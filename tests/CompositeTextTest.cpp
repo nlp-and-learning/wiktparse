@@ -134,7 +134,7 @@ TEST(TaggedTextTest, SpanTag1) {
 
 TEST(TaggedTextTest, UsualLt) {
     std::string input = "m<n && m>a";
-    std::string expected = "m<n && m>a ";
+    std::string expected = "m<n && m>a";
     MarkupParser parser(input, 0);
     auto fragment = parser.parse();
     EXPECT_EQ(expected, fragment->displayText());

@@ -18,4 +18,7 @@ public:
         ss << suffix;
         return ss.str();
     }
+    [[nodiscard]] std::string displayText() const override {
+        return parts.back()->dump() + suffix;
+    };
 };

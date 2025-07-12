@@ -59,4 +59,11 @@ public:
         out += "\n}}";
         return out;
     }
+
+    [[nodiscard]] std::string displayText() const override {
+        std::string out = name;
+        for (const auto& p : parameters)
+            out += p.dump();
+        return out;
+    }
 };

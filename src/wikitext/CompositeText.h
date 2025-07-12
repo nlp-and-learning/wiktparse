@@ -35,14 +35,14 @@ struct CompositeText: public Fragment {
     std::vector<std::unique_ptr<Fragment>> parts;
     [[nodiscard]] std::string displayText() const override {
         std::ostringstream ss;
-        for (auto &framgent: parts)
-            ss << framgent->displayText();
+        for (auto &fragment: parts)
+            ss << fragment->displayText();
         return ss.str();
     };
     [[nodiscard]] std::string dump() const override {
         std::ostringstream ss;
-        for (auto &framgent: parts)
-            ss << framgent->dump();
+        for (auto &fragment: parts)
+            ss << fragment->dump();
         return ss.str();
     };
 };

@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include "tags/TagParser.h"
+#include "wikinodes/HeaderParser.h"
 #include "wikinodes/TemplateParser.h"
 #include "wikinodes/WikiLinkParser.h"
 
@@ -26,10 +28,15 @@ std::unique_ptr<Markup> MarkupParser::parse(int asParamValue) {
             }
         }
         switch (startFragment) {
+            case StartSpecial::Tag: {
+                TagParser tagParser(text, pos);
+                composite->parts.push_back(tagParser.parse());
+                pos = tagParser.getPos();
+                break;
+            }
             case StartSpecial::Template: {
                 TemplateParser templateParser(text, pos);
                 composite->parts.push_back(templateParser.parse());
-                templateParser.parse();
                 pos = templateParser.getPos();
                 break;
             }
@@ -37,6 +44,12 @@ std::unique_ptr<Markup> MarkupParser::parse(int asParamValue) {
                 WikiLinkParser wikiLinkParser(text, pos);
                 composite->parts.push_back(wikiLinkParser.parse());
                 pos = wikiLinkParser.getPos();
+                break;
+            }
+            case StartSpecial::Header: {
+                HeaderParser headerParser(text, pos);
+                composite->parts.push_back(headerParser.parse());
+                pos = headerParser.getPos();
                 break;
             }
             default:buffer << text[pos++];

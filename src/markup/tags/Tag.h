@@ -22,4 +22,7 @@ struct Tag: public Markup {
         ss << ">";
         return ss.str();
     }
+    [[nodiscard]] std::string displayText() const override {
+        return "";
+    }
 };

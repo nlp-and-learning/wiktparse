@@ -2,6 +2,20 @@
 #include "../src/markup/tags/Tag.h"
 #include "../src/markup/tags/TagParser.h"
 
+TEST(TagTest, DumpOpen) {
+    std::string input = "<sub>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ("<sub>", tag->dump());
+}
+
+TEST(TagTest, DumpClose) {
+    std::string input = "</sub>";
+    TagParser parser(input, 0);
+    auto tag = parser.parse();
+    EXPECT_EQ("</sub>", tag->dump());
+}
+
 TEST(TagTest, SelfClosing) {
     std::string input = "<br  />";
     TagParser parser(input, 0);
@@ -9,6 +23,7 @@ TEST(TagTest, SelfClosing) {
     EXPECT_EQ(TagType::SelfClosing, tag->type);
     EXPECT_EQ("br", tag->name);
     EXPECT_EQ(0, tag->attributes.size());
+    EXPECT_EQ("<br />", tag->dump());
 }
 
 TEST(TagTest, SelfClosing1) {

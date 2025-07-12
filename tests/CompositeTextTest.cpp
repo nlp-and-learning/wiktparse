@@ -64,7 +64,7 @@ TEST(CompositeTest, CommentBreakA) {
 
 TEST(CompositeTest, CommentBreakB) {
     std::string input = "a\n\n<!--comment -->\nb";
-    std::string expected = "a\n\nb";
+    std::string expected = "a\nb";
     std::string preparsed = Comments::clean(input);
     MarkupParser parser(preparsed, 0);
     auto fragment = parser.parse();
@@ -74,7 +74,7 @@ TEST(CompositeTest, CommentBreakB) {
 
 TEST(CompositeTest, CommentBreakC) {
     std::string input = "a\n<!--comment -->\n\nb";
-    std::string expected = "a\n\nb";
+    std::string expected = "a\nb";
     std::string preparsed = Comments::clean(input);
     MarkupParser parser(preparsed, 0);
     auto fragment = parser.parse();

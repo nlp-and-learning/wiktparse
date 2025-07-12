@@ -78,8 +78,42 @@ class Comments {
         return segments;
     }
 
+    static bool isCommentAloneOnLine(const std::string& text, size_t commentStart, size_t commentEnd) {
+        // Find the start of the line containing the comment
+        size_t lineStart = commentStart;
+        while (lineStart > 0 && text[lineStart - 1] != '\n')
+            lineStart--;
 
-    static std::vector<std::pair<size_t, size_t>> findSegments(size_t textLen, const std::vector<MarkerPos>& pairs) {
+        // Find the end of the line (including newline, if present)
+        size_t lineEnd = commentEnd;
+        while (lineEnd < text.size() && text[lineEnd] != '\n')
+            lineEnd++;
+        if (lineEnd < text.size() && text[lineEnd] == '\n')
+            lineEnd++; // Include the newline
+
+        // Check if the content between lineStart and commentStart is only whitespace
+        bool beforeIsWhitespace = true;
+        for (size_t i = lineStart; i < commentStart; ++i) {
+            if (text[i] != ' ' && text[i] != '\t') {
+                beforeIsWhitespace = false;
+                break;
+            }
+        }
+
+        // Check if the content between commentEnd and lineEnd is only whitespace or newline
+        bool afterIsWhitespace = true;
+        for (size_t i = commentEnd; i < lineEnd; ++i) {
+            if (text[i] != ' ' && text[i] != '\t' && text[i] != '\n') {
+                afterIsWhitespace = false;
+                break;
+            }
+        }
+
+        return beforeIsWhitespace && afterIsWhitespace;
+    }
+
+    static std::vector<std::pair<size_t, size_t>> findSegments(const std::string& text, const std::vector<MarkerPos>& pairs) {
+        size_t textLen = text.size();
         std::vector<std::pair<size_t, size_t>> segments;
         int startPos = 0;
         size_t startSegment = 0;
@@ -102,8 +136,16 @@ class Comments {
                 if (pairs[startPos].first > startSegment)
                     segments.emplace_back(startSegment, pairs[startPos].first);
                 auto closingPos = findMarker(pairs, "-->", startPos + 1);
-                if (closingPos < pairs.size())
-                    startSegment = pairs[closingPos].first + len("-->");
+                if (closingPos < pairs.size()) {
+                    size_t commentEnd = pairs[closingPos].first + len("-->");
+                    // Check if the comment is alone on a line
+                    if (isCommentAloneOnLine(text, pairs[startPos].first, commentEnd)) {
+                        // Skip one trailing newline if present
+                        if (commentEnd < textLen && text[commentEnd] == '\n')
+                            commentEnd++;
+                    }
+                    startSegment = commentEnd;
+                }
                 else
                     startSegment = textLen;
                 if (closingPos >= pairs.size() - 1)
@@ -152,7 +194,7 @@ class Comments {
 public:
     static std::string clean(const std::string& text) {
         auto markerPos = getMarkerPos(text);
-        auto segments = findSegments(text.size(),markerPos);
+        auto segments = findSegments(text, markerPos);
         return clean(text, segments);
     }
 

@@ -13,7 +13,7 @@ std::unique_ptr<Markup> MarkupParser::parse(int asParamValue) {
         Whitespace::skipWhiteBreaks(text, pos);
     while (pos < text.size()) {
         if (asParamValue > 0) {
-            if (text.compare(pos, 2, "}}") == 0 || text[pos] == '|')
+            if (text.compare(pos, 2, "}}") == 0 || text.compare(pos, 2, "]]") == 0 ||  text[pos] == '|')
                 break;
             if (asParamValue == 2 && text[pos] == '\n')
                 break;

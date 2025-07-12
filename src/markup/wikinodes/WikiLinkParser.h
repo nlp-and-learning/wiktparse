@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include "WikiLink.h"
-#include "../BaseParser.h"
+#include "../MarkupParser.h"
 
 class WikiLinkParser: public BaseParser {
 public:
@@ -11,12 +11,10 @@ public:
         pos += 2;
         size_t startPos = pos;
         auto link = std::make_unique<WikiLink>();
-        std::string currentPart;
 
         while (pos + 1 < text.size()) {
             // Detecting ]] termination without consuming the suffix
             if (text[pos] == ']' && text[pos + 1] == ']') {
-                link->parts.push_back(std::move(currentPart));
                 pos += 2;
 
                 // Suffix parsing: ASCII letters only
@@ -27,28 +25,23 @@ public:
                 break;
             }
 
-            // New part after '|'
-            if (text[pos] == '|') {
-                link->parts.push_back(std::move(currentPart));
-                currentPart.clear();
-                ++pos;
-                continue;
+            // Parse one part with subparser
+            MarkupParser subparser(text, pos);
+            auto part = subparser.parse(1);  // tryb 1: zakończ na '|'
+            pos = subparser.getPos();
+
+            if (part) {
+                link->parts.emplace_back(std::move(part));
             }
 
-            // Normal character (including \n, spaces, whatever)
-            currentPart.push_back(text[pos]);
-            ++pos;
+            // If we are on pipe, skip it
+            if (pos < text.size() && text[pos] == '|') {
+                ++pos;
+            }
         }
 
-        // If there was no closure ]], treat as one part
-        if (pos + 1 >= text.size()) {
-            link->parts.clear();
-            link->parts.push_back(text.substr(startPos));
-            link->suffix.clear();
-        }
         if (!link->parts.empty()) {
-            link->target = link->parts[0];
-            link->display = link->parts.back() + link->suffix;
+            link->target = link->parts[0]->dump();
         }
         return link;
     }

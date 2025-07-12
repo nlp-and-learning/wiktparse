@@ -18,7 +18,11 @@ struct Tag: public Markup {
     [[nodiscard]] std::string dump() const override {
         std::ostringstream ss;
         ss << "<";
+        if (type == TagType::Close)
+            ss << "/";
         ss << name;
+        if (type == TagType::SelfClosing)
+            ss << " /";
         ss << ">";
         return ss.str();
     }

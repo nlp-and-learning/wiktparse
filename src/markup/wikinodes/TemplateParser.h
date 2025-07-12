@@ -7,6 +7,6 @@
 class TemplateParser: public BaseParser {
 public:
     TemplateParser(const std::string& text, size_t pos) : BaseParser(text, pos) {}
-    std::string parseName();
+    bool parseName(std::string &name);
     std::unique_ptr<Template> parse();
 };

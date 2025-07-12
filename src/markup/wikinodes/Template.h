@@ -39,6 +39,7 @@ struct TemplateParameter {
 
 class Template: public Markup {
 public:
+    bool invalid = false;
     std::string name;
     std::vector<TemplateParameter> parameters;
     [[nodiscard]] std::string dump() const override {

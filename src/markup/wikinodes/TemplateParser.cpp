@@ -1,16 +1,20 @@
 #include "TemplateParser.h"
 #include "../MarkupParser.h"
 
-std::string TemplateParser::parseName() {
-    std::ostringstream name;
+ bool TemplateParser::parseName(std::string &name) {
+    std::ostringstream ss;
     while (pos < text.size() &&
            text[pos] != '|' &&
            text[pos] != '\n' &&
-           text.compare(pos, 2, "}}") != 0)
+           !startsWithFrom("}}") &&
+           !startsWithFrom("{{"))
     {
-        name << text[pos++];
+        ss << text[pos++];
     }
-    return name.str();
+    if (text[pos] == '\n' || startsWithFrom("{{"))
+        return false;
+    name = ss.str();
+    return true;
 }
 
 std::unique_ptr<Template> TemplateParser::parse() {
@@ -19,7 +23,9 @@ std::unique_ptr<Template> TemplateParser::parse() {
     pos += 2;
     Whitespace::skipWhitespace(text, pos);
     auto templ = std::make_unique<Template>();
-    templ->name = parseName();
+    templ->invalid = !parseName(templ->name);
+    if (templ->invalid)
+        return templ;
     while (pos < text.size()) {
         Whitespace::skipWhiteBreaks(text, pos);
         if (text.compare(pos, 2, "}}") == 0) {

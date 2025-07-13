@@ -69,6 +69,8 @@ private:
     FRIEND_TEST(WikiLinkParsingTest, ParseWikiLinkWithDisplay);
     FRIEND_TEST(WikiLinkParsingTest, ParseWikiLinkWithSuffix);
     FRIEND_TEST(WikiLinkParsingTest, ParseWikiLinkWithDisplayAndSuffix);
+    FRIEND_TEST(ExternalLinkParsingTest, ParseSimpleExternalLinkNoSpace);
+    FRIEND_TEST(ExternalLinkParsingTest, ParseExternalLinkWithSpaceAndDescription);
 #endif
 };
 

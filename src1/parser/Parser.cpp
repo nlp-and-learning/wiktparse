@@ -213,8 +213,16 @@ std::unique_ptr<elements::Template> Parser::parse_template(const std::string& va
         return nullptr;
     }
 
+    // Level to min(leading, trailing)
+    int level = std::min(leading, trailing);
+
+    // If level <1 or >6, invalid (optional, MediaWiki limit 6)
+    if (level < 1 || level > 6) {
+        return nullptr;
+    }
+
     // Title to substr between, including extra = if unbalanced
-    std::string title = value.substr(leading, value.size() - leading - trailing);
+    std::string title = value.substr(level, value.size() - 2 * level);
 
     // Trim whitespace z title (MediaWiki behavior)
     size_t start = title.find_first_not_of(" \t");
@@ -223,14 +231,6 @@ std::unique_ptr<elements::Template> Parser::parse_template(const std::string& va
     } else {
         size_t end = title.find_last_not_of(" \t");
         title = title.substr(start, end - start + 1);
-    }
-
-    // Level to min(leading, trailing)
-    int level = std::min(leading, trailing);
-
-    // If level <1 or >6, invalid (optional, MediaWiki limit 6)
-    if (level < 1 || level > 6) {
-        return nullptr;
     }
 
     return std::make_unique<elements::Header>(level, title, 0, 0);  // Set positions in the caller

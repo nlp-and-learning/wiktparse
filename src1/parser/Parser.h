@@ -63,6 +63,8 @@ private:
     void handle_unmatched();
 #ifdef UNIT_TEST
     FRIEND_TEST(TemplateParsingTest, ParseSimpleTemplate);
+    FRIEND_TEST(HeaderParsingTest, ParseBalancedHeaderLevel3);
+    FRIEND_TEST(HeaderParsingTest, ParseUnbalancedHeaderMinLevel);
 #endif
 };
 

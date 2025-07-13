@@ -13,6 +13,7 @@ add_executable(tests
         ../src1/elements/WikiElement.cpp
         ../src1/elements/Template.cpp
         ../src1/elements/Tag.cpp
+        test_header_parsing.cpp
 )
 
 target_link_libraries(tests

@@ -15,7 +15,8 @@ namespace parser {
         std::string input = "[https://en.wikipedia.org]";
 
         // Call the subparser for external link
-        auto link_obj = wiki_parser.parse_external_link(input);
+        size_t pos = 0;
+        auto link_obj = wiki_parser.parse_external_link(input, pos);
 
         // Check if the object is not null
         ASSERT_NE(link_obj, nullptr);
@@ -30,7 +31,8 @@ namespace parser {
         std::string input = "[https://en.wikipedia.org Wikipedia]";
 
         // Call the subparser for external link
-        auto link_obj = wiki_parser.parse_external_link(input);
+        size_t pos = 0;
+        auto link_obj = wiki_parser.parse_external_link(input, pos);
 
         // Sprawdź, czy obiekt nie jest null
         ASSERT_NE(link_obj, nullptr);

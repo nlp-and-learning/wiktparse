@@ -15,7 +15,8 @@ namespace parser {
         std::string input = "<sub>";
 
         // Call tag subparser
-        auto tag_obj = wiki_parser.parse_tag(input);
+        size_t pos = 0;
+        auto tag_obj = wiki_parser.parse_tag(input, pos);
 
         // Check if object is not null
         ASSERT_NE(tag_obj, nullptr);
@@ -32,7 +33,8 @@ namespace parser {
         std::string input = "</sub>";
 
         // Call tag subparser
-        auto tag_obj = wiki_parser.parse_tag(input);
+        size_t pos = 0;
+        auto tag_obj = wiki_parser.parse_tag(input, pos);
 
         // Check if object is not null
         ASSERT_NE(tag_obj, nullptr);
@@ -49,7 +51,8 @@ namespace parser {
         std::string input = "<br  />";
 
         // Call tag subparser
-        auto tag_obj = wiki_parser.parse_tag(input);
+        size_t pos = 0;
+        auto tag_obj = wiki_parser.parse_tag(input, pos);
 
         // Check if object is not null
         ASSERT_NE(tag_obj, nullptr);
@@ -66,7 +69,8 @@ namespace parser {
         std::string input = "<span style=\"color:red;\" class=\"highlight\" title=\"example\">";
 
         // Call tag subparser
-        auto tag_obj = wiki_parser.parse_tag(input);
+        size_t pos = 0;
+        auto tag_obj = wiki_parser.parse_tag(input, pos);
 
         // Check if object is not null
         ASSERT_NE(tag_obj, nullptr);
@@ -89,7 +93,8 @@ namespace parser {
         std::string input = "<span style='color:red' class=highlight>";
 
         // Call tag subparser
-        auto tag_obj = wiki_parser.parse_tag(input);
+        size_t pos = 0;
+        auto tag_obj = wiki_parser.parse_tag(input, pos);
 
         // Check if object is not null
         ASSERT_NE(tag_obj, nullptr);

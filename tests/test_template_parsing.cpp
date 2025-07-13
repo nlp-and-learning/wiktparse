@@ -14,7 +14,8 @@ namespace parser {
         wiki_parser = parser::Parser{"{{name|param0|key1=param1}}"};
 
         // Call a private method directly (thanks to friend)
-        auto template_obj = wiki_parser.parse_template("{{name|param0|key1=param1}}");  // Przekaż value jeśli potrzeba
+        size_t pos = 0;
+        auto template_obj = wiki_parser.parse_template("{{name|param0|key1=param1}}", pos);
 
         // Check if the object is not null
         ASSERT_NE(template_obj, nullptr);

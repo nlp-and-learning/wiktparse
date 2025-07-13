@@ -28,11 +28,11 @@ namespace parser::factory {
     // Method of creating a tag
     std::unique_ptr<elements::Tag> TagFactory::create_tag(const std::string& name,
                                                           const std::unordered_map<std::string, std::string>& attrs,
-                                                          elements::TagType type, bool syntactically_valid) const {
+                                                          elements::TagType type, bool syntactically_valid, size_t start_pos, size_t end_pos) const {
         bool final_valid = syntactically_valid && (handlers.find(name) != handlers.end());
 
         // Create and return Tag (start/end positions are assumed to be provided by the parser later)
-        return std::make_unique<elements::Tag>(name, attrs, type, final_valid, 0, 0);  // Tymczasowe pozycje
+        return std::make_unique<elements::Tag>(name, attrs, type, final_valid, start_pos, end_pos);
     }
 
 }  // namespace parser::factory

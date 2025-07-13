@@ -13,7 +13,8 @@ namespace parser {
     TEST_F(HeaderParsingTest, ParseBalancedHeaderLevel3) {
         std::string input = "===123===";
 
-        auto header_obj = wiki_parser.parse_header(input);
+        size_t pos = 0;
+        auto header_obj = wiki_parser.parse_header(input, pos);
 
         ASSERT_NE(header_obj, nullptr);
 
@@ -25,7 +26,8 @@ namespace parser {
         // Input: "===abc==" (unbalanced, level=min(3,2)=2, title="=abc")
         std::string input = "===abc==";
 
-        auto header_obj = wiki_parser.parse_header(input);
+        size_t pos = 0;
+        auto header_obj = wiki_parser.parse_header(input, pos);
 
         ASSERT_NE(header_obj, nullptr);
 

@@ -18,7 +18,8 @@ namespace parser::factory {
         // Method to creating a tag
         std::unique_ptr<elements::Tag> create_tag(const std::string& name,
                                                   const std::unordered_map<std::string, std::string>& attrs,
-                                                  elements::TagType type, bool syntactically_valid) const;
+                                                  elements::TagType type, bool syntactically_valid,
+                                                  size_t start_pos, size_t end_pos) const;
 
         // No copying or assignment
         TagFactory(const TagFactory&) = delete;

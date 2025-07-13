@@ -15,13 +15,14 @@ namespace parser {
         std::string input = "[[dom]]";
 
         // Call subparser for wikilink
-        auto link_obj = wiki_parser.parse_wikilink(input);
+        size_t pos = 0;
+        auto link_obj = wiki_parser.parse_wikilink(input, pos);
 
         // Check if the object is not null
-        ASSERT_NE(link_obj, nullptr);
+        ASSERT_NE(nullptr, link_obj);
 
         // Check target and display (no display, use target)
-        EXPECT_EQ(link_obj->get_target(), "dom");
+        EXPECT_EQ("dom", link_obj->get_target());
         EXPECT_FALSE(link_obj->get_display().has_value());
     }
 
@@ -30,7 +31,8 @@ namespace parser {
         std::string input = "[[dom|domy]]";
 
         // Call the subparser for wikilinks
-        auto link_obj = wiki_parser.parse_wikilink(input);
+        size_t pos = 0;
+        auto link_obj = wiki_parser.parse_wikilink(input, pos);
 
         // Check if the object is not null
         ASSERT_NE(link_obj, nullptr);
@@ -46,7 +48,8 @@ namespace parser {
         std::string input = "[[dom]]ostwa";
 
         // Call the sub-parser for wikilinks (assuming that the parser supports suffix)
-        auto link_obj = wiki_parser.parse_wikilink(input);
+        size_t pos = 0;
+        auto link_obj = wiki_parser.parse_wikilink(input, pos);
 
         // Check if the object is not null
         ASSERT_NE(link_obj, nullptr);
@@ -62,7 +65,8 @@ namespace parser {
         std::string input = "[[dom|domo]]stwa";
 
         // Call the sub-parser for wikilinks (assuming that the parser supports suffixes)
-        auto link_obj = wiki_parser.parse_wikilink(input);
+        size_t pos = 0;
+        auto link_obj = wiki_parser.parse_wikilink(input, pos);
 
         // Check if the object is not null
         ASSERT_NE(link_obj, nullptr);

@@ -40,12 +40,12 @@ std::vector<std::unique_ptr<elements::WikiElement>> Parser::parse() {
                             container_stack.top()->set_closing_tag(std::move(tag));
                             container_stack.top()->set_end_pos(pos);
                             container_stack.pop();
-                            } else {
-                                // Unmatched closing, treat as invalid or text
-                                pos = start;
-                                elem = parse_text(input, pos);
-                                container_stack.top()->add_child(std::move(elem));
-                            }
+                        } else {
+                            // Unmatched closing, treat as invalid or text
+                            pos = start;
+                            elem = parse_text(input, pos);
+                            container_stack.top()->add_child(std::move(elem));
+                        }
                     } else {  // Self-closing or invalid
                         elem = std::move(tag);
                         container_stack.top()->add_child(std::move(elem));

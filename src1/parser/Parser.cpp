@@ -237,8 +237,52 @@ std::unique_ptr<elements::Template> Parser::parse_template(const std::string& va
 }
 
 std::unique_ptr<elements::WikiLink> Parser::parse_wikilink(const std::string& value) {
-    // TODO: Implement
-    return nullptr;
+    // We assume that the value starts with [[ and ends with ]] + optional suffix
+    if (value.size() < 4 || value.substr(0, 2) != "[[" || value.find("]]") == std::string::npos) {
+        return nullptr;  // Invalid format
+    }
+
+    size_t close_pos = value.find("]]", 2);
+    std::string inner = value.substr(2, close_pos - 2);
+    std::string suffix = value.substr(close_pos + 2);
+
+    // Check suffix: only ASCII letters (isalpha, a-zA-Z)
+    bool valid_suffix = !suffix.empty();
+    for (char c : suffix) {
+        if (!std::isalpha(static_cast<unsigned char>(c))) {  // not an ASCII character
+            valid_suffix = false;
+            break;
+        }
+    }
+    if (!valid_suffix) {
+        suffix.clear();
+    }
+
+    // Parse inner: target and optional display
+    std::string target;
+    std::optional<std::string> display;
+    size_t pipe_pos = inner.find('|');
+    if (pipe_pos != std::string::npos) {
+        target = inner.substr(0, pipe_pos);
+        display = inner.substr(pipe_pos + 1);
+    } else {
+        target = inner;
+    }
+
+    // Dołącz suffix do display
+    if (!suffix.empty()) {
+        if (display.has_value()) {
+            display = display.value() + suffix;
+        } else {
+            display = target + suffix;
+        }
+    }
+
+    // Positions: full value
+    size_t start_pos = 0;
+    size_t end_pos = value.size();
+
+    return std::make_unique<elements::WikiLink>(target, display, start_pos, end_pos);
 }
 
 std::unique_ptr<elements::ExternalLink> Parser::parse_external_link(const std::string& value) {

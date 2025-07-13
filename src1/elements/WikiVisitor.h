@@ -6,7 +6,7 @@ namespace parser::elements {
 
     // Forward declarations for all WikiElement classes
     class WikiElement;
-    class TextFragment;
+    class TextElement;
     class Tag;
     class TaggedContent;
     class Header;
@@ -20,7 +20,7 @@ namespace parser::elements {
 
         // visit methods for each derived class
         virtual void visit(const WikiElement& element) = 0;
-        virtual void visit(const TextFragment& fragment) = 0;
+        virtual void visit(const TextElement& fragment) = 0;
         virtual void visit(const Tag& tag) = 0;
         virtual void visit(const TaggedContent& content) = 0;
         virtual void visit(const Header& header) = 0;

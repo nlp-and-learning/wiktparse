@@ -17,7 +17,7 @@
 #include "../elements/WikiLink.h"
 #include "../elements/ExternalLink.h"
 #include "../elements/Tag.h"
-#include "../elements/TextFragment.h"
+#include "../elements/TextElement.h"
 #include "../factory/TagFactory.h"
 #include "ParserError.h"
 
@@ -32,7 +32,7 @@ public:
     std::vector<std::unique_ptr<elements::WikiElement>> parse();
 
     // Preprocessing (static or member)
-    static std::vector<std::unique_ptr<elements::TextFragment>> preprocess(const std::string& wiki_text);
+    static std::vector<std::unique_ptr<elements::TextElement>> preprocess(const std::string& wiki_text);
 
 private:
     std::string input;

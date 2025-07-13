@@ -4,11 +4,13 @@
 
 #include <string>
 #include <optional>
+
+#include "LeafElement.h"
 #include "WikiElement.h"  // Base class
 
 namespace parser::elements {
 
-    class WikiLink : public WikiElement {
+    class WikiLink : public LeafElement {
     public:
         // Constructor
         WikiLink(const std::string& target, const std::optional<std::string>& display,

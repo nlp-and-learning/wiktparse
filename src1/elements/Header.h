@@ -3,11 +3,13 @@
 #define HEADER_H
 
 #include <string>
+
+#include "LeafElement.h"
 #include "WikiElement.h"  // Bazowa klasa
 
 namespace parser::elements {
 
-    class Header : public WikiElement {
+    class Header : public LeafElement {
     public:
         // Constructor
         Header(int level, const std::string& title, size_t start_pos, size_t end_pos);

@@ -8,7 +8,7 @@ namespace parser::elements {
     // Constructor
     Template::Template(const std::string& name, const std::unordered_map<std::string, std::string>& params,
                        size_t start_pos, size_t end_pos)
-        : WikiElement(start_pos, end_pos),
+        : LeafElement(start_pos, end_pos),
           name(name),
           params(params) {}
 

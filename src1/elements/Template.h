@@ -4,11 +4,13 @@
 
 #include <string>
 #include <unordered_map>
+
+#include "LeafElement.h"
 #include "WikiElement.h"  // Base class
 
 namespace parser::elements {
 
-    class Template : public WikiElement {
+    class Template : public LeafElement {
     public:
         // Constructor
         Template(const std::string& name, const std::unordered_map<std::string, std::string>& params,

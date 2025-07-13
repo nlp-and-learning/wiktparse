@@ -4,11 +4,13 @@
 
 #include <string>
 #include <optional>  // For optional display, C++17+
+
+#include "LeafElement.h"
 #include "WikiElement.h"  // Base class
 
 namespace parser::elements {
 
-    class ExternalLink : public WikiElement {
+    class ExternalLink : public LeafElement {
     public:
         // Constructor
         ExternalLink(const std::string& url, const std::optional<std::string>& display,

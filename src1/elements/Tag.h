@@ -4,6 +4,8 @@
 
 #include <string>
 #include <unordered_map>
+
+#include "LeafElement.h"
 #include "WikiElement.h"  // Base class
 
 namespace parser::elements {
@@ -16,7 +18,7 @@ namespace parser::elements {
         INVALID
     };
 
-    class Tag : public WikiElement {
+    class Tag : public LeafElement {
     public:
         // Constructor
         Tag(const std::string& name, const std::unordered_map<std::string, std::string>& attributes,

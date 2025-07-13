@@ -5,7 +5,7 @@
 #include "../elements/WikiLink.h"
 #include "../elements/ExternalLink.h"
 #include "../elements/Tag.h"
-#include "../elements/TextFragment.h"
+#include "../elements/TextElement.h"
 #include "../elements/TaggedContent.h"
 #include "../factory/TagFactory.h"  // Dla TagFactory
 #include <regex>  // Dla regex
@@ -54,7 +54,7 @@ std::vector<std::unique_ptr<elements::WikiElement>> Parser::parse() {
             }
             // Add handling for other types: HEADER, WIKILINK, etc.
             case Token::TokenType::TEXT: {
-                current->add_child(std::make_unique<elements::TextFragment>(token.value, true, token.start, pos));
+                current->add_child(std::make_unique<elements::TextElement>(token.value, true, token.start, pos));
                 break;
             }
             default:
@@ -66,8 +66,8 @@ std::vector<std::unique_ptr<elements::WikiElement>> Parser::parse() {
 }
 
 // Preprocessing (comments and <nowiki>)
-std::vector<std::unique_ptr<elements::TextFragment>> Parser::preprocess(const std::string& wiki_text) {
-    std::vector<std::unique_ptr<elements::TextFragment>> fragments;
+std::vector<std::unique_ptr<elements::TextElement>> Parser::preprocess(const std::string& wiki_text) {
+    std::vector<std::unique_ptr<elements::TextElement>> fragments;
     size_t p = 0;
     std::regex comment_regex(R"(<!--[\s\S]*?-->)");
     std::regex nowiki_open_regex(R"(<nowiki>)");
@@ -77,21 +77,21 @@ std::vector<std::unique_ptr<elements::TextFragment>> Parser::preprocess(const st
         // Skip comments
         std::smatch match;
         if (std::regex_search(wiki_text.cbegin() + p, wiki_text.cend(), match, comment_regex)) {
-            fragments.push_back(std::make_unique<elements::TextFragment>(wiki_text.substr(p, match.position()), true, p, p + match.position()));
+            fragments.push_back(std::make_unique<elements::TextElement>(wiki_text.substr(p, match.position()), true, p, p + match.position()));
             p += match.position() + match.length();
         } else if (std::regex_search(wiki_text.cbegin() + p, wiki_text.cend(), match, nowiki_open_regex)) {
             // Add before <nowiki>
-            fragments.push_back(std::make_unique<elements::TextFragment>(wiki_text.substr(p, match.position()), true, p, p + match.position()));
+            fragments.push_back(std::make_unique<elements::TextElement>(wiki_text.substr(p, match.position()), true, p, p + match.position()));
             p += match.position() + match.length();
             // Search </nowiki>
             if (std::regex_search(wiki_text.cbegin() + p, wiki_text.cend(), match, nowiki_close_regex)) {
-                fragments.push_back(std::make_unique<elements::TextFragment>(wiki_text.substr(p, match.position()), false, p, p + match.position()));
+                fragments.push_back(std::make_unique<elements::TextElement>(wiki_text.substr(p, match.position()), false, p, p + match.position()));
                 p += match.position() + match.length();
             } else {
                 throw ParserError("Unmatched <nowiki>");
             }
         } else {
-            fragments.push_back(std::make_unique<elements::TextFragment>(wiki_text.substr(p), true, p, wiki_text.size()));
+            fragments.push_back(std::make_unique<elements::TextElement>(wiki_text.substr(p), true, p, wiki_text.size()));
             p = wiki_text.size();
         }
     }

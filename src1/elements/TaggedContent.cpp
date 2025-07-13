@@ -6,7 +6,7 @@ namespace parser::elements {
 
     // Constructor
     TaggedContent::TaggedContent(std::unique_ptr<Tag> opening_tag, size_t start_pos, size_t end_pos)
-        : WikiElement(start_pos, end_pos),
+        : ContainerElement(start_pos, end_pos),
           opening_tag(std::move(opening_tag)),
           content(),
           closing_tag(nullptr) {}

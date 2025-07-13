@@ -58,7 +58,7 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src1/elements/Header.h
         src1/elements/WikiLink.h
         src1/elements/ExternalLink.h
-        src1/elements/TextFragment.h
+        src1/elements/TextElement.h
         src1/parser/ParserError.h
         src1/parser/Parser.cpp
         src1/elements/TaggedContent.cpp)

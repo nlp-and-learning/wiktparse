@@ -8,7 +8,7 @@ namespace parser::elements {
     // Constructor
     Tag::Tag(const std::string& name, const std::unordered_map<std::string, std::string>& attributes,
              TagType type, bool valid, size_t start_pos, size_t end_pos)
-        : WikiElement(start_pos, end_pos),
+        : LeafElement(start_pos, end_pos),
           name(name),
           attributes(attributes),
           type(type),

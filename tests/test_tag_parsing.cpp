@@ -114,7 +114,7 @@ namespace parser {
         wiki_parser = parser::Parser(input);
         auto elements = wiki_parser.parse();
 
-        // Expect TextFragment or invalid Tag (adjust based on lexer behavior)
+        // Expect TextElement or invalid Tag (adjust based on lexer behavior)
         ASSERT_EQ(elements.size(), 1);  // Whole as text or invalid tag
         auto tag = dynamic_cast<elements::Tag*>(elements[0].get());
         if (tag) {
@@ -122,7 +122,7 @@ namespace parser {
             EXPECT_EQ("n", tag->get_name());
         } else {
             // If treated as text
-            auto text = dynamic_cast<elements::TextFragment*>(elements[0].get());
+            auto text = dynamic_cast<elements::TextElement*>(elements[0].get());
             ASSERT_NE(nullptr, text);
             EXPECT_EQ(input, text->get_text());
         }
@@ -140,7 +140,7 @@ namespace parser {
         ASSERT_EQ(3, elements.size());
 
         // First: text "m"
-        auto text1 = dynamic_cast<elements::TextFragment*>(elements[0].get());
+        auto text1 = dynamic_cast<elements::TextElement*>(elements[0].get());
         ASSERT_NE(nullptr, text1);
         EXPECT_EQ("m", text1->get_text());
 
@@ -153,7 +153,7 @@ namespace parser {
         EXPECT_TRUE(tag->get_attributes().empty());
 
         // Third: text " && m>a"
-        auto text2 = dynamic_cast<elements::TextFragment*>(elements[2].get());
+        auto text2 = dynamic_cast<elements::TextElement*>(elements[2].get());
         ASSERT_NE(nullptr, text2);
         EXPECT_EQ( "a", text2->get_text());
     }

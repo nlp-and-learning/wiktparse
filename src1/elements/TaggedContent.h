@@ -5,12 +5,14 @@
 #include <vector>
 #include <memory>
 #include <optional>
+
+#include "ContainerElement.h"
 #include "WikiElement.h"
 #include "Tag.h"  // Dla Tag
 
 namespace parser::elements {
 
-    class TaggedContent : public WikiElement {
+    class TaggedContent : public ContainerElement {
     public:
         // Constructor
         TaggedContent(std::unique_ptr<Tag> opening_tag, size_t start_pos, size_t end_pos);

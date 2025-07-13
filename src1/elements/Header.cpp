@@ -7,7 +7,7 @@ namespace parser::elements {
 
     // Constructor
     Header::Header(int level, const std::string& title, size_t start_pos, size_t end_pos)
-        : WikiElement(start_pos, end_pos),
+        : LeafElement(start_pos, end_pos),
           level(level),
           title(title) {
         // Optional validation: level 1-6

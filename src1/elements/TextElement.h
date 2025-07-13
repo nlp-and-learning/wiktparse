@@ -1,22 +1,19 @@
-// elements/TextFragment.h
-#ifndef TEXT_FRAGMENT_H
-#define TEXT_FRAGMENT_H
+// elements/TextElement.h
+#ifndef TEXT_ELEMENT_H
+#define TEXT_ELEMENT_H
 
+#include "WikiElement.h"
 #include <string>
-#include "WikiElement.h"  // Base class
 
 namespace parser::elements {
 
-    class TextFragment : public WikiElement {
+    class TextElement : public WikiElement {
     public:
-        // Constructor
-        TextFragment(const std::string& text, bool active, size_t start_pos, size_t end_pos);
+        TextElement(const std::string& text, bool active, size_t start_pos, size_t end_pos);
 
-        // Access methods
         const std::string& get_text() const { return text; }
         bool is_active() const { return active; }
 
-        // Override from WikiElement
         std::string to_string() const override;
         void accept(WikiVisitor& visitor) const override;
 
@@ -27,4 +24,4 @@ namespace parser::elements {
 
 }  // namespace parser::elements
 
-#endif  // TEXT_FRAGMENT_H
+#endif  // TEXT_ELEMENT_H

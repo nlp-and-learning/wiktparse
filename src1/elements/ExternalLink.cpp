@@ -7,7 +7,7 @@ namespace parser::elements {
     // Constructor
     ExternalLink::ExternalLink(const std::string& url, const std::optional<std::string>& display,
                                size_t start_pos, size_t end_pos)
-        : WikiElement(start_pos, end_pos),
+        : LeafElement(start_pos, end_pos),
           url(url),
           display(display) {}
 

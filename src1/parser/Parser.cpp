@@ -28,6 +28,7 @@ std::vector<std::unique_ptr<elements::WikiElement>> Parser::parse() {
         std::unique_ptr<elements::WikiElement> elem;
         switch (type) {
             case StarterType::TAG: {
+                auto old_pos = pos;
                 auto tag = parse_tag(input, pos);
                 if (tag) {
                     if (tag->is_opening()) {
@@ -52,6 +53,7 @@ std::vector<std::unique_ptr<elements::WikiElement>> Parser::parse() {
                     }
                 } else {
                     // Invalid tag, parse as text
+                    pos = old_pos;;
                     elem = parse_text(input, pos);
                     container_stack.top()->add_child(std::move(elem));
                 }
@@ -396,7 +398,7 @@ std::unique_ptr<elements::WikiLink> Parser::parse_wikilink(const std::string &in
 
     while (pos < input.size()) {
         char c = input[pos];
-        if (c == '<' || c == '[' || c == '{' || (c == '=' && is_line_start())) {
+        if (pos > start && (c == '<' || c == '[' || c == '{' || (c == '=' && is_line_start()))) {
             break;  // Potential starter, stop text parsing
         }
         text += c;

@@ -30,7 +30,25 @@ namespace parser::handlers {
         }
     };
 
+    class SubHandler : public TagHandler {
+    public:
+        void handle_open(const Tag& tag, TaggedContent& content) override {}
+        void handle_close(const Tag& tag) override {}
+    };
+
     class RefHandler : public TagHandler {
+    public:
+        void handle_open(const Tag& tag, TaggedContent& content) override {}
+        void handle_close(const Tag& tag) override {}
+    };
+
+    class BrHandler : public TagHandler {
+    public:
+        void handle_open(const Tag& tag, TaggedContent& content) override {}
+        void handle_close(const Tag& tag) override {}
+    };
+
+    class SpanHandler : public TagHandler {
     public:
         void handle_open(const Tag& tag, TaggedContent& content) override {}
         void handle_close(const Tag& tag) override {}

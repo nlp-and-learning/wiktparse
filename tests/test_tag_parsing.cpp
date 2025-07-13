@@ -108,7 +108,7 @@ namespace parser {
 
     TEST_F(TagParsingTest, ParseInvalidNonTagInText) {
         // Input: m<n && m>a - invalid, no proper tag (name "n" not in factory)
-        std::string input = "m<n && m>a";
+        std::string input = "m<n && m>a </n>";
 
         // Use full parse
         wiki_parser = parser::Parser(input);
@@ -130,14 +130,14 @@ namespace parser {
 
     TEST_F(TagParsingTest, ParseValidTagInText) {
         // Input: m<span && m>a - valid tag <span> (name "span" in factory)
-        std::string input = "m<span && m>a";
+        std::string input = "m<span && m>a </span>";
 
         // Use full parse
         wiki_parser = parser::Parser(input);
         auto elements = wiki_parser.parse();
 
         // Expect 3 elements: text "m", Tag "span", text " && m>a"
-        ASSERT_EQ(elements.size(), 3);
+        ASSERT_EQ(3, elements.size());
 
         // First: text "m"
         auto text1 = dynamic_cast<elements::TextFragment*>(elements[0].get());

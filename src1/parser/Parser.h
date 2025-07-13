@@ -37,7 +37,7 @@ public:
 private:
     std::string input;
     size_t pos;
-    std::stack<std::unique_ptr<elements::TaggedContent>> stack;
+    std::stack<elements::TaggedContent*> stack;
     size_t last_newline;  // To track the beginning of the line for headers
 
     // Lexer: Get the next token

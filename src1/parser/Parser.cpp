@@ -19,8 +19,8 @@ Parser::Parser(const std::string& input_text) : input(input_text), pos(0), last_
 // Main parsing method (simple implementation to start with)
 std::vector<std::unique_ptr<elements::WikiElement>> Parser::parse() {
     auto root = std::make_unique<elements::TaggedContent>(nullptr, 0, 0);  // Dummy root
-    stack.push(std::move(root));
-    auto current = stack.top().get();
+    stack.push(root.get());
+    auto current = stack.top();
 
     while (pos < input.size()) {
         Token token = next_token();
@@ -29,8 +29,9 @@ std::vector<std::unique_ptr<elements::WikiElement>> Parser::parse() {
                 auto tag = parse_tag(token.value);
                 if (tag->is_opening()) {
                     auto content = std::make_unique<elements::TaggedContent>(std::move(tag), token.start, 0);
+                    elements::TaggedContent* content_ptr = content.get();
                     current->add_child(std::move(content));
-                    stack.push(std::move(content));
+                    stack.push(content_ptr);
                 } else if (tag->is_closing()) {
                     if (!stack.empty() && stack.top()->get_opening_tag() && stack.top()->get_opening_tag()->get_name() == tag->get_name()) {
                         stack.top()->set_closing_tag(std::move(tag));
@@ -131,23 +132,56 @@ std::unique_ptr<elements::Tag> Parser::parse_tag(const std::string& value) {
     std::string name;
     std::unordered_map<std::string, std::string> attrs;
     elements::TagType type = elements::TagType::INVALID;
-    bool valid = true;
+    bool syntactically_valid = false;  // Only syntax check here
 
     // Use regex to parse <tag attr="val" />
-    std::regex tag_pattern(R"(<(/?)(\w+)([^>]*)(/?)>)");
+    std::regex tag_pattern(R"(<(/?)(\w+)([^>]*)>)");
     std::smatch m;
     if (std::regex_match(value, m, tag_pattern)) {
         bool is_closing = !m[1].str().empty();
         name = m[2].str();
-        bool is_self_closing = !m[4].str().empty();
-        // Parse attrs from m[3]
+        std::string attrs_str = m[3].str();
+        bool is_self_closing = false;
+        if (!attrs_str.empty() && attrs_str.back() == '/') {
+            is_self_closing = true;
+            attrs_str.pop_back();
+        }
 
-        if (is_closing) type = elements::TagType::CLOSING;
-        else if (is_self_closing) type = elements::TagType::SELF_CLOSING;
-        else type = elements::TagType::OPENING;
-    }
 
-    return factory::TagFactory::get_instance().create_tag(name, attrs, type);
+        // Determine type
+        if (is_closing && is_self_closing) {
+            type = elements::TagType::INVALID;  // Closing and self-closing simultaneously invalid
+        } else if (is_closing) {
+            type = elements::TagType::CLOSING;
+        } else if (is_self_closing) {
+            type = elements::TagType::SELF_CLOSING;
+        } else {
+            type = elements::TagType::OPENING;
+        }
+
+        // Parse attributes from attrs_str
+        std::string attr_pattern_str = R"(\s*(\w+)\s*=\s*)";
+        attr_pattern_str += "(\"([^\"]*)\"|'([^']*)'|([^ \\t>]+))";
+        std::regex attr_pattern(attr_pattern_str);
+        std::sregex_iterator iter(attrs_str.begin(), attrs_str.end(), attr_pattern);
+        std::sregex_iterator end;
+        for (; iter != end; ++iter) {
+            std::string key = (*iter)[1].str();
+            std::string val;
+            if ((*iter)[3].matched) {  // Double quoted
+                val = (*iter)[3].str();
+            } else if ((*iter)[4].matched) {  // Single quoted
+                val = (*iter)[4].str();
+            } else {  // Unquoted
+                val = (*iter)[5].str();
+            }
+            attrs[key] = val;
+        }
+
+        syntactically_valid = (type != elements::TagType::INVALID);
+    }  // If no match (e.g., no >), remains invalid and returns Tag with INVALID
+
+    return factory::TagFactory::get_instance().create_tag(name, attrs, type, syntactically_valid);
 }
 
 // Subparser for template (for testing)
@@ -333,7 +367,7 @@ std::string Parser::extract_balanced(const std::string& delim_open, const std::s
 
 // Handle unmatched
 void Parser::handle_unmatched() {
-    if (!stack.empty()) {
+    if (stack.size() > 1) {  // Ignore dummy root (size==1 is OK)
         throw ParserError("Unmatched tags");
     }
 }

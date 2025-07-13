@@ -18,11 +18,13 @@ namespace parser::factory {
         // Method to creating a tag
         std::unique_ptr<elements::Tag> create_tag(const std::string& name,
                                                   const std::unordered_map<std::string, std::string>& attrs,
-                                                  elements::TagType type) const;
+                                                  elements::TagType type, bool syntactically_valid) const;
 
         // No copying or assignment
         TagFactory(const TagFactory&) = delete;
         TagFactory& operator=(const TagFactory&) = delete;
+
+        bool has_handler(const std::string& name) const;
 
     private:
         // Private constructor (handler registration)

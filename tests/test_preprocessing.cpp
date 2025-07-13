@@ -41,4 +41,15 @@ namespace preprocessor {
         EXPECT_EQ(fragments[2]->get_text(), "def");
         EXPECT_TRUE(fragments[2]->is_active());
     }
+
+    TEST(CompositeTest, CommentBreakA) {
+        std::string input = "a\n<!--comment -->\nb";
+        auto fragments = Preprocessor::preprocess(input);
+        ASSERT_EQ(fragments.size(), 2);
+        EXPECT_EQ(fragments[0]->get_text(), "a\n");
+        EXPECT_TRUE(fragments[0]->is_active());
+        EXPECT_EQ(fragments[1]->get_text(), "b");
+        EXPECT_TRUE(fragments[1]->is_active());
+    }
+
 }

@@ -38,8 +38,9 @@ namespace preprocessor {
         return markersPos;
     }
 
-    std::vector<Preprocessor::WikiSegment> Preprocessor::findWikiSegments(size_t textLen,
+    std::vector<Preprocessor::WikiSegment> Preprocessor::findWikiSegments(const std::string& text,
         const std::vector<MarkerPos> &pairs) {
+        size_t textLen = text.size();
         std::vector<WikiSegment> segments;
         int startPos = 0;
         size_t startSegment = 0;
@@ -62,8 +63,16 @@ namespace preprocessor {
                 if (pairs[startPos].first > startSegment)
                     segments.emplace_back(startSegment, pairs[startPos].first, true);
                 auto closingPos = findMarker(pairs, "-->", startPos + 1);
-                if (closingPos < pairs.size())
-                    startSegment = pairs[closingPos].first + len("-->");
+                if (closingPos < pairs.size()) {
+                    size_t commentEnd = pairs[closingPos].first + len("-->");
+                    // Check if the comment is alone on a line
+                    if (isCommentAloneOnLine(text, pairs[startPos].first, commentEnd)) {
+                        // Skip one trailing newline if present
+                        if (commentEnd < textLen && text[commentEnd] == '\n')
+                            commentEnd++;
+                    }
+                    startSegment = commentEnd;
+                }
                 else
                     startSegment = textLen;
                 if (closingPos >= pairs.size() - 1)
@@ -79,10 +88,53 @@ namespace preprocessor {
         return segments;
     }
 
+    std::vector<std::unique_ptr<TextElement>> Preprocessor::toTextElements(const std::string &text,
+        const std::vector<WikiSegment> &segments) {
+        std::vector<std::unique_ptr<TextElement>> text_elements;
+        for (auto &seg : segments) {
+            auto substr = text.substr(seg.from, seg.to - seg.from);
+            text_elements.emplace_back(std::make_unique<TextElement>(substr, seg.active, seg.from, seg.to));
+        }
+        return text_elements;
+    }
+
+    bool Preprocessor::isCommentAloneOnLine(const std::string &text, size_t commentStart, size_t commentEnd) {
+        // Find the start of the line containing the comment
+        size_t lineStart = commentStart;
+        while (lineStart > 0 && text[lineStart - 1] != '\n')
+            lineStart--;
+
+        // Find the end of the line (including newline, if present)
+        size_t lineEnd = commentEnd;
+        while (lineEnd < text.size() && text[lineEnd] != '\n')
+            lineEnd++;
+        if (lineEnd < text.size() && text[lineEnd] == '\n')
+            lineEnd++; // Include the newline
+
+        // Check if the content between lineStart and commentStart is only whitespace
+        bool beforeIsWhitespace = true;
+        for (size_t i = lineStart; i < commentStart; ++i) {
+            if (text[i] != ' ' && text[i] != '\t') {
+                beforeIsWhitespace = false;
+                break;
+            }
+        }
+
+        // Check if the content between commentEnd and lineEnd is only whitespace or newline
+        bool afterIsWhitespace = true;
+        for (size_t i = commentEnd; i < lineEnd; ++i) {
+            if (text[i] != ' ' && text[i] != '\t' && text[i] != '\n') {
+                afterIsWhitespace = false;
+                break;
+            }
+        }
+        return beforeIsWhitespace && afterIsWhitespace;
+    }
+
     std::vector<std::unique_ptr<parser::elements::TextElement>> Preprocessor::preprocess(
         const std::string &input) {
         auto markerPos = getMarkerPos(input);
-        auto segments = findWikiSegments(input.size(), markerPos);
+        auto segments = findWikiSegments(input, markerPos);
         return toTextElements(input, segments);
     }
 }

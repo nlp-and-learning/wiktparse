@@ -52,16 +52,6 @@ TEST(CompositeTest, Breaks4) {
     EXPECT_EQ(expected, fragment->displayText());
 }
 
-TEST(CompositeTest, CommentBreakA) {
-    std::string input = "a\n<!--comment -->\nb";
-    std::string expected = "a b";
-    std::string preparsed = Comments::clean(input);
-    MarkupParser parser(preparsed, 0);
-    auto fragment = parser.parse();
-    EXPECT_EQ(preparsed, fragment->dump());
-    EXPECT_EQ(expected, fragment->displayText());
-}
-
 TEST(CompositeTest, CommentBreakB) {
     std::string input = "a\n\n<!--comment -->\nb";
     std::string expected = "a\nb";

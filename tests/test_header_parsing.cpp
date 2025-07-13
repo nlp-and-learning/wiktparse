@@ -17,8 +17,8 @@ namespace parser {
 
         ASSERT_NE(header_obj, nullptr);
 
-        EXPECT_EQ(header_obj->get_level(), 3);
-        EXPECT_EQ(header_obj->get_title(), "123");
+        EXPECT_EQ(3, header_obj->get_level());
+        EXPECT_EQ("123", header_obj->get_title());
     }
 
     TEST_F(HeaderParsingTest, ParseUnbalancedHeaderMinLevel) {
@@ -30,7 +30,7 @@ namespace parser {
         ASSERT_NE(header_obj, nullptr);
 
         // Check the level (minimum on both sides) and title (contains an additional ‘=’)
-        EXPECT_EQ(header_obj->get_level(), 2);
-        EXPECT_EQ(header_obj->get_title(), "=abc");
+        EXPECT_EQ(2, header_obj->get_level());
+        EXPECT_EQ("=abc", header_obj->get_title());
     }
 }

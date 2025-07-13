@@ -20,12 +20,12 @@ namespace parser {
         ASSERT_NE(template_obj, nullptr);
 
         // Check the template name
-        EXPECT_EQ(template_obj->get_name(), "name");
+        EXPECT_EQ("name", template_obj->get_name());
 
         // Check the parameters
         const auto& params = template_obj->get_params();
-        EXPECT_EQ(params.size(), 2);
-        EXPECT_EQ(params.at("1"), "param0");
-        EXPECT_EQ(params.at("key1"), "param1");
+        EXPECT_EQ(2, params.size());
+        EXPECT_EQ("param0", params.at("1"));
+        EXPECT_EQ("param1", params.at("key1"));
     }
 }

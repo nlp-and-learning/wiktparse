@@ -14,6 +14,7 @@ add_executable(tests
         ../src1/elements/Template.cpp
         ../src1/elements/Tag.cpp
         test_header_parsing.cpp
+        ../src1/elements/Header.cpp
 )
 
 target_link_libraries(tests

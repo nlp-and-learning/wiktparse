@@ -193,9 +193,47 @@ std::unique_ptr<elements::Template> Parser::parse_template(const std::string& va
 }
 
 // Implementations of other sub-parsers (empty at startup)
-std::unique_ptr<elements::Header> Parser::parse_header(const std::string& value) {
-    // TODO: Implement
-    return nullptr;
+ std::unique_ptr<elements::Header> Parser::parse_header(const std::string& value) {
+    // Count leading =
+    size_t leading = 0;
+    while (leading < value.size() && value[leading] == '=') {
+        ++leading;
+    }
+
+    // Count trailing =
+    size_t trailing = 0;
+    size_t pos = value.size();
+    while (pos > 0 && value[pos - 1] == '=') {
+        --pos;
+        ++trailing;
+    }
+
+    // If missing = invalid
+    if (leading == 0 && trailing == 0) {
+        return nullptr;
+    }
+
+    // Title to substr between, including extra = if unbalanced
+    std::string title = value.substr(leading, value.size() - leading - trailing);
+
+    // Trim whitespace z title (MediaWiki behavior)
+    size_t start = title.find_first_not_of(" \t");
+    if (start == std::string::npos) {
+        title.clear();  // Tylko whitespace
+    } else {
+        size_t end = title.find_last_not_of(" \t");
+        title = title.substr(start, end - start + 1);
+    }
+
+    // Level to min(leading, trailing)
+    int level = std::min(leading, trailing);
+
+    // If level <1 or >6, invalid (optional, MediaWiki limit 6)
+    if (level < 1 || level > 6) {
+        return nullptr;
+    }
+
+    return std::make_unique<elements::Header>(level, title, 0, 0);  // Set positions in the caller
 }
 
 std::unique_ptr<elements::WikiLink> Parser::parse_wikilink(const std::string& value) {

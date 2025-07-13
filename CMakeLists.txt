@@ -61,6 +61,8 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src1/elements/TextElement.h
         src1/parser/ParserError.h
         src1/parser/Parser.cpp
-        src1/elements/TaggedContent.cpp)
+        src1/elements/TaggedContent.cpp
+        src1/preprocessor/Preprocessor.cpp
+        src1/preprocessor/Preprocessor.h)
 
 target_link_libraries(${PROJECT_NAME} bz2 pugixml::pugixml)

@@ -23,6 +23,8 @@ add_executable(tests
         ../src1/elements/LeafElement.h
         ../src1/elements/ContainerElement.h
         test_full_parsing.cpp
+        test_preprocessing.cpp
+        ../src1/preprocessor/Preprocessor.cpp
 )
 
 target_link_libraries(tests

@@ -115,51 +115,28 @@ namespace parser {
         // Input: m<n && m>a - invalid, no proper tag (name "n" not in factory)
         std::string input = "m<n && m>a </n>";
 
-        // Use full parse
-        wiki_parser = parser::Parser(input);
-        auto elements = wiki_parser.parse();
+        // Call tag subparser
+        size_t pos = 1;
+        auto tag_obj = wiki_parser.parse_tag(input, pos);
 
-        // Expect TextElement or invalid Tag (adjust based on lexer behavior)
-        ASSERT_EQ(elements.size(), 1);  // Whole as text or invalid tag
-        auto tag = dynamic_cast<elements::Tag*>(elements[0].get());
-        if (tag) {
-            EXPECT_TRUE(tag->is_invalid());
-            EXPECT_EQ("n", tag->get_name());
-        } else {
-            // If treated as text
-            auto text = dynamic_cast<elements::TextElement*>(elements[0].get());
-            ASSERT_NE(nullptr, text);
-            EXPECT_EQ(input, text->get_text());
-        }
+        // Check if object is not null
+        ASSERT_EQ(nullptr, tag_obj);
     }
 
     TEST_F(TagParsingTest, ParseValidTagInText) {
         // Input: m<span && m>a - valid tag <span> (name "span" in factory)
         std::string input = "m<span && m>a </span>";
 
-        // Use full parse
-        wiki_parser = parser::Parser(input);
-        auto elements = wiki_parser.parse();
+        // Call tag subparser
+        size_t pos = 1;
+        auto tag_obj = wiki_parser.parse_tag(input, pos);
 
-        // Expect 3 elements: text "m", Tag "span", text " && m>a"
-        ASSERT_EQ(3, elements.size());
+        // Check if object is not null
+        ASSERT_NE(nullptr, tag_obj);
 
-        // First: text "m"
-        auto text1 = dynamic_cast<elements::TextElement*>(elements[0].get());
-        ASSERT_NE(nullptr, text1);
-        EXPECT_EQ("m", text1->get_text());
-
-        // Second: valid opening Tag "span"
-        auto tag = dynamic_cast<elements::Tag*>(elements[1].get());
-        ASSERT_NE(nullptr ,tag);
-        EXPECT_EQ("span", tag->get_name());
-        EXPECT_TRUE(tag->is_opening());
-        EXPECT_TRUE(tag->is_valid());
-        EXPECT_TRUE(tag->get_attributes().empty());
-
-        // Third: text " && m>a"
-        auto text2 = dynamic_cast<elements::TextElement*>(elements[2].get());
-        ASSERT_NE(nullptr, text2);
-        EXPECT_EQ( "a", text2->get_text());
+        // Check name, type, valid
+        EXPECT_EQ("span", tag_obj->get_name());
+        EXPECT_TRUE(tag_obj->is_opening());
+        EXPECT_TRUE(tag_obj->is_valid());
     }
 }

@@ -22,6 +22,7 @@ add_executable(tests
         test_tag_parsing.cpp
         ../src1/elements/LeafElement.h
         ../src1/elements/ContainerElement.h
+        test_full_parsing.cpp
 )
 
 target_link_libraries(tests

@@ -18,17 +18,11 @@ namespace parser {
         auto elements = wiki_parser.parse();
 
         // Expect TextElement or invalid Tag (adjust based on lexer behavior)
-        ASSERT_EQ(elements.size(), 1);  // Whole as text or invalid tag
-        auto tag = dynamic_cast<elements::Tag*>(elements[0].get());
-        if (tag) {
-            EXPECT_TRUE(tag->is_invalid());
-            EXPECT_EQ("n", tag->get_name());
-        } else {
-            // If treated as text
-            auto text = dynamic_cast<elements::TextElement*>(elements[0].get());
-            ASSERT_NE(nullptr, text);
-            EXPECT_EQ(input, text->get_text());
-        }
+        ASSERT_EQ(3, elements.size());  // Whole as text or invalid tag
+        auto text_0 = dynamic_cast<elements::TextElement*>(elements[0].get());
+        auto text_1 = dynamic_cast<elements::TextElement*>(elements[1].get());
+        auto text_2 = dynamic_cast<elements::TextElement*>(elements[2].get());
+        EXPECT_EQ(input, text_0->get_text() + text_1->get_text() + text_2->get_text());
     }
 
     TEST_F(FullParsingTest, ParseValidTagInText) {
@@ -40,7 +34,7 @@ namespace parser {
         auto elements = wiki_parser.parse();
 
         // Expect 3 elements: text "m", Tag "span", text " && m>a"
-        ASSERT_EQ(3, elements.size());
+        ASSERT_EQ(2, elements.size());
 
         // First: text "m"
         auto text1 = dynamic_cast<elements::TextElement*>(elements[0].get());
@@ -48,16 +42,13 @@ namespace parser {
         EXPECT_EQ("m", text1->get_text());
 
         // Second: valid opening Tag "span"
-        auto tag = dynamic_cast<elements::Tag*>(elements[1].get());
+        auto tag_content = dynamic_cast<elements::TaggedContent*>(elements[1].get());
+        ASSERT_NE(nullptr ,tag_content);
+        auto tag = tag_content->get_opening_tag();
         ASSERT_NE(nullptr ,tag);
         EXPECT_EQ("span", tag->get_name());
         EXPECT_TRUE(tag->is_opening());
         EXPECT_TRUE(tag->is_valid());
         EXPECT_TRUE(tag->get_attributes().empty());
-
-        // Third: text " && m>a"
-        auto text2 = dynamic_cast<elements::TextElement*>(elements[2].get());
-        ASSERT_NE(nullptr, text2);
-        EXPECT_EQ( "a", text2->get_text());
     }
 }

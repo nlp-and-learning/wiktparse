@@ -10,43 +10,83 @@
 #include "../factory/TagFactory.h"  // Dla TagFactory
 #include <regex>  // Dla regex
 #include <algorithm>  // Dla std::find, etc.
+#include <stack>    // Dla stack TaggedContent
 
 namespace parser {
 
 Parser::Parser(const std::string& input_text) : input(input_text), pos(0) {}
 
-// Main parse
+// Main parse with hierarchy for tags
 std::vector<std::unique_ptr<elements::WikiElement>> Parser::parse() {
-    std::vector<std::unique_ptr<elements::WikiElement>> elements;
+    std::stack<elements::TaggedContent*> container_stack;
+    auto root = std::make_unique<elements::TaggedContent>(nullptr, 0, input.size());  // Dummy root container
+    container_stack.push(root.get());
+
     while (pos < input.size()) {
         size_t start = pos;
         StarterType type = detect_starter(start);
         std::unique_ptr<elements::WikiElement> elem;
         switch (type) {
-            case StarterType::TAG:
-                elem = parse_tag(input, pos);
+            case StarterType::TAG: {
+                auto tag = parse_tag(input, pos);
+                if (tag) {
+                    if (tag->is_opening()) {
+                        auto content = std::make_unique<elements::TaggedContent>(std::move(tag), start, 0);  // End pos set later
+                        container_stack.top()->add_child(std::move(content));
+                        container_stack.push(static_cast<elements::TaggedContent*>(container_stack.top()->get_content().back().get()));  // Push new container
+                    } else if (tag->is_closing()) {
+                        if (container_stack.size() > 1 && container_stack.top()->get_opening_tag() &&
+                            container_stack.top()->get_opening_tag()->get_name() == tag->get_name()) {
+                            container_stack.top()->set_closing_tag(std::move(tag));
+                            container_stack.top()->set_end_pos(pos);
+                            container_stack.pop();
+                            } else {
+                                // Unmatched closing, treat as invalid or text
+                                pos = start;
+                                elem = parse_text(input, pos);
+                                container_stack.top()->add_child(std::move(elem));
+                            }
+                    } else {  // Self-closing or invalid
+                        elem = std::move(tag);
+                        container_stack.top()->add_child(std::move(elem));
+                    }
+                } else {
+                    // Invalid tag, parse as text
+                    elem = parse_text(input, pos);
+                    container_stack.top()->add_child(std::move(elem));
+                }
                 break;
+            }
             case StarterType::TEMPLATE:
                 elem = parse_template(input, pos);
+                container_stack.top()->add_child(std::move(elem));
                 break;
             case StarterType::WIKILINK:
                 elem = parse_wikilink(input, pos);
+                container_stack.top()->add_child(std::move(elem));
                 break;
             case StarterType::EXTERNAL_LINK:
                 elem = parse_external_link(input, pos);
+                container_stack.top()->add_child(std::move(elem));
                 break;
             case StarterType::HEADER:
                 elem = parse_header(input, pos);
+                container_stack.top()->add_child(std::move(elem));
                 break;
             default:
                 elem = parse_text(input, pos);
+                container_stack.top()->add_child(std::move(elem));
                 break;
         }
-        if (elem) {
-            elements.push_back(std::move(elem));
-        }
     }
-    return elements;
+
+    // Handle unmatched open tags if any (optional: throw or close)
+    while (container_stack.size() > 1) {
+        container_stack.top()->set_end_pos(input.size());
+        container_stack.pop();
+    }
+
+    return root->take_content();
 }
 
 // Detect starter
@@ -138,8 +178,8 @@ std::unique_ptr<elements::Tag> Parser::parse_tag(const std::string& input, size_
     return tag;
 }
 
-    // For template (with balancing)
-    std::unique_ptr<elements::Template> Parser::parse_template(const std::string& input, size_t& pos) {
+// For template (with balancing)
+std::unique_ptr<elements::Template> Parser::parse_template(const std::string& input, size_t& pos) {
     size_t start = pos;
     pos += 2;  // Skip {{
     std::string content;

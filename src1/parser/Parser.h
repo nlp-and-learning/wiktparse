@@ -71,6 +71,13 @@ private:
     FRIEND_TEST(WikiLinkParsingTest, ParseWikiLinkWithDisplayAndSuffix);
     FRIEND_TEST(ExternalLinkParsingTest, ParseSimpleExternalLinkNoSpace);
     FRIEND_TEST(ExternalLinkParsingTest, ParseExternalLinkWithSpaceAndDescription);
+    FRIEND_TEST(TagParsingTest, ParseOpeningTag);
+    FRIEND_TEST(TagParsingTest, ParseClosingTag);
+    FRIEND_TEST(TagParsingTest, ParseSelfClosingTagWithSpaces);
+    FRIEND_TEST(TagParsingTest, ParseTagWithDoubleQuotedAttributes);
+    FRIEND_TEST(TagParsingTest, ParseTagWithMixedQuotedAttributes);
+    FRIEND_TEST(TagParsingTest, ParseInvalidNonTagInText);
+    FRIEND_TEST(TagParsingTest, ParseValidTagInText);
 #endif
 };
 

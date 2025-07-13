@@ -286,8 +286,43 @@ std::unique_ptr<elements::WikiLink> Parser::parse_wikilink(const std::string& va
 }
 
 std::unique_ptr<elements::ExternalLink> Parser::parse_external_link(const std::string& value) {
-    // TODO: Implement
-    return nullptr;
+    // Assume value starts with [ and ends with ], no suffix
+    if (value.size() < 3 || value[0] != '[' || value.back() != ']') {
+        return nullptr;  // Invalid format
+    }
+
+    std::string inner = value.substr(1, value.size() - 2);
+
+    // Find first space - before is url, after is display
+    size_t space_pos = inner.find(' ');
+    std::string url;
+    std::optional<std::string> display;
+    if (space_pos != std::string::npos) {
+        url = inner.substr(0, space_pos);
+        std::string desc = inner.substr(space_pos + 1);
+
+        // Trim leading/trailing spaces from display (handle multiple spaces)
+        size_t start = desc.find_first_not_of(" \t");
+        if (start != std::string::npos) {
+            size_t end = desc.find_last_not_of(" \t");
+            display = desc.substr(start, end - start + 1);
+        }
+    } else {
+        url = inner;
+    }
+
+    // URL validation: scheme (ASCII letters, optional digits) followed by "://"
+    std::regex url_scheme_regex(R"([a-zA-Z][a-zA-Z0-9]*://)");
+    std::smatch match;
+    if (!std::regex_search(url, match, url_scheme_regex) || match.position() != 0) {
+        return nullptr;  // Invalid URL scheme
+    }
+
+    // Positions: full value
+    size_t start_pos = 0;
+    size_t end_pos = value.size();
+
+    return std::make_unique<elements::ExternalLink>(url, display, start_pos, end_pos);
 }
 
 // Balance delimiters (for nesting)

@@ -18,6 +18,7 @@ add_executable(tests
         test_wikilink_parsing.cpp
         ../src1/elements/WikiLink.cpp
         test_external_link_parsing.cpp
+        ../src1/elements/ExternalLink.cpp
 )
 
 target_link_libraries(tests

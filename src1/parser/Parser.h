@@ -65,6 +65,10 @@ private:
     FRIEND_TEST(TemplateParsingTest, ParseSimpleTemplate);
     FRIEND_TEST(HeaderParsingTest, ParseBalancedHeaderLevel3);
     FRIEND_TEST(HeaderParsingTest, ParseUnbalancedHeaderMinLevel);
+    FRIEND_TEST(WikiLinkParsingTest, ParseSimpleWikiLink);
+    FRIEND_TEST(WikiLinkParsingTest, ParseWikiLinkWithDisplay);
+    FRIEND_TEST(WikiLinkParsingTest, ParseWikiLinkWithSuffix);
+    FRIEND_TEST(WikiLinkParsingTest, ParseWikiLinkWithDisplayAndSuffix);
 #endif
 };
 

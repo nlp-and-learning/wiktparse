@@ -177,7 +177,7 @@ std::optional<json> getNested(const json& j, std::vector<std::string> keys) {
         if (!current->contains(k)) return std::nullopt;
         current = &(*current)[k];
     }
-    return *current;
+    return std::optional<json>{*current};
 }
 
 PropType propType(const json& j) {
@@ -405,5 +405,6 @@ void collectAllHeaders() {
 }
 
 int main() {
-    wikipediaInfoboxes();
+    //wikipediaInfoboxes();
+    splitWikiDataResult();
 }

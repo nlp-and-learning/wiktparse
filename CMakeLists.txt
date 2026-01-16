@@ -49,16 +49,23 @@ add_executable(${PROJECT_NAME} src/main.cpp src/liner/Bz2Liner.cpp src/liner/Abs
         src/markup/tags/TaggedContent.h
         src1/handlers/TagHandler.h
         src1/elements/Tag.h
+        src1/elements/Tag.cpp
         src1/elements/WikiElement.h
+        src1/elements/WikiElement.cpp
         src1/elements/TaggedContent.h
         src1/factory/TagFactory.cpp
         src1/factory/TagFactory.h
         src1/parser/Parser.h
         src1/elements/Template.h
+        src1/elements/Template.cpp
         src1/elements/Header.h
+        src1/elements/Header.cpp
         src1/elements/WikiLink.h
+        src1/elements/WikiLink.cpp
         src1/elements/ExternalLink.h
+        src1/elements/ExternalLink.cpp
         src1/elements/TextElement.h
+        src1/elements/TextElement.cpp
         src1/parser/ParserError.h
         src1/parser/Parser.cpp
         src1/elements/TaggedContent.cpp

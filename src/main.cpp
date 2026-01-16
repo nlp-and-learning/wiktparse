@@ -169,7 +169,7 @@ void showTitleTypes() {
     }
 }
 
-enum PropType {Iso, Glottolog, Gost, Lang, Pos, Other,  Pronun, Ling, LingNorm};
+enum PropType {Iso, Glottolog, Gost, Unesco, EndAngered,LinguistList, Lang, Pos, Other,  Pronun, Ling, LingNorm};
 
 std::optional<json> getNested(const json& j, std::vector<std::string> keys) {
     const json* current = &j;
@@ -192,6 +192,18 @@ PropType propType(const json& j) {
     auto resGost = getNested(j, {"claims", "P278"});
     if (resGost)
         return Gost;
+
+    auto resUnesco = getNested(j, {"claims", "P2355"});
+    if (resUnesco)
+        return Unesco;
+
+    auto resEndAngered = getNested(j, {"claims", "P2192"});
+    if (resEndAngered)
+        return EndAngered;
+
+    auto resLinguistList = getNested(j, {"claims", "P1232"});
+    if (resLinguistList)
+        return LinguistList;
 
     auto res31 = getNested(j, {"claims", "P31"});
     if (res31) {
@@ -254,6 +266,9 @@ void splitWikiDataResult() {
     std::ofstream posfile("pos.jsonl");
     std::ofstream glottologfile("glottolog.jsonl");
     std::ofstream gostfile("gost.jsonl");
+    std::ofstream unescofile("unesco.jsonl");
+    std::ofstream endAngeredfile("endAngered.jsonl");
+    std::ofstream linguistListfile("linguistList.jsonl");
     std::ofstream langfile("lang.jsonl");
     std::ofstream pronunfile("pronun.jsonl");
     std::ofstream lingfile("ling.jsonl");
@@ -266,6 +281,9 @@ void splitWikiDataResult() {
             case Iso: isofile << line << '\n'; break;
             case Glottolog: glottologfile << line << '\n'; break;
             case Gost: gostfile << line << '\n'; break;
+            case Unesco: unescofile << line << '\n'; break;
+            case EndAngered: endAngeredfile << line << '\n'; break;
+            case LinguistList: linguistListfile << line << '\n'; break;
             case Lang: langfile << line << '\n'; break;
             case Pos: posfile << line << '\n'; break;
             case Pronun: pronunfile << line << '\n'; break;

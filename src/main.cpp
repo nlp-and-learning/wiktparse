@@ -169,7 +169,8 @@ void showTitleTypes() {
     }
 }
 
-enum PropType {Iso, Glottolog, Gost, Unesco, EndAngered,LinguistList, Lang, Pos, Other,  Pronun, Ling, LingNorm};
+enum PropType {Iso, Glottolog, Gost, Unesco, EndAngered,LinguistList, NativeLabel, IndonesiaCode,
+    IndonesiaEth, Lang, Pos, Other,  Pronun, Ling, LingNorm};
 
 std::optional<json> getNested(const json& j, std::vector<std::string> keys) {
     const json* current = &j;
@@ -205,6 +206,10 @@ PropType propType(const json& j) {
     if (resLinguistList)
         return LinguistList;
 
+    auto resIndonesiaCode = getNested(j, {"claims", "P2590"});
+    if (resIndonesiaCode)
+        return IndonesiaCode;
+
     auto res31 = getNested(j, {"claims", "P31"});
     if (res31) {
         if (!res31.value().is_array())
@@ -215,6 +220,12 @@ PropType propType(const json& j) {
             if (to_string(resCode.value())=="\"Q82042\"") {
                 return Pos;
             } else if (to_string(resCode.value())=="\"Q34770\"") {
+                auto resIndonesiaEth = getNested(j, {"claims", "P2589"});
+                if (resIndonesiaEth)
+                    return IndonesiaEth;
+                auto resNativeLabel = getNested(j, {"claims", "P1705"});
+                if (resNativeLabel)
+                    return NativeLabel;
                 return Lang;
             }
         }
@@ -269,6 +280,9 @@ void splitWikiDataResult() {
     std::ofstream unescofile("unesco.jsonl");
     std::ofstream endAngeredfile("endAngered.jsonl");
     std::ofstream linguistListfile("linguistList.jsonl");
+    std::ofstream nativeLabelfile("nativeLabel.jsonl");
+    std::ofstream IndonesiaCodefile("IndonesiaCode.jsonl");
+    std::ofstream IndonesiaEthfile("IndonesiaEth.jsonl");
     std::ofstream langfile("lang.jsonl");
     std::ofstream pronunfile("pronun.jsonl");
     std::ofstream lingfile("ling.jsonl");
@@ -284,6 +298,9 @@ void splitWikiDataResult() {
             case Unesco: unescofile << line << '\n'; break;
             case EndAngered: endAngeredfile << line << '\n'; break;
             case LinguistList: linguistListfile << line << '\n'; break;
+            case NativeLabel: nativeLabelfile << line << '\n'; break;
+            case IndonesiaCode: IndonesiaCodefile << line << '\n'; break;
+            case IndonesiaEth: IndonesiaEthfile << line << '\n'; break;
             case Lang: langfile << line << '\n'; break;
             case Pos: posfile << line << '\n'; break;
             case Pronun: pronunfile << line << '\n'; break;

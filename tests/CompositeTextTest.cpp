@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "../src/markup/Comments.h"
+#include <wikilib/markup/tokenizer.h>
 #include "../src/markup/MarkupParser.h"
+
+using wikilib::markup::strip_comments;
 
 TEST(CompositeTest, PlainText) {
     std::string input = "This is plain text";
@@ -55,7 +57,7 @@ TEST(CompositeTest, Breaks4) {
 TEST(CompositeTest, CommentBreakB) {
     std::string input = "a\n\n<!--comment -->\nb";
     std::string expected = "a\nb";
-    std::string preparsed = Comments::clean(input);
+    std::string preparsed = strip_comments(input);
     MarkupParser parser(preparsed, 0);
     auto fragment = parser.parse();
     EXPECT_EQ(preparsed, fragment->dump());
@@ -65,7 +67,7 @@ TEST(CompositeTest, CommentBreakB) {
 TEST(CompositeTest, CommentBreakC) {
     std::string input = "a\n<!--comment -->\n\nb";
     std::string expected = "a\nb";
-    std::string preparsed = Comments::clean(input);
+    std::string preparsed = strip_comments(input);
     MarkupParser parser(preparsed, 0);
     auto fragment = parser.parse();
     EXPECT_EQ(preparsed, fragment->dump());
@@ -75,7 +77,7 @@ TEST(CompositeTest, CommentBreakC) {
 TEST(CompositeTest, CommentBreakD) {
     std::string input = "a\n<!-- -->\n<!-- -->\nb";
     std::string expected = "a b";
-    std::string preparsed = Comments::clean(input);
+    std::string preparsed = strip_comments(input);
     MarkupParser parser(preparsed, 0);
     auto fragment = parser.parse();
     EXPECT_EQ(preparsed, fragment->dump());

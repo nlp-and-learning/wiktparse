@@ -25,10 +25,12 @@ add_executable(tests
         test_full_parsing.cpp
         test_preprocessing.cpp
         ../src1/preprocessor/Preprocessor.cpp
+        WikiDataTest.cpp
 )
 
 target_link_libraries(tests
         PRIVATE
+        wiktdump
         GTest::GTest
         GTest::Main
 )

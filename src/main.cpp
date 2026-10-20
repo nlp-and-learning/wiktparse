@@ -1,30 +1,26 @@
 #include <algorithm>
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <vector>
-#include <bzlib.h>
 #include <map>
 #include <set>
 #include <sstream>
-#include <ranges>
 #include <string_view>
-#include <sys/stat.h>
 
-#include "reader/Index.h"
 #include "headers/headers.h"
 #include "WikiData.h"
-#include "reader/WikiFile.h"
-#include "xml/Xml.h"
+#include "dump/WikiDump.h"
 #include <nlohmann/json.hpp>
 
 #include "headers/headerTree.h"
-#include "markup/Comments.h"
 #include "markup/wikinodes/TemplateParser.h"
 #include "wikitext/templates.h"
-#include "util/Progress.h"
 #include "util/structs.h"
+#include "util/textUtils.h"
 
 using json = nlohmann::json;
+namespace fs = std::filesystem;
 
 using namespace std;
 
@@ -34,30 +30,29 @@ string correct_filename(std::string str) {
     return str;
 }
 
+void extractTermsToPages(WikiDump &wikiDump, const std::string &termsFile, const fs::path &directory) {
+    auto terms_to_extract = readLines(termsFile);
+    auto termValues = wikiDump.extractTerms(terms_to_extract);
+    for (size_t i = 0; i < terms_to_extract.size(); i++) {
+        const auto& term = terms_to_extract[i];
+        cout << term;
+        if (!termValues[i].empty()) {
+            saveToFile(termValues[i], directory/ (correct_filename(term)+".page"));
+            cout << " ok" << endl;
+        }
+        else
+            cout << " failed" << endl;
+    }
+}
+
 void createPages() {
     fs::create_directory("../pages");
     vector<string> langs = {"pl","en", "fr", "eo"};
     for (const auto& lang: langs) {
         fs::path directory = "../pages/"+lang;
         fs::create_directory(directory);
-        WikiName wikiName;
-        wikiName.wiktName(lang);
-        Index index(wikiName);
-        index.readIndex();
-        WikiFile wikiFile(index);
-        wikiFile.open();
-        auto terms_to_extract = readLines("../work/terms_to_extract." + lang + ".txt");
-        for (const auto& term : terms_to_extract) {
-            cout << term;
-            auto termValue = wikiFile.extractTerm(term);
-            if (!termValue.empty()) {
-                saveToFile(termValue, directory/ (correct_filename(term)+".page"));
-                cout << " ok" << endl;
-            }
-            else
-                cout << " failed" << endl;
-        }
-        wikiFile.close();
+        auto wikiDump = WikiDump::wiktionary(lang);
+        extractTermsToPages(wikiDump, "../work/terms_to_extract." + lang + ".txt", directory);
     }
 }
 
@@ -92,85 +87,51 @@ void createTreeForPages() {
 void createPagesWiki() {
     fs::path directory = "../pages/enwiki";
     fs::create_directory(directory);
-    WikiName wikiName;
-    wikiName.wikiName("en");
-    Index index(wikiName);
-    index.readIndex();
-    WikiFile wikiFile(index);
-    wikiFile.open();
-    auto terms_to_extract = readLines("../work/terms_to_extract.enwiki.txt");
-    for (const auto& term : terms_to_extract) {
-        cout << term;
-        auto termValue = wikiFile.extractTerm(term);
-        if (!termValue.empty()) {
-            saveToFile(termValue, directory/ (correct_filename(term)+".page"));
-            cout << " ok" << endl;
-        } else
-            cout << " failed" << endl;
-    }
-    wikiFile.close();
+    auto wikiDump = WikiDump::wikipedia("en");
+    extractTermsToPages(wikiDump, "../work/terms_to_extract.enwiki.txt", directory);
 }
 
-
-void searchWikiDataWiktNeeded() {
-    vector<string> listTosearch;
-    listTosearch.emplace_back("\"P220\"");//ISO 639-1 code
-    listTosearch.emplace_back("\"Q82042\"");//part of speech
-    listTosearch.emplace_back("\"Q8162\"");//linguistics , Etymology
-    listTosearch.emplace_back("\"Q34770\"");//language
-    vector<string> listNotTosearch;
-    listNotTosearch.emplace_back("\"Q5\"");
-    WikiData::search(listTosearch,listNotTosearch, "wiktNeeded.jsonl");
-}
 
 void showTitleTypes() {
-    const std::regex pattern(R"((.*)wiktionary.*.txt.bz2)");
-    fs::path directory("../dump");
     fs::create_directory("titles");
-    for (const auto& entry : fs::recursive_directory_iterator(directory)) {
-        if (!entry.is_regular_file()) continue;
-        const std::string filename = entry.path().filename().string();
-        std::smatch match;
-        if (std::regex_match(filename, match, pattern)) {
-            if (match[1].str()=="en")continue;
-            cout << match[1].str() << endl;
-            WikiName wikiName;
-            wikiName.wiktName(match[1].str());
-            Index index(wikiName);
-            index.readIndex();
-            map<string, set<string>> setMap;
-            set<string> allTitles;
-            for (const auto& title : index.objectMap | std::views::keys) {
-                if (title.find('/')==string::npos && title.find(':')==string::npos) continue;
-                allTitles.insert(title);
-                if (title.find('/')!=string::npos) {
-                    auto parts = split(title, '/');
-                    for (int i=0; i<parts.size(); i++) {
-                        string key = format("s{}_{}", i, parts.size());
-                        setMap[key].insert(parts[i]);
-                    }
-                } else if (title.find(':')!=string::npos) {
-                    auto parts = split(title, ':');
-                    for (int i=0; i<parts.size(); i++) {
-                        string key = format("c{}_{}", i, parts.size());
-                        setMap[key].insert(parts[i]);
-                    }
+    auto langs = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary).available_languages();
+    for (const auto& lang : langs) {
+        if (lang=="en")continue;
+        cout << lang << endl;
+        auto wikiDump = WikiDump::wiktionary(lang);
+        if (!wikiDump.path().index_exists()) continue;
+        map<string, set<string>> setMap;
+        set<string> allTitles;
+        wikiDump.forEachTitle([&](const string& title) {
+            if (title.find('/')==string::npos && title.find(':')==string::npos) return;
+            allTitles.insert(title);
+            if (title.find('/')!=string::npos) {
+                auto parts = split(title, '/');
+                for (int i=0; i<parts.size(); i++) {
+                    string key = format("s{}_{}", i, parts.size());
+                    setMap[key].insert(parts[i]);
+                }
+            } else if (title.find(':')!=string::npos) {
+                auto parts = split(title, ':');
+                for (int i=0; i<parts.size(); i++) {
+                    string key = format("c{}_{}", i, parts.size());
+                    setMap[key].insert(parts[i]);
                 }
             }
-            auto outname = "titles/" + match[1].str() + ".all.txt";;
-            saveToFile(allTitles, outname);
-            for (const auto& pair : setMap) {
-                const std::string& key = pair.first;
-                // if (key!="c0_2" && key!="s1_2") continue;
-                outname = "titles/" + match[1].str() + "." + pair.first + ".txt";
-                saveToFile(pair.second, outname);
-            }
+        });
+        auto outname = "titles/" + lang + ".all.txt";;
+        saveToFile(allTitles, outname);
+        for (const auto& pair : setMap) {
+            const std::string& key = pair.first;
+            // if (key!="c0_2" && key!="s1_2") continue;
+            outname = "titles/" + lang + "." + pair.first + ".txt";
+            saveToFile(pair.second, outname);
         }
     }
 }
 
 enum PropType {Iso, Glottolog, Gost, Unesco, EndAngered,LinguistList, NativeLabel, IndonesiaCode,
-    IndonesiaEth, Lang, Pos, Other,  Pronun, Ling, LingNorm};
+    IndonesiaEth, Lang, Pos, Other,  Pronun, Ling, LingNorm, Grammar};
 
 std::optional<json> getNested(const json& j, std::vector<std::string> keys) {
     const json* current = &j;
@@ -217,6 +178,7 @@ PropType propType(const json& j) {
         for (const auto & i : res31.value()) {
             auto resCode= getNested(i, {"mainsnak", "datavalue",
             "value", "id"});
+            if (!resCode) continue;
             if (to_string(resCode.value())=="\"Q82042\"") {
                 return Pos;
             } else if (to_string(resCode.value())=="\"Q34770\"") {
@@ -230,6 +192,12 @@ PropType propType(const json& j) {
             }
         }
     }
+    if (WikiData::isLexical(j))
+        return Pos;
+    if (WikiData::isGrammatical(j))
+        return Grammar;
+    if (WikiData::isLanguage(j))
+        return Lang;
     auto res361 = getNested(j, {"claims", "P361"});
     if (res361) {
         if (!res361.value().is_array())
@@ -237,6 +205,7 @@ PropType propType(const json& j) {
         for (const auto & i : res361.value()) {
             auto resCode= getNested(i, {"mainsnak", "datavalue",
             "value", "id"});
+            if (!resCode) continue;
             if (to_string(resCode.value())=="\"Q34770\"") {
                 return Pronun;
             }
@@ -250,6 +219,7 @@ PropType propType(const json& j) {
         for (const auto & i : res279.value()) {
             auto resCode= getNested(i, {"mainsnak", "datavalue",
             "value", "id"});
+            if (!resCode) continue;
             if (to_string(resCode.value())=="\"Q8162\"") {
                 return Ling;
             } else if (to_string(resCode.value())=="\"Q1759988\"") {
@@ -287,6 +257,7 @@ void splitWikiDataResult() {
     std::ofstream pronunfile("pronun.jsonl");
     std::ofstream lingfile("ling.jsonl");
     std::ofstream lingnormfile("lingnorm.jsonl");
+    std::ofstream grammarfile("grammar.jsonl");
     for( std::string line; getline( infile, line ); ) {
         if (line.empty()) continue;
         json j = json::parse(line);
@@ -306,6 +277,7 @@ void splitWikiDataResult() {
             case Pronun: pronunfile << line << '\n'; break;
             case Ling: lingfile << line << '\n'; break;
             case LingNorm: lingnormfile << line << '\n'; break;
+            case Grammar: grammarfile << line << '\n'; break;
             default: otherfile << line << '\n';
         }
         cnt++;
@@ -330,33 +302,20 @@ void testTemplates() {
 }
 
 void wikipediaInfoboxes() {
-    WikiName wikiName;
-    wikiName.wikiName("en");
-    Index index(wikiName);
-    WikiFile wikiFile(index);
-    wikiFile.open();
-    index.open();
-    Xml xml;
-    Progress progress(wikiFile.size(), 0.001);
+    auto wikiDump = WikiDump::wikipedia("en");
     std::ofstream out("infoboxes.txt");
-    for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
-        auto chunkStr = wikiFile.decompressChunk(indexChunk);
-        progress.update(wikiFile.filePos());
-        auto objects =  xml.allFromChunk(chunkStr);
-        for (auto &p : objects) {
-            auto templates = extractTemplates(Comments::clean(p.second));
-            for (auto &tstr: templates) {
-                size_t pos = 0;
-                TemplateParser parser(tstr, 0);
-                auto t = parser.parse();
-                auto name = trim(t->name);
-                if (name == "Infobox language")
-                    out << tstr << endl << endl;
-            }
+    wikiDump.forEachPage([&](const std::string &title, const std::string &text) {
+        auto templates = extractTemplates(text);
+        for (auto &tstr: templates) {
+            size_t pos = 0;
+            TemplateParser parser(tstr, 0);
+            auto t = parser.parse();
+            auto name = trim(t->name);
+            if (name == "Infobox language")
+                out << tstr << endl << endl;
         }
-    }
-    index.close();
-    wikiFile.close();
+        return true;
+    }, 0.001);
 }
 
 void pagesInfoboxes() {
@@ -382,64 +341,38 @@ void pagesInfoboxes() {
 }
 
 void searchForComments(const std::string &lang) {
-    WikiName wikiName;
-    wikiName.wiktName(lang);
-    Index index(wikiName);
-    WikiFile wikiFile(index);
-    wikiFile.open();
-    index.open();
-    Xml xml;
-    Progress progress(wikiFile.size());
-    for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
-        auto chunkStr = wikiFile.decompressChunk(indexChunk);
-        progress.update(wikiFile.filePos());
-        auto objects =  xml.allFromChunk(chunkStr);
-        for (auto &p : objects) {
-            auto lines = splitLines(p.second);
-            for (const auto& line : lines) {
-                auto trimmed = trim(line);
-                if (trimmed.find("<!--")!=std::string::npos) {
-                    std::cout << p.first << " : " << trimmed << std::endl;
-                }
+    auto wikiDump = WikiDump::wiktionary(lang);
+    wikiDump.forEachPage([&](const std::string &title, const std::string &text) {
+        auto lines = splitLines(text);
+        for (const auto& line : lines) {
+            auto trimmed = trim(line);
+            if (trimmed.find("<!--")!=std::string::npos) {
+                std::cout << title << " : " << trimmed << std::endl;
             }
         }
-    }
-    index.close();
-    wikiFile.close();
+        return true;
+    });
 }
 
 void collectAllHeaders() {
-    WikiName wikiName;
-    wikiName.wiktName("en");
-    Index index(wikiName);
-    WikiFile wikiFile(index);
-    wikiFile.open();
-    index.open();
+    auto wikiDump = WikiDump::wiktionary("en");
     LimitedListMap<string,string> allHeaders;
-    Xml xml;
-    Progress progress(wikiFile.size());
-    for( WikiIndexChunk indexChunk; index.getChunk(indexChunk);) {
-        auto chunkStr = wikiFile.decompressChunk(indexChunk);
-        progress.update(wikiFile.filePos());
-        auto objects =  xml.allFromChunk(chunkStr);
-        for (auto &p : objects) {
-            auto lines = splitLines(p.second);
-            for (const auto& line : lines) {
-                if (count_levelL(line)>1) {
-                    auto tag = trim_header(trim(line));
-                    allHeaders.add(tag,p.first);
-                }
+    wikiDump.forEachPage([&](const std::string &title, const std::string &text) {
+        auto lines = splitLines(text);
+        for (const auto& line : lines) {
+            if (count_levelL(line)>1) {
+                auto tag = trim_header(trim(line));
+                allHeaders.add(tag,title);
             }
         }
-    }
-    index.close();
-    wikiFile.close();
+        return true;
+    });
     std::ofstream out("allHeadersWhere.txt");
     if (!out) throw std::runtime_error("Cannot open file");
     allHeaders.print(out);
 }
 
 int main() {
-    //wikipediaInfoboxes();
-    splitWikiDataResult();
+    wikipediaInfoboxes();
+    //splitWikiDataResult();
 }

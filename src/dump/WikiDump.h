@@ -28,6 +28,13 @@ public:
     // Uses the index when present, otherwise reads dump (or its parts) sequentially.
     // Returns false when stopped by the visitor.
     bool forEachPage(const PageVisitor &visitor, double progressStep = 0.01);
+
+    // Called concurrently; worker is 0..workerCount()-1, one worker calls it sequentially
+    using ParallelPageVisitor = std::function<void(size_t worker, const std::string &title, const std::string &text)>;
+    // Number of workers forEachPageParallel uses: threads, but at most one per dump part
+    [[nodiscard]] size_t workerCount(size_t threads) const;
+    // Reads dump parts (e.g. Wikidata) in parallel; each worker takes the next part
+    void forEachPageParallel(const ParallelPageVisitor &visitor, size_t threads, double progressStep = 0.01);
     // Texts of terms in the same order; empty string for missing term
     std::vector<std::string> extractTerms(const std::vector<std::string> &terms);
     // Titles from the index, without reading the dump

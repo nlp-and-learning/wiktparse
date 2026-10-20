@@ -1,6 +1,7 @@
 .idea/
 pages/
 out/
+HANDOFF*.md
 
 # Prerequisites
 *.d

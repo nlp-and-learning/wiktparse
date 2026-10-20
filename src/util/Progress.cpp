@@ -115,7 +115,7 @@ int Progress::update(size_t currentPos) {
             }
             line += ")";
         }
-        std::cout << line << "\n";
+        std::cout << line << std::endl;
         return percentChanged?1:2;
     }
     return 0;

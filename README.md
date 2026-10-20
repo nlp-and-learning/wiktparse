@@ -11,13 +11,15 @@ dump_dir = ~/dump
 
 ## Tools
 
-- `wiktneeded [output.jsonl]` – reads the Wikidata dump (`<dump_dir>/wikidata/`,
-  also split into `...-multistreamN.xml-pApB.bz2` parts, with progress and ETA)
-  and writes entities needed by wiktparse to `wiktNeeded.jsonl`: languages and
+- `wiktneeded [-j N] [output.jsonl]` – reads the Wikidata dump
+  (`<dump_dir>/wikidata/`, split into `...-multistreamN.xml-pApB.bz2` parts) in
+  N threads (default 8, each takes the next part), with progress and ETA.
+  Thread n writes `wiktNeeded_n.jsonl`; old `wiktNeeded_*.jsonl` are removed
+  first. Selected entities: languages and
   language types, parts of speech and other Wiktionary section concepts (affixes,
   phrases, idioms, abbreviations, letters...), grammatical features, linguistics
   terms. Humans, publications, categories, names etc. are skipped. Selection
-  rules are in `src/WikiData.cpp`. `wiktparse` only reads this file
-  (`splitWikiDataResult()`).
+  rules are in `src/WikiData.cpp`. `wiktparse` only reads these files
+  (`splitWikiDataResult()`; falls back to a single `wiktNeeded.jsonl`).
 - `wiktneeded --filter in.jsonl out.jsonl` – applies the current selection to an
   earlier result, without the dump.

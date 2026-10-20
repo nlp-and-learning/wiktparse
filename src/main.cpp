@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <string_view>
@@ -238,9 +239,21 @@ void removeEmptyLinesFromJSonl(const std::string& filename) {
     }
 }
 
+// wiktneeded output: wiktNeeded_<n>.jsonl of each thread, or older single wiktNeeded.jsonl
+std::vector<fs::path> wiktNeededFiles(const fs::path& dir) {
+    const std::regex pattern(R"(wiktNeeded_\d+\.jsonl)");
+    std::vector<fs::path> files;
+    for (const auto& entry : fs::directory_iterator(dir)) {
+        if (entry.is_regular_file() && std::regex_match(entry.path().filename().string(), pattern))
+            files.push_back(entry.path());
+    }
+    if (files.empty())
+        files.push_back(dir / "wiktNeeded.jsonl");
+    std::ranges::sort(files);
+    return files;
+}
+
 void splitWikiDataResult() {
-    std::vector<std::string> lines;
-    std::ifstream infile("../cmake-build-release/wiktNeeded.jsonl");
     int cnt = 0;
     std::ofstream isofile("iso.jsonl");
     std::ofstream otherfile("other.jsonl");
@@ -258,6 +271,8 @@ void splitWikiDataResult() {
     std::ofstream lingfile("ling.jsonl");
     std::ofstream lingnormfile("lingnorm.jsonl");
     std::ofstream grammarfile("grammar.jsonl");
+    for (const auto& file : wiktNeededFiles("../cmake-build-release")) {
+    std::ifstream infile(file);
     for( std::string line; getline( infile, line ); ) {
         if (line.empty()) continue;
         json j = json::parse(line);
@@ -282,6 +297,7 @@ void splitWikiDataResult() {
         }
         cnt++;
         if (cnt % 200 ==0) cout << cnt << endl <<flush;
+    }
     }
 }
 

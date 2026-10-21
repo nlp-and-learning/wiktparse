@@ -12,6 +12,9 @@ public:
     static bool isWiktNeeded(const nlohmann::json &entity);
 
     static bool isExcluded(const nlohmann::json &entity);
+    // Stricter exclusion for entities found only by a label equal to a header
+    // term: also works, places, organizations, chemicals ("English" song, "Noun" band)
+    static bool isExcludedTermMatch(const nlohmann::json &entity);
     static bool isLanguage(const nlohmann::json &entity);
     // Parts of speech, affixes, phrases, abbreviations, letters...
     static bool isLexical(const nlohmann::json &entity);

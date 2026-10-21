@@ -20,7 +20,13 @@ add_library(wiktdump STATIC
         src/titles.cpp
         src/titles.h
         src/WikiData.cpp
-        src/WikiData.h)
+        src/WikiData.h
+        src/WikiTerms.cpp
+        src/WikiTerms.h
+        src/util/textUtils.cpp
+        src/util/textUtils.h
+        src/wikitext/HeaderTerms.cpp
+        src/wikitext/HeaderTerms.h)
 target_include_directories(wiktdump PUBLIC src)
 target_link_libraries(wiktdump PUBLIC wikilib::wikilib nlohmann_json::nlohmann_json)
 
@@ -28,11 +34,17 @@ target_link_libraries(wiktdump PUBLIC wikilib::wikilib nlohmann_json::nlohmann_j
 add_executable(wiktneeded tools/wiktneeded.cpp)
 target_link_libraries(wiktneeded wiktdump)
 
+# Statistics of section headers of all Wiktionaries
+add_executable(wiktheaders tools/wiktheaders.cpp)
+target_link_libraries(wiktheaders wiktdump)
+
+# Term lists (languages, parts of speech, sections) from wiktheaders output
+add_executable(wiktterms tools/wiktterms.cpp)
+target_link_libraries(wiktterms wiktdump)
+
 add_executable(${PROJECT_NAME} src/main.cpp
         src/headers/headers.cpp
         src/headers/headers.h
-        src/util/textUtils.cpp
-        src/util/textUtils.h
         src/wikitext/templates.cpp
         src/wikitext/templates.h
         src/headers/headerTree.cpp

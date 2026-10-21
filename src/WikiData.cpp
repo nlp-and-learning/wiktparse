@@ -192,6 +192,47 @@ const IdSet excludedClasses = {
     "Q17442446",  // Wikimedia internal item
 };
 
+// P31 of entities never needed when found only by a label (header term)
+const IdSet termExcludedClasses = {
+    "Q7366",      // song
+    "Q482994",    // album
+    "Q134556",    // single
+    "Q105543609", // musical work/composition
+    "Q1344",      // opera
+    "Q215380",    // musical group
+    "Q5398426",   // television series
+    "Q15416",     // television program
+    "Q21191270",  // television series episode
+    "Q24862",     // short film
+    "Q7889",      // video game
+    "Q3305213",   // painting
+    "Q838948",    // work of art
+    "Q17537576",  // creative work
+    "Q41298",     // magazine
+    "Q1002697",   // periodical
+    "Q11032",     // newspaper
+    "Q4830453",   // business
+    "Q783794",    // company
+    "Q891723",    // public company
+    "Q43229",     // organization
+    "Q486972",    // human settlement
+    "Q515",       // city
+    "Q1093829",   // city in the United States
+    "Q532",       // village
+    "Q484170",    // commune of France
+    "Q747074",    // comune of Italy
+    "Q4022",      // river
+    "Q8502",      // mountain
+    "Q23397",     // lake
+    "Q11446",     // ship
+    "Q1248784",   // airport
+    "Q3863",      // asteroid
+    "Q618779",    // award
+    "Q7187",      // gene
+    "Q8054",      // protein
+    "Q11173",     // chemical compound
+};
+
 // Ids (P..., Q...) whose presence in raw JSON makes an entity a candidate
 const IdSet &candidateMarkers() {
     static const IdSet markers = [] {
@@ -263,6 +304,10 @@ bool WikiData::mayBeWiktNeeded(std::string_view title, std::string_view text) {
 
 bool WikiData::isExcluded(const json &entity) {
     return !isItem(entity) || anyClaimIn(entity, "P31", excludedClasses);
+}
+
+bool WikiData::isExcludedTermMatch(const json &entity) {
+    return isExcluded(entity) || anyClaimIn(entity, "P31", termExcludedClasses);
 }
 
 bool WikiData::isLanguage(const json &entity) {

@@ -23,3 +23,18 @@ dump_dir = ~/dump
   (`splitWikiDataResult()`; falls back to a single `wiktNeeded.jsonl`).
 - `wiktneeded --filter in.jsonl out.jsonl` – applies the current selection to an
   earlier result, without the dump.
+- `wiktheaders [-j N] [output_dir] [lang...]` – collects section headers
+  (`==header==`, and lines with one template only) of all Wiktionaries per
+  namespace and level. A level is trusted when its headers repeat (80% of
+  occurrences on >= 3 pages); the entry word is removed from headers like
+  `kot ({{język polski}})`. Writes `report.tsv`, `<lang>.tsv` and `vocab.tsv`
+  (texts, template names and arguments of trusted levels).
+- `wiktterms [headers_dir] [terms_dir] [--ns wiki:Namespace]` – from
+  `wiktheaders` output (no dumps) writes `terms/<wiki>.txt`, one term per line:
+  language names, parts of speech, section names. Headers written as templates
+  give section names without language codes (`{{S|verbe|fr}}` -> `verbe`).
+  Main namespace by default.
+- `wiktneeded --terms terms` (default when `./terms` exists) also selects
+  entities whose label or alias in the language of a Wiktionary equals one of
+  its terms (case-insensitive), with stricter exclusions (works, places,
+  organizations...); they are logged in `wiktNeeded_terms_n.tsv`.

@@ -26,6 +26,7 @@ add_executable(tests
         test_preprocessing.cpp
         ../src1/preprocessor/Preprocessor.cpp
         WikiDataTest.cpp
+        WikiTermsTest.cpp
 )
 
 target_link_libraries(tests

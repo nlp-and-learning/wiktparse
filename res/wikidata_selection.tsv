@@ -206,6 +206,224 @@ excludedItems	Q124714	spring (water source; matches "sources" headers)
 excludedItems	Q21112633	edition of a translation (matches "translations" headers)
 excludedItems	Q3331189	version, edition or translation
 excludedItems	Q56876983	Letters, words and symbols in heraldry
+# Reviewed 2026-10-21: entities matched only by header terms in >= 2 languages
+# which are homonyms from other fields or too general concepts
+excludedItems	Q22231110	1.1: cycling race class defined by the International Cycling Unio
+excludedItems	Q22231111	1.2: cycling race class defined by the International Cycling Unio
+excludedItems	Q19647	2: year
+excludedItems	Q19636	3: year
+excludedItems	Q333291	abstract: summary of a research document
+excludedItems	Q4026292	action: something an agent can do or perform
+excludedItems	Q352858	addendum: addition made to a document following its publication
+excludedItems	Q1363768	amalgamation: legal consolidation of two or more business entities into on
+excludedItems	Q217602	analysis: process of applying analytical methods to existing data of a
+excludedItems	Q1007870	art gallery: place where art is exhibited and sometimes also sold
+excludedItems	Q2353429	Artha: meaning, sense, goal, purpose, or essence, one of four aims
+excludedItems	Q3258659	background: relatively distant and unimportant element in art
+excludedItems	Q1072476	bending: strain caused by a bending moment
+excludedItems	Q196117	bending: metalworking term
+excludedItems	Q2355220	Bhadra: month of the Hindu calendar
+excludedItems	Q64225319	bird: motif
+excludedItems	Q43099	Book of Numbers: fourth book of Bible
+excludedItems	Q47035253	C: NRHP criterion - design/construction
+excludedItems	Q4438875	C++ reference: specific kind of reference datatype in C++
+excludedItems	Q163875	cardinal number: finite or infinite number that measures cardinality (size) o
+excludedItems	Q2961479	cat: heraldic animal
+excludedItems	Q29385765	Cat Statuette intended to contain a mummified cat: object highlighted in The MET collection
+excludedItems	Q714737	category of being: philosophical concept
+excludedItems	Q1983832	Category:Buddhism: Wikimedia category
+excludedItems	Q2574811	cause: entity which forms causality for an event
+excludedItems	Q1150070	change: process, event or action that deviates from the present stat
+excludedItems	Q842046	check: chess condition
+excludedItems	Q83147	chemical formula: compact notation for chemical compounds giving element symbo
+excludedItems	Q899336	chemical species: chemically identical molecular entities that can have the sa
+excludedItems	Q29514218	child: first-degree relative, direct descendant of parent
+excludedItems	Q1091366	ci: Chinese lyrical poetic genre whose meters are determined by
+excludedItems	Q191836	CITES: multilateral treaty to protect endangered plants and animals
+excludedItems	Q15253706	city: type of populated places in South Korea, Japan, the United S
+excludedItems	Q16889133	class: collection of items in an ontology defined by common charact
+excludedItems	Q18204	class: in education, a group of students taking the same course, or
+excludedItems	Q217594	class: mathematical collection of sets that can be defined based on
+excludedItems	Q4479242	class: in object-oriented programming, a definition that specifies
+excludedItems	Q5127848	class: group of things derived from extensional or intensional defi
+excludedItems	Q4994879	code: cipher that operates on semantic tokens, rather than individ
+excludedItems	Q58897583	comment: work consisting of a critical or explanatory note written to
+excludedItems	Q1310239	component: self-contained constituent part of a larger technical entity
+excludedItems	Q830414	component: separable (countable or measurable) constituent part of a ta
+excludedItems	Q462437	composition: placement or arrangement of visual elements or ingredients i
+excludedItems	Q4406616	concrete object: a particular or specific instance of an entity. To describe
+excludedItems	Q12488383	content: entity that is contained
+excludedItems	Q515173	contraction mapping: function reducing distance between all points
+excludedItems	Q40735	coordinate origin: point in a Euclidean space used as a reference for geometric
+excludedItems	Q1277575	correspondence: mails or messages written by a person and sent to one or sev
+excludedItems	Q107194231	counter: kind of furniture
+excludedItems	Q26156752	Counter: Pokémon move
+excludedItems	Q600134	course: program of study, or unit of teaching that typically lasts o
+excludedItems	Q1320830	covered passageway: part of building
+excludedItems	Q2754860	cyclamor: heraldic symbol, it is the annulet when it appears alone and
+excludedItems	Q190087	data type: classification of data in computer science
+excludedItems	Q2672013	deformation: In engineering, any changes in the shape or size of an objec
+excludedItems	Q89659343	descent: biological or social descent of an individual
+excludedItems	Q1200750	description: description of something, written down or verbal
+excludedItems	Q66087861	different from: inverse label for property P1889
+excludedItems	Q82990	digit: numerical symbol used in combinations to represent numbers i
+excludedItems	Q746549	dish: specific food preparation with cooking finished, and ready t
+excludedItems	Q181043	dissident: person who actively challenges an established doctrine, poli
+excludedItems	Q185789	drop: small unit of liquid
+excludedItems	Q213449	eating: ingestion of food to provide for all organisms their nutriti
+excludedItems	Q35120	entity: anything that can be considered, discussed, or observed
+excludedItems	Q3143	Europa: Galilean moon of Jupiter
+excludedItems	Q114424786	example in mathematics: mathematical subtext, which presents an application or an il
+excludedItems	Q7958	explanation: set of statements constructed to describe reasons why such a
+excludedItems	Q13226383	facility: place, equipment, or service to support a specific function
+excludedItems	Q35409	family: taxonomic rank (or a taxon at that rank) between order and g
+excludedItems	Q13204680	father-in-law: male parent-in-law
+excludedItems	Q6581072	female: to be used in "sex or gender" (P21) to indicate that the hum
+excludedItems	Q43445	female organism: organism of the female sex
+excludedItems	Q186157	filename extension: suffix to the name of a computer file
+excludedItems	Q112091664	finger ring: circular band worn as a type of ornamental jewellery around
+excludedItems	Q1419683	fish: heraldic animal
+excludedItems	Q11681869	flexion: bending movement that decreases the angle between a segment
+excludedItems	Q951964	food product: marketed product consisting of food intended for human consu
+excludedItems	Q279749	form: one of the secondary taxonomic ranks, below that of variety,
+excludedItems	Q871403	formation: in association football (soccer), position of the players
+excludedItems	Q99294601	France: the country of France as depicted in Star Trek
+excludedItems	Q140442048	Gallery: 2018 music track
+excludedItems	Q1627767	gallery: upper level space in a building
+excludedItems	Q483394	genre: category of creative works based on stylistic, thematic or t
+excludedItems	Q34740	genus: taxonomic rank used in the biological classification of livi
+excludedItems	Q2221906	geographic location: point, line or area on or near Earth
+excludedItems	Q18185	grade: standardized measurement of academic performance
+excludedItems	Q65933034	has instance: inverse label for property P31
+excludedItems	Q29902355	heirs: people (unnamed) who inherited the property of one person
+excludedItems	Q18408740	heraldic bird: category of heraldic charges
+excludedItems	Q114353569	Horse: fictional species in Minecraft
+excludedItems	Q102403326	hyper: HTTP library for the Rust programming language
+excludedItems	Q102014	hyperlink: reference to data that the reader can directly follow either
+excludedItems	Q55654238	in use: state of normal operation of a building, installation, park,
+excludedItems	Q795052	individual: individual person or organism
+excludedItems	Q23958946	individual entity: entity, be it a thing, a person or any other agent, which is
+excludedItems	Q21503252	instance of: relation of type constraints
+excludedItems	Q855395	interpretation: assignment of meanings to various concepts, symbols, or obje
+excludedItems	Q28869365	issue: issue of a newspaper, a scientific journal or magazine for r
+excludedItems	Q392953	Italian Space Agency: national space agency of Italy
+excludedItems	Q192581	job activity: activity done by a person to earn money
+excludedItems	Q120	June: sixth month of the year in the Julian and Gregorian calendar
+excludedItems	Q6410497	kind: type of types in a type system
+excludedItems	Q1324655	Kāla: deity and concept in Hinduism
+excludedItems	Q379833	lesson: section of learning or teaching into which a wider learning
+excludedItems	Q12139612	list: set of discrete items of information
+excludedItems	Q164419	long gallery: type of long, narrow room
+excludedItems	Q6581097	male: to be used in "sex or gender" (P21) to indicate that the hum
+excludedItems	Q84048850	male human: human of the male sex
+excludedItems	Q319636	malleus: bone of the middle ear (handle of malleus 5 mm, head of mall
+excludedItems	Q214609	material: substance that can occur in different amounts, all with some
+excludedItems	Q21959508	materials:
+excludedItems	Q6498784	mathematical expression: formula that represents a mathematical object
+excludedItems	Q544736	matter in philosophy: philosophical
+excludedItems	Q628523	message: discrete unit of communication intended by the source for co
+excludedItems	Q8473	military: organization primarily tasked with preparing for and conduct
+excludedItems	Q2302426	miscellaneous: quality of items having differing or formally unclassified t
+excludedItems	Q36384	molar equivalent: unit of measurement
+excludedItems	Q54418095	more: comparison term
+excludedItems	Q73067531	musical number: song or composition used in a film, musical, revue, stage pr
+excludedItems	Q17099235	mutation: in algebra
+excludedItems	Q1955809	mutation: kind of operation in knot theory
+excludedItems	Q610425	mutation: type of genetic operator used to maintain genetic diversity
+excludedItems	Q215392	Norwegian Air Shuttle: Norwegian low-cost airline
+excludedItems	Q59496158	not yet determined: entity for which the value has not been determined yet (for
+excludedItems	Q140743042	Nota CRM: field service CRM software by Alkhast Vatsaev
+excludedItems	Q474423	note: component of a fragrance
+excludedItems	Q60558258	note:
+excludedItems	Q16666794	Notes: comic books series by Boulet
+excludedItems	Q4653740	Notes: conflation of two software applications developed by Apple I
+excludedItems	Q121362883	Number: thematic unit of the Maths curriculum for 7th grade in basic
+excludedItems	Q121362908	Number: thematic unit of the Maths curriculum for 8th grade in basic
+excludedItems	Q121362911	Number: thematic unit of the Maths curriculum for 9th grade in basic
+excludedItems	Q121551683	Number: substrand of the 7th-grade Mathematics program in basic educ
+excludedItems	Q121551698	Number: substrand of the 8th-grade Mathematics program in basic educ
+excludedItems	Q121551704	Number: substrand of the 9th-grade Mathematics program in basic educ
+excludedItems	Q122433280	number: publication series subdivision (bibliography)
+excludedItems	Q14916053	number: structural element of artistic performance
+excludedItems	Q614112	number of entities: discrete quantity; number of entities of a given kind in a s
+excludedItems	Q1422299	nutriment: chemicals that serve as energy storage for life, obtained vi
+excludedItems	Q216601	object: programming element that groups data with relevant operation
+excludedItems	Q488383	object: anything that may be observed or acted upon by a subject
+excludedItems	Q193181	observation: active acquisition of information from a primary source
+excludedItems	Q239526	offspring: in biology, the product of reproduction of an organism
+excludedItems	Q36602	order: taxonomic rank
+excludedItems	Q191780	ordinal number: mathematical concept generalizing ordinal numerals to extend
+excludedItems	Q55107540	other: item(s) that are separate and distinct from the item(s) unde
+excludedItems	Q207514	Paraguayan guaraní: currency
+excludedItems	Q13196193	part: separate element of a larger entity. For integral parts, see
+excludedItems	Q88392887	part of a work: part that a work consists of (use a more specific object if
+excludedItems	Q2083958	pattern: discernible regularity in an entity or set of entities
+excludedItems	Q13099586	pear: fruit
+excludedItems	Q17334923	physical location: position of something in space
+excludedItems	Q12335479	physical template: a pattern entity for making or processing things of the same
+excludedItems	Q8679	Pisces: zodiac constellation straddling the celestial equator
+excludedItems	Q29566706	place: where something is situated spatially
+excludedItems	Q1371819	plan: outline of a strategy for achievement of an objective
+excludedItems	Q57809364	Portugal: chapter; National Forest Inventories
+excludedItems	Q58417459	Portugal: chapter; Política Externa – As Relações Internacionais em Mu
+excludedItems	Q60156663	Portugal: chapter; Worlds of Work: Building an International Sociology
+excludedItems	Q4164871	position: social role with a set of powers and responsibilities within
+excludedItems	Q1141067	program comment: explanatory note in the source code of a computer program, s
+excludedItems	Q1773840	provenance: chronology of the ownership, custody or location of a histor
+excludedItems	Q1207505	quality: distinguishing feature
+excludedItems	Q29934271	quantity: Wikibase property value datatype
+excludedItems	Q309314	quantity: property that exists in a range of magnitudes or multitudes;
+excludedItems	Q107435521	record: physical or digital manifestation of recorded information
+excludedItems	Q1334113	reference data type: value that gives indirect access to e.g. a variable or regis
+excludedItems	Q114946819	related property: Wikibase property that might provide additional information
+excludedItems	Q930933	relation: general relation between different objects or individuals
+excludedItems	Q114423884	remark: mathematical (short) text , in which explanations, variants,
+excludedItems	Q1272626	representation: entity or process that portrays something else, usually in a
+excludedItems	Q1554231	resource: source or supply from which benefit is produced
+excludedItems	Q7376362	river source: start of a river or stream
+excludedItems	Q1881523	science, technology, engineering, and mathematics: group of academic disciplines
+excludedItems	Q3181348	section: taxonomic rank in botany
+excludedItems	Q3182649	separation: process of separating one entity to form others; often: sepa
+excludedItems	Q15304597	sequence variant: non-exact copy of a sequence feature or genome exhibiting on
+excludedItems	Q207961	shape: form of an object or its external boundary
+excludedItems	Q21075805	significance: the level of importance, meaning, or purpose of concept, act
+excludedItems	Q18614342	Simple: 547th strip of the webcomic xkcd
+excludedItems	Q12946962	sleeping: rest in a state of decreased consciousness and reduced metab
+excludedItems	Q2122665	source: typically a confidential provider of non open-source intelli
+excludedItems	Q643572	Source: game engine developed by Valve Corporation
+excludedItems	Q114666554	source of material: place where physical material was mined, quarried, found, or
+excludedItems	Q93723782	source vertex: graph vertex with no inward-directed edges, making it the or
+excludedItems	Q1785918	Sources: Canadian news websites
+excludedItems	Q667	south: one of the four cardinal directions
+excludedItems	Q705338	species: specific genus-differentia defined item that is described fi
+excludedItems	Q5767753	style: official or legally recognized title for a person or entity
+excludedItems	Q131931143	sur: trumpet used by the archangel Israfil according to Islam
+excludedItems	Q16256733	Tae: Korean given name element (태)
+excludedItems	Q1200995	talent: aptitude useful for some activity
+excludedItems	Q193472	trunk: main wooden axis of a tree
+excludedItems	Q21146257	type: kind or variety of something
+excludedItems	Q3707858	type: anchoring point of a taxonomic name (e.g. a physical specime
+excludedItems	Q834884	type: term in model theory and related areas of mathematics
+excludedItems	Q35657	U.S. state: constituent political entity of the United States of America
+excludedItems	Q17853087	union: entity resulting from the act of combining several entities
+excludedItems	Q2198779	unit: entity regarded or used as an elementary structural or funct
+excludedItems	Q1724915	use: use of a resource to perform a task
+excludedItems	Q30041652	Usus:
+excludedItems	Q65244368	utilization: phase of a system life cycle in which the system performs it
+excludedItems	Q1196827	value: expression in computer science which cannot be evaluated fur
+excludedItems	Q767728	variety: taxonomic rank
+excludedItems	Q11663	weather: state of the atmosphere
+excludedItems	Q23387	week: unit of time
+excludedItems	Q54285715	Wikibase sense: Wikibase entity type for lexicographic senses
+excludedItems	Q19798642	Wikibase value: part of a claim in Wikibase data model
+excludedItems	Q18616576	Wikidata property: part of statements according to the Wikidata data model, app
+excludedItems	Q4167836	Wikimedia category: use with 'instance of' (P31) for Wikimedia category
+excludedItems	Q386724	work: intellectual or artistic creation
+excludedItems	Q214604	zero of a function: element of the domain where function's value is zero
+excludedItems	Q4102975	Валоун:
+excludedItems	Q9731409	פראנצייה: Wikimedia permanent duplicate item
+excludedItems	Q23108	১: year
+excludedItems	Q3782498	ḥāl: spiritual state in Sufi path
 
 termExcludedProps	P625	coordinate location
 termExcludedProps	P131	located in the administrative territorial entity

@@ -21,6 +21,9 @@
 #   excludedItems          these entities -> never needed (homonyms of header terms)
 #   termExcludedClasses    P31 -> not needed when found only by a header term label
 #   termExcludedProps      claim present -> not needed when found only by a label (places)
+#   termAllowedDewey       prefixes of Dewey codes (P1036) of fields related to dictionaries;
+#                          an entity found only by a label with Dewey codes, none of them
+#                          in these fields, is a homonym from another field (root of a plant)
 
 languageCodeProps	P218	ISO 639-1
 languageCodeProps	P219	ISO 639-2
@@ -206,6 +209,17 @@ excludedItems	Q56876983	Letters, words and symbols in heraldry
 
 termExcludedProps	P625	coordinate location
 termExcludedProps	P131	located in the administrative territorial entity
+
+termAllowedDewey	4	language
+termAllowedDewey	01	bibliography
+termAllowedDewey	080	general collections, quotations
+termAllowedDewey	121.6	meaning, interpretation
+termAllowedDewey	16	logic, definition
+termAllowedDewey	398	folklore, proverbs
+termAllowedDewey	793.73	word games, anagrams
+termAllowedDewey	808	rhetoric, rhyme, citation
+termAllowedDewey	910.014	toponymy
+termAllowedDewey	929.4	personal names
 
 termExcludedClasses	Q7366	song
 termExcludedClasses	Q482994	album

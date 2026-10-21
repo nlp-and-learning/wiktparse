@@ -120,6 +120,14 @@ TEST(WikiDataTest, DeweyLinguisticsAndExcludedItems) {
     entity["claims"]["P1036"][0]["mainsnak"]["datavalue"]["value"] = "425.1"; // English grammar: a language
     EXPECT_FALSE(WikiData::isLinguistics(entity));
 
+    // Term match classified by Dewey outside dictionary fields: plant root (581), not proverb (398)
+    entity["claims"]["P1036"][0]["mainsnak"]["datavalue"]["value"] = "581.498";
+    EXPECT_TRUE(WikiData::isExcludedTermMatch(entity));
+    entity["claims"]["P1036"][0]["mainsnak"]["datavalue"]["value"] = "398.9";
+    EXPECT_FALSE(WikiData::isExcludedTermMatch(entity));
+    entity["claims"].erase("P1036");
+    EXPECT_FALSE(WikiData::isExcludedTermMatch(entity));
+
     EXPECT_TRUE(WikiData::isExcluded(json::parse(item("Q202444", {{"P31", "Q121493639"}})))); // given name
     EXPECT_TRUE(WikiData::isExcludedTermMatch(json::parse(item("Q801", {{"P31", "Q21199"}})))); // number
 }

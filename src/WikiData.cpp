@@ -30,11 +30,11 @@ const std::set<std::string> knownGroups = {
     "linguisticsClasses", "linguisticsSuperclasses", "linguisticsFields", "linguisticsPartOf", "linguisticsItems",
     "linguisticsDewey",
     "writingSystemClasses",
-    "excludedClasses", "excludedItems", "termExcludedClasses", "termExcludedProps",
+    "excludedClasses", "excludedItems", "termExcludedClasses", "termExcludedProps", "termAllowedDewey",
 };
 
 // Groups of string prefixes instead of ids
-const std::set<std::string> prefixGroups = {"linguisticsDewey"};
+const std::set<std::string> prefixGroups = {"linguisticsDewey", "termAllowedDewey"};
 constexpr const char *deweyProperty = "P1036";
 
 // Groups whose ids in raw JSON (claim keys, item values) make an entity a candidate
@@ -219,8 +219,23 @@ bool WikiData::isExcluded(const json &entity) {
 
 bool WikiData::isExcludedTermMatch(const json &entity) {
     const auto &r = rules();
-    return isExcluded(entity) || anyClaimIn(entity, "P31", r["termExcludedClasses"]) ||
-           hasAnyClaim(entity, r["termExcludedProps"]);
+    if (isExcluded(entity) || anyClaimIn(entity, "P31", r["termExcludedClasses"]) ||
+        hasAnyClaim(entity, r["termExcludedProps"]))
+        return true;
+    // Classified by Dewey only outside fields related to dictionaries
+    const auto &allowed = r["termAllowedDewey"];
+    if (allowed.empty())
+        return false;
+    bool classified = false;
+    for (const auto &code : claimStrings(entity, deweyProperty)) {
+        if (code.empty() || code[0] < '0' || code[0] > '9')
+            continue;
+        classified = true;
+        for (const auto &prefix : allowed)
+            if (code.starts_with(prefix))
+                return false;
+    }
+    return classified;
 }
 
 bool WikiData::isLanguage(const json &entity) {

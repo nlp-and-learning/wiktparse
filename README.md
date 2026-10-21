@@ -57,7 +57,10 @@ dump_dir = ~/dump
   first), languages of English Wikipedia infoboxes which are not known yet (no
   code maps to en.wikt, name not an en.wikt name or alias) and their unknown
   varieties (lcN/ldN) are added to `lang` with kind `wikipedia` (type
-  `infobox`, `infobox family` or `infobox variety`).
+  `infobox`, `infobox family` or `infobox variety`). Table `glottolog` has the
+  languoids of `res/glottolog/languoid.csv` (Glottolog 5.3, CC BY 4.0, see
+  `res/glottolog/README.txt` for citation); Glottolog codes of Wikidata
+  missing there are noted in `wd_code_map`.
 - Ids of classes and properties used by `wiktneeded` and `splitWikiDataResult()`
   are in `res/wikidata_selection.tsv` (`--rules FILE` for another file); after
   changing it, `wiktneeded --filter` reapplies the rules to an earlier result

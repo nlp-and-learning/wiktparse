@@ -16,6 +16,9 @@
 //       to en.wikt codes; method: code | iso1 | qid | macrolanguage | retired |
 //       none (note: private use, retired, dialect, constructed); uses SIL tables
 //       in res/sil
+//   glottolog(id, name, level, parent, family, iso3, latitude, longitude, bookkeeping)
+//       Glottolog languoids from res/glottolog/languoid.csv; Glottolog codes of
+//       Wikidata missing there are noted "not in Glottolog" in wd_code_map
 // With infoboxes.jsonl (wiktparse), languages of English Wikipedia infoboxes not
 // known yet (no code maps to en.wikt, name not an en.wikt name or alias) are
 // added to lang with kind "wikipedia": code = ISO 639-3, Glottolog or
@@ -293,6 +296,56 @@ std::vector<std::string> fetchEntities(const std::vector<std::string> &qids) {
     return lines;
 }
 
+// CSV with a header (RFC 4180: quoted fields with "", commas and newlines);
+// rows as maps column -> value
+std::vector<std::map<std::string, std::string>> readCsv(const fs::path &file) {
+    std::ifstream in(file, std::ios::binary);
+    if (!in) throw std::runtime_error("Cannot open " + file.string());
+    std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    std::vector<std::vector<std::string>> rows(1);
+    std::string field;
+    bool quoted = false;
+    for (size_t i = 0; i < text.size(); i++) {
+        char c = text[i];
+        if (quoted) {
+            if (c == '"' && i + 1 < text.size() && text[i + 1] == '"') {
+                field += '"';
+                i++;
+            } else if (c == '"')
+                quoted = false;
+            else
+                field += c;
+        } else if (c == '"')
+            quoted = true;
+        else if (c == ',') {
+            rows.back().push_back(std::move(field));
+            field.clear();
+        } else if (c == '\n' || c == '\r') {
+            if (c == '\r' && i + 1 < text.size() && text[i + 1] == '\n')
+                i++;
+            rows.back().push_back(std::move(field));
+            field.clear();
+            rows.emplace_back();
+        } else
+            field += c;
+    }
+    if (!field.empty() || !rows.back().empty())
+        rows.back().push_back(std::move(field));
+    std::vector<std::map<std::string, std::string>> result;
+    if (rows.empty())
+        return result;
+    const auto &header = rows.front();
+    for (size_t r = 1; r < rows.size(); r++) {
+        if (rows[r].size() < header.size())
+            continue;
+        std::map<std::string, std::string> row;
+        for (size_t c = 0; c < header.size(); c++)
+            row[header[c]] = rows[r][c];
+        result.push_back(std::move(row));
+    }
+    return result;
+}
+
 // Private use range qaa-qtz of ISO 639
 bool privateUse(const std::string &code) {
     return code.size() == 3 && code[0] == 'q' && code[1] >= 'a' && code[1] <= 't';
@@ -425,6 +478,13 @@ int main(int argc, char *argv[]) {
 
         // Codes of Wikidata languages mapped to codes of en.wiktionary
         Iso639 iso(fs::path(WikiData::defaultRulesPath()).parent_path() / "sil");
+        // Glottolog languoids (families, languages, dialects) of the current version
+        std::map<std::string, std::map<std::string, std::string>> glottolog;
+        auto glottologFile = fs::path(WikiData::defaultRulesPath()).parent_path() / "glottolog" / "languoid.csv";
+        if (fs::exists(glottologFile))
+            for (auto &row : readCsv(glottologFile))
+                glottolog[row["id"]] = std::move(row);
+        std::cout << glottolog.size() << " Glottolog languoids" << std::endl;
         std::set<std::string> wiktCodes;
         std::map<std::string, std::string> qidCode; // Q -> en.wikt code (languages preferred)
         for (const auto &row : langRows) {
@@ -488,6 +548,8 @@ int main(int argc, char *argv[]) {
                         else if (classes.contains("Q33384")) note = "dialect";
                         else if (classes.contains("Q33215")) note = "constructed";
                     }
+                    if (scheme == "glottolog" && !glottolog.empty() && !glottolog.contains(code))
+                        note = note.empty() ? "not in Glottolog" : note + ", not in Glottolog";
                     methodCounts[{scheme, found.second}]++;
                     mapRows.push_back({scheme, code, q, name, found.first, found.second, note});
                 }
@@ -635,6 +697,17 @@ int main(int argc, char *argv[]) {
         db.insert("INSERT OR REPLACE INTO lang VALUES(?,?,?,?,?,?,?,?,?,?)", langRows);
         db.insert("INSERT INTO lang_alias VALUES(?,?,?)", aliasRows);
         db.insert("INSERT INTO lang_name VALUES(?,?,?,?,?)", nameRows);
+        db.exec("CREATE TABLE glottolog(id TEXT PRIMARY KEY, name TEXT, level TEXT, parent TEXT, family TEXT, "
+                "iso3 TEXT, latitude TEXT, longitude TEXT, bookkeeping TEXT)");
+        {
+            std::vector<std::vector<std::string>> rows;
+            for (const auto &[id, r] : glottolog)
+                rows.push_back({id, r.at("name"), r.at("level"), r.at("parent_id"), r.at("family_id"),
+                                r.at("iso639P3code"), r.at("latitude"), r.at("longitude"),
+                                r.at("bookkeeping") == "True" ? "1" : ""});
+            db.insert("INSERT INTO glottolog VALUES(?,?,?,?,?,?,?,?,?)", rows);
+            db.exec("CREATE INDEX glottolog_parent ON glottolog(parent); CREATE INDEX glottolog_iso3 ON glottolog(iso3);");
+        }
         db.exec("CREATE TABLE wd_code_map(scheme TEXT, code TEXT, qid TEXT, name TEXT, wikt_code TEXT, "
                 "method TEXT, note TEXT)");
         db.insert("INSERT INTO wd_code_map VALUES(?,?,?,?,?,?,?)", mapRows);

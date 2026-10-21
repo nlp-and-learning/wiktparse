@@ -62,6 +62,7 @@ languageClasses	Q25295	language family
 languageClasses	Q17376908	languoid
 languageClasses	Q3329375	language variety
 languageClasses	Q12442971	lect
+languageClasses	Q206577	proto-language
 
 languageItems	Q34770	language
 
@@ -200,6 +201,21 @@ excludedClasses	Q4167410	Wikimedia disambiguation page
 excludedClasses	Q11266439	Wikimedia template
 excludedClasses	Q19887878	Wikimedia infobox template
 excludedClasses	Q17442446	Wikimedia internal item
+# Wikimedia sites have a Wikimedia language code (P424) but are not languages
+excludedClasses	Q10876391	Wikipedia language edition
+excludedClasses	Q22001389	Wiktionary language edition
+excludedClasses	Q22001316	Wikibooks language edition
+excludedClasses	Q22001361	Wikiquote language edition
+excludedClasses	Q15156455	Wikisource language edition
+excludedClasses	Q20671729	Wikinews language edition
+excludedClasses	Q19826567	Wikivoyage language edition
+excludedClasses	Q22001390	Wikiversity language edition
+excludedClasses	Q138580578	former Wikipedia language edition
+excludedClasses	Q21450877	Wikimedia multilingual project main page
+excludedClasses	Q21469493	Wikimedia project chat in specific languages
+excludedClasses	Q36509592	wiki with script conversion
+excludedClasses	Q47495990	closed wiki
+excludedClasses	Q138685553	Wikimedia project with a nonstandard language code
 
 excludedItems	Q202444	given name (class; label matches name section headers)
 excludedItems	Q124714	spring (water source; matches "sources" headers)

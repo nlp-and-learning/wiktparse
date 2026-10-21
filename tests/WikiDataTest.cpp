@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -91,6 +93,32 @@ TEST(WikiDataTest, JunkIsSkipped) {
     EXPECT_FALSE(needed(item("Q305", {{"P31", "Q515"}, {"P2936", "Q34770"}})));
     // A concrete word is not a lexical class
     EXPECT_FALSE(needed(item("Q306", {{"P31", "Q8171"}})));
+}
+
+TEST(WikiDataTest, WritingSystems) {
+    EXPECT_TRUE(needed(item("Q8209", {{"P31", "Q335806"}})));   // Devanagari: abugida
+    EXPECT_TRUE(needed(item("Q401", {{"P31", "Q4004706"}})));   // unicase alphabet
+    EXPECT_TRUE(WikiData::isWritingSystem(json::parse(item("Q9779", {{"P279", "Q8192"}}))));
+    EXPECT_FALSE(WikiData::isWritingSystem(json::parse(item("Q402", {{"P31", "Q19776628"}})))); // letter
+}
+
+TEST(WikiDataTest, TermMatchesOfPlacesAreExcluded) {
+    auto place = json::parse(item("Q500", {{"P31", "Q123456"}, {"P625", ""}}));
+    EXPECT_TRUE(WikiData::isExcludedTermMatch(place));
+    EXPECT_FALSE(WikiData::isExcluded(place));
+    EXPECT_TRUE(WikiData::isExcludedTermMatch(json::parse(item("Q501", {{"P131", "Q1"}}))));
+    EXPECT_TRUE(WikiData::isExcludedTermMatch(json::parse(item("Q502", {{"P31", "Q41710"}})))); // ethnic group
+    EXPECT_FALSE(WikiData::isExcludedTermMatch(json::parse(item("Q503", {{"P31", "Q151885"}})))); // concept
+}
+
+TEST(WikiDataTest, RulesFileErrors) {
+    EXPECT_THROW(WikiData::loadRules("/nonexistent/rules.tsv"), std::runtime_error);
+    auto bad = std::filesystem::temp_directory_path() / "wiktparse-bad-rules.tsv";
+    std::ofstream(bad) << "noSuchGroup\tQ1\tcomment\n";
+    EXPECT_THROW(WikiData::loadRules(bad), std::runtime_error);
+    std::filesystem::remove(bad);
+    // Failed loads keep the previous rules
+    EXPECT_TRUE(WikiData::isLanguage(json::parse(item("Q809", {{"P220", ""}}))));
 }
 
 TEST(WikiDataTest, RedirectsAndMissingValues) {

@@ -28,6 +28,8 @@ add_library(wiktdump STATIC
         src/wikitext/HeaderTerms.cpp
         src/wikitext/HeaderTerms.h)
 target_include_directories(wiktdump PUBLIC src)
+# Default location of rules files (res/wikidata_selection.tsv)
+target_compile_definitions(wiktdump PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
 target_link_libraries(wiktdump PUBLIC wikilib::wikilib nlohmann_json::nlohmann_json)
 
 # Creates wiktNeeded.jsonl from the Wikidata dump

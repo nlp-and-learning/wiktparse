@@ -132,7 +132,7 @@ void showTitleTypes() {
 }
 
 enum PropType {Iso, Glottolog, Gost, Unesco, EndAngered,LinguistList, NativeLabel, IndonesiaCode,
-    IndonesiaEth, Lang, Pos, Other,  Pronun, Ling, LingNorm, Grammar};
+    IndonesiaEth, Lang, Pos, Other,  Pronun, Ling, LingNorm, Grammar, Script};
 
 std::optional<json> getNested(const json& j, std::vector<std::string> keys) {
     const json* current = &j;
@@ -197,6 +197,8 @@ PropType propType(const json& j) {
         return Pos;
     if (WikiData::isGrammatical(j))
         return Grammar;
+    if (WikiData::isWritingSystem(j))
+        return Script;
     if (WikiData::isLanguage(j))
         return Lang;
     auto res361 = getNested(j, {"claims", "P361"});
@@ -271,6 +273,7 @@ void splitWikiDataResult() {
     std::ofstream lingfile("ling.jsonl");
     std::ofstream lingnormfile("lingnorm.jsonl");
     std::ofstream grammarfile("grammar.jsonl");
+    std::ofstream scriptfile("script.jsonl");
     for (const auto& file : wiktNeededFiles("../cmake-build-release")) {
     std::ifstream infile(file);
     for( std::string line; getline( infile, line ); ) {
@@ -293,6 +296,7 @@ void splitWikiDataResult() {
             case Ling: lingfile << line << '\n'; break;
             case LingNorm: lingnormfile << line << '\n'; break;
             case Grammar: grammarfile << line << '\n'; break;
+            case Script: scriptfile << line << '\n'; break;
             default: otherfile << line << '\n';
         }
         cnt++;

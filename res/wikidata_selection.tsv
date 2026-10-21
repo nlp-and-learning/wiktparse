@@ -1,0 +1,268 @@
+# Selection of Wikidata entities needed by wiktparse (wiktneeded, splitWikiDataResult).
+# Format: group <TAB> id <TAB> comment; lines starting with # are comments.
+# Groups and how they are used (P31 = instance of, P279 = subclass of):
+#   languageCodeProps      entity has a claim with this property -> language
+#   languageClasses        P31 (or P279: language types) -> language
+#   languageMetaclasses    P31 -> language type (official language, dialect...)
+#   languageItems          these entities -> language
+#   lexicalClasses         P31 or P279 -> part of speech / lexical class
+#   lexicalSuperclasses    P279 only (their instances are concrete words)
+#   lexicalItems           these entities -> lexical (Wiktionary section concepts)
+#   grammaticalClasses     P31 -> grammatical category or its value
+#   grammaticalItems       these entities -> grammatical
+#   linguisticsClasses     P31 or P279 -> linguistics term
+#   linguisticsSuperclasses P279 only -> linguistics term
+#   linguisticsFields      P2579 (studied by) -> linguistics term
+#   linguisticsPartOf      P361 (part of) -> linguistics term
+#   linguisticsItems       these entities -> linguistics
+#   writingSystemClasses   P31 or P279 -> writing system
+#   excludedClasses        P31 -> never needed
+#   termExcludedClasses    P31 -> not needed when found only by a header term label
+#   termExcludedProps      claim present -> not needed when found only by a label (places)
+
+languageCodeProps	P218	ISO 639-1
+languageCodeProps	P219	ISO 639-2
+languageCodeProps	P220	ISO 639-3
+languageCodeProps	P305	IETF language tag
+languageCodeProps	P424	Wikimedia language code
+languageCodeProps	P1394	Glottolog
+languageCodeProps	P1232	Linguist List
+languageCodeProps	P1627	Ethnologue
+languageCodeProps	P278	GOST 7.75-97
+languageCodeProps	P2355	UNESCO Atlas of the World's Languages in Danger
+languageCodeProps	P2192	Endangered Languages Project
+languageCodeProps	P2590	BPS language code (Indonesia)
+languageCodeProps	P2589	Indonesian ethnic group
+
+languageMetaclasses	Q28923954	languoid class
+languageMetaclasses	Q20829075	type of language
+
+languageClasses	Q34770	language
+languageClasses	Q1288568	modern language
+languageClasses	Q33742	natural language
+languageClasses	Q20162172	human language
+languageClasses	Q38058796	extinct language
+languageClasses	Q45762	dead language
+languageClasses	Q436240	ancient language
+languageClasses	Q2315359	historical language
+languageClasses	Q4085712	unwritten language
+languageClasses	Q1149626	written language
+languageClasses	Q33384	dialect
+languageClasses	Q34228	sign language
+languageClasses	Q33215	constructed language
+languageClasses	Q33289	creole
+languageClasses	Q33831	pidgin
+languageClasses	Q152559	macrolanguage
+languageClasses	Q25295	language family
+languageClasses	Q17376908	languoid
+languageClasses	Q3329375	language variety
+languageClasses	Q12442971	lect
+
+languageItems	Q34770	language
+
+lexicalClasses	Q82042	part of speech
+lexicalClasses	Q1084	noun
+lexicalClasses	Q24905	verb
+lexicalClasses	Q34698	adjective
+lexicalClasses	Q380057	adverb
+lexicalClasses	Q36224	pronoun
+lexicalClasses	Q63116	numeral
+lexicalClasses	Q103184	article
+lexicalClasses	Q576271	determiner
+lexicalClasses	Q36484	conjunction
+lexicalClasses	Q83034	interjection
+lexicalClasses	Q4833830	preposition
+lexicalClasses	Q161873	postposition
+lexicalClasses	Q134316	adposition
+lexicalClasses	Q184943	grammatical particle
+lexicalClasses	Q2120608	function word
+lexicalClasses	Q789016	content word
+lexicalClasses	Q503992	nominal
+lexicalClasses	Q2006180	pro-form
+lexicalClasses	Q62155	affix
+lexicalClasses	Q111029	root
+lexicalClasses	Q184511	idiom
+lexicalClasses	Q35102	proverb
+lexicalClasses	Q1778442	verb phrase
+lexicalClasses	Q101244	acronym
+lexicalClasses	Q918270	initialism
+lexicalClasses	Q126473	contraction
+lexicalClasses	Q54553409	verb form
+lexicalClasses	Q207857	inflection
+
+lexicalSuperclasses	Q8171	word
+lexicalSuperclasses	Q43249	morpheme
+lexicalSuperclasses	Q187931	phrase
+lexicalSuperclasses	Q48937186	word or phrase
+lexicalSuperclasses	Q102786	abbreviation
+lexicalSuperclasses	Q111352	lexeme
+lexicalSuperclasses	Q2545446	grapheme
+lexicalSuperclasses	Q11953984	linguistic unit
+lexicalSuperclasses	Q115786086	form
+
+lexicalItems	Q80071	symbol
+lexicalItems	Q3241972	character
+lexicalItems	Q82622	punctuation
+lexicalItems	Q162940	diacritic
+lexicalItems	Q9788	letter
+lexicalItems	Q184377	pronunciation
+lexicalItems	Q35245	etymology
+lexicalItems	Q976327	romanization
+lexicalItems	Q1122269	collocation
+lexicalItems	Q170239	onomatopoeia
+lexicalItems	Q8171	word
+lexicalItems	Q43249	morpheme
+lexicalItems	Q187931	phrase
+lexicalItems	Q102786	abbreviation
+lexicalItems	Q111352	lexeme
+lexicalItems	Q2545446	grapheme
+lexicalItems	Q82042	part of speech
+
+grammaticalClasses	Q980357	grammatical category
+grammaticalClasses	Q162378	grammatical gender
+grammaticalClasses	Q104083	grammatical number
+grammaticalClasses	Q128234	case
+grammaticalClasses	Q184932	grammatical mood
+
+grammaticalItems	Q980357	grammatical category
+
+linguisticsClasses	Q8162	linguistics
+linguisticsClasses	Q1759988	linguistic norm
+linguisticsClasses	Q66664364	linguistic term
+
+linguisticsSuperclasses	Q8183	phoneme
+
+linguisticsFields	Q8162	linguistics
+linguisticsFields	Q160845	sociolinguistics
+linguisticsFields	Q40998	phonology
+linguisticsFields	Q35395	phonetics
+linguisticsFields	Q192625	linguistic typology
+linguisticsFields	Q190375	historical linguistics
+linguisticsFields	Q35245	etymology
+
+linguisticsPartOf	Q34770	language
+linguisticsPartOf	Q8162	linguistics
+
+linguisticsItems	Q8162	linguistics
+
+writingSystemClasses	Q8192	writing system
+writingSystemClasses	Q119520394	type of writing system
+writingSystemClasses	Q12775371	script family
+writingSystemClasses	Q29517555	natural writing system
+writingSystemClasses	Q1191702	constructed writing system
+writingSystemClasses	Q9779	alphabet
+writingSystemClasses	Q2182919	alphabetic writing system
+writingSystemClasses	Q4004706	unicase alphabet
+writingSystemClasses	Q65045986	bicameral script
+writingSystemClasses	Q29575627	Latin-script alphabet
+writingSystemClasses	Q30016797	Arabic-script alphabet
+writingSystemClasses	Q106644552	Hebrew-script-based alphabet
+writingSystemClasses	Q139027527	constructed alphabet
+writingSystemClasses	Q579287	phonetic alphabet
+writingSystemClasses	Q335806	abugida
+writingSystemClasses	Q185087	abjad
+writingSystemClasses	Q182133	syllabary
+writingSystemClasses	Q3781304	semi-syllabary
+writingSystemClasses	Q3953107	logographic writing system
+writingSystemClasses	Q56317132	logosyllabary
+writingSystemClasses	Q1191127	featural writing system
+writingSystemClasses	Q140774	numeric writing system
+writingSystemClasses	Q467037	Brahmic scripts
+writingSystemClasses	Q7439210	script in Unicode
+
+excludedClasses	Q5	human
+excludedClasses	Q15632617	fictional human
+excludedClasses	Q101352	family name
+excludedClasses	Q202444	given name
+excludedClasses	Q13442814	scholarly article
+excludedClasses	Q5633421	scientific journal
+excludedClasses	Q187685	doctoral thesis
+excludedClasses	Q1907875	master's thesis
+excludedClasses	Q3331189	version, edition or translation
+excludedClasses	Q7725634	literary work
+excludedClasses	Q47461344	written work
+excludedClasses	Q732577	publication
+excludedClasses	Q571	book
+excludedClasses	Q11424	film
+excludedClasses	Q1259759	miniseries
+excludedClasses	Q16521	taxon
+excludedClasses	Q1298668	science project
+excludedClasses	Q2300983	Collaborative Research Centre
+excludedClasses	Q4167836	Wikimedia category
+excludedClasses	Q4167410	Wikimedia disambiguation page
+excludedClasses	Q11266439	Wikimedia template
+excludedClasses	Q19887878	Wikimedia infobox template
+excludedClasses	Q17442446	Wikimedia internal item
+
+termExcludedProps	P625	coordinate location
+termExcludedProps	P131	located in the administrative territorial entity
+
+termExcludedClasses	Q7366	song
+termExcludedClasses	Q482994	album
+termExcludedClasses	Q134556	single
+termExcludedClasses	Q105543609	musical work/composition
+termExcludedClasses	Q1344	opera
+termExcludedClasses	Q215380	musical group
+termExcludedClasses	Q5398426	television series
+termExcludedClasses	Q15416	television program
+termExcludedClasses	Q21191270	television series episode
+termExcludedClasses	Q24862	short film
+termExcludedClasses	Q7889	video game
+termExcludedClasses	Q3305213	painting
+termExcludedClasses	Q838948	work of art
+termExcludedClasses	Q17537576	creative work
+termExcludedClasses	Q41298	magazine
+termExcludedClasses	Q1002697	periodical
+termExcludedClasses	Q11032	newspaper
+termExcludedClasses	Q4830453	business
+termExcludedClasses	Q783794	company
+termExcludedClasses	Q891723	public company
+termExcludedClasses	Q43229	organization
+termExcludedClasses	Q163740	nonprofit organization
+termExcludedClasses	Q131734	brewery
+termExcludedClasses	Q486972	human settlement
+termExcludedClasses	Q515	city
+termExcludedClasses	Q1093829	city in the United States
+termExcludedClasses	Q532	village
+termExcludedClasses	Q484170	commune of France
+termExcludedClasses	Q747074	comune of Italy
+termExcludedClasses	Q6256	country
+termExcludedClasses	Q3624078	sovereign state
+termExcludedClasses	Q7275	state
+termExcludedClasses	Q5107	continent
+termExcludedClasses	Q41710	ethnic group
+termExcludedClasses	Q23442	island
+termExcludedClasses	Q33837	archipelago
+termExcludedClasses	Q4022	river
+termExcludedClasses	Q355304	watercourse
+termExcludedClasses	Q47521	stream
+termExcludedClasses	Q8502	mountain
+termExcludedClasses	Q54050	hill
+termExcludedClasses	Q23397	lake
+termExcludedClasses	Q17343829	unincorporated community
+termExcludedClasses	Q253019	Ortsteil
+termExcludedClasses	Q56436498	village in India
+termExcludedClasses	Q26211545	desa
+termExcludedClasses	Q126020951	ward of Papua New Guinea
+termExcludedClasses	Q18663566	dissolved municipality of Japan
+termExcludedClasses	Q1907114	metropolitan area
+termExcludedClasses	Q79007	street
+termExcludedClasses	Q11446	ship
+termExcludedClasses	Q1248784	airport
+termExcludedClasses	Q3863	asteroid
+termExcludedClasses	Q618779	award
+termExcludedClasses	Q7187	gene
+termExcludedClasses	Q8054	protein
+termExcludedClasses	Q11173	chemical compound
+termExcludedClasses	Q29654788	Unicode character
+termExcludedClasses	Q3512806	Unicode block
+termExcludedClasses	Q12308941	male given name
+termExcludedClasses	Q11879590	female given name
+termExcludedClasses	Q3409032	unisex given name
+termExcludedClasses	Q22812564	Japanese given name
+termExcludedClasses	Q2095	food
+termExcludedClasses	Q40050	drink
+termExcludedClasses	Q125191	photograph
+termExcludedClasses	Q860861	sculpture
+termExcludedClasses	Q11060274	print
+termExcludedClasses	Q13433827	encyclopedia article

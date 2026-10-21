@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <regex>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -23,6 +24,7 @@ namespace fs = std::filesystem;
 namespace {
 
 WikiTerms terms;
+size_t minTermLanguages = 2; // label must be a header term in so many languages
 
 // Writes the entity when needed; entities found only by a header term are
 // also logged (id, language, term) to termLog. Returns true when written.
@@ -41,7 +43,12 @@ bool writeIfNeeded(std::string_view title, const std::string &text, std::ofstrea
     if (!byTerm || WikiData::isExcludedTermMatch(entity))
         return false;
     auto matched = terms.matches(entity);
-    if (matched.empty())
+    // A linguistic concept is a header in many Wiktionaries; a homonym (island,
+    // ethnic group, surname) usually matches the headers of one only
+    std::set<std::string> languages;
+    for (const auto &[language, label] : matched)
+        languages.insert(language);
+    if (languages.size() < minTermLanguages)
         return false;
     out << text << '\n';
     if (termLog) {
@@ -141,12 +148,17 @@ int main(int argc, char *argv[]) {
     size_t threads = 8;
     fs::path termsDir = "terms";
     bool termsGiven = false;
+    fs::path rulesFile = WikiData::defaultRulesPath();
     for (size_t i = 0; i + 1 < args.size();) {
         if (args[i] == "-j") {
             threads = std::max<size_t>(1, std::stoul(args[i + 1]));
         } else if (args[i] == "--terms") {
             termsDir = args[i + 1];
             termsGiven = true;
+        } else if (args[i] == "--rules") {
+            rulesFile = args[i + 1];
+        } else if (args[i] == "--min-term-languages") {
+            minTermLanguages = std::max<size_t>(1, std::stoul(args[i + 1]));
         } else {
             i++;
             continue;
@@ -155,16 +167,20 @@ int main(int argc, char *argv[]) {
     }
     std::string arg = args.empty() ? "wiktNeeded.jsonl" : args[0];
     if (arg == "-h" || arg == "--help") {
-        std::cout << "usage: wiktneeded [-j N] [--terms DIR] [output.jsonl]\n"
+        std::cout << "usage: wiktneeded [-j N] [--rules FILE] [--terms DIR] [--min-term-languages N] [output.jsonl]\n"
+                     "           rules: ids of classes and properties (default res/wikidata_selection.tsv)\n"
                      "           read Wikidata dump in N threads (default 8); thread n writes output_n.jsonl;\n"
                      "           with term lists (default ./terms if present, from wiktterms) also entities\n"
-                     "           whose label is a header term; these are logged in output_terms_n.tsv\n"
+                     "           whose label is a header term in N languages (default 2); these are\n"
+                     "           logged in output_terms_n.tsv\n"
                      "       wiktneeded [--terms DIR] --filter in.jsonl out.jsonl\n"
                      "           apply selection to an earlier result\n"
                      "       wiktneeded --first   write first Wikidata page to firstChuknk\n";
         return 0;
     }
     try {
+        WikiData::loadRules(rulesFile);
+        std::cout << "rules " << rulesFile.string() << std::endl;
         if (termsGiven || fs::is_directory(termsDir)) {
             auto count = terms.load(termsDir);
             std::cout << count << " header terms loaded from " << termsDir.string() << std::endl;

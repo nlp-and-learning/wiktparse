@@ -36,5 +36,10 @@ dump_dir = ~/dump
   Main namespace by default.
 - `wiktneeded --terms terms` (default when `./terms` exists) also selects
   entities whose label or alias in the language of a Wiktionary equals one of
-  its terms (case-insensitive), with stricter exclusions (works, places,
+  its terms (case-insensitive) in at least `--min-term-languages N` (default 2)
+  Wiktionaries, with stricter exclusions (works, places with P625/P131,
   organizations...); they are logged in `wiktNeeded_terms_n.tsv`.
+- Ids of classes and properties used by `wiktneeded` and `splitWikiDataResult()`
+  are in `res/wikidata_selection.tsv` (`--rules FILE` for another file); after
+  changing it, `wiktneeded --filter` reapplies the rules to an earlier result
+  without reading the dump (rules adding new entities need a dump pass).

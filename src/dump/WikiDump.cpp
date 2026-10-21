@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <iostream>
 #include <filesystem>
 #include <mutex>
 #include <optional>
@@ -72,10 +73,67 @@ bool WikiDump::forEachPage(const PageVisitor &visitor, double progressStep) {
 }
 
 size_t WikiDump::workerCount(size_t threads) const {
+    if (path().index_exists())
+        return std::max<size_t>(1, threads);
     return std::max<size_t>(1, std::min(threads, path().dump_parts().size()));
 }
 
+// Multistream dump with index: workers take the next indexed range (bz2 stream
+// group of about 100 pages) and decompress it independently
+void WikiDump::forEachPageParallelIndexed(const ParallelPageVisitor &visitor, size_t threads, double progressStep) {
+    const uint64_t dumpSize = path().dump_size();
+    std::vector<IndexChunk> ranges;
+    {
+        auto chunker = IndexChunker::from_file(path().index_path().string(), dumpSize, IndexLinePolicy::RejectMalformed);
+        for (IndexChunk chunk; chunker.next_chunk(chunk);) {
+            chunk.entries.clear(); // offsets only; titles are read from the dump
+            ranges.push_back(chunk);
+        }
+        if (!chunker.error().empty())
+            throw std::runtime_error(std::string(chunker.error()));
+    }
+    if (ranges.empty())
+        throw std::runtime_error("No ranges in index " + path().index_path().string());
+    const size_t workers = workerCount(threads);
+    std::cout << ranges.size() << " indexed ranges, " << workers << " threads" << std::endl;
+
+    Progress progress(dumpSize - ranges.front().start_offset, progressStep);
+    std::mutex progressMutex;
+    std::atomic<uint64_t> doneBytes{0};
+    std::atomic<size_t> nextRange{0};
+    std::atomic<bool> failed{false};
+    std::string error;
+    auto work = [&](size_t worker) {
+        DumpReader rangeReader(path());
+        for (size_t i; !failed && (i = nextRange++) < ranges.size();) {
+            bool ok = rangeReader.process_chunk(ranges[i], [&](const Page &page) {
+                if (getTitleType(page.info.title).first != TitleType::Other)
+                    visitor(worker, page.info.title, pageText(page.content()));
+                return !failed.load();
+            });
+            if (!ok && !rangeReader.error().empty() && !failed.exchange(true)) {
+                std::lock_guard lock(progressMutex);
+                error = rangeReader.error();
+            }
+            auto bytes = doneBytes += ranges[i].end_offset - ranges[i].start_offset;
+            std::lock_guard lock(progressMutex);
+            progress.update(bytes);
+        }
+    };
+    std::vector<std::thread> pool;
+    for (size_t worker = 0; worker < workers; worker++)
+        pool.emplace_back(work, worker);
+    for (auto &thread : pool)
+        thread.join();
+    if (failed)
+        throw std::runtime_error(error);
+}
+
 void WikiDump::forEachPageParallel(const ParallelPageVisitor &visitor, size_t threads, double progressStep) {
+    if (path().index_exists()) {
+        forEachPageParallelIndexed(visitor, threads, progressStep);
+        return;
+    }
     const auto parts = path().dump_parts();
     if (parts.empty())
         throw std::runtime_error("Dump file not found: " + path().dump_path().string());

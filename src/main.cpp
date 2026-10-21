@@ -1,5 +1,7 @@
 #include <algorithm>
+#include <atomic>
 #include <iostream>
+#include <mutex>
 #include <filesystem>
 #include <fstream>
 #include <vector>
@@ -13,6 +15,7 @@
 #include "WikiData.h"
 #include "dump/WikiDump.h"
 #include <nlohmann/json.hpp>
+#include <wikilib/templates/template_parser.h>
 
 #include "headers/headerTree.h"
 #include "markup/wikinodes/TemplateParser.h"
@@ -321,21 +324,49 @@ void testTemplates() {
     }
 }
 
-void wikipediaInfoboxes() {
+// Template name as MediaWiki compares it: first letter case-insensitive, '_' = ' '
+std::string normalizedTemplateName(std::string name) {
+    name = trim(name);
+    std::replace(name.begin(), name.end(), '_', ' ');
+    if (!name.empty())
+        name[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(name[0])));
+    return name;
+}
+
+// Infobox language (and language family) templates of English Wikipedia,
+// read in parallel threads (indexed multistream ranges):
+// infoboxes.txt - raw templates; infoboxes.jsonl - one infobox per line:
+// {"title":..,"template":..,"params":{"name":"raw value",..}}; positional
+// parameters are named "1", "2"...
+void wikipediaInfoboxes(size_t threads) {
     auto wikiDump = WikiDump::wikipedia("en");
+    std::cout << wikiDump.path().dump_path().string() << std::endl;
     std::ofstream out("infoboxes.txt");
-    wikiDump.forEachPage([&](const std::string &title, const std::string &text) {
-        auto templates = extractTemplates(text);
-        for (auto &tstr: templates) {
-            size_t pos = 0;
-            TemplateParser parser(tstr, 0);
-            auto t = parser.parse();
-            auto name = trim(t->name);
-            if (name == "Infobox language")
-                out << tstr << endl << endl;
+    std::ofstream jsonl("infoboxes.jsonl");
+    std::mutex outMutex;
+    std::atomic<size_t> count{0};
+    wikiDump.forEachPageParallel([&](size_t, const std::string &title, const std::string &text) {
+        // Cheap check before parsing templates of every article
+        if (text.find("nfobox language") == std::string::npos && text.find("nfobox_language") == std::string::npos)
+            return;
+        for (const auto &invocation : wikilib::templates::find_invocations(text)) {
+            auto name = normalizedTemplateName(invocation.name);
+            if (name != "Infobox language" && name != "Infobox language family")
+                continue;
+            json params = json::object();
+            size_t positional = 0;
+            for (const auto &[key, value] : invocation.parameters)
+                params[key.empty() ? std::to_string(++positional) : key] = value;
+            auto raw = text.substr(invocation.location.begin.offset, invocation.location.length());
+            auto line = json{{"title", title}, {"template", name}, {"params", params}}.dump(
+                    -1, ' ', false, json::error_handler_t::replace);
+            std::lock_guard lock(outMutex);
+            out << raw << "\n\n";
+            jsonl << line << '\n';
+            count++;
         }
-        return true;
-    }, 0.001);
+    }, threads, 0.001);
+    std::cout << count << " infoboxes written to infoboxes.txt and infoboxes.jsonl" << std::endl;
 }
 
 void pagesInfoboxes() {
@@ -392,7 +423,9 @@ void collectAllHeaders() {
     allHeaders.print(out);
 }
 
-int main() {
-    wikipediaInfoboxes();
+// wiktparse [threads]   (default 16)
+int main(int argc, char *argv[]) {
+    size_t threads = argc > 1 ? std::max<size_t>(1, std::stoul(argv[1])) : 16;
+    wikipediaInfoboxes(threads);
     //splitWikiDataResult();
 }

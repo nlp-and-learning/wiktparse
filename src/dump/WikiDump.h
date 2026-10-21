@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <map>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -42,4 +43,7 @@ public:
     std::vector<std::string> extractTerms(const std::vector<std::string> &terms);
     // Titles from the index, without reading the dump
     void forEachTitle(const std::function<void(const std::string &title)> &visitor) const;
+    // Raw texts (comments kept) of pages whose title passes the filter; reads
+    // only the indexed ranges containing them
+    std::map<std::string, std::string> extractMatching(const std::function<bool(const std::string &title)> &filter);
 };

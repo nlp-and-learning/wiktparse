@@ -26,7 +26,9 @@ add_library(wiktdump STATIC
         src/util/textUtils.cpp
         src/util/textUtils.h
         src/wikitext/HeaderTerms.cpp
-        src/wikitext/HeaderTerms.h)
+        src/wikitext/HeaderTerms.h
+        src/wikitext/LuaData.cpp
+        src/wikitext/LuaData.h)
 target_include_directories(wiktdump PUBLIC src)
 # Default location of rules files (res/wikidata_selection.tsv)
 target_compile_definitions(wiktdump PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
@@ -39,6 +41,11 @@ target_link_libraries(wiktneeded wiktdump)
 # Statistics of section headers of all Wiktionaries
 add_executable(wiktheaders tools/wiktheaders.cpp)
 target_link_libraries(wiktheaders wiktdump)
+
+# Languages of English Wiktionary modules with Wikidata names, into SQLite
+find_package(SQLite3 REQUIRED)
+add_executable(wiktlangs tools/wiktlangs.cpp)
+target_link_libraries(wiktlangs wiktdump SQLite::SQLite3)
 
 # Term lists (languages, parts of speech, sections) from wiktheaders output
 add_executable(wiktterms tools/wiktterms.cpp)

@@ -26,10 +26,20 @@ namespace {
 WikiTerms terms;
 size_t minTermLanguages = 2; // label must be a header term in so many languages
 bool removeHomonymTerms = true;
+std::set<std::string, std::less<>> items; // --items: Q ids always selected
+
+// Entity selected by claims or listed in --items
+bool selected(const json &entity) {
+    return items.contains(entity.value("id", "")) || WikiData::isWiktNeeded(entity);
+}
 
 // Writes the entity when needed; entities found only by a header term are
 // also logged (id, language, term) to termLog. Returns true when written.
 bool writeIfNeeded(std::string_view title, const std::string &text, std::ofstream &out, std::ofstream *termLog) {
+    if (items.contains(title)) {
+        out << text << '\n';
+        return true;
+    }
     bool byClaims = WikiData::mayBeWiktNeeded(title, text);
     bool byTerm = !terms.empty() && terms.mayMatch(text);
     if (!byClaims && !byTerm)
@@ -98,7 +108,7 @@ void removeHomonyms(const std::vector<fs::path> &outputs, const std::vector<fs::
         std::ifstream in(file);
         for (std::string line; std::getline(in, line);) {
             auto entity = json::parse(line, nullptr, false);
-            if (!entity.is_discarded() && WikiData::isWiktNeeded(entity))
+            if (!entity.is_discarded() && selected(entity))
                 for (auto &key : terms.matchedTerms(entity))
                     covered.insert(std::move(key));
         }
@@ -111,7 +121,7 @@ void removeHomonyms(const std::vector<fs::path> &outputs, const std::vector<fs::
             auto out = openOutput(tmp.string());
             for (std::string line; std::getline(in, line);) {
                 auto entity = json::parse(line, nullptr, false);
-                if (!entity.is_discarded() && !WikiData::isWiktNeeded(entity)) {
+                if (!entity.is_discarded() && !selected(entity)) {
                     std::set<std::string> languages;
                     for (const auto &key : terms.matchedTerms(entity))
                         if (!covered.contains(key))
@@ -227,6 +237,15 @@ int main(int argc, char *argv[]) {
         } else if (args[i] == "--terms") {
             termsDir = args[i + 1];
             termsGiven = true;
+        } else if (args[i] == "--items") {
+            std::ifstream in(args[i + 1]);
+            if (!in) {
+                std::cerr << "Cannot open " << args[i + 1] << '\n';
+                return 1;
+            }
+            for (std::string line; std::getline(in, line);)
+                if (!line.empty() && line[0] == 'Q')
+                    items.insert(line.substr(0, line.find_first_of(" \t\r")));
         } else if (args[i] == "--rules") {
             rulesFile = args[i + 1];
         } else if (args[i] == "--min-term-languages") {
@@ -241,6 +260,7 @@ int main(int argc, char *argv[]) {
     if (arg == "-h" || arg == "--help") {
         std::cout << "usage: wiktneeded [-j N] [--rules FILE] [--terms DIR] [--min-term-languages N] [output.jsonl]\n"
                      "           rules: ids of classes and properties (default res/wikidata_selection.tsv)\n"
+                     "           --items FILE: Q ids always selected, one per line (wiktlangs_qid.txt)\n"
                      "           read Wikidata dump in N threads (default 8); thread n writes output_n.jsonl;\n"
                      "           with term lists (default ./terms if present, from wiktterms) also entities\n"
                      "           whose label is a header term in N languages (default 2); these are\n"

@@ -198,6 +198,30 @@ std::vector<std::string> WikiDump::extractTerms(const std::vector<std::string> &
     return result;
 }
 
+std::map<std::string, std::string> WikiDump::extractMatching(const std::function<bool(const std::string &)> &filter) {
+    std::vector<IndexChunk> chunks;
+    {
+        auto chunker = IndexChunker::from_file(path().index_path().string(), path().dump_size());
+        for (IndexChunk chunk; chunker.next_chunk(chunk);) {
+            if (std::ranges::any_of(chunk.entries, [&](const auto &entry) { return filter(entry.title); }))
+                chunks.push_back(chunk);
+        }
+        if (!chunker.error().empty())
+            throw std::runtime_error(std::string(chunker.error()));
+    }
+    std::map<std::string, std::string> pages;
+    for (const auto &chunk : chunks) {
+        bool ok = reader.process_chunk(chunk, [&](const Page &page) {
+            if (filter(page.info.title))
+                pages[page.info.title] = std::string(page.content());
+            return true;
+        });
+        if (!ok)
+            throw std::runtime_error(reader.error());
+    }
+    return pages;
+}
+
 void WikiDump::forEachTitle(const std::function<void(const std::string &title)> &visitor) const {
     auto chunker = IndexChunker::from_file(path().index_path().string(), 0);
     for (IndexChunk chunk; chunker.next_chunk(chunk);) {

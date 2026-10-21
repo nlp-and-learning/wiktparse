@@ -53,7 +53,10 @@ dump_dir = ~/dump
   missing entities from the Wikidata API into `wiktlangs_fetched.jsonl`, which
   is read on every later run. Table `wd_code_map` maps codes of Wikidata
   languages (ISO 639-1/2/3, Wikimedia, Glottolog) to en.wikt codes, using the
-  SIL tables in `res/sil`.
+  SIL tables in `res/sil`. With `./infoboxes.jsonl` (from `wiktparse`, run it
+  first), languages of English Wikipedia infoboxes which are not known yet (no
+  code maps to en.wikt, name not an en.wikt name or alias) and their unknown
+  varieties (lcN/ldN) are added to `lang` with kind `wikipedia`.
 - Ids of classes and properties used by `wiktneeded` and `splitWikiDataResult()`
   are in `res/wikidata_selection.tsv` (`--rules FILE` for another file); after
   changing it, `wiktneeded --filter` reapplies the rules to an earlier result

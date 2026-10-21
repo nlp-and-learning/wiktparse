@@ -16,6 +16,11 @@
 //       to en.wikt codes; method: code | iso1 | qid | macrolanguage | retired |
 //       none (note: private use, retired, dialect, constructed); uses SIL tables
 //       in res/sil
+// With infoboxes.jsonl (wiktparse), languages of English Wikipedia infoboxes not
+// known yet (no code maps to en.wikt, name not an en.wikt name or alias) are
+// added to lang with kind "wikipedia": code = ISO 639-3, Glottolog or
+// "enwiki:<title>", family = famN chain, module = "enwiki:<title>"; unknown
+// varieties (lcN/ldN) too, with the language as parent (type "infobox variety").
 // Also writes <output>_qid.txt (all Q ids, for wiktneeded --items) and
 // <output>_missing_qid.txt (Q ids not found in the Wikidata files).
 #include <algorithm>
@@ -37,8 +42,11 @@
 #include <curl/curl.h>
 #include <sqlite3.h>
 
+#include <wikilib/core/unicode_utils.h>
+
 #include "WikiData.h"
 #include "dump/WikiDump.h"
+#include "wikitext/HeaderTerms.h"
 #include "wikitext/LuaData.h"
 
 namespace fs = std::filesystem;
@@ -311,8 +319,14 @@ int main(int argc, char *argv[]) {
         fetchMissing = true;
         args.erase(flag);
     }
+    fs::path infoboxFile = "infoboxes.jsonl";
+    if (auto flag = std::ranges::find(args, "--infoboxes"); flag != args.end() && flag + 1 != args.end()) {
+        infoboxFile = *(flag + 1);
+        args.erase(flag, flag + 2);
+    }
     if (!args.empty() && (args[0] == "-h" || args[0] == "--help")) {
-        std::cout << "usage: wiktlangs [--fetch-missing] [output.sqlite] [wikidata.jsonl...]\n"
+        std::cout << "usage: wiktlangs [--fetch-missing] [--infoboxes FILE] [output.sqlite] [wikidata.jsonl...]\n"
+                     "       --infoboxes: Wikipedia infoboxes from wiktparse (default ./infoboxes.jsonl if present)\n"
                      "       --fetch-missing: Q ids of en.wikt not in the Wikidata files are fetched from\n"
                      "       the Wikidata API into <output>_fetched.jsonl (always read when present)\n";
         return 0;
@@ -478,6 +492,137 @@ int main(int argc, char *argv[]) {
                     mapRows.push_back({scheme, code, q, name, found.first, found.second, note});
                 }
             }
+        }
+
+        // Languages of English Wikipedia infoboxes (wiktparse: infoboxes.jsonl) which
+        // are not yet known: none of their codes maps to an en.wikt code and their
+        // name is not a name or alias of an en.wikt language. Added to lang with
+        // kind "wikipedia"; varieties (lcN/ldN) with unknown codes too.
+        size_t boxes = 0, boxesKnown = 0, boxesAdded = 0, varietiesAdded = 0;
+        if (fs::exists(infoboxFile)) {
+            std::map<std::string, std::string> glottoQid;
+            for (const auto &[q, entity] : wikidata)
+                if (entity["claims"].contains("P1394"))
+                    for (const auto &g : entity["claims"]["P1394"])
+                        glottoQid[g.get<std::string>()] = q;
+            std::set<std::string> knownNames;
+            for (const auto &row : langRows)
+                knownNames.insert(wikilib::unicode::to_lower(row[2]));
+            for (const auto &row : aliasRows)
+                knownNames.insert(wikilib::unicode::to_lower(row[1]));
+
+            static const std::regex markup(R"(<!--[\s\S]*?-->|<ref[^>]*/>|<ref[\s\S]*?</ref>|\{\{[^{}]*\}\}|<br\s*/?>)");
+            static const std::regex separators(R"([\s,;/]+)");
+            static const std::regex glottoCode(R"([a-z0-9]{4}[0-9]{4})");
+            static const std::regex iso1Code("[a-z]{2}");
+            static const std::regex iso3Code("[a-z]{3}");
+            auto param = [](const json &box, const std::string &key) {
+                auto it = box["params"].find(key);
+                return it != box["params"].end() && it->is_string() ? it->get<std::string>() : std::string();
+            };
+            static const std::regex whitespace(R"(\s+)");
+            auto plain = [](const std::string &text) {
+                return headerPlainText(std::regex_replace(std::regex_replace(text, markup, " "), whitespace, " "));
+            };
+            auto codesOf = [&](const std::string &text, const std::regex &pattern) {
+                std::vector<std::string> codes;
+                std::string cleaned = std::regex_replace(text, markup, " ");
+                for (std::sregex_token_iterator it(cleaned.begin(), cleaned.end(), separators, -1), end; it != end; ++it)
+                    if (std::regex_match(it->str(), pattern))
+                        codes.push_back(*it);
+                return codes;
+            };
+            // en.wikt code of an ISO code (scheme by length) or a Glottolog code
+            auto wiktCodeOf = [&](const std::string &code) -> std::string {
+                if (std::regex_match(code, glottoCode)) {
+                    if (auto q = glottoQid.find(code); q != glottoQid.end())
+                        if (auto c = qidCode.find(q->second); c != qidCode.end())
+                            return c->second;
+                    return "";
+                }
+                if (wiktCodes.contains(code))
+                    return code;
+                if (code.size() == 3) {
+                    if (auto r = resolveIso3(code, 0); !r.first.empty())
+                        return r.first;
+                    if (iso.fromPart2.contains(code))
+                        return resolveIso3(iso.fromPart2[code], 0).first;
+                }
+                if (code.size() == 2 && iso.fromPart1.contains(code))
+                    return resolveIso3(iso.fromPart1[code], 0).first;
+                return "";
+            };
+
+            std::ifstream in(infoboxFile);
+            for (std::string line; std::getline(in, line);) {
+                auto box = json::parse(line, nullptr, false);
+                if (box.is_discarded() || !box.contains("params") || !box["params"].is_object())
+                    continue;
+                boxes++;
+                std::string title = box.value("title", "");
+                std::vector<std::string> iso3s, glottos, iso1s;
+                for (const auto &key : {"iso3", "iso2t", "iso2b"})
+                    for (auto &c : codesOf(param(box, key), iso3Code))
+                        iso3s.push_back(c);
+                iso1s = codesOf(param(box, "iso1"), iso1Code);
+                glottos = codesOf(param(box, "glotto"), glottoCode);
+
+                std::string mainCode;
+                for (const auto *list : {&iso1s, &iso3s, &glottos})
+                    for (const auto &c : *list)
+                        if (mainCode.empty())
+                            mainCode = wiktCodeOf(c);
+                std::string name = plain(param(box, "name"));
+                std::string titleName = std::regex_replace(title, std::regex(R"( \(.*\)$| languages?$| dialects?$)"), "");
+                bool known = !mainCode.empty() || knownNames.contains(wikilib::unicode::to_lower(name)) ||
+                             knownNames.contains(wikilib::unicode::to_lower(titleName));
+                std::string q;
+                for (const auto &g : glottos)
+                    if (q.empty() && glottoQid.contains(g))
+                        q = glottoQid[g];
+                if (known) {
+                    boxesKnown++;
+                } else {
+                    // Code: ISO 639-3, else Glottolog, else the article title
+                    std::string code = !iso3s.empty() ? iso3s.front() : !glottos.empty() ? glottos.front()
+                                     : "enwiki:" + title;
+                    std::string family;
+                    for (int n = 1; n <= 15; n++)
+                        if (auto f = plain(param(box, "fam" + std::to_string(n))); !f.empty())
+                            family += (family.empty() ? "" : " > ") + f;
+                    langRows.push_back({code, "wikipedia", name.empty() ? titleName : name, q, family, "", "", "",
+                                        "infobox", "enwiki:" + title});
+                    if (!q.empty())
+                        codeQid[code] = q;
+                    mainCode = code;
+                    boxesAdded++;
+                }
+                // Varieties lcN (codes) with names ldN
+                for (int n = 1; n <= 60; n++) {
+                    auto lc = codesOf(param(box, "lc" + std::to_string(n)), iso3Code);
+                    if (lc.empty() || !wiktCodeOf(lc.front()).empty())
+                        continue;
+                    std::string varietyName = plain(param(box, "ld" + std::to_string(n)));
+                    if (knownNames.contains(wikilib::unicode::to_lower(varietyName)))
+                        continue;
+                    langRows.push_back({lc.front(), "wikipedia", varietyName, "", "", mainCode, "", "",
+                                        "infobox variety", "enwiki:" + title});
+                    varietiesAdded++;
+                }
+            }
+            // Names in many languages of added languages with a Q id
+            for (const auto &row : langRows) {
+                if (row[1] != "wikipedia" || row[3].empty())
+                    continue;
+                auto it = wikidata.find(row[3]);
+                if (it == wikidata.end())
+                    continue;
+                for (const auto &[lang, label] : it->second["labels"].items())
+                    if (label.is_object())
+                        nameRows.push_back({row[0], row[3], lang, label.value("value", ""), "0"});
+            }
+            std::cout << boxes << " infoboxes from " << infoboxFile.string() << ": " << boxesKnown << " known, "
+                      << boxesAdded << " languages and " << varietiesAdded << " varieties added" << std::endl;
         }
 
         Db db(output);

@@ -38,7 +38,10 @@ dump_dir = ~/dump
   entities whose label or alias in the language of a Wiktionary equals one of
   its terms (case-insensitive) in at least `--min-term-languages N` (default 2)
   Wiktionaries, with stricter exclusions (works, places with P625/P131,
-  organizations...); they are logged in `wiktNeeded_terms_n.tsv`.
+  organizations...); they are logged in `wiktNeeded_terms_n.tsv`. A final
+  pass over the outputs removes homonyms: entities whose terms are already
+  labels of claims-selected entities ("root" of a plant besides the linguistic
+  root); `--keep-homonyms` keeps them.
 - Ids of classes and properties used by `wiktneeded` and `splitWikiDataResult()`
   are in `res/wikidata_selection.tsv` (`--rules FILE` for another file); after
   changing it, `wiktneeded --filter` reapplies the rules to an earlier result

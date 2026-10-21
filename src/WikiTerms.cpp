@@ -155,6 +155,13 @@ bool WikiTerms::mayMatch(std::string_view text) const {
     return false;
 }
 
+std::vector<std::pair<std::string, std::string>> WikiTerms::matchedTerms(const json &entity) const {
+    auto result = matches(entity);
+    for (auto &[language, term] : result)
+        term = wikilib::unicode::to_lower(term);
+    return result;
+}
+
 std::vector<std::pair<std::string, std::string>> WikiTerms::matches(const json &entity) const {
     std::vector<std::pair<std::string, std::string>> result;
     auto check = [&](const json &item) {

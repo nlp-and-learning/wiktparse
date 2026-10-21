@@ -27,6 +27,8 @@ public:
     [[nodiscard]] bool mayMatch(std::string_view text) const;
     // (language, label or alias) of the entity which are terms
     [[nodiscard]] std::vector<std::pair<std::string, std::string>> matches(const nlohmann::json &entity) const;
+    // Like matches(), with terms in the compared (lowercase) form
+    [[nodiscard]] std::vector<std::pair<std::string, std::string>> matchedTerms(const nlohmann::json &entity) const;
     // Decodes a JSON string body (without quotes): \uXXXX, \", \\ ...
     static std::string unescapeJson(std::string_view raw);
 };

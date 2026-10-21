@@ -25,6 +25,7 @@ namespace {
 
 WikiTerms terms;
 size_t minTermLanguages = 2; // label must be a header term in so many languages
+bool removeHomonymTerms = true;
 
 // Writes the entity when needed; entities found only by a header term are
 // also logged (id, language, term) to termLog. Returns true when written.
@@ -87,6 +88,58 @@ fs::path termLogPath(const fs::path &output) {
     return output.parent_path() / (output.stem().string() + "_terms.tsv");
 }
 
+// Second pass over written outputs: an entity selected only by header terms is a
+// homonym when its terms, except those already labels of entities selected by
+// claims ("root" of a plant besides the linguistic root), are in fewer than
+// minTermLanguages languages. Rewrites outputs and term logs without homonyms.
+void removeHomonyms(const std::vector<fs::path> &outputs, const std::vector<fs::path> &termLogs) {
+    std::set<std::pair<std::string, std::string>> covered; // (language, term) of claims-selected entities
+    for (const auto &file : outputs) {
+        std::ifstream in(file);
+        for (std::string line; std::getline(in, line);) {
+            auto entity = json::parse(line, nullptr, false);
+            if (!entity.is_discarded() && WikiData::isWiktNeeded(entity))
+                for (auto &key : terms.matchedTerms(entity))
+                    covered.insert(std::move(key));
+        }
+    }
+    std::set<std::string> removed;
+    for (const auto &file : outputs) {
+        auto tmp = fs::path(file.string() + ".tmp");
+        {
+            std::ifstream in(file);
+            auto out = openOutput(tmp.string());
+            for (std::string line; std::getline(in, line);) {
+                auto entity = json::parse(line, nullptr, false);
+                if (!entity.is_discarded() && !WikiData::isWiktNeeded(entity)) {
+                    std::set<std::string> languages;
+                    for (const auto &key : terms.matchedTerms(entity))
+                        if (!covered.contains(key))
+                            languages.insert(key.first);
+                    if (languages.size() < minTermLanguages) {
+                        removed.insert(entity.value("id", ""));
+                        continue;
+                    }
+                }
+                out << line << '\n';
+            }
+        }
+        fs::rename(tmp, file);
+    }
+    for (const auto &file : termLogs) {
+        auto tmp = fs::path(file.string() + ".tmp");
+        {
+            std::ifstream in(file);
+            auto out = openOutput(tmp.string());
+            for (std::string line; std::getline(in, line);)
+                if (!removed.contains(line.substr(0, line.find('\t'))))
+                    out << line << '\n';
+        }
+        fs::rename(tmp, file);
+    }
+    std::cout << removed.size() << " homonyms of claims-selected terms removed" << std::endl;
+}
+
 // Each worker writes its own <stem>_<n><ext>; a worker reads many dump parts
 void searchWiktNeeded(const fs::path &output, size_t threads) {
     auto wikiDump = WikiDump::wikidata();
@@ -109,6 +162,16 @@ void searchWiktNeeded(const fs::path &output, size_t threads) {
     }, threads);
     std::cout << foundCnt << " entities written to " << workerOutput(output, 1).string() << " .. "
               << workerOutput(output, workers).filename().string() << std::endl;
+    if (!terms.empty() && removeHomonymTerms) {
+        outs.clear();
+        logs.clear();
+        std::vector<fs::path> outputFiles, logFiles;
+        for (size_t n = 1; n <= workers; n++) {
+            outputFiles.push_back(workerOutput(output, n));
+            logFiles.push_back(workerOutput(termLogs, n));
+        }
+        removeHomonyms(outputFiles, logFiles);
+    }
 }
 
 // Applies current selection to an earlier result, without the dump
@@ -129,6 +192,11 @@ void filterJsonl(const std::string &inputFile, const std::string &outputFile) {
             written++;
     }
     std::cout << written << " of " << read << " entities written to " << outputFile << std::endl;
+    if (!terms.empty() && removeHomonymTerms) {
+        out.close();
+        log.close();
+        removeHomonyms({outputFile}, {termLogPath(outputFile)});
+    }
 }
 
 void firstPage() {
@@ -149,6 +217,10 @@ int main(int argc, char *argv[]) {
     fs::path termsDir = "terms";
     bool termsGiven = false;
     fs::path rulesFile = WikiData::defaultRulesPath();
+    if (auto flag = std::ranges::find(args, "--keep-homonyms"); flag != args.end()) {
+        removeHomonymTerms = false;
+        args.erase(flag);
+    }
     for (size_t i = 0; i + 1 < args.size();) {
         if (args[i] == "-j") {
             threads = std::max<size_t>(1, std::stoul(args[i + 1]));
@@ -172,7 +244,8 @@ int main(int argc, char *argv[]) {
                      "           read Wikidata dump in N threads (default 8); thread n writes output_n.jsonl;\n"
                      "           with term lists (default ./terms if present, from wiktterms) also entities\n"
                      "           whose label is a header term in N languages (default 2); these are\n"
-                     "           logged in output_terms_n.tsv\n"
+                     "           logged in output_terms_n.tsv; afterwards homonyms of terms of\n"
+                     "           claims-selected entities are removed (--keep-homonyms to keep them)\n"
                      "       wiktneeded [--terms DIR] --filter in.jsonl out.jsonl\n"
                      "           apply selection to an earlier result\n"
                      "       wiktneeded --first   write first Wikidata page to firstChuknk\n";

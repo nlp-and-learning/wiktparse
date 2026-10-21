@@ -590,8 +590,9 @@ int main(int argc, char *argv[]) {
                     for (int n = 1; n <= 15; n++)
                         if (auto f = plain(param(box, "fam" + std::to_string(n))); !f.empty())
                             family += (family.empty() ? "" : " > ") + f;
+                    bool isFamily = box.value("template", "") == "Infobox language family";
                     langRows.push_back({code, "wikipedia", name.empty() ? titleName : name, q, family, "", "", "",
-                                        "infobox", "enwiki:" + title});
+                                        isFamily ? "infobox family" : "infobox", "enwiki:" + title});
                     if (!q.empty())
                         codeQid[code] = q;
                     mainCode = code;

@@ -56,7 +56,8 @@ dump_dir = ~/dump
   SIL tables in `res/sil`. With `./infoboxes.jsonl` (from `wiktparse`, run it
   first), languages of English Wikipedia infoboxes which are not known yet (no
   code maps to en.wikt, name not an en.wikt name or alias) and their unknown
-  varieties (lcN/ldN) are added to `lang` with kind `wikipedia`.
+  varieties (lcN/ldN) are added to `lang` with kind `wikipedia` (type
+  `infobox`, `infobox family` or `infobox variety`).
 - Ids of classes and properties used by `wiktneeded` and `splitWikiDataResult()`
   are in `res/wikidata_selection.tsv` (`--rules FILE` for another file); after
   changing it, `wiktneeded --filter` reapplies the rules to an earlier result

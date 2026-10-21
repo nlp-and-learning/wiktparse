@@ -31,6 +31,10 @@
 #include <string>
 #include <vector>
 
+#include <chrono>
+#include <thread>
+
+#include <curl/curl.h>
 #include <sqlite3.h>
 
 #include "WikiData.h"
@@ -159,9 +163,13 @@ std::map<std::string, json> loadWikidata(const std::vector<fs::path> &files) {
             for (const auto &prop : keptClaims)
                 if (auto values = claimValues(entity, prop); !values.empty())
                     claims[prop] = values;
-            entities[entity["id"].get<std::string>()] = {{"labels", entity.value("labels", json::object())},
-                                                        {"aliases", entity.value("aliases", json::object())},
-                                                        {"claims", claims}};
+            json data = {{"labels", entity.value("labels", json::object())},
+                         {"aliases", entity.value("aliases", json::object())},
+                         {"claims", claims}};
+            // Fetched from the API under an old id of a merged item
+            if (entity.contains("_redirected_from") && entity["_redirected_from"].is_string())
+                entities[entity["_redirected_from"].get<std::string>()] = data;
+            entities[entity["id"].get<std::string>()] = std::move(data);
         }
     }
     return entities;
@@ -219,6 +227,64 @@ struct Iso639 {
     }
 };
 
+size_t appendBody(char *data, size_t size, size_t count, void *body) {
+    static_cast<std::string *>(body)->append(data, size * count);
+    return size * count;
+}
+
+// Entities from the Wikidata API (same JSON as in dumps), 50 per request, slowly;
+// waits and retries when the API answers 429 Too Many Requests
+std::vector<std::string> fetchEntities(const std::vector<std::string> &qids) {
+    std::vector<std::string> lines;
+    CURL *curl = curl_easy_init();
+    if (!curl)
+        throw std::runtime_error("curl init failed");
+    for (size_t i = 0; i < qids.size(); i += 50) {
+        std::string ids;
+        for (size_t k = i; k < std::min(qids.size(), i + 50); k++)
+            ids += (ids.empty() ? "" : "|") + qids[k];
+        std::string url = "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json"
+                          "&props=labels%7Caliases%7Cdescriptions%7Cclaims&ids=" + ids;
+        for (int attempt = 0;; attempt++) {
+            std::string body;
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_USERAGENT, "wiktparse/1.0 (dictionary research tool)");
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, appendBody);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body);
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT, 120L);
+            curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
+            auto rc = curl_easy_perform(curl);
+            long status = 0;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+            if (rc == CURLE_OK && status == 200) {
+                auto response = json::parse(body, nullptr, false);
+                if (response.is_discarded() || !response.contains("entities"))
+                    throw std::runtime_error("unexpected API response: " + body.substr(0, 200));
+                for (const auto &[id, entity] : response["entities"].items()) {
+                    if (entity.contains("missing"))
+                        continue;
+                    // A merged item is returned under its new id; remember the requested one
+                    json copy = entity;
+                    if (entity.contains("redirects") && entity["redirects"].contains("from"))
+                        copy["_redirected_from"] = entity["redirects"]["from"];
+                    lines.push_back(copy.dump());
+                }
+                break;
+            }
+            if (attempt >= 6)
+                throw std::runtime_error("Wikidata API failed, HTTP " + std::to_string(status) + ": " +
+                                         curl_easy_strerror(rc));
+            int wait = status == 429 ? 40 : 10;
+            std::cout << "  HTTP " << status << ", waiting " << wait << " s" << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(wait));
+        }
+        std::cout << "  fetched " << std::min(qids.size(), i + 50) << "/" << qids.size() << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    }
+    curl_easy_cleanup(curl);
+    return lines;
+}
+
 // Private use range qaa-qtz of ISO 639
 bool privateUse(const std::string &code) {
     return code.size() == 3 && code[0] == 'q' && code[1] >= 'a' && code[1] <= 't';
@@ -240,10 +306,18 @@ std::vector<fs::path> defaultWikidataFiles() {
 
 int main(int argc, char *argv[]) {
     std::vector<std::string> args(argv + 1, argv + argc);
+    bool fetchMissing = false;
+    if (auto flag = std::ranges::find(args, "--fetch-missing"); flag != args.end()) {
+        fetchMissing = true;
+        args.erase(flag);
+    }
     if (!args.empty() && (args[0] == "-h" || args[0] == "--help")) {
-        std::cout << "usage: wiktlangs [output.sqlite] [wikidata.jsonl...]\n";
+        std::cout << "usage: wiktlangs [--fetch-missing] [output.sqlite] [wikidata.jsonl...]\n"
+                     "       --fetch-missing: Q ids of en.wikt not in the Wikidata files are fetched from\n"
+                     "       the Wikidata API into <output>_fetched.jsonl (always read when present)\n";
         return 0;
     }
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     try {
         fs::path output = args.empty() ? "wiktlangs.sqlite" : args[0];
         std::vector<fs::path> wikidataFiles(args.size() > 1 ? args.begin() + 1 : args.end(), args.end());
@@ -296,8 +370,28 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        // Entities fetched from the API earlier are read with the dump data
+        auto fetchedFile = output.parent_path() / (output.stem().string() + "_fetched.jsonl");
+        if (fs::exists(fetchedFile))
+            wikidataFiles.push_back(fetchedFile);
         auto wikidata = loadWikidata(wikidataFiles);
         std::cout << wikidata.size() << " Wikidata entities from " << wikidataFiles.size() << " files" << std::endl;
+        if (fetchMissing) {
+            std::set<std::string> wanted;
+            for (const auto &[code, q] : codeQid)
+                if (!wikidata.contains(q))
+                    wanted.insert(q);
+            std::cout << "fetching " << wanted.size() << " entities from the Wikidata API" << std::endl;
+            auto lines = fetchEntities({wanted.begin(), wanted.end()});
+            {
+                std::ofstream out(fetchedFile, std::ios::app);
+                for (const auto &line : lines)
+                    out << line << '\n';
+            }
+            for (auto &[q, entity] : loadWikidata({fetchedFile}))
+                wikidata[q] = std::move(entity);
+            std::cout << lines.size() << " entities fetched into " << fetchedFile.string() << std::endl;
+        }
         std::vector<std::vector<std::string>> nameRows;
         std::set<std::string> missing;
         for (const auto &[code, q] : codeQid) {
@@ -406,10 +500,19 @@ int main(int argc, char *argv[]) {
         std::ofstream missingOut(output.parent_path() / (output.stem().string() + "_missing_qid.txt"));
         for (const auto &q : missing)
             missingOut << q << '\n';
-        // All Q ids, for wiktneeded --items (select them from the Wikidata dump)
+        // All Q ids, for wiktneeded --items (select them from the Wikidata dump);
+        // for merged items also the new id, as the dump has only a redirect for the old one
         std::set<std::string> allQids;
         for (const auto &[code, q] : codeQid)
             allQids.insert(q);
+        if (fs::exists(fetchedFile)) {
+            std::ifstream in(fetchedFile);
+            for (std::string line; std::getline(in, line);) {
+                auto entity = json::parse(line, nullptr, false);
+                if (!entity.is_discarded() && entity.contains("_redirected_from") && entity.contains("id"))
+                    allQids.insert(entity["id"].get<std::string>());
+            }
+        }
         std::ofstream allOut(output.parent_path() / (output.stem().string() + "_qid.txt"));
         for (const auto &q : allQids)
             allOut << q << '\n';

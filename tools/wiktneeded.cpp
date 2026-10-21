@@ -36,7 +36,8 @@ bool selected(const json &entity) {
 // Writes the entity when needed; entities found only by a header term are
 // also logged (id, language, term) to termLog. Returns true when written.
 bool writeIfNeeded(std::string_view title, const std::string &text, std::ofstream &out, std::ofstream *termLog) {
-    if (items.contains(title)) {
+    // Listed items, but not redirect pages of merged items ({"entity":..,"redirect":..})
+    if (items.contains(title) && text.find("\"redirect\":") == std::string::npos) {
         out << text << '\n';
         return true;
     }
@@ -227,6 +228,8 @@ int main(int argc, char *argv[]) {
     fs::path termsDir = "terms";
     bool termsGiven = false;
     fs::path rulesFile = WikiData::defaultRulesPath();
+    fs::path itemsFile = "wiktlangs_qid.txt"; // Q ids of English Wiktionary languages (wiktlangs)
+    bool itemsGiven = false;
     if (auto flag = std::ranges::find(args, "--keep-homonyms"); flag != args.end()) {
         removeHomonymTerms = false;
         args.erase(flag);
@@ -238,14 +241,8 @@ int main(int argc, char *argv[]) {
             termsDir = args[i + 1];
             termsGiven = true;
         } else if (args[i] == "--items") {
-            std::ifstream in(args[i + 1]);
-            if (!in) {
-                std::cerr << "Cannot open " << args[i + 1] << '\n';
-                return 1;
-            }
-            for (std::string line; std::getline(in, line);)
-                if (!line.empty() && line[0] == 'Q')
-                    items.insert(line.substr(0, line.find_first_of(" \t\r")));
+            itemsFile = args[i + 1];
+            itemsGiven = true;
         } else if (args[i] == "--rules") {
             rulesFile = args[i + 1];
         } else if (args[i] == "--min-term-languages") {
@@ -260,7 +257,8 @@ int main(int argc, char *argv[]) {
     if (arg == "-h" || arg == "--help") {
         std::cout << "usage: wiktneeded [-j N] [--rules FILE] [--terms DIR] [--min-term-languages N] [output.jsonl]\n"
                      "           rules: ids of classes and properties (default res/wikidata_selection.tsv)\n"
-                     "           --items FILE: Q ids always selected, one per line (wiktlangs_qid.txt)\n"
+                     "           --items FILE: Q ids always selected, one per line\n"
+                     "           (default ./wiktlangs_qid.txt if present, written by wiktlangs)\n"
                      "           read Wikidata dump in N threads (default 8); thread n writes output_n.jsonl;\n"
                      "           with term lists (default ./terms if present, from wiktterms) also entities\n"
                      "           whose label is a header term in N languages (default 2); these are\n"
@@ -277,6 +275,14 @@ int main(int argc, char *argv[]) {
         if (termsGiven || fs::is_directory(termsDir)) {
             auto count = terms.load(termsDir);
             std::cout << count << " header terms loaded from " << termsDir.string() << std::endl;
+        }
+        if (itemsGiven || fs::exists(itemsFile)) {
+            std::ifstream in(itemsFile);
+            if (!in) throw std::runtime_error("Cannot open " + itemsFile.string());
+            for (std::string line; std::getline(in, line);)
+                if (!line.empty() && line[0] == 'Q')
+                    items.insert(line.substr(0, line.find_first_of(" \t\r")));
+            std::cout << items.size() << " items always selected, from " << itemsFile.string() << std::endl;
         }
         if (arg == "--first")
             firstPage();

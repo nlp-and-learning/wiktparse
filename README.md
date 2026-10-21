@@ -42,14 +42,18 @@ dump_dir = ~/dump
   pass over the outputs removes homonyms: entities whose terms are already
   labels of claims-selected entities ("root" of a plant besides the linguistic
   root); `--keep-homonyms` keeps them.
-- `wiktneeded --items FILE` always selects the listed Q ids (e.g.
-  `wiktlangs_qid.txt`).
+- `wiktneeded --items FILE` always selects the listed Q ids (default
+  `./wiktlangs_qid.txt` when present); redirect pages of merged items are skipped.
 - `wiktlangs [output.sqlite] [wikidata.jsonl...]` – languages, etymology
   languages (varieties, historical stages), families and scripts of English
   Wiktionary (`Module:languages/data...`, read through the index only) into
   SQLite, with their names in many languages from Wikidata labels and aliases
-  (`wiktNeeded_*.jsonl`). Also writes `wiktlangs_qid.txt` and
-  `wiktlangs_missing_qid.txt`.
+  (`wiktNeeded_*.jsonl`). Also writes `wiktlangs_qid.txt` (with new ids of
+  merged items) and `wiktlangs_missing_qid.txt`. `--fetch-missing` fetches the
+  missing entities from the Wikidata API into `wiktlangs_fetched.jsonl`, which
+  is read on every later run. Table `wd_code_map` maps codes of Wikidata
+  languages (ISO 639-1/2/3, Wikimedia, Glottolog) to en.wikt codes, using the
+  SIL tables in `res/sil`.
 - Ids of classes and properties used by `wiktneeded` and `splitWikiDataResult()`
   are in `res/wikidata_selection.tsv` (`--rules FILE` for another file); after
   changing it, `wiktneeded --filter` reapplies the rules to an earlier result

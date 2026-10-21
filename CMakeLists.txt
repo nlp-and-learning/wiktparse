@@ -44,8 +44,9 @@ target_link_libraries(wiktheaders wiktdump)
 
 # Languages of English Wiktionary modules with Wikidata names, into SQLite
 find_package(SQLite3 REQUIRED)
+find_package(CURL REQUIRED)
 add_executable(wiktlangs tools/wiktlangs.cpp)
-target_link_libraries(wiktlangs wiktdump SQLite::SQLite3)
+target_link_libraries(wiktlangs wiktdump SQLite::SQLite3 CURL::libcurl)
 
 # Term lists (languages, parts of speech, sections) from wiktheaders output
 add_executable(wiktterms tools/wiktterms.cpp)

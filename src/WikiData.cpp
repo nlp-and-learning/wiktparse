@@ -28,9 +28,14 @@ const std::set<std::string> knownGroups = {
     "lexicalClasses", "lexicalSuperclasses", "lexicalItems",
     "grammaticalClasses", "grammaticalItems",
     "linguisticsClasses", "linguisticsSuperclasses", "linguisticsFields", "linguisticsPartOf", "linguisticsItems",
+    "linguisticsDewey",
     "writingSystemClasses",
-    "excludedClasses", "termExcludedClasses", "termExcludedProps",
+    "excludedClasses", "excludedItems", "termExcludedClasses", "termExcludedProps",
 };
+
+// Groups of string prefixes instead of ids
+const std::set<std::string> prefixGroups = {"linguisticsDewey"};
+constexpr const char *deweyProperty = "P1036";
 
 // Groups whose ids in raw JSON (claim keys, item values) make an entity a candidate
 const std::vector<std::string> markerGroups = {
@@ -65,12 +70,17 @@ std::shared_ptr<const Rules> loadRulesFile(const fs::path &file) {
         std::string group, id;
         std::getline(ss, group, '\t');
         std::getline(ss, id, '\t');
-        if (!knownGroups.contains(group) || id.size() < 2 || (id[0] != 'Q' && id[0] != 'P'))
+        bool valid = knownGroups.contains(group) &&
+                     (prefixGroups.contains(group) ? !id.empty()
+                                                   : id.size() >= 2 && (id[0] == 'Q' || id[0] == 'P'));
+        if (!valid)
             throw std::runtime_error(file.string() + ":" + std::to_string(lineNo) + ": invalid rule: " + line);
         rules->groups[group].insert(id);
     }
     for (const auto &group : markerGroups)
         rules->markers.insert((*rules)[group].begin(), (*rules)[group].end());
+    if (!(*rules)["linguisticsDewey"].empty())
+        rules->markers.insert(deweyProperty);
     for (const auto &group : itemGroups)
         rules->items.insert((*rules)[group].begin(), (*rules)[group].end());
     return rules;
@@ -129,6 +139,32 @@ bool anyClaimIn(const json &entity, const char *prop, const IdSet &set) {
     return false;
 }
 
+// String values of the given property (external ids, classification codes)
+std::vector<std::string> claimStrings(const json &entity, const char *prop) {
+    std::vector<std::string> values;
+    auto claims = entity.find("claims");
+    if (claims == entity.end() || !claims->is_object())
+        return values;
+    auto statements = claims->find(prop);
+    if (statements == claims->end() || !statements->is_array())
+        return values;
+    for (const auto &statement : *statements) {
+        const auto &value = statement.value("mainsnak", json::object()).value("datavalue", json::object())
+                .value("value", json());
+        if (value.is_string())
+            values.push_back(value.get<std::string>());
+    }
+    return values;
+}
+
+bool anyClaimWithPrefix(const json &entity, const char *prop, const IdSet &prefixes) {
+    for (const auto &value : claimStrings(entity, prop))
+        for (const auto &prefix : prefixes)
+            if (value.starts_with(prefix))
+                return true;
+    return false;
+}
+
 bool hasClaim(const json &entity, const std::string &prop) {
     auto claims = entity.find("claims");
     return claims != entity.end() && claims->is_object() && claims->contains(prop);
@@ -176,7 +212,9 @@ bool WikiData::mayBeWiktNeeded(std::string_view title, std::string_view text) {
 }
 
 bool WikiData::isExcluded(const json &entity) {
-    return !isItem(entity) || anyClaimIn(entity, "P31", rules()["excludedClasses"]);
+    const auto &r = rules();
+    return !isItem(entity) || anyClaimIn(entity, "P31", r["excludedClasses"]) ||
+           r["excludedItems"].contains(entityId(entity));
 }
 
 bool WikiData::isExcludedTermMatch(const json &entity) {
@@ -212,6 +250,7 @@ bool WikiData::isLinguistics(const json &entity) {
     return anyClaimIn(entity, "P279", r["linguisticsClasses"]) || anyClaimIn(entity, "P31", r["linguisticsClasses"]) ||
            anyClaimIn(entity, "P279", r["linguisticsSuperclasses"]) ||
            anyClaimIn(entity, "P2579", r["linguisticsFields"]) || anyClaimIn(entity, "P361", r["linguisticsPartOf"]) ||
+           anyClaimWithPrefix(entity, deweyProperty, r["linguisticsDewey"]) ||
            r["linguisticsItems"].contains(entityId(entity));
 }
 

@@ -111,6 +111,19 @@ TEST(WikiDataTest, TermMatchesOfPlacesAreExcluded) {
     EXPECT_FALSE(WikiData::isExcludedTermMatch(json::parse(item("Q503", {{"P31", "Q151885"}})))); // concept
 }
 
+TEST(WikiDataTest, DeweyLinguisticsAndExcludedItems) {
+    auto entity = json::parse(item("Q600", {{"P31", "Q151885"}}));
+    entity["claims"]["P1036"] = json::array({{{"mainsnak", {{"snaktype", "value"}, {"property", "P1036"},
+                                                           {"datavalue", {{"value", "415.62"}, {"type", "string"}}}}}}});
+    EXPECT_TRUE(WikiData::isLinguistics(entity));
+    EXPECT_TRUE(WikiData::mayBeWiktNeeded("Q600", entity.dump()));
+    entity["claims"]["P1036"][0]["mainsnak"]["datavalue"]["value"] = "425.1"; // English grammar: a language
+    EXPECT_FALSE(WikiData::isLinguistics(entity));
+
+    EXPECT_TRUE(WikiData::isExcluded(json::parse(item("Q202444", {{"P31", "Q121493639"}})))); // given name
+    EXPECT_TRUE(WikiData::isExcludedTermMatch(json::parse(item("Q801", {{"P31", "Q21199"}})))); // number
+}
+
 TEST(WikiDataTest, RulesFileErrors) {
     EXPECT_THROW(WikiData::loadRules("/nonexistent/rules.tsv"), std::runtime_error);
     auto bad = std::filesystem::temp_directory_path() / "wiktparse-bad-rules.tsv";

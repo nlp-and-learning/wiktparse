@@ -15,8 +15,10 @@
 #   linguisticsFields      P2579 (studied by) -> linguistics term
 #   linguisticsPartOf      P361 (part of) -> linguistics term
 #   linguisticsItems       these entities -> linguistics
+#   linguisticsDewey       prefix of Dewey Decimal Classification (P1036) -> linguistics
 #   writingSystemClasses   P31 or P279 -> writing system
 #   excludedClasses        P31 -> never needed
+#   excludedItems          these entities -> never needed (homonyms of header terms)
 #   termExcludedClasses    P31 -> not needed when found only by a header term label
 #   termExcludedProps      claim present -> not needed when found only by a label (places)
 
@@ -145,6 +147,8 @@ linguisticsPartOf	Q8162	linguistics
 
 linguisticsItems	Q8162	linguistics
 
+linguisticsDewey	41	linguistics (410-419); 420-499 are particular languages, selected by codes
+
 writingSystemClasses	Q8192	writing system
 writingSystemClasses	Q119520394	type of writing system
 writingSystemClasses	Q12775371	script family
@@ -193,6 +197,12 @@ excludedClasses	Q4167410	Wikimedia disambiguation page
 excludedClasses	Q11266439	Wikimedia template
 excludedClasses	Q19887878	Wikimedia infobox template
 excludedClasses	Q17442446	Wikimedia internal item
+
+excludedItems	Q202444	given name (class; label matches name section headers)
+excludedItems	Q124714	spring (water source; matches "sources" headers)
+excludedItems	Q21112633	edition of a translation (matches "translations" headers)
+excludedItems	Q3331189	version, edition or translation
+excludedItems	Q56876983	Letters, words and symbols in heraldry
 
 termExcludedProps	P625	coordinate location
 termExcludedProps	P131	located in the administrative territorial entity
@@ -266,3 +276,11 @@ termExcludedClasses	Q125191	photograph
 termExcludedClasses	Q860861	sculpture
 termExcludedClasses	Q11060274	print
 termExcludedClasses	Q13433827	encyclopedia article
+termExcludedClasses	Q21199	natural number
+termExcludedClasses	Q28920044	positive integer
+termExcludedClasses	Q28920052	non-negative integer
+termExcludedClasses	Q49008	prime number
+termExcludedClasses	Q50707	composite number
+termExcludedClasses	Q13366104	even number
+termExcludedClasses	Q13366129	odd number
+termExcludedClasses	Q1130510	figurate number

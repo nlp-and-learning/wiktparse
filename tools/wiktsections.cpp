@@ -2,14 +2,14 @@
 // languages, into wiktsections.sqlite (next to wiktlangs.sqlite).
 //
 // English Wiktionary section headings (wiktheaders: headers/en.tsv, main
-// namespace, below language level) without languages (wiktlangs.sqlite) are
+// namespace, level 2 and below) without languages (wiktlangs.sqlite) are
 // the sections; each is looked up in wiktNeeded by its English label or alias,
 // and the labels and aliases of that entity give its names in other
 // languages. Headings of other Wiktionaries named by hand come from
 // res/wiktionary_section_names.tsv.
 //
 // wiktsections [-o wiktsections.sqlite] [--headers headers] [--db wiktlangs.sqlite]
-//              [--min-pages 20] [--min-labels 10] [wiktNeeded.jsonl...]
+//              [--min-pages 3] [--min-labels 10] [wiktNeeded.jsonl...]
 //
 // Tables:
 //   section(section, pages, qid, kind): English headings, with the Wikidata item
@@ -86,7 +86,7 @@ private:
 int main(int argc, char *argv[]) {
     try {
         fs::path output = "wiktsections.sqlite", headersDir = "headers", langsFile = "wiktlangs.sqlite";
-        size_t minPages = 20, minLabels = 10;
+        size_t minPages = 3, minLabels = 10;
         std::vector<fs::path> wikidataFiles;
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
                 minLabels = std::stoul(argv[++i]);
             else if (arg == "-h" || arg == "--help") {
                 std::cout << "usage: wiktsections [-o wiktsections.sqlite] [--headers headers] [--db wiktlangs.sqlite] "
-                             "[--min-pages 20] [--min-labels 10] [wiktNeeded.jsonl...]\n";
+                             "[--min-pages 3] [--min-labels 10] [wiktNeeded.jsonl...]\n";
                 return 0;
             } else
                 wikidataFiles.emplace_back(arg);
@@ -127,11 +127,11 @@ int main(int argc, char *argv[]) {
         }
 
         // English section headings below language level; "Etymology 2" counts as "Etymology"
-        static const std::regex numbered(R"(^(.*\S)\s+\d+$)");
+        static const std::regex numbered(R"(^(.*\S)\s+\d+(?:\.\d+)*$)");
         std::map<std::string, size_t> pages; // heading as written -> pages
         for (const auto &line : readLines((headersDir / "en.tsv").string())) {
             auto f = split(line, '\t');
-            if (f.size() < 4 || f[0] != "(main)" || f[1] == "level" || std::stoi(f[1]) < 3)
+            if (f.size() < 4 || f[0] != "(main)" || f[1] == "level" || std::stoi(f[1]) < 2)
                 continue;
             std::string heading = trim(f[3]);
             std::smatch m;
@@ -148,6 +148,9 @@ int main(int argc, char *argv[]) {
                 continue;
             }
             byLower[lower(it->first)] = it->first;
+            // "Hypernyms": the label is singular ("hypernym")
+            if (auto l = lower(it->first); l.size() > 3 && l.ends_with('s') && !l.ends_with("ss"))
+                byLower.emplace(l.substr(0, l.size() - 1), it->first);
             ++it;
         }
         std::cout << pages.size() << " English section headings (>= " << minPages << " pages)" << std::endl;

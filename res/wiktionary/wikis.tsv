@@ -19,7 +19,7 @@ bg	E	{{-xx-}}
 bh	F		
 bi	F		
 bjn	B	basa	
-blk	A		
+blk	A		blk.json
 bm	F		
 bn	F		
 bo	F		
@@ -29,7 +29,7 @@ btm	B2
 ca	B1		
 ch	F		
 chr	E	{{-xx-}}	
-ckb	A		
+ckb	A		ckb.json
 co	E	{{-xx-}}	
 cr	F		
 cs	A		cs.json
@@ -56,7 +56,7 @@ ga	E	{{-xx-}}
 gd	E	{{=xx=}}	
 gl	E	{{-xx-}}	
 gn	A		
-gom	A		
+gom	A		gom.json
 gor	B2		
 gu	A		
 guw	A		
@@ -81,16 +81,16 @@ iu	E	{{-xx-}}
 ja	B		ja.json
 jbo	B2		
 jv	B	basa	
-ka	A		
+ka	A		ka.json
 kaa	B1		
 kbd	F		
 kcg	A		
-kk	A		
+kk	A		kk.json
 kl	E	{{-xx-}}	
-km	A		
+km	A		km.json
 kn	A		kn.json
 ko	A		ko.json
-ks	A		
+ks	A		ks.json
 ku	B	ziman	
 kw	A		
 ky	E	{{-xx-}}	
@@ -110,7 +110,7 @@ min	B	bahasa
 mk	E	{{-xx-}}	
 ml	A		ml.json
 mn	A		mn.json
-mni	A		
+mni	A		mni.json
 mnw	B2		
 mr	A		
 ms	A		
@@ -131,7 +131,7 @@ pa	A
 pi	F		
 pl	D		pl.json
 pnb	A		
-ps	A		
+ps	A		ps.json
 pt	C		
 qu	E	{{-xx-}}	
 rm	F		
@@ -147,9 +147,9 @@ scn	E	{{-xx-}}
 sd	A		
 sg	B	Y	sg.json
 sh	A		sh.json
-shn	A		
+shn	A		shn.json
 shy	B	langue	
-si	A		
+si	A		si.json
 simple	A		simple.json
 sk	A		sk.json
 skr	A		skr.json
@@ -165,7 +165,7 @@ su	B2
 sv	A		sv.json
 sw	B2		
 ta	B	மொழி	
-tcy	A		
+tcy	A		tcy.json
 te	A		te.json
 tg	E	{{-xx-}}	
 th	A		th.json

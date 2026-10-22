@@ -1,0 +1,11 @@
+{
+  "wiki": "km",
+  "language": {
+    "aliases": {
+      "អង់គ្លេស": "en",
+      "បារាំង": "fr",
+      "ខ្មែរ": "km"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

@@ -1,0 +1,48 @@
+# Section headings of Wiktionaries in English (wiktlangs: table wikt_section).
+# kind: section | relation | pos. From jsonl/markers.tsv headings that are no languages.
+wiki	name	section	kind
+hi	प्रकाशितकोशों से अर्थ	dictionary definitions	section
+skr	حوالہ	references	section
+sh	Napomene	notes	section
+sh	Reference	references	section
+cs	poznámky	notes	section
+cs	externí odkazy	external links	section
+sk	Externé odkazy	external links	section
+my	ကိုးကား	references	section
+ml	ഉച്ചാരണം	pronunciation	section
+fi	Viitteet	references	section
+fi	Lähteet	sources	section
+zh_min_nan	參考資料	references	section
+sv	Källor	sources	section
+ha	Manazarta	references	section
+km	ឯកសារយោង	references	section
+gom	Sondorbh	references	section
+gu	સંદર્ભ	references	section
+sq	Referencat	references	section
+sq	Etimologjia	etymology	section
+sq	Shqiptimi	pronunciation	section
+sq	Prononcimi	pronunciation	section
+sq	Në gjuhë tjera	translations	section
+ig	Ntụgharị n'asụsụ ọzọ	translations	section
+ha	Fassara	translations	section
+de	Umschrift	transliteration	section
+ig	Nkọwa	definitions	section
+ha	Bayani	definitions	section
+wo	Tekki	definitions	section
+ur	معانی	definitions	section
+ha	Misalai	examples	section
+ha	Misali	examples	section
+gn	Techapyrã:	examples	section
+wo	Xool it	see also	section
+sq	Sinonime	synonyms	relation
+sq	Antonime	antonyms	relation
+my	ကြောင်းတူသံကွဲ	synonyms	relation
+my	ဆန့်ကျင်ဘက်	antonyms	relation
+sq	Fjalë të prejardhura	derived terms	relation
+sq	Fjalë rrjedhëse	derived terms	relation
+skr	مشتقات	derived terms	relation
+my	နာမ်	noun	pos
+my	နာမဝိသေသန	adjective	pos
+my	ကြိယာ	verb	pos
+pnb	ناں	noun	pos
+pnb	کریا	verb	pos

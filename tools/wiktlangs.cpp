@@ -374,6 +374,7 @@ int main(int argc, char *argv[]) {
     }
     fs::path infoboxFile = "infoboxes.jsonl";
     fs::path markersFile = "jsonl/markers.tsv";
+    const fs::path sectionNamesFile = WIKTPARSE_RES_DIR "/wiktionary_section_names.tsv";
     if (auto flag = std::ranges::find(args, "--markers"); flag != args.end() && flag + 1 != args.end()) {
         markersFile = *(flag + 1);
         args.erase(flag, flag + 2);
@@ -732,6 +733,23 @@ int main(int argc, char *argv[]) {
             db.insert("INSERT INTO wikt_marker VALUES(?,?,?,?,?)", rows);
             db.exec("CREATE INDEX wikt_marker_wiki ON wikt_marker(wiki, marker);");
             std::cout << rows.size() << " language markers of Wiktionaries from " << markersFile.string() << std::endl;
+        }
+        // Section headings of Wiktionaries in English (res/wiktionary_section_names.tsv)
+        db.exec("CREATE TABLE wikt_section(wiki TEXT, name TEXT, section TEXT, kind TEXT)");
+        {
+            std::vector<std::vector<std::string>> rows;
+            std::ifstream in(sectionNamesFile);
+            for (std::string line; std::getline(in, line);) {
+                std::vector<std::string> f;
+                std::stringstream ss(line);
+                for (std::string field; std::getline(ss, field, '\t');)
+                    f.push_back(field);
+                if (f.size() == 4 && f[0] != "wiki" && !f[0].starts_with("#"))
+                    rows.push_back(f);
+            }
+            db.insert("INSERT INTO wikt_section VALUES(?,?,?,?)", rows);
+            db.exec("CREATE INDEX wikt_section_wiki ON wikt_section(wiki, name);");
+            std::cout << rows.size() << " section names of Wiktionaries" << std::endl;
         }
         db.exec("CREATE TABLE wd_code_map(scheme TEXT, code TEXT, qid TEXT, name TEXT, wikt_code TEXT, "
                 "method TEXT, note TEXT)");

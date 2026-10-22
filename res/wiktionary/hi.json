@@ -6,7 +6,8 @@
       "कन्नड़": "kn",
       "तेलेगु": "te",
       "मालागासी": "mg",
-      "(सायरेबियन)serbian": "sr"
+      "(सायरेबियन)serbian": "sr",
+      "{{मालागासी}}": "mg"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

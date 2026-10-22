@@ -126,6 +126,23 @@ int num(const json &config, const std::string &pointer, int fallback) {
 // Language names -> en.wikt codes
 // ---------------------------------------------------------------------------
 
+std::string withoutCombining(std::string_view text) {
+    std::string result;
+    for (size_t pos = 0; pos < text.size();) {
+        size_t start = pos;
+        auto c = wikilib::unicode::decode_utf8(text, pos);
+        if (!c) {
+            pos = start + 1;
+            continue;
+        }
+        bool combining = (*c >= 0x0300 && *c <= 0x036F) || (*c >= 0x0591 && *c <= 0x05C7) ||
+                         (*c >= 0x0610 && *c <= 0x061A) || (*c >= 0x064B && *c <= 0x065F) || *c == 0x0670;
+        if (!combining)
+            result += text.substr(start, pos - start);
+    }
+    return result;
+}
+
 class LanguageNames {
 public:
     explicit LanguageNames(const fs::path &file) {
@@ -139,21 +156,32 @@ public:
 
     // Code of a language name written in the language of the wiki
     // Thread-safe
-    std::string code(const std::string &wiki, const std::string &name) {
+    // lookup: the full label when the wiki writes a short name (sr "српски" -> "{name} језик")
+    std::string code(const std::string &wiki, const std::string &name, const std::string &lookup = "") {
         if (!db_ || name.empty())
             return "";
         std::lock_guard lock(mutex_);
-        auto key = wiki + '\t' + name;
+        auto key = wiki + '\t' + name + '\t' + lookup;
         if (auto it = cache_.find(key); it != cache_.end())
             return it->second;
         std::string lang = wiki;
         std::ranges::replace(lang, '_', '-');
         // Labels of Chinese wikis are in traditional or simplified characters
+        // Wikidata label languages differing from wiki codes
+        static const std::map<std::string, std::string> labelLanguage = {
+                {"no", "nb"}, {"simple", "en"}, {"zh-min-nan", "nan"}, {"roa-rup", "rup"}, {"bh", "bho"}};
+        if (auto it = labelLanguage.find(lang); it != labelLanguage.end())
+            lang = it->second;
         std::vector<std::string> langs{lang};
         if (lang == "zh")
             langs = {"zh", "zh-hant", "zh-hans", "zh-tw", "zh-cn", "zh-hk"};
         // "esperanto (morfem)", "język norweski (bokmål)": also without the note
         std::vector<std::string> variants{name};
+        if (auto at = lookup.find("{name}"); at != std::string::npos)
+            variants.push_back(std::string(lookup).replace(at, 6, name));
+        // skr "اُردو": without vowel marks and other combining characters
+        if (auto plain = withoutCombining(name); plain != name)
+            variants.push_back(plain);
         if (auto open = name.rfind(" ("); open != std::string::npos && name.ends_with(")"))
             variants.push_back(name.substr(0, open));
         std::string result;
@@ -272,6 +300,15 @@ std::optional<std::string> languageMarker(const json &config, const std::string 
     }
     if (form == "heading-word-and-template") {
         // "woda ({{język polski}})", "Wasser ({{Sprache|Deutsch}})"
+        // sr: "sanska koza ([[Викиречник:Српски|српски]], [[…|ћирилица]])": the first link
+        if (auto link = h->text.find("([["); link != std::string::npos) {
+            auto end = h->text.find("]]", link);
+            if (end == std::string::npos)
+                return std::nullopt;
+            auto target = h->text.substr(link + 3, end - link - 3);
+            auto bar = target.find('|');
+            return trim(bar == std::string::npos ? target : target.substr(bar + 1));
+        }
         auto open = h->text.find("({{");
         if (open == std::string::npos)
             return std::nullopt;
@@ -474,11 +511,28 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         sectionText.clear();
         counters.clear();
     };
+    const bool implicit = str(config, "/language/form") == "implicit";
+    const bool requireCode = byName && !implicit && config["language"].value("require_code", true);
     std::istringstream in(text);
+    bool first = true;
     for (std::string line; std::getline(in, line);) {
-        if (auto marker = languageMarker(config, line)) {
+        auto marker = implicit ? (first ? std::optional(native.front()) : std::nullopt) : languageMarker(config, line);
+        first = false;
+        if (marker && requireCode && !(config.contains(json::json_pointer("/language/aliases")) &&
+                                       config["language"]["aliases"].contains(*marker)) &&
+            names.code(wiki, *marker, str(config, "/language/lookup")).empty()) {
+            // A heading that is no language (sections at the same level: "Napomene",
+            // "Референце"); counted for review, the section goes on
+            auto &[markerCode, count] = stats.markers[*marker];
+            ++count;
+            stats.markerExamples.emplace(*marker, title);
+            marker.reset();
+        }
+        if (marker) {
             finish();
-            std::string code = byName ? names.code(wiki, *marker) : *marker;
+            std::string code = byName ? names.code(wiki, *marker, str(config, "/language/lookup")) : *marker;
+            if (implicit && sections.empty() && line.empty() == false)
+                sectionText += line + '\n';
             // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}
             if (auto aliases = json::json_pointer("/language/aliases"); config.contains(aliases))
                 if (auto it = config[aliases].find(*marker); it != config[aliases].end())
@@ -599,6 +653,7 @@ int main(int argc, char *argv[]) {
                                    stats.translations, stats.nativeSections, stats.nativeSenses, stats.nativeTranslations);
             statsFile << row << '\n';
             for (const auto &[marker, value] : stats.markers)
+                if (!value.first.empty() || value.second >= 3) // one-off unresolved headings are words or sections
                 markersFile << wiki << '\t' << str(config, "/language/form") << '\t' << marker << '\t' << value.first
                             << '\t' << value.second << '\t' << stats.markerExamples[marker] << '\n';
             std::cout << row << std::endl;

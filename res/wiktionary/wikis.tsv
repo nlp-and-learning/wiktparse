@@ -62,13 +62,13 @@ gu	A
 guw	A		
 gv	E	{{=xx=}}	
 ha	A		
-he	A		
+he	A		he.json
 hi	A		
 hif	A		
 hr	D		
 hsb	A		
 hu	E	{{-xx-}}	
-hy	A		
+hy	E	{{-xx-}}	
 ia	E	{{-xx-}}	
 id	B	bahasa	
 ie	E	{{-xx-}}	
@@ -150,23 +150,23 @@ sh	A
 shn	A		
 shy	B	langue	
 si	A		
-simple	A		
+simple	A		simple.json
 sk	A		
-skr	A1		
+skr	A		
 sl	E	{{=xx=}}	
 sm	E	{{-xx-}}	
 sn	F		
 so	E	{{-xx-}}	
 sq	A		
-sr	A		
+sr	D		sr.json
 ss	A		
 st	A		
 su	B2		
 sv	A		
 sw	B2		
-ta	A		
+ta	B	மொழி	
 tcy	A		
-te	A		
+te	A		te.json
 tg	E	{{-xx-}}	
 th	A		
 ti	E	{{-xx-}}	

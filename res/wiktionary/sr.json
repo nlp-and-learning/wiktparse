@@ -1,0 +1,13 @@
+{
+  "wiki": "sr",
+  "language": {
+    "lookup": "{name} језик",
+    "aliases": {
+      "српски": "sr",
+      "хрватски": "hr",
+      "босански": "bs",
+      "српскохрватски": "sh"
+    }
+  },
+  "status": "language as the first link in parentheses after the word"
+}

@@ -1,0 +1,8 @@
+# Languages of Wiktionaries missing in English Wiktionary, with private codes
+# (wiktlangs puts them into table lang, kind extra). Used as aliases in res/wiktionary/<wiki>.json.
+# qid left empty until checked on Wikidata.
+code	name	qid	family	note
+art-slovio	Slovio		art	constructed Pan-Slavic language (pl, csb, ko, fi, no)
+art-unish	Unish		art	constructed language (ko)
+art-wenedyk	Wenedyk		art	constructed language, Latin evolved like Polish (pl)
+art-romanico	Romániço		art	constructed Romance language (pl)

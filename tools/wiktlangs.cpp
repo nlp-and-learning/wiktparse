@@ -379,7 +379,7 @@ int main(int argc, char *argv[]) {
         moduleNamesFile = *(flag + 1);
         args.erase(flag, flag + 2);
     }
-    const fs::path sectionNamesFile = WIKTPARSE_RES_DIR "/wiktionary_section_names.tsv";
+    const fs::path extraLanguagesFile = WIKTPARSE_RES_DIR "/extra_languages.tsv";
     if (auto flag = std::ranges::find(args, "--markers"); flag != args.end() && flag + 1 != args.end()) {
         markersFile = *(flag + 1);
         args.erase(flag, flag + 2);
@@ -758,22 +758,21 @@ int main(int argc, char *argv[]) {
             db.exec("CREATE INDEX wikt_lang_name_wiki ON wikt_lang_name(wiki, name);");
             std::cout << rows.size() << " language names from modules of Wiktionaries" << std::endl;
         }
-        // Section headings of Wiktionaries in English (res/wiktionary_section_names.tsv)
-        db.exec("CREATE TABLE wikt_section(wiki TEXT, name TEXT, section TEXT, kind TEXT)");
+        // Languages of Wiktionaries missing in English Wiktionary, with private codes (art-slovio)
         {
             std::vector<std::vector<std::string>> rows;
-            std::ifstream in(sectionNamesFile);
+            std::ifstream in(extraLanguagesFile);
             for (std::string line; std::getline(in, line);) {
                 std::vector<std::string> f;
                 std::stringstream ss(line);
                 for (std::string field; std::getline(ss, field, '\t');)
                     f.push_back(field);
-                if (f.size() == 4 && f[0] != "wiki" && !f[0].starts_with("#"))
-                    rows.push_back(f);
+                if (f.size() >= 4 && f[0] != "code" && !f[0].starts_with("#"))
+                    rows.push_back({f[0], "extra", f[1], f[2], f[3], "", "", "", f.size() > 4 ? f[4] : "",
+                                    "res/extra_languages.tsv"});
             }
-            db.insert("INSERT INTO wikt_section VALUES(?,?,?,?)", rows);
-            db.exec("CREATE INDEX wikt_section_wiki ON wikt_section(wiki, name);");
-            std::cout << rows.size() << " section names of Wiktionaries" << std::endl;
+            db.insert("INSERT OR IGNORE INTO lang VALUES(?,?,?,?,?,?,?,?,?,?)", rows);
+            std::cout << rows.size() << " extra languages" << std::endl;
         }
         db.exec("CREATE TABLE wd_code_map(scheme TEXT, code TEXT, qid TEXT, name TEXT, wikt_code TEXT, "
                 "method TEXT, note TEXT)");

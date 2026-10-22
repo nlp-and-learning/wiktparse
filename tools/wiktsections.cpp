@@ -187,6 +187,14 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
+        // Items of sections missing in wiktNeeded (res/wiktionary_section_qids.tsv): Q without names until
+        // wiktneeded --items selects them
+        std::map<std::string, std::string> extraQids;
+        for (const auto &line : readLines(WIKTPARSE_RES_DIR "/wiktionary_section_qids.tsv")) {
+            auto f = split(line, '\t');
+            if (f.size() >= 2 && f[1].starts_with("Q") && !matches.contains(f[0]))
+                extraQids[f[0]] = f[1];
+        }
         std::cout << matches.size() << " of them found in " << wikidataFiles.size() << " wiktNeeded files" << std::endl;
 
         fs::remove(output);
@@ -196,7 +204,8 @@ int main(int argc, char *argv[]) {
         std::vector<std::vector<std::string>> sectionRows, nameRows;
         for (const auto &[heading, count] : pages) {
             auto it = matches.find(heading);
-            sectionRows.push_back({heading, std::to_string(count), it == matches.end() ? "" : it->second.qid, ""});
+            std::string qid = it != matches.end() ? it->second.qid : extraQids.contains(heading) ? extraQids[heading] : "";
+            sectionRows.push_back({heading, std::to_string(count), qid, ""});
             if (it == matches.end())
                 continue;
             for (const auto &[lang, label] : it->second.labels.items())

@@ -1,0 +1,9 @@
+# English Wiktionary sections not found in wiktNeeded, with their Wikidata items
+# (found with wbsearchentities). For wiktneeded --items: cut -f2 | grep ^Q
+section	qid	label
+Further reading	Q139594646	Further reading (title of a section of a Wikipedia article)
+References	Q139594642	References (title of a section of a Wikipedia article)
+Alternative forms	Q59342809	alternative form
+Related terms	Q62687904	related term
+Translations	Q7553	translation
+Mutation	Q557863	consonant mutation

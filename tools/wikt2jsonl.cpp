@@ -37,6 +37,8 @@
 #include <wikilib/core/unicode_utils.h>
 #include <wikilib/templates/template_parser.h>
 
+#include <wikilib/lua/lua_data.h>
+
 #include "dump/WikiDump.h"
 #include "util/textUtils.h"
 
@@ -690,6 +692,23 @@ int main(int argc, char *argv[]) {
         std::cout << header << '\n';
         for (const auto &wiki : wikis) {
             json config = configs.of(wiki);
+            // zh: a Lua module of the wiki maps language names to codes
+            // ("Module:Languages/canonical names": ["阿歐語"] = "aou"); its entries become aliases
+            if (auto module = str(config, "/language/names_module"); !module.empty()) {
+                auto pages = WikiDump::wiktionary(wiki).extractMatching([&](const std::string &t) { return t == module; });
+                if (auto it = pages.find(module); it != pages.end()) {
+                    auto open = it->second.find('{');
+                    auto table = open == std::string::npos ? json() : wikilib::lua::parse_value(std::string_view(it->second).substr(open));
+                    size_t added = 0;
+                    if (table.is_object())
+                        for (const auto &[name, code] : table.items())
+                            if (code.is_string() && !config["language"]["aliases"].contains(name)) {
+                                config["language"]["aliases"][name] = code;
+                                ++added;
+                            }
+                    std::cout << wiki << ": " << added << " language names from " << module << std::endl;
+                }
+            }
             if (config.value("skip", false))
                 continue;
             Stats stats;

@@ -153,8 +153,12 @@
       "查莫羅語": "ch",
       "尤加德語": "rmd",
       "埃維語": "ee",
-      "埃爾夫達利安語": "ovd"
-    }
+      "埃爾夫達利安語": "ovd",
+      "佛羅語": "vro",
+      "約拉語": "yol",
+      "蘇里南湯加語": "srn"
+    },
+    "names_module": "Module:Languages/canonical names"
   },
   "homographs": null,
   "pos": {

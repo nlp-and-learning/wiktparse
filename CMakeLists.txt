@@ -92,4 +92,15 @@ add_executable(${PROJECT_NAME} src/main.cpp
 
 target_link_libraries(${PROJECT_NAME} wiktdump)
 
+# Browser of JSONL files (Qt6, Kate's KTextEditor), built when they are installed
+find_package(Qt6 QUIET COMPONENTS Widgets)
+find_package(KF6TextEditor QUIET)
+if(Qt6_FOUND AND KF6TextEditor_FOUND)
+    add_executable(wiktbrowse browser/main.cpp)
+    set_target_properties(wiktbrowse PROPERTIES AUTOMOC ON)
+    target_link_libraries(wiktbrowse Qt6::Widgets KF6::TextEditor nlohmann_json::nlohmann_json)
+else()
+    message(STATUS "wiktbrowse not built: Qt6 Widgets and KF6TextEditor are needed")
+endif()
+
 add_subdirectory(tests)

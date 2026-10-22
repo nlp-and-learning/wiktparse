@@ -567,11 +567,12 @@ const std::set<std::string> partsOfSpeech = {
         "preposition", "postposition", "particle", "determiner", "article", "suffix", "prefix", "infix", "interfix",
         "circumfix", "affix", "phrase", "prepositional phrase", "idiom", "proverb", "letter", "symbol", "participle",
         "contraction", "abbreviation", "initialism", "acronym", "classifier", "counter", "root", "han character",
-        "kanji", "hanja", "syllable", "punctuation mark", "diacritical mark", "number", "adnominal", "verbal noun"};
+        "kanji", "hanja", "syllable", "punctuation mark", "diacritical mark", "number", "adnominal", "verbal noun",
+        "inflected form"};
 const std::set<std::string> relations = {
         "synonyms", "antonyms", "hypernyms", "hyponyms", "meronyms", "holonyms", "troponyms", "coordinate terms",
         "derived terms", "related terms", "compounds", "descendants", "anagrams", "idioms", "proverbs",
-        "collocations", "paronyms", "abbreviations"};
+        "collocations", "paronyms", "abbreviations", "diminutives", "false friends", "homonyms", "metagrams"};
 
 struct SectionName {
     std::string section; // English: "Synonyms"
@@ -704,9 +705,15 @@ public:
     json finish(Stats &stats) {
         for (auto &ety : entry_["etymologies"])
             for (auto &p : ety["pos"]) {
+                // The translation section, or all sections when its local name is not known yet
+                std::string text;
                 if (auto it = p["sections"].find("Translations"); it != p["sections"].end())
-                    for (const auto &t : translations(config_, it->get<std::string>()))
-                        p["translations"].push_back({{"lang", t.lang}, {"term", t.term}, {"sense", t.sense}});
+                    text = it->get<std::string>();
+                else
+                    for (const auto &[name, section] : p["sections"].items())
+                        text += section.get<std::string>();
+                for (const auto &t : translations(config_, text))
+                    p["translations"].push_back({{"lang", t.lang}, {"term", t.term}, {"sense", t.sense}});
                 stats.senses += p["senses"].size();
                 stats.translations += p["translations"].size();
             }

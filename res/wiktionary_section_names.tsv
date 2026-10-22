@@ -650,3 +650,188 @@ pl	transliteracja	Romanization	section
 pl	zapis	Alternative scripts	section
 pl	warianty	Alternative forms	section
 pl	wymowa	Pronunciation	section
+de	Bedeutungen	Definitions	section
+de	Übersetzungen	Translations	section
+de	Synonyme	Synonyms	section
+de	Gegenwörter	Antonyms	section
+de	Oberbegriffe	Hypernyms	section
+de	Unterbegriffe	Hyponyms	section
+de	Beispiele	Examples	section
+de	Redewendungen	Idioms	section
+de	Charakteristische Wortkombinationen	Collocations	section
+de	Wortbildungen	Derived terms	section
+de	Herkunft	Etymology	section
+de	Aussprache	Pronunciation	section
+de	Worttrennung	Hyphenation	section
+de	Referenzen	References	section
+de	Quellen	Sources	section
+de	Abkürzungen	Abbreviations	section
+de	Verkleinerungsformen	Diminutives	section
+de	Meronyme	Meronyms	section
+de	Holonyme	Holonyms	section
+de	Sinnverwandte Wörter	Related terms	section
+de	Substantiv	Noun	section
+de	Adjektiv	Adjective	section
+de	Adverb	Adverb	section
+de	Pronomen	Pronoun	section
+de	Präposition	Preposition	section
+de	Konjunktion	Conjunction	section
+de	Interjektion	Interjection	section
+de	Eigenname	Proper noun	section
+de	Toponym	Proper noun	section
+de	Numerale	Numeral	section
+de	Partikel	Particle	section
+de	Artikel	Article	section
+de	Abkürzung	Abbreviation	section
+de	Deklinierte Form	Inflected form	section
+de	Konjugierte Form	Inflected form	section
+de	Erweiterter Infinitiv	Inflected form	section
+de	Dekliniertes Gerundivum	Inflected form	section
+ru	Морфологические и синтаксические свойства	Morphology	section
+ru	Семантические свойства	Semantics	section
+ru	Значение	Definitions	section
+ru	Родственные слова	Related terms	section
+ru	Фразеологизмы и устойчивые сочетания	Idioms	section
+ru	Фразеологизмы	Idioms	section
+ru	Пословицы и поговорки	Proverbs	section
+ru	Анаграммы	Anagrams	section
+ru	Типичные сочетания	Collocations	section
+ru	Метаграммы	Metagrams	section
+ru	Меронимы	Meronyms	section
+ru	Холонимы	Holonyms	section
+ru	Синонимы	Synonyms	section
+ru	Антонимы	Antonyms	section
+ru	Гиперонимы	Hypernyms	section
+ru	Гипонимы	Hyponyms	section
+ru	Перевод	Translations	section
+ru	Этимология	Etymology	section
+ru	Произношение	Pronunciation	section
+ru	Библиография	References	section
+es	Referencias y notas	References	section
+es	Traducciones	Translations	section
+es	Forma verbal	Inflected form	section
+es	Forma flexiva	Inflected form	section
+es	Forma adjetiva	Inflected form	section
+es	Forma adjetiva y de participio	Inflected form	section
+es	Forma sustantiva masculina	Inflected form	section
+es	Forma sustantiva femenina	Inflected form	section
+es	sustantivo masculino	Noun	section
+es	sustantivo femenino	Noun	section
+es	sustantivo masculino y femenino	Noun	section
+es	verbo transitivo	Verb	section
+es	verbo intransitivo	Verb	section
+es	verbo auxiliar	Verb	section
+es	verbo pronominal	Verb	section
+es	adjetivo	Adjective	section
+es	adverbio	Adverb	section
+es	Información adicional	Notes	section
+es	Refranes	Proverbs	section
+es	Compuestos	Compounds	section
+es	Locuciones	Idioms	section
+es	Véase también	See also	section
+es	Etimología	Etymology	section
+es	Pronunciación y escritura	Pronunciation	section
+it	sost	Noun	section
+it	verb	Verb	section
+it	agg	Adjective	section
+it	avv	Adverb	section
+it	trad	Translations	section
+it	sin	Synonyms	section
+it	ant	Antonyms	section
+it	der	Derived terms	section
+it	var	Alternative forms	section
+it	alter	Alternative forms	section
+it	prov	Proverbs	section
+it	sill	Hyphenation	section
+it	pron	Pronunciation	section
+it	etim	Etymology	section
+it	quote	Quotations	section
+it	ref	References	section
+it	rel	Related terms	section
+it	iperon	Hypernyms	section
+it	ipon	Hyponyms	section
+it	Altri progetti	External links	section
+nl	noun	Noun	section
+nl	verb	Verb	section
+nl	adjc	Adjective	section
+nl	adverb	Adverb	section
+nl	pron	Pronunciation	section
+nl	syll	Hyphenation	section
+nl	etym	Etymology	section
+nl	syn	Synonyms	section
+nl	ant	Antonyms	section
+nl	hypo	Hyponyms	section
+nl	hyper	Hypernyms	section
+nl	drv	Derived terms	section
+nl	rel	Related terms	section
+nl	expr	Idioms	section
+nl	prov	Proverbs	section
+nl	trans	Translations	section
+nl	info	Notes	section
+nl	ref	References	section
+zh	讀音	Pronunciation	section
+zh	读音	Pronunciation	section
+zh	發音	Pronunciation	section
+zh	發音1	Pronunciation	section
+zh	釋義	Definitions	section
+zh	释义	Definitions	section
+zh	寫法	Alternative forms	section
+zh	組詞	Compounds	section
+zh	组词	Compounds	section
+zh	字源	Etymology	section
+zh	詞源	Etymology	section
+zh	衍生詞	Derived terms	section
+zh	同義字	Synonyms	section
+zh	近义词	Synonyms	section
+zh	參見	See also	section
+zh	名词	Noun	section
+zh	名詞	Noun	section
+zh	動詞	Verb	section
+zh	动词	Verb	section
+zh	形容詞	Adjective	section
+zh	形容词	Adjective	section
+zh	翻譯	Translations	section
+zh	翻译	Translations	section
+fr	traductions	Translations	section
+fr	traductions à trier	Translations	section
+fr	dérivés	Derived terms	section
+fr	références	References	section
+fr	vocabulaire	Related terms	section
+fr	apparentés	Related terms	section
+fr	hyperonymes	Hypernyms	section
+fr	hyponymes	Hyponyms	section
+fr	antonymes	Antonyms	section
+fr	synonymes	Synonyms	section
+fr	holonymes	Holonyms	section
+fr	méronymes	Meronyms	section
+fr	dérivés autres langues	Descendants	section
+fr	abréviations	Abbreviations	section
+fr	variantes	Alternative forms	section
+fr	variantes orthographiques	Alternative forms	section
+fr	diminutifs	Diminutives	section
+fr	faux-amis	False friends	section
+fr	paronymes	Paronyms	section
+fr	étymologie	Etymology	section
+fr	prononciation	Pronunciation	section
+fr	nom	Noun	section
+fr	verbe	Verb	section
+fr	adjectif	Adjective	section
+fr	adverbe	Adverb	section
+fr	adjectif indéfini	Adjective	section
+fr	nom propre	Proper noun	section
+fr	pronom	Pronoun	section
+ja	rel	Related terms	section
+ja	etym	Etymology	section
+ja	trans	Translations	section
+ja	pron	Pronunciation	section
+ja	conjug	Conjugation	section
+ja	drv	Derived terms	section
+ja	alter	Alternative forms	section
+ja	ant	Antonyms	section
+ja	comp	Compounds	section
+ja	homonym	Homonyms	section
+ja	noun	Noun	section
+ja	verb	Verb	section
+ja	name	Proper noun	section
+ja	adj	Adjective	section
+ja	syn	Synonyms	section

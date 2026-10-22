@@ -38,10 +38,7 @@
       "Zentrales Puebla-Nahuatl": "ncx"
     }
   },
-  "homographs": {
-    "form": "heading",
-    "note": "one level 2 heading per homograph"
-  },
+  "homographs": null,
   "pos": {
     "form": "heading-template",
     "template": "Wortart",

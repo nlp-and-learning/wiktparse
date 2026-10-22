@@ -721,6 +721,22 @@ int main(int argc, char *argv[]) {
                     langRows.push_back({f[0], "extra", f[1], f[2], f[3], "", "", "", f.size() > 4 ? f[4] : "",
                                         "res/extra_languages.tsv"});
                     ++extra;
+                    // Names of its Wikidata item (Griko, Q35719)
+                    if (f[2].empty())
+                        continue;
+                    codeQid[f[0]] = f[2];
+                    auto it = wikidata.find(f[2]);
+                    if (it == wikidata.end()) {
+                        missing.insert(f[2]);
+                        continue;
+                    }
+                    for (const auto &[lang, label] : it->second["labels"].items())
+                        if (label.is_object())
+                            nameRows.push_back({f[0], f[2], lang, label.value("value", ""), "0"});
+                    for (const auto &[lang, list] : it->second["aliases"].items())
+                        if (list.is_array())
+                            for (const auto &alias : list)
+                                nameRows.push_back({f[0], f[2], lang, alias.value("value", ""), "1"});
                 }
             }
             std::cout << extra << " extra languages" << std::endl;
@@ -829,7 +845,12 @@ int main(int argc, char *argv[]) {
         for (const auto &r : nameRows) // code, qid, label language, name, alias
             addName(r[0], canonical(r[2]), r[3], r[4] == "1" ? "wikidata-alias" : "wikidata-label");
         // Labels and aliases of other Wikidata items of a language (infoboxes)
+        std::set<std::string> languageQids;
+        for (const auto &[code, q] : codeQid)
+            languageQids.insert(q);
         for (auto [code, q] : otherItems) {
+            if (languageQids.contains(q)) // the item of a language itself (an extra one)
+                continue;
             auto it = wikidata.find(q);
             if (it == wikidata.end()) {
                 missing.insert(q);

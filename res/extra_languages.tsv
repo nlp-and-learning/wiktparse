@@ -1,6 +1,7 @@
 # Languages of Wiktionaries missing in English Wiktionary, with private codes
-# (wiktlangs puts them into table lang, kind extra). Used as aliases in res/wiktionary/<wiki>.json.
+# (wiktlangs puts them into table language, kind extra; names of the qid item into language_name). Used as aliases in res/wiktionary/<wiki>.json.
 # qid left empty until checked on Wikidata.
+# Also varieties that en.wikt merges into another language while a sibling has its own code.
 code	name	qid	family	note
 art-slovio	Slovio		art	constructed Pan-Slavic language (pl, csb, ko, fi, no)
 art-unish	Unish		art	constructed language (ko)
@@ -10,3 +11,4 @@ hr	Croatian			ISO 639-1; en.wikt merges it into sh (Serbo-Croatian), Wiktionarie
 sr	Serbian			ISO 639-1; en.wikt merges it into sh
 bs	Bosnian			ISO 639-1; en.wikt merges it into sh
 cnr	Montenegrin			ISO 639-3; en.wikt merges it into sh
+grk-apu	Griko	Q35719	grk	Apulian Greek, Glottolog apul1237 (dialect of apul1236); en.wikt merges it into grk-ita (Italiot Greek, apul1236) but has Calabrian Greek (aspr1238) as grk-cal

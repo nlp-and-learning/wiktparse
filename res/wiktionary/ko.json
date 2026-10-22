@@ -6,7 +6,9 @@
       "보스니아어": "bs",
       "크로아티아어": "hr",
       "바슈키르어": "ba",
-      "가가우스어": "gag"
+      "가가우스어": "gag",
+      "우니쉬": "art-unish",
+      "슬로비오": "art-slovio"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

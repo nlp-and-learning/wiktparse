@@ -742,7 +742,12 @@ public:
 
     json finish(Stats &stats) {
         finishNode(root_, stats);
-        return {{"sections", root_["children"]}, {"text", root_["text"]}, {"unknown_headings", unknown_}};
+        json result = {{"sections", root_.value("children", json::array())}};
+        if (root_.contains("text") && !root_["text"].get<std::string>().empty())
+            result["text"] = root_["text"];
+        if (!unknown_.empty())
+            result["unknown_headings"] = unknown_;
+        return result;
     }
 
 private:
@@ -806,7 +811,9 @@ private:
             found = translations(config_, n["text"].get<std::string>(), false);
         for (const auto &t : found) {
             std::string code = languageCode_(t.lang);
-            json item = {{"lang", code.empty() ? json() : json(code)}, {"term", t.term}, {"sense", t.sense}};
+            json item = {{"lang", code.empty() ? json() : json(code)}, {"term", t.term}};
+            if (!t.sense.empty())
+                item["sense"] = t.sense;
             if (code != t.lang)
                 item["lang_written"] = t.lang; // pl "angielski", it "{{en}}" -> en
             n["translations"].push_back(std::move(item));
@@ -814,11 +821,31 @@ private:
         stats.senses += n["senses"].size();
         stats.translations += n["translations"].size();
         n.erase("template_pos");
-        // The text of sections handled in this phase is not repeated: its range points into the page
+        // The text of sections handled in this phase is not repeated: "source" points into the dump
         if (!n["senses"].empty() || !n["translations"].empty() || n["section"] == "Translations")
             n.erase("text");
         for (auto &c : n["children"])
             finishNode(c, stats);
+        // Sections with nothing in them (pl {{składnia}} with no text) are left out
+        auto &children = n["children"];
+        for (size_t i = children.size(); i-- > 0;)
+            if (!children[i].contains("text") && !children[i].contains("senses") &&
+                !children[i].contains("translations") && !children[i].contains("children") &&
+                children[i].value("kind", json()) != "pos")
+                children.erase(i);
+        // Empty and default fields are left out (kind follows from the section name); template
+        // lines have no level of their own
+        for (const char *key : {"senses", "translations", "children"})
+            if (n.contains(key) && n[key].empty())
+                n.erase(key);
+        for (const char *key : {"index", "section"})
+            if (n.contains(key) && n[key].is_null())
+                n.erase(key);
+        n.erase("kind");
+        if (n.contains("text") && n["text"].get<std::string>().empty())
+            n.erase("text");
+        if (n.value("template", false))
+            n.erase("level");
     }
 };
 

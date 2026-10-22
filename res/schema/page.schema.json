@@ -90,14 +90,7 @@
     "section": {
       "type": "object",
       "required": [
-        "section",
-        "kind",
-        "heading",
-        "level",
-        "index",
-        "senses",
-        "translations",
-        "children"
+        "heading"
       ],
       "additionalProperties": false,
       "properties": {
@@ -107,16 +100,6 @@
             "null"
           ],
           "description": "English name: Noun, Synonyms, Translations; null when not known"
-        },
-        "kind": {
-          "enum": [
-            "pos",
-            "etymology",
-            "relation",
-            "section",
-            null
-          ],
-          "description": "Part of speech, etymology, relation (synonyms...), other section; null when not known"
         },
         "heading": {
           "type": "string",
@@ -159,7 +142,8 @@
             "$ref": "#/$defs/section"
           }
         }
-      }
+      },
+      "description": "A section; empty sections and empty or default fields are left out; template lines have no level; the kind (part of speech, relation) follows from the English name (wiktsections.sqlite)"
     },
     "sense": {
       "type": "object",
@@ -183,8 +167,7 @@
       "type": "object",
       "required": [
         "lang",
-        "term",
-        "sense"
+        "term"
       ],
       "additionalProperties": false,
       "properties": {

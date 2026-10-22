@@ -8,7 +8,8 @@
 // View > Original: the page's wikitext (the <text> of its <page>, entities
 // decoded) with Kate mediawiki highlighting, read from the dump at its "source"
 // ([bz2 block, number in it]); the dump directory is set in Settings and kept
-// in wiktbrowse.ini next to the binary.
+// in wiktbrowse.ini next to the binary. Search > Find (Ctrl+F, F3, Shift+F3)
+// in the JSON and Original tabs.
 //
 // wiktbrowse [file.jsonl | file.jsonl.bz2]
 #include <QApplication>
@@ -17,6 +18,7 @@
 #include <QShortcut>
 #include <QFile>
 #include <qxfiledialog.h>
+#include "FindBar.h"
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -259,7 +261,7 @@ public:
         tree_ = new QTreeView;
         model_ = new QStandardItemModel(this);
         tree_->setModel(model_);
-        tabs_->addTab(json_.edit, "JSON");
+        tabs_->addTab(json_.page, "JSON");
         tabs_->addTab(tree_, "Tree");
 
         central->addWidget(left);
@@ -294,6 +296,19 @@ public:
             showOriginalTab(on);
         });
         showOriginalTab(originalAction_->isChecked());
+        auto *search = menuBar()->addMenu("&Search");
+        search->addAction("&Find...", QKeySequence::Find, this, [this] {
+            if (auto *view = currentView())
+                view->find->showSearch();
+        });
+        search->addAction("Find &Next", QKeySequence(Qt::Key_F3), this, [this] {
+            if (auto *view = currentView())
+                view->find->findNext();
+        });
+        search->addAction("Find &Previous", QKeySequence(Qt::SHIFT | Qt::Key_F3), this, [this] {
+            if (auto *view = currentView())
+                view->find->findNext(true);
+        });
         auto *setup = menuBar()->addMenu("&Settings");
         setup->addAction("&Dump directory...", this, [this] {
             auto dir = QxFileDialog::getExistingDirectory(this, "Directory of the *-pages-articles-multistream.xml.bz2 dumps",
@@ -339,9 +354,9 @@ private:
     static QString dumpDir() { return settings().value("dumps/dir").toString(); }
 
     void showOriginalTab(bool on) {
-        const int at = tabs_->indexOf(wiki_.edit);
+        const int at = tabs_->indexOf(wiki_.page);
         if (on && at < 0)
-            tabs_->addTab(wiki_.edit, "Original");
+            tabs_->addTab(wiki_.page, "Original");
         else if (!on && at >= 0)
             tabs_->removeTab(at);
         if (on)
@@ -404,7 +419,7 @@ private:
     }
 
     void showOriginal() {
-        if (tabs_->indexOf(wiki_.edit) < 0)
+        if (tabs_->indexOf(wiki_.page) < 0)
             return;
         QString text;
         if (!current_.is_object() || !current_.contains("wiki") || !current_.contains("source") ||
@@ -443,6 +458,8 @@ private:
         std::unique_ptr<qce::FoldingGutter> foldGutter;
         std::unique_ptr<qce::RulesHighlighter> highlighter;
         std::unique_ptr<qce::RuleBasedFoldingProvider> foldProvider;
+        QWidget *page = nullptr; // the tab: find bar space and editor
+        FindBar *find = nullptr;
     };
     CodeView json_; // the line as indented JSON
     CodeView wiki_; // the page's wikitext from the dump
@@ -487,6 +504,21 @@ private:
             view.edit->area()->setFoldingProvider(view.foldProvider.get());
         }
         view.edit->area()->setWordWrap(true);
+        view.page = new QWidget;
+        auto *layout = new QVBoxLayout(view.page);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(0);
+        view.find = new FindBar(view.page, view.edit, view.doc);
+        layout->addWidget(view.find->space());
+        layout->addWidget(view.edit);
+    }
+
+    // The code view of the current tab (none for the tree)
+    CodeView *currentView() {
+        for (auto *view : {&json_, &wiki_})
+            if (tabs_->currentWidget() == view->page)
+                return view;
+        return nullptr;
     }
 
     void fillList() {

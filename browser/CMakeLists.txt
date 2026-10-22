@@ -38,6 +38,6 @@ else()
 endif()
 FetchContent_MakeAvailable(qt-extra)
 
-add_executable(wiktbrowse main.cpp)
+add_executable(wiktbrowse main.cpp FindBar.cpp FindBar.h)
 target_link_libraries(wiktbrowse Qt6::Widgets qcodeedit::qcodeedit qcodeedit::kate qt-extra nlohmann_json::nlohmann_json
         BZip2::BZip2)

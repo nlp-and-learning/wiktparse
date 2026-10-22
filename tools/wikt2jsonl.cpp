@@ -24,6 +24,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <set>
 #include <mutex>
 #include <optional>
 #include <regex>
@@ -280,11 +281,18 @@ std::optional<std::string> languageMarker(const json &config, const std::string 
     if (!h || h->level != level)
         return std::nullopt;
     if (form == "heading-name") {
+        // bcl "<small>Etimolohiya</small>", "'''Kahulugan'''", am " እንግሊዝኛ " (no-break spaces)
+        static const std::regex wrappers(R"(<[^>]*>|''+)");
+        h->text = std::regex_replace(h->text, wrappers, "");
+        for (std::string_view space : {"\u00A0", "\u2009", "\u200B"})
+            for (size_t at; (at = h->text.find(space)) != std::string::npos;)
+                h->text.replace(at, space.size(), " ");
+        h->text = trim(h->text);
         // or "[[ଓଡ଼ିଆ]]", ps "[[پښتو]]": the link text
         static const std::regex link(R"(^\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]$)");
         std::smatch m;
         if (std::regex_match(h->text, m, link))
-            return m[1].str();
+            return trim(m[1].str());
         // ang "{{sprǣc|en}}": a code parameter; "{{fro}}": a code as the name; fa "{{انگلیسی}}": a name;
         // fa "{{{3|فارسی}}}": the default of a parameter
         static const std::regex parameterDefault(R"(^\{\{\{[^|}]*\|([^}]+)\}\}\}$)");
@@ -523,6 +531,9 @@ std::vector<std::string> nativeCodes(const std::string &wiki, const json &config
     return {code};
 }
 
+// Known section headings per wiki (res/wiktionary_section_names.tsv): not listed as unresolved languages
+std::map<std::string, std::set<std::string>> knownSections;
+
 json convertPage(const std::string &wiki, const json &config, LanguageNames &names, const std::string &title, int ns,
                  const std::string &text, Stats &stats, bool markersOnly = false) {
     json sections = json::array();
@@ -558,9 +569,11 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             names.code(wiki, *marker, str(config, "/language/lookup"), config["language"].value("strip", std::vector<std::string>{})).empty()) {
             // A heading that is no language (sections at the same level: "Napomene",
             // "Референце"); counted for review, the section goes on
-            auto &[markerCode, count] = stats.markers[*marker];
-            ++count;
-            stats.markerExamples.emplace(*marker, title);
+            if (!knownSections[wiki].contains(*marker)) {
+                auto &[markerCode, count] = stats.markers[*marker];
+                ++count;
+                stats.markerExamples.emplace(*marker, title);
+            }
             marker.reset();
         }
         if (marker) {
@@ -640,6 +653,11 @@ int main(int argc, char *argv[]) {
         std::ranges::sort(wikis);
 
         Configs configs(configDir);
+        for (const auto &line : readLines((configDir.parent_path() / "wiktionary_section_names.tsv").string())) {
+            auto f = split(line, '\t');
+            if (f.size() >= 2 && f[0] != "wiki" && !f[0].starts_with("#"))
+                knownSections[f[0]].insert(f[1]);
+        }
         LanguageNames names(dbFile);
         fs::create_directories(output);
         std::ofstream statsFile(output / "stats.tsv");

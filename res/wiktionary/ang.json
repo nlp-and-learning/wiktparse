@@ -2,7 +2,20 @@
   "wiki": "ang",
   "language": {
     "aliases": {
-      "Italisc": "it"
+      "Italisc": "it",
+      "Eald Héah Þéodisc": "goh",
+      "Eald Hēah Þēodisc": "goh",
+      "Ealdseaxisc": "osx",
+      "Frencisc": "fr",
+      "Hēah Þēodisc": "de",
+      "Héah Þéodisc": "de",
+      "Malægisc": "mg",
+      "Niðerlendisc": "nl",
+      "Nīwe Englisc": "en",
+      "Níwe Englisc": "en",
+      "Spéonisc": "es",
+      "Swēonisc": "sv",
+      "Þēodisc": "de"
     }
   },
   "status": "aliases from the dump markers"

@@ -3,7 +3,7 @@ aa	F
 ab	F		
 af	E	{{=xx=}}	
 ak	F		
-am	A		
+am	A		am.json
 an	E	{{-xx-}}	
 ang	A		ang.json
 ar	B2		
@@ -12,7 +12,7 @@ ast	C
 av	A		
 ay	E	{{-xx-}}	
 az	B	Dil	
-bcl	A		
+bcl	A		bcl.json
 be	C		
 bew	B	basa	
 bg	E	{{-xx-}}	

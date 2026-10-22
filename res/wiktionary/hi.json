@@ -68,7 +68,14 @@
       "यूक्रेनी": "uk",
       "रूसी": "ru",
       "संस्कृत": "sa"
-    }
+    },
+    "also": [
+      {
+        "form": "line-template",
+        "pattern": "{{-xx-}}"
+      }
+    ],
+    "fallback_native": true
   },
   "status": "aliases from the dump markers (unresolved.tsv)"
 }

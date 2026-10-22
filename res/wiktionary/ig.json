@@ -4,7 +4,8 @@
     "aliases": {
       "Bekee": "en",
       "Mba ụwa": "mul"
-    }
+    },
+    "fallback_native": true
   },
   "status": "aliases from the dump markers"
 }

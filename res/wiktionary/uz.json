@@ -1,0 +1,12 @@
+{
+  "wiki": "uz",
+  "language": {
+    "also": [
+      {
+        "form": "line-template",
+        "pattern": "{{-xx-}}"
+      }
+    ]
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

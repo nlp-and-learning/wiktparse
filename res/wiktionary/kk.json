@@ -9,7 +9,9 @@
       "Французша": "fr",
       "تۇرىكشە": "tr",
       "ماجارشا": "hu"
-    }
+    },
+    "template_regex": "^src([a-z][a-z-]*)$",
+    "fallback_native": true
   },
   "status": "aliases from the dump markers (unresolved.tsv)"
 }

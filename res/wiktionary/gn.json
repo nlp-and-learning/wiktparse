@@ -3,7 +3,8 @@
   "language": {
     "aliases": {
       "Ñe'ẽ aty": "mul"
-    }
+    },
+    "fallback_native": true
   },
   "status": "aliases from the dump markers"
 }

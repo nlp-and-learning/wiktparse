@@ -58,7 +58,7 @@ gl	E	{{-xx-}}
 gn	A		gn.json
 gom	A		gom.json
 gor	B2		
-gu	A		
+gu	E	{{-xx-}}	gu.json
 guw	A		guw.json
 gv	E	{{=xx=}}	
 ha	A		ha.json
@@ -66,8 +66,8 @@ he	A		he.json
 hi	A		hi.json
 hif	A		
 hr	D		hr.json
-hsb	A		hsb.json
-hu	E	{{-xx-}}	
+hsb	D		hsb.json
+hu	E	{{-xx-}}	hu.json
 hy	E	{{-xx-}}	
 ia	E	{{-xx-}}	
 id	B	bahasa	
@@ -94,7 +94,7 @@ ks	A		ks.json
 ku	B	ziman	
 kw	A		kw.json
 ky	E	{{-xx-}}	
-la	B	-lingua-	
+la	B	-lingua-	la.json
 lb	B2		
 li	A		li.json
 lmo	B1		
@@ -107,11 +107,11 @@ mg	B2
 mh	F		
 mi	E	{{=xx=}}	
 min	B	bahasa	
-mk	E	{{-xx-}}	
+mk	E	{{-xx-}}	mk.json
 ml	A		ml.json
 mn	A		mn.json
 mni	A		mni.json
-mnw	B2		
+mnw	A		mnw.json
 mr	A		mr.json
 ms	A		ms.json
 mt	E	{{-xx-}}	
@@ -125,7 +125,7 @@ nl	E	{{=xx=}}	nl.json
 nn	A		nn.json
 no	A		no.json
 oc	E	{{=xx=}}	
-om	E	{{-xx-}}	
+om	E	{{-xx-}}	om.json
 or	A		or.json
 pa	A		pa.json
 pi	F		
@@ -179,10 +179,10 @@ tr	A		tr.json
 ts	A		
 tt	A		tt.json
 tw	F		
-ug	B	تىلى	
+ug	B	تىلى	ug.json
 uk	E	{{=xx=}}	
 ur	A		ur.json
-uz	C		
+uz	C		uz.json
 vec	E	{{-xx-}}	
 vi	E	{{-xx-}}	
 vo	E	{{-xx-}}	

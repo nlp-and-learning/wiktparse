@@ -1,0 +1,11 @@
+{
+  "wiki": "om",
+  "language": {
+    "aliases": {
+      "Afaan Oromoo": "om",
+      "Oromoo": "om"
+    },
+    "fallback_native": true
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

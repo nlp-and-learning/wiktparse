@@ -1,0 +1,17 @@
+{
+  "wiki": "la",
+  "language": {
+    "also": [
+      {
+        "form": "line-template",
+        "template": "caput",
+        "code": 1
+      },
+      {
+        "form": "heading-dash-template",
+        "heading_level": 2
+      }
+    ]
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

@@ -3,7 +3,8 @@
   "language": {
     "aliases": {
       "{{PAGENAME}} ([[internacionale]])": "mul"
-    }
+    },
+    "name_from": "parameter"
   },
   "status": "aliases from the dump markers"
 }

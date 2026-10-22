@@ -1,0 +1,10 @@
+{
+  "wiki": "mk",
+  "language": {
+    "lookup": "{name} јазик",
+    "aliases": {
+      "Македонски": "mk"
+    }
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

@@ -6,7 +6,8 @@
       "Bikol Sentral": "bcl",
       "Internasyunal": "mul",
       "Sinugbuanon": "ceb"
-    }
+    },
+    "fallback_native": true
   },
   "status": "aliases from the dump markers"
 }

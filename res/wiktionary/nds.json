@@ -3,7 +3,9 @@
   "language": {
     "aliases": {
       "{{S|hy}}": "hy"
-    }
+    },
+    "parameter": "SPRAAK",
+    "fallback_native": true
   },
   "status": "aliases from the dump markers"
 }

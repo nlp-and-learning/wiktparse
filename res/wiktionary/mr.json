@@ -11,8 +11,16 @@
       "भाषा = मराठी": "mr",
       "हिन्दी": "hi",
       "हिन्दी भाषा": "hi",
-      "तमिळ शब्द": "ta"
-    }
+      "तमिळ शब्द": "ta",
+      "मराठी": "mr"
+    },
+    "fallback_native": true,
+    "also": [
+      {
+        "form": "line-template",
+        "pattern": "{{=xx=}}"
+      }
+    ]
   },
   "status": "aliases from the dump markers"
 }

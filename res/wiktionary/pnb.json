@@ -5,7 +5,8 @@
       "الاقوامی": "mul",
       "پٹھواری": "phr",
       "پنجابی بولیاں": "pnb"
-    }
+    },
+    "form": "implicit"
   },
   "status": "aliases from the dump markers"
 }

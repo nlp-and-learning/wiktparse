@@ -7,8 +7,10 @@
       "''Turanci''": "en",
       "A Turanci": "en",
       "Turanci": "en",
-      "Na duniya": "mul"
-    }
+      "Na duniya": "mul",
+      "Hausa": "ha"
+    },
+    "fallback_native": true
   },
   "status": "aliases from the dump markers"
 }

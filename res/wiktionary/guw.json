@@ -3,7 +3,8 @@
   "language": {
     "aliases": {
       "Akọjọpli": "mul"
-    }
+    },
+    "form": "implicit"
   },
   "status": "aliases from the dump markers"
 }

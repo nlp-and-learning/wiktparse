@@ -101,6 +101,18 @@ public:
         }
         if (!file.empty())
             mergeInto(config, readJson(dir_ / file));
+        // Other forms of language markers, prepared once: {"language": merged without aliases}
+        if (config["language"].contains("also")) {
+            json base = config["language"];
+            base.erase("also");
+            base.erase("aliases");
+            config["also_forms"] = json::array();
+            for (const auto &other : config["language"]["also"]) {
+                json merged = base;
+                mergeInto(merged, other);
+                config["also_forms"].push_back({{"language", merged}});
+            }
+        }
         // Headings lose zero-width characters (si "ඉංග්‍රීසි" has a joiner): aliases too
         if (auto ptr = json::json_pointer("/language/aliases"); config.contains(ptr)) {
             json &aliases = config[ptr];
@@ -240,7 +252,9 @@ public:
         if (!db_ || code.empty() || code.size() > 12)
             return "";
         std::lock_guard lock(mutex_);
-        return query("SELECT wikt_code FROM wd_code_map WHERE code=?2 AND wikt_code<>'' AND ?1<>'' LIMIT 1", "x", code);
+        if (auto it = mapped_.find(code); it != mapped_.end())
+            return it->second;
+        return mapped_[code] = query("SELECT wikt_code FROM wd_code_map WHERE code=?2 AND wikt_code<>'' AND ?1<>'' LIMIT 1", "x", code);
     }
 
     // A language code of wiktlangs.sqlite (en.wikt codes and extra ones)
@@ -257,6 +271,7 @@ private:
     sqlite3 *db_ = nullptr;
     std::map<std::string, std::string> cache_;
     std::map<std::string, bool> codes_;
+    std::map<std::string, std::string> mapped_;
     std::mutex mutex_;
 
     std::string query(const char *sql, const std::string &a, const std::string &b) {
@@ -306,13 +321,54 @@ std::optional<TemplateInvocation> onlyTemplate(const std::string &text) {
 }
 
 // Language of a line by the configured form, as written (name, code or template name)
+std::optional<std::string> languageMarkerOfForm(const json &config, const std::string &line);
+
+// Language of a line: the template ways (language.parameter: nds {{…|SPRAAK=ga}};
+// language.template_regex: kk {{srces}}, hu {{engfn}}), the configured form, then
+// the other forms of language.also (la {{caput|la}} and =={{-en-}}==)
 std::optional<std::string> languageMarker(const json &config, const std::string &line) {
+    const auto &language = config["language"];
+    if (language.contains("parameter") || language.contains("template_regex"))
+        if (auto t = templateLine(line)) {
+            if (language.contains("parameter"))
+                if (auto v = t->get(language["parameter"].get<std::string>()); v && !v->empty())
+                    return std::string(*v);
+            if (language.contains("template_regex")) {
+                std::smatch m;
+                // Compiled once per pattern and thread
+                thread_local std::map<std::string, std::regex> compiled;
+                const auto &pattern = language["template_regex"].get_ref<const std::string &>();
+                auto it = compiled.find(pattern);
+                if (it == compiled.end())
+                    it = compiled.emplace(pattern, std::regex(pattern)).first;
+                if (std::regex_match(t->name, m, it->second) && m.size() > 1)
+                    return m[1].str();
+            }
+        }
+    if (auto marker = languageMarkerOfForm(config, line))
+        return marker;
+    if (config.contains("also_forms"))
+        for (const auto &alternative : config["also_forms"])
+            if (auto marker = languageMarkerOfForm(alternative, line))
+                return marker;
+    return std::nullopt;
+}
+
+std::optional<std::string> languageMarkerOfForm(const json &config, const std::string &line) {
     const auto form = str(config, "/language/form");
     const int level = num(config, "/language/heading_level", 2);
     if (form == "line-template") {
         auto t = templateLine(line);
         if (!t)
             return std::nullopt;
+        // la {{caput|la|rufus}}: a named template with the code as a parameter
+        if (auto name = str(config, "/language/template"); !name.empty()) {
+            if (t->name != name)
+                return std::nullopt;
+            if (auto v = t->get(static_cast<size_t>(num(config, "/language/code", 1))); v && !v->empty())
+                return std::string(*v);
+            return std::nullopt;
+        }
         static const std::regex dash(R"(^-([a-z][a-z-]*)-$)"), eq(R"(^=([a-z][a-z-]*)=$)");
         std::smatch m;
         auto pattern = str(config, "/language/pattern", "{{-xx-}}");
@@ -881,6 +937,14 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         entry.reset();
     };
     const bool implicit = str(config, "/language/form") == "implicit";
+    // Code of a language marker: by name (lookup, strip), or a code of another scheme (hu "eng")
+    auto markerCode = [&](const std::string &marker) {
+        std::string code = names.code(wiki, marker, str(config, "/language/lookup"),
+                                      config["language"].value("strip", std::vector<std::string>{}));
+        if (code.empty())
+            code = names.mappedCode(marker);
+        return code;
+    };
     const bool requireCode = byName && !implicit && config["language"].value("require_code", true);
     std::istringstream in(text);
     bool first = true;
@@ -891,7 +955,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         first = false;
         if (marker && requireCode && !(config.contains(json::json_pointer("/language/aliases")) &&
                                        config["language"]["aliases"].contains(*marker)) &&
-            names.code(wiki, *marker, str(config, "/language/lookup"), config["language"].value("strip", std::vector<std::string>{})).empty()) {
+            markerCode(*marker).empty()) {
             // A heading that is no language (sections at the same level: "Napomene",
             // "Референце"); counted for review, the section goes on
             if (!knownSections[wiki].contains(*marker)) {
@@ -903,7 +967,10 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         }
         if (marker) {
             finish(offset);
-            std::string code = byName && !implicit ? names.code(wiki, *marker, str(config, "/language/lookup"), config["language"].value("strip", std::vector<std::string>{})) : *marker;
+            std::string code = byName && !implicit ? markerCode(*marker) : *marker;
+            if (!byName && !implicit && !names.isCode(code))
+                if (auto mapped = names.mappedCode(code); !mapped.empty())
+                    code = mapped; // a code of another scheme in a code template
             const bool keepLine = implicit && sections.empty() && !line.empty();
             // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}
             if (auto aliases = json::json_pointer("/language/aliases"); config.contains(aliases))
@@ -943,6 +1010,13 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         entry->line(line, offset);
     }
     finish(text.size());
+    // Pages without any language marker in mostly one-language wikis (gu, ig): all in the wiki's language
+    if (sections.empty() && !markersOnly && config["language"].value("fallback_native", false) &&
+        str(config, "/language/form") != "implicit") {
+        json implicit = config;
+        implicit["language"]["form"] = "implicit";
+        return convertPage(wiki, implicit, names, sectionNames, title, ns, text, stats, markersOnly, source);
+    }
     stats.pages++;
     stats.pagesWithSections += !sections.empty();
     return {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"source", source}, {"sections", sections}};

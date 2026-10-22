@@ -1,13 +1,16 @@
-// wiktbrowse: browser of JSONL files (wikt2jsonl output, one page per line).
-// Left: the lines with their titles, a filter and "go to line". Right: the
-// selected line as indented JSON in a read-only QCodeEditor view
-// (highlighting, line numbers), and as a tree with readable labels of
-// sections and senses (folding).
+// wiktbrowse: browser of JSONL files (wikt2jsonl output, one page per line; any
+// JSONL, e.g. the Wikidata entities of wiktNeeded):
+// plain .jsonl, or .jsonl.bz2 with its .jsonl.idx (only the block of the
+// shown line is decompressed). Left: the lines with their titles, a filter and
+// "go to line". Right: the selected line as indented JSON in a read-only
+// qcodeedit view (Kate highlighting and folding), and as a tree with readable
+// labels of sections and senses.
 //
-// wiktbrowse [file.jsonl]
+// wiktbrowse [file.jsonl | file.jsonl.bz2]
 #include <QApplication>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
@@ -21,46 +24,135 @@
 #include <QTreeView>
 #include <QVBoxLayout>
 
-#include <QCodeEditor>
-#include <QJSONHighlighter>
-#include <QSyntaxStyle>
+#include <bzlib.h>
+#include <qce/CodeEdit.h>
+#include <qce/CodeEditArea.h>
+#include <qce/RuleBasedFoldingProvider.h>
+#include <qce/RulesHighlighter.h>
+#include <qce/SimpleTextDocument.h>
+#include <qce/kate/KatePaths.h>
+#include <qce/kate/KateTheme.h>
+#include <qce/kate/KateXmlReader.h>
+#include <qce/margins/FoldingGutter.h>
+#include <qce/margins/LineNumberGutter.h>
 
+#include <memory>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::ordered_json;
 
 namespace {
 
-// Offsets of the lines and their titles ("title" of a page, or "id")
-struct JsonlIndex {
-    std::vector<qint64> offsets;
-    std::vector<QString> titles;
+// Lines of a JSONL file with their titles
+class Lines {
+public:
+    virtual ~Lines() = default;
+    [[nodiscard]] virtual size_t count() const = 0;
+    [[nodiscard]] virtual QString title(size_t i) const = 0;
+    [[nodiscard]] virtual QByteArray line(size_t i) = 0;
+};
 
-    void build(QFile &file) {
-        offsets.clear();
-        titles.clear();
-        file.seek(0);
-        while (!file.atEnd()) {
-            offsets.push_back(file.pos());
-            QByteArray line = file.readLine();
-            QString title;
-            for (const char *key : {"\"title\":\"", "\"id\":\""}) {
-                if (int at = line.indexOf(key); at >= 0) {
-                    at += static_cast<int>(strlen(key));
-                    int end = line.indexOf('"', at);
-                    title = QString::fromUtf8(line.mid(at, end - at));
-                    break;
-                }
-            }
-            titles.push_back(title);
+// "title" (wikt2jsonl pages), or "id" with the English label (Wikidata entities: Q1084 noun)
+QString titleOf(const QByteArray &line) {
+    auto value = [&](const char *key) -> QString {
+        int at = line.indexOf(key);
+        if (at < 0)
+            return {};
+        at += static_cast<int>(strlen(key));
+        return QString::fromUtf8(line.mid(at, line.indexOf('"', at) - at));
+    };
+    if (auto title = value("\"title\":\""); !title.isEmpty())
+        return title;
+    QString id = value("\"id\":\"");
+    if (auto english = value("\"en\":{\"language\":\"en\",\"value\":\""); !english.isEmpty())
+        id += "  " + english;
+    return id;
+}
+
+class PlainLines : public Lines {
+public:
+    explicit PlainLines(const QString &path) : file_(path) {
+        if (!file_.open(QIODevice::ReadOnly))
+            return;
+        while (!file_.atEnd()) {
+            offsets_.push_back(file_.pos());
+            titles_.push_back(titleOf(file_.readLine()));
         }
     }
+    [[nodiscard]] size_t count() const override { return offsets_.size(); }
+    [[nodiscard]] QString title(size_t i) const override { return titles_[i]; }
+    QByteArray line(size_t i) override {
+        file_.seek(offsets_[i]);
+        return file_.readLine();
+    }
+
+private:
+    QFile file_;
+    std::vector<qint64> offsets_;
+    std::vector<QString> titles_;
+};
+
+// .jsonl.bz2 in blocks with the index of wikt2jsonl --bz2: "offset compressed
+// uncompressed" per block, tab + title per page, EOF=<size>
+class Bz2Lines : public Lines {
+public:
+    Bz2Lines(const QString &path, const QString &indexPath) : file_(path) {
+        file_.open(QIODevice::ReadOnly);
+        QFile index(indexPath);
+        if (!index.open(QIODevice::ReadOnly))
+            return;
+        while (!index.atEnd()) {
+            QByteArray l = index.readLine();
+            l.chop(l.endsWith('\n') ? 1 : 0);
+            if (l.startsWith('#') || l.startsWith("EOF="))
+                continue;
+            if (l.startsWith('\t')) {
+                titles_.push_back(QString::fromUtf8(l.mid(1)));
+                continue;
+            }
+            auto parts = l.split(' ');
+            if (parts.size() == 3)
+                blocks_.push_back({parts[0].toULongLong(), parts[1].toUInt(), parts[2].toUInt(), titles_.size()});
+        }
+    }
+    [[nodiscard]] size_t count() const override { return titles_.size(); }
+    [[nodiscard]] QString title(size_t i) const override { return titles_[i]; }
+    QByteArray line(size_t i) override {
+        auto it = std::upper_bound(blocks_.begin(), blocks_.end(), i,
+                                   [](size_t line, const Block &b) { return line < b.firstLine; });
+        if (it == blocks_.begin())
+            return {};
+        const Block &b = *std::prev(it);
+        if (cached_ != b.offset || lines_.isEmpty()) {
+            file_.seek(static_cast<qint64>(b.offset));
+            QByteArray compressed = file_.read(b.compressed);
+            QByteArray text(static_cast<qsizetype>(b.uncompressed), '\0');
+            unsigned length = b.uncompressed;
+            if (BZ2_bzBuffToBuffDecompress(text.data(), &length, compressed.data(), b.compressed, 0, 0) != BZ_OK)
+                return {};
+            text.truncate(length);
+            lines_ = text.split('\n');
+            cached_ = b.offset;
+        }
+        const size_t n = i - b.firstLine;
+        return n < static_cast<size_t>(lines_.size()) ? lines_[static_cast<qsizetype>(n)] : QByteArray();
+    }
+
+private:
+    struct Block {
+        quint64 offset;
+        unsigned compressed, uncompressed;
+        size_t firstLine;
+    };
+    QFile file_;
+    std::vector<Block> blocks_;
+    std::vector<QString> titles_;
+    QList<QByteArray> lines_;
+    quint64 cached_ = ~0ull;
 };
 
 QString scalar(const json &v) {
-    if (v.is_string())
-        return QString::fromStdString(v.get<std::string>());
-    return QString::fromStdString(v.dump());
+    return v.is_string() ? QString::fromStdString(v.get<std::string>()) : QString::fromStdString(v.dump());
 }
 
 // A readable label of an array element: sections, senses, translations, languages
@@ -72,7 +164,7 @@ QString label(const json &v, size_t i) {
         if (v.contains(key) && !v[key].is_null() && !(v[key].is_string() && v[key].get<std::string>().empty()))
             text += " " + scalar(v[key]).left(80);
     };
-    if (v.contains("children")) { // a section of the tree
+    if (v.contains("children")) {
         add("section");
         if (v.contains("heading"))
             text += " — '" + scalar(v["heading"]).left(60) + "'";
@@ -94,7 +186,7 @@ QString label(const json &v, size_t i) {
     return text;
 }
 
-void addItems(QStandardItem *parent, const std::string &key, const json &v, const QString &name) {
+void addItems(QStandardItem *parent, const json &v, const QString &name) {
     auto *keyItem = new QStandardItem(name);
     auto *valueItem = new QStandardItem(v.is_structured() ? QString() : scalar(v).left(500));
     keyItem->setEditable(false);
@@ -104,11 +196,11 @@ void addItems(QStandardItem *parent, const std::string &key, const json &v, cons
     parent->appendRow({keyItem, valueItem});
     if (v.is_object())
         for (const auto &[k, child] : v.items())
-            addItems(keyItem, k, child, QString::fromStdString(k));
+            addItems(keyItem, child, QString::fromStdString(k));
     else if (v.is_array()) {
         valueItem->setText(QString("%1 items").arg(v.size()));
         for (size_t i = 0; i < v.size(); ++i)
-            addItems(keyItem, key, v[i], label(v[i], i));
+            addItems(keyItem, v[i], label(v[i], i));
     }
 }
 
@@ -133,15 +225,11 @@ public:
         leftLayout->addWidget(status_);
 
         tabs_ = new QTabWidget;
-        view_ = new QCodeEditor;
-        view_->setReadOnly(true);
-        view_->setSyntaxStyle(QSyntaxStyle::defaultStyle());
-        view_->setHighlighter(new QJSONHighlighter);
-        view_->setWordWrapMode(QTextOption::NoWrap);
+        setupEditor();
         tree_ = new QTreeView;
         model_ = new QStandardItemModel(this);
         tree_->setModel(model_);
-        tabs_->addTab(view_, "JSON");
+        tabs_->addTab(edit_, "JSON");
         tabs_->addTab(tree_, "Tree");
 
         central->addWidget(left);
@@ -159,61 +247,107 @@ public:
     }
 
     void open(const QString &path) {
-        file_.close();
-        file_.setFileName(path);
-        if (!file_.open(QIODevice::ReadOnly)) {
-            status_->setText("cannot open " + path);
-            return;
-        }
-        index_.build(file_);
-        lineBox_->setMaximum(std::max<int>(1, static_cast<int>(index_.offsets.size())));
+        QString index = path;
+        if (path.endsWith(".bz2"))
+            index = path.left(path.size() - 4) + ".idx";
+        if (path.endsWith(".bz2") && QFileInfo::exists(index))
+            lines_ = std::make_unique<Bz2Lines>(path, index);
+        else
+            lines_ = std::make_unique<PlainLines>(path);
+        lineBox_->setMaximum(std::max<int>(1, static_cast<int>(lines_->count())));
         setWindowTitle(path + " — wiktbrowse");
         fillList();
-        if (!index_.offsets.empty())
+        if (lines_->count() > 0)
             list_->setCurrentRow(0);
     }
 
 private:
-    QFile file_;
-    JsonlIndex index_;
+    std::unique_ptr<Lines> lines_;
     QLineEdit *filter_;
     QSpinBox *lineBox_;
     QLabel *status_;
     QListWidget *list_;
     QTabWidget *tabs_;
-    QCodeEditor *view_;
+    qce::SimpleTextDocument *doc_ = nullptr;
+    qce::CodeEdit *edit_ = nullptr;
+    std::unique_ptr<qce::LineNumberGutter> lineNumbers_;
+    std::unique_ptr<qce::FoldingGutter> foldGutter_;
+    std::unique_ptr<qce::RulesHighlighter> highlighter_;
+    std::unique_ptr<qce::RuleBasedFoldingProvider> foldProvider_;
     QTreeView *tree_;
     QStandardItemModel *model_;
 
+    // Read-only qcodeedit with Kate's JSON syntax (downloaded Kate data) and folding
+    void setupEditor() {
+        doc_ = new qce::SimpleTextDocument(this);
+        edit_ = new qce::CodeEdit;
+        edit_->setDocument(doc_);
+        edit_->area()->setReadOnly(true);
+        lineNumbers_ = std::make_unique<qce::LineNumberGutter>(doc_);
+        lineNumbers_->setFont(edit_->area()->font());
+        edit_->addLeftMargin(lineNumbers_.get());
+        foldGutter_ = std::make_unique<qce::FoldingGutter>(&edit_->area()->foldState(),
+                                                           [this](int line) { edit_->area()->toggleFoldAt(line); });
+        edit_->addLeftMargin(foldGutter_.get());
+
+        const auto theme = KateTheme::loadDefault();
+        QPalette palette = edit_->area()->palette();
+        if (theme.editorBackground.isValid()) {
+            palette.setColor(QPalette::Base, theme.editorBackground);
+            palette.setColor(QPalette::Window, theme.editorBackground);
+        }
+        if (auto normal = theme.styles.constFind("Normal"); normal != theme.styles.constEnd() && normal->fg.isValid())
+            palette.setColor(QPalette::Text, normal->fg);
+        edit_->setPalette(palette);
+        edit_->area()->setPalette(palette);
+        edit_->area()->viewport()->setPalette(palette);
+        edit_->setGutterColors({theme.iconBorder, theme.lineNumbers, theme.separator});
+
+        const QString syntax = qce::kate::syntaxDir() + "/json.xml";
+        highlighter_ = theme.isValid() ? KateXmlReader::load(syntax, theme) : KateXmlReader::load(syntax);
+        if (highlighter_) {
+            edit_->area()->setHighlighter(highlighter_.get());
+            foldProvider_ = std::make_unique<qce::RuleBasedFoldingProvider>(highlighter_.get());
+            for (const char *region : {"Brace1", "brace", "curly"})
+                foldProvider_->setPlaceholderFor(region, "{…}");
+            for (const char *region : {"Bracket1", "bracket", "square"})
+                foldProvider_->setPlaceholderFor(region, "[…]");
+            edit_->area()->setFoldingProvider(foldProvider_.get());
+        }
+        edit_->area()->setWordWrap(true);
+    }
+
     void fillList() {
         list_->clear();
+        if (!lines_)
+            return;
         const QString text = filter_->text();
-        for (size_t i = 0; i < index_.titles.size(); ++i) {
-            if (!text.isEmpty() && !index_.titles[i].contains(text, Qt::CaseInsensitive))
+        for (size_t i = 0; i < lines_->count(); ++i) {
+            if (!text.isEmpty() && !lines_->title(i).contains(text, Qt::CaseInsensitive))
                 continue;
-            auto *item = new QListWidgetItem(QString("%1  %2").arg(i + 1).arg(index_.titles[i]));
+            auto *item = new QListWidgetItem(QString("%1  %2").arg(i + 1).arg(lines_->title(i)));
             item->setData(Qt::UserRole, static_cast<int>(i));
             list_->addItem(item);
-            if (list_->count() >= 100000)
+            if (list_->count() >= 200000)
                 break;
         }
-        status_->setText(QString("%1 lines, %2 shown").arg(index_.offsets.size()).arg(list_->count()));
+        status_->setText(QString("%1 lines, %2 shown").arg(lines_->count()).arg(list_->count()));
     }
 
     void showLine(int line) {
-        if (line < 0 || line >= static_cast<int>(index_.offsets.size()))
+        if (!lines_ || line < 0 || line >= static_cast<int>(lines_->count()))
             return;
-        file_.seek(index_.offsets[line]);
-        const QByteArray raw = file_.readLine();
+        const QByteArray raw = lines_->line(static_cast<size_t>(line));
         json value = json::parse(raw.constData(), raw.constData() + raw.size(), nullptr, false);
         lineBox_->setValue(line + 1);
-        view_->setPlainText(value.is_discarded() ? QString::fromUtf8(raw)
-                                                 : QString::fromStdString(value.dump(2, ' ', false, json::error_handler_t::replace)));
+        doc_->setText(value.is_discarded()
+                              ? QString::fromUtf8(raw)
+                              : QString::fromStdString(value.dump(2, ' ', false, json::error_handler_t::replace)));
         model_->clear();
         model_->setHorizontalHeaderLabels({"Key", "Value"});
         if (!value.is_discarded())
             for (const auto &[k, child] : value.items())
-                addItems(model_->invisibleRootItem(), k, child, QString::fromStdString(k));
+                addItems(model_->invisibleRootItem(), child, QString::fromStdString(k));
         tree_->expandToDepth(2);
         tree_->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     }
@@ -225,7 +359,8 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     Browser browser;
     QString path = argc > 1 ? QString::fromLocal8Bit(argv[1])
-                            : QFileDialog::getOpenFileName(nullptr, "JSONL file", {}, "JSONL (*.jsonl *.json);;All (*)");
+                            : QFileDialog::getOpenFileName(nullptr, "JSONL file", {},
+                                                           "JSONL (*.jsonl *.jsonl.bz2 *.json);;All (*)");
     if (path.isEmpty())
         return 0;
     browser.open(path);

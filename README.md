@@ -81,11 +81,15 @@ dump_dir = ~/dump
   under its English name with senses or translations where they stand (not
   linked yet). Schema: `res/schema/page.schema.json`;
   `tools/validate_jsonl.py jsonl` checks the output.
-- `wiktbrowse [file.jsonl]` – browser of JSONL files, a separate project in
-  `browser/` (Qt6; QCodeEditor fetched by CMake), so that the rest needs no Qt:
+- `wiktbrowse [file.jsonl | file.jsonl.bz2]` – browser of JSONL files (wikt2jsonl
+  output, also any JSONL such as wiktNeeded), a separate project in `browser/`
+  (Qt6 and qcodeedit: the sibling `../qcodeedit` when present, otherwise
+  fetched), so that the rest needs no Qt:
   `cmake -S browser -B browser/build -DCMAKE_BUILD_TYPE=Release && cmake --build browser/build`.
-  Lines with titles and a filter, the selected line as indented JSON in a
-  read-only editor with highlighting, and as a tree with folding.
+  Lines with titles (or Wikidata id and English label), a filter, the selected
+  line as indented JSON in a read-only editor with Kate highlighting and
+  folding, and as a tree. `.jsonl.bz2` files of `wikt2jsonl --bz2` are read
+  through their `.jsonl.idx`, decompressing only the block shown.
 - `defglos [samples.txt] [-v] [--sweep]` – links English definitions to
   translation glosses on `res/defglos/samples.txt` and reports precision and
   recall against the expected links; see `doc/defglos/README.md`.

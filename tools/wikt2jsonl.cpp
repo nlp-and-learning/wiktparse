@@ -287,6 +287,12 @@ std::optional<std::string> languageMarker(const json &config, const std::string 
         for (std::string_view space : {"\u00A0", "\u2009", "\u200B"})
             for (size_t at; (at = h->text.find(space)) != std::string::npos;)
                 h->text.replace(at, space.size(), " ");
+        // fa "[[تصویر:Flag of Italy.svg|40px]] ایتالیایی": without the image; no zero-width joiners
+        static const std::regex image(R"(^\[?\[?(?:تصویر|[Ff]ile|[Ii]mage|پرونده):[^\]]*\]\]\s*(?:\[\[)?)");
+        h->text = std::regex_replace(h->text, image, "");
+        for (std::string_view zw : {"\u200C", "\u200D", "\u200E", "\u200F"})
+            for (size_t at; (at = h->text.find(zw)) != std::string::npos;)
+                h->text.erase(at, zw.size());
         h->text = trim(h->text);
         // or "[[ଓଡ଼ିଆ]]", ps "[[پښتو]]": the link text
         static const std::regex link(R"(^\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]$)");

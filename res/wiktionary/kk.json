@@ -2,7 +2,13 @@
   "wiki": "kk",
   "language": {
     "aliases": {
-      "Qazaqşa": "kk"
+      "Qazaqşa": "kk",
+      "قازاقشا": "kk",
+      "Әзірбайжанша": "az",
+      "Қырғызша": "ky",
+      "Французша": "fr",
+      "تۇرىكشە": "tr",
+      "ماجارشا": "hu"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

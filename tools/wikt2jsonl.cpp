@@ -294,6 +294,9 @@ std::optional<std::string> languageMarker(const json &config, const std::string 
             for (size_t at; (at = h->text.find(zw)) != std::string::npos;)
                 h->text.erase(at, zw.size());
         h->text = trim(h->text);
+        // gn "Techapyrã:", gom "Konknni /"
+        while (!h->text.empty() && std::string_view(":./").find(h->text.back()) != std::string_view::npos)
+            h->text = trim(h->text.substr(0, h->text.size() - 1));
         // or "[[ଓଡ଼ିଆ]]", ps "[[پښتو]]": the link text
         static const std::regex link(R"(^\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]$)");
         std::smatch m;

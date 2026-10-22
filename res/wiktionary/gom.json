@@ -3,7 +3,27 @@
   "language": {
     "aliases": {
       "Konknni": "gom",
-      "Moratthi": "mr"
+      "Moratthi": "mr",
+      "Inglish": "en",
+      "Inglix": "en",
+      "Inglez Bhaxen  ( in English )": "en",
+      "Inglezint  ( in English )": "en",
+      "Hindint  ( in Hindi )": "hi",
+      "Kon'nodd": "kn",
+      "Morathhi": "mr",
+      "Morattthi": "mr",
+      "Portuguez": "pt",
+      "Purtugez": "pt",
+      "आंतरदेशीय": "mul",
+      "इंगलीश": "en",
+      "इंगलेज": "en",
+      "इंग्लिश": "en",
+      "इंग्लीश": "en",
+      "इंग्लेज": "en",
+      "इंलीश": "en",
+      "कन्नड": "kn",
+      "कोंकणी": "gom",
+      "हिंदी": "hi"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

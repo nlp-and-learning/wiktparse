@@ -45,12 +45,12 @@ add_executable(wiktlangs tools/wiktlangs.cpp)
 target_link_libraries(wiktlangs wiktdump SQLite::SQLite3 CURL::libcurl)
 target_compile_definitions(wiktlangs PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
 
-# Sample pages of every Wiktionary (water, dog, house, red, go) for the per-wiki configuration
 # Wiktionary pages to JSONL, configured by res/wiktionary
 add_executable(wikt2jsonl tools/wikt2jsonl.cpp)
 target_compile_definitions(wikt2jsonl PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
 target_link_libraries(wikt2jsonl wiktdump SQLite::SQLite3)
 
+# Sample pages of every Wiktionary (water, dog, house, red, go) for the per-wiki configuration
 add_executable(wiktsamples tools/wiktsamples.cpp)
 target_link_libraries(wiktsamples wiktdump SQLite::SQLite3)
 

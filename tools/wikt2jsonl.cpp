@@ -24,6 +24,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <optional>
 #include <regex>
 #include <sstream>
@@ -35,6 +36,7 @@
 #include <wikilib/core/unicode_utils.h>
 #include <wikilib/templates/template_parser.h>
 
+#include "dump/WikiDump.h"
 #include "util/textUtils.h"
 
 namespace fs = std::filesystem;
@@ -136,9 +138,11 @@ public:
     ~LanguageNames() { sqlite3_close(db_); }
 
     // Code of a language name written in the language of the wiki
+    // Thread-safe
     std::string code(const std::string &wiki, const std::string &name) {
         if (!db_ || name.empty())
             return "";
+        std::lock_guard lock(mutex_);
         auto key = wiki + '\t' + name;
         if (auto it = cache_.find(key); it != cache_.end())
             return it->second;
@@ -168,6 +172,7 @@ public:
 private:
     sqlite3 *db_ = nullptr;
     std::map<std::string, std::string> cache_;
+    std::mutex mutex_;
 
     std::string query(const char *sql, const std::string &a, const std::string &b) {
         sqlite3_stmt *stmt = nullptr;
@@ -417,6 +422,16 @@ struct Stats {
     size_t nativeSections = 0, nativeSenses = 0, nativeTranslations = 0;
     // Language markers as written in the wiki -> code and number of sections
     std::map<std::string, std::pair<std::string, size_t>> markers;
+
+    void add(const Stats &o) {
+        pages += o.pages, pagesWithSections += o.pagesWithSections, sections += o.sections;
+        sectionsWithCode += o.sectionsWithCode, senses += o.senses, translations += o.translations;
+        nativeSections += o.nativeSections, nativeSenses += o.nativeSenses, nativeTranslations += o.nativeTranslations;
+        for (const auto &[marker, value] : o.markers) {
+            markers[marker].first = value.first;
+            markers[marker].second += value.second;
+        }
+    }
 };
 
 // Codes of the wiki's own language: entries of other languages are defined in
@@ -434,7 +449,7 @@ std::vector<std::string> nativeCodes(const std::string &wiki, const json &config
 }
 
 json convertPage(const std::string &wiki, const json &config, LanguageNames &names, const std::string &title, int ns,
-                 const std::string &text, Stats &stats) {
+                 const std::string &text, Stats &stats, bool markersOnly = false) {
     json sections = json::array();
     json *current = nullptr;
     std::string sectionText;
@@ -442,7 +457,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     const bool byName = str(config, "/language/value") == "name";
     const auto native = nativeCodes(wiki, config);
     auto finish = [&] {
-        if (!current)
+        if (!current || markersOnly)
             return;
         for (const auto &t : translations(config, sectionText))
             (*current)["translations"].push_back({{"lang", t.lang}, {"term", t.term}, {"sense", t.sense}});
@@ -476,7 +491,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             stats.sectionsWithCode += !code.empty();
             continue;
         }
-        if (!current)
+        if (!current || markersOnly)
             continue;
         sectionText += line + '\n';
         if (auto h = heading(line))
@@ -499,6 +514,8 @@ int main(int argc, char *argv[]) {
         fs::path input = "samples100", output = "jsonl", dbFile = "wiktlangs.sqlite";
         fs::path configDir = WIKTPARSE_RES_DIR "/wiktionary";
         std::vector<std::string> wikis;
+        bool fromDumps = false, markersOnly = false;
+        size_t threads = 8;
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
             if (arg == "-i" && i + 1 < argc)
@@ -507,13 +524,23 @@ int main(int argc, char *argv[]) {
                 output = argv[++i];
             else if (arg == "--db" && i + 1 < argc)
                 dbFile = argv[++i];
+            else if (arg == "--dump")
+                fromDumps = true;
+            else if (arg == "--markers-only")
+                markersOnly = true;
+            else if (arg == "-j" && i + 1 < argc)
+                threads = std::max(1, std::stoi(argv[++i]));
             else if (arg == "-h" || arg == "--help") {
-                std::cout << "usage: wikt2jsonl [-i samples100] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n";
+                std::cout << "usage: wikt2jsonl [-i samples100 | --dump [-j N]] [--markers-only] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n"
+                             "       --dump: all pages of the dumps, each wiki read in N threads (default 8)\n"
+                             "       --markers-only: only language markers and stats, no JSONL\n";
                 return 0;
             } else
                 wikis.push_back(arg);
         }
-        if (wikis.empty())
+        if (wikis.empty() && fromDumps)
+            wikis = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, "en").available_languages();
+        else if (wikis.empty())
             for (const auto &entry : fs::directory_iterator(input))
                 if (entry.is_directory())
                     wikis.push_back(entry.path().filename().string());
@@ -534,14 +561,34 @@ int main(int argc, char *argv[]) {
             if (config.value("skip", false))
                 continue;
             Stats stats;
-            std::ofstream out(output / (wiki + ".jsonl"));
+            std::ofstream out;
+            if (!markersOnly)
+                out.open(output / (wiki + ".jsonl"));
+            if (fromDumps) {
+                auto dump = WikiDump::wiktionary(wiki);
+                std::vector<Stats> workerStats(dump.workerCount(threads));
+                std::mutex outMutex;
+                std::cout << wiki << ": " << dump.path().dump_path().filename().string() << std::endl;
+                dump.forEachPageParallel(
+                        [&](size_t worker, const std::string &title, const std::string &text) {
+                            auto line = convertPage(wiki, config, names, title, 0, text, workerStats[worker], markersOnly);
+                            if (!markersOnly) {
+                                auto dumped = line.dump(-1, ' ', false, json::error_handler_t::replace);
+                                std::lock_guard lock(outMutex);
+                                out << dumped << '\n';
+                            }
+                        },
+                        threads, 0.25);
+                for (const auto &w : workerStats)
+                    stats.add(w);
+            } else
             for (const auto &page : readJson(input / wiki / "meta.json")) {
                 std::ifstream file(input / wiki / page["file"].get<std::string>());
                 std::stringstream text;
                 text << file.rdbuf();
-                out << convertPage(wiki, config, names, page["title"], page["ns"], text.str(), stats)
-                                .dump(-1, ' ', false, json::error_handler_t::replace)
-                    << '\n';
+                auto line = convertPage(wiki, config, names, page["title"], page["ns"], text.str(), stats, markersOnly);
+                if (!markersOnly)
+                    out << line.dump(-1, ' ', false, json::error_handler_t::replace) << '\n';
             }
             auto row = std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", wiki, config.value("profile", ""), stats.pages,
                                    stats.pagesWithSections, stats.sections, stats.sectionsWithCode, stats.senses,

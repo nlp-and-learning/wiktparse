@@ -725,7 +725,8 @@ int main(int argc, char *argv[]) {
                 std::stringstream ss(line);
                 for (std::string field; std::getline(ss, field, '\t');)
                     f.push_back(field);
-                if (f.size() == 5 && f[0] != "wiki")
+                // Unresolved one-off markers are other level 2 headings ('''CABELLO''' in he)
+                if (f.size() == 5 && f[0] != "wiki" && (!f[3].empty() || std::stoul(f[4]) >= 3))
                     rows.push_back(f);
             }
             db.insert("INSERT INTO wikt_marker VALUES(?,?,?,?,?)", rows);

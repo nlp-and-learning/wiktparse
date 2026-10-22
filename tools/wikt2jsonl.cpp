@@ -37,7 +37,12 @@
 #include <wikilib/core/unicode_utils.h>
 #include <wikilib/templates/template_parser.h>
 
+#include <bzlib.h>
+#include <wikilib/core/progress.h>
+#include <wikilib/dump/dump_reader.h>
+#include <wikilib/dump/parallel_reader.h>
 #include <wikilib/lua/lua_data.h>
+#include <wikilib/markup/tokenizer.h>
 
 #include "dump/WikiDump.h"
 #include "util/textUtils.h"
@@ -735,11 +740,7 @@ public:
         current()["text"] = current()["text"].get<std::string>() + line + '\n';
     }
 
-    json finish(Stats &stats, size_t end) {
-        while (stack_.size() > 1) {
-            current()["range"][1] = end;
-            stack_.pop_back();
-        }
+    json finish(Stats &stats) {
         finishNode(root_, stats);
         return {{"sections", root_["children"]}, {"text", root_["text"]}, {"unknown_headings", unknown_}};
     }
@@ -755,10 +756,7 @@ private:
     size_t offset_ = 0;
 
     json &current() { return *stack_.back(); }
-    void close() {
-        current()["range"][1] = offset_;
-        stack_.pop_back();
-    }
+    void close() { stack_.pop_back(); }
 
     int headingLevel() const {
         for (auto it = stack_.rbegin(); it != stack_.rend(); ++it)
@@ -775,7 +773,6 @@ private:
     }
 
     void push(json n) {
-        n["range"] = json::array({offset_, offset_});
         auto &children = current()["children"];
         children.push_back(std::move(n));
         stack_.push_back(&children.back());
@@ -825,8 +822,10 @@ private:
     }
 };
 
+// source: where the page is in the dump, [start of its bz2 block, number in it]; null for samples
 json convertPage(const std::string &wiki, const json &config, LanguageNames &names, const SectionNames &sectionNames,
-                 const std::string &title, int ns, const std::string &text, Stats &stats, bool markersOnly = false) {
+                 const std::string &title, int ns, const std::string &text, Stats &stats, bool markersOnly = false,
+                 const json &source = nullptr) {
     json sections = json::array();
     json *current = nullptr;
     std::optional<LanguageEntry> entry;
@@ -836,8 +835,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         if (!current || markersOnly || !entry)
             return;
         const size_t senses = stats.senses, translated = stats.translations;
-        current->update(entry->finish(stats, end));
-        (*current)["range"][1] = end;
+        current->update(entry->finish(stats));
         if ((*current)["native"].get<bool>()) {
             stats.nativeSections++;
             stats.nativeSenses += stats.senses - senses;
@@ -879,8 +877,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             ++count;
             stats.markerExamples.emplace(*marker, title);
             sections.push_back({{"language", *marker}, {"code", code.empty() ? json() : json(code)},
-                                {"native", std::ranges::contains(native, code)},
-                                {"range", json::array({offset, text.size()})}});
+                                {"native", std::ranges::contains(native, code)}});
             current = &sections.back();
             entry.emplace(config, sectionNames, [&](const std::string &lang) {
                 // Canonical code of a translation language: a code as such (ru "az.cyr": without the
@@ -911,7 +908,87 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     finish(text.size());
     stats.pages++;
     stats.pagesWithSections += !sections.empty();
-    return {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"sections", sections}};
+    return {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"source", source}, {"sections", sections}};
+}
+
+// Output of one wiki: plain JSONL, or bz2 blocks of 100 lines (each an independent
+// stream, so bzcat reads the file) with an index: a line per block "offset
+// compressed uncompressed", then tab + title of each of its pages, at the end
+// EOF=<size>. Thread-safe.
+class JsonlWriter {
+public:
+    JsonlWriter(const fs::path &base, bool compressed) : compressed_(compressed) {
+        if (!compressed) {
+            data_.open(base.string() + ".jsonl");
+            return;
+        }
+        data_.open(base.string() + ".jsonl.bz2", std::ios::binary);
+        index_.open(base.string() + ".jsonl.idx");
+        index_ << "# wikt2jsonl: block lines \"offset compressed uncompressed\", then tab + title of each page; EOF=<size>\n";
+    }
+    ~JsonlWriter() { close(); }
+
+    void add(const std::string &line, const std::string &title) {
+        std::lock_guard lock(mutex_);
+        if (!compressed_) {
+            data_ << line << '\n';
+            return;
+        }
+        block_ += line;
+        block_ += '\n';
+        titles_.push_back(title);
+        if (titles_.size() >= blockLines)
+            flush();
+    }
+
+    void close() {
+        std::lock_guard lock(mutex_);
+        if (!data_.is_open())
+            return;
+        if (compressed_) {
+            flush();
+            index_ << "EOF=" << offset_ << '\n';
+            index_.close();
+        }
+        data_.close();
+    }
+
+private:
+    static constexpr size_t blockLines = 100;
+    bool compressed_;
+    std::ofstream data_, index_;
+    std::mutex mutex_;
+    std::string block_;
+    std::vector<std::string> titles_;
+    uint64_t offset_ = 0;
+
+    void flush() {
+        if (titles_.empty())
+            return;
+        std::string out(block_.size() + block_.size() / 100 + 600, '\0');
+        auto length = static_cast<unsigned>(out.size());
+        if (BZ2_bzBuffToBuffCompress(out.data(), &length, block_.data(), static_cast<unsigned>(block_.size()), 9, 0, 0) != BZ_OK)
+            throw std::runtime_error("bz2 compression failed");
+        data_.write(out.data(), length);
+        index_ << offset_ << ' ' << length << ' ' << block_.size() << '\n';
+        for (const auto &t : titles_)
+            index_ << '\t' << t << '\n';
+        offset_ += length;
+        block_.clear();
+        titles_.clear();
+    }
+};
+
+// Pages converted from dumps: the main namespace (with translation subpages)
+// and content namespaces 100-199 (thesaurus, reconstructions, appendices),
+// no talk pages, no portals
+bool convertedNamespace(const wikilib::dump::SiteInfo &site, int ns) {
+    if (ns == 0)
+        return true;
+    if (ns < 100 || ns > 199 || ns % 2 == 1)
+        return false;
+    const auto *n = site.find_namespace(ns);
+    return n && n->name != "Portal" && n->name != "Portail" && n->name != "Портал" && n->name != "Portale";
 }
 
 } // namespace
@@ -921,7 +998,7 @@ int main(int argc, char *argv[]) {
         fs::path input = "samples100", output = "jsonl", dbFile = "wiktlangs.sqlite";
         fs::path configDir = WIKTPARSE_RES_DIR "/wiktionary";
         std::vector<std::string> wikis;
-        bool fromDumps = false, markersOnly = false;
+        bool fromDumps = false, markersOnly = false, compress = false;
         size_t threads = 8;
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
@@ -935,12 +1012,15 @@ int main(int argc, char *argv[]) {
                 fromDumps = true;
             else if (arg == "--markers-only")
                 markersOnly = true;
+            else if (arg == "--bz2")
+                compress = true;
             else if (arg == "-j" && i + 1 < argc)
                 threads = std::max(1, std::stoi(argv[++i]));
             else if (arg == "-h" || arg == "--help") {
-                std::cout << "usage: wikt2jsonl [-i samples100 | --dump [-j N]] [--markers-only] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n"
+                std::cout << "usage: wikt2jsonl [-i samples100 | --dump [-j N]] [--markers-only] [--bz2] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n"
                              "       --dump: all pages of the dumps, each wiki read in N threads (default 8)\n"
-                             "       --markers-only: only language markers and stats, no JSONL\n";
+                             "       --markers-only: only language markers and stats, no JSONL\n"
+                             "       --bz2: <wiki>.jsonl.bz2 in blocks of 100 lines with <wiki>.jsonl.idx\n";
                 return 0;
             } else
                 wikis.push_back(arg);
@@ -991,24 +1071,39 @@ int main(int argc, char *argv[]) {
                 continue;
             const SectionNames sectionNames("wiktsections.sqlite", wiki);
             Stats stats;
-            std::ofstream out;
+            std::optional<JsonlWriter> out;
             if (!markersOnly)
-                out.open(output / (wiki + ".jsonl"));
+                out.emplace(output / wiki, compress);
             if (fromDumps) {
-                auto dump = WikiDump::wiktionary(wiki);
-                std::vector<Stats> workerStats(dump.workerCount(threads));
-                std::mutex outMutex;
-                std::cout << wiki << ": " << dump.path().dump_path().filename().string() << std::endl;
-                dump.forEachPageParallel(
-                        [&](size_t worker, const std::string &title, const std::string &text) {
-                            auto line = convertPage(wiki, config, names, sectionNames, title, 0, text, workerStats[worker], markersOnly);
-                            if (!markersOnly) {
-                                auto dumped = line.dump(-1, ' ', false, json::error_handler_t::replace);
-                                std::lock_guard lock(outMutex);
-                                out << dumped << '\n';
-                            }
+                auto path = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki);
+                wikilib::dump::DumpReader reader(path);
+                auto site = reader.read_site_info();
+                if (!site)
+                    throw std::runtime_error(wiki + ": " + reader.error());
+                std::vector<Stats> workerStats(wikilib::dump::parallel_worker_count(path, threads));
+                std::cout << wiki << ": " << path.dump_path().filename().string() << std::endl;
+                std::optional<wikilib::ProgressReporter> progress;
+                auto error = wikilib::dump::process_parallel(
+                        path, threads,
+                        [&](size_t worker, const std::string &title, std::string_view content,
+                            const wikilib::dump::PageLocation &location) {
+                            const int ns = site->namespace_of(title);
+                            if (!convertedNamespace(*site, ns))
+                                return true;
+                            auto line = convertPage(wiki, config, names, sectionNames, title, ns,
+                                                    wikilib::markup::strip_comments(content), workerStats[worker], markersOnly,
+                                                    json::array({location.block, location.index}));
+                            if (out)
+                                out->add(line.dump(-1, ' ', false, json::error_handler_t::replace), title);
+                            return true;
                         },
-                        threads, 0.25);
+                        [&](const wikilib::dump::DumpReader::ProcessProgress &p) {
+                            if (!progress)
+                                progress.emplace(p.bytes_total, 0.25);
+                            progress->update(p.bytes_compressed);
+                        });
+                if (!error.empty())
+                    throw std::runtime_error(wiki + ": " + error);
                 for (const auto &w : workerStats)
                     stats.add(w);
             } else
@@ -1017,8 +1112,8 @@ int main(int argc, char *argv[]) {
                 std::stringstream text;
                 text << file.rdbuf();
                 auto line = convertPage(wiki, config, names, sectionNames, page["title"], page["ns"], text.str(), stats, markersOnly);
-                if (!markersOnly)
-                    out << line.dump(-1, ' ', false, json::error_handler_t::replace) << '\n';
+                if (out)
+                    out->add(line.dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
             }
             auto row = std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", wiki, config.value("profile", ""), stats.pages,
                                    stats.pagesWithSections, stats.sections, stats.sectionsWithCode, stats.senses,

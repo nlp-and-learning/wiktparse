@@ -52,6 +52,22 @@ target_link_libraries(wiktlangs wiktdump SQLite::SQLite3 CURL::libcurl)
 add_executable(wiktterms tools/wiktterms.cpp)
 target_link_libraries(wiktterms wiktdump)
 
+# Linking English definitions to translation glosses (from my_c/wikitools/defglos)
+add_library(defglos STATIC
+        src/defglos/Samples.cpp
+        src/defglos/Samples.h
+        src/defglos/Similarity.cpp
+        src/defglos/Similarity.h
+        src/defglos/Matcher.cpp
+        src/defglos/Matcher.h)
+target_link_libraries(defglos PUBLIC wiktdump)
+
+# Evaluates definition-gloss linking on res/defglos/samples.txt
+add_executable(defglos_eval tools/defglos.cpp)
+set_target_properties(defglos_eval PROPERTIES OUTPUT_NAME defglos)
+target_compile_definitions(defglos_eval PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
+target_link_libraries(defglos_eval defglos)
+
 add_executable(${PROJECT_NAME} src/main.cpp
         src/headers/headers.cpp
         src/headers/headers.h

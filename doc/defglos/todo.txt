@@ -1,0 +1,6 @@
+Czytanie match, definicje hierarchiczne i typy definicji głównych
+Dla poddefincji definicji możemy porównywać każdy z każdym w celu najlepszego dopasowania
+
+po przejściu diff są dwie listy, które nie użyte , powinien rozróżniać czy
+nie było porównywane czy było z konkretnym a nie jest similar -
+    dla każdego def i glosss - set nie podobnych

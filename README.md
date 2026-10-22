@@ -61,6 +61,9 @@ dump_dir = ~/dump
   languoids of `res/glottolog/languoid.csv` (Glottolog 5.3, CC BY 4.0, see
   `res/glottolog/README.txt` for citation); Glottolog codes of Wikidata
   missing there are noted in `wd_code_map`.
+- `defglos [samples.txt] [-v] [--sweep]` – links English definitions to
+  translation glosses on `res/defglos/samples.txt` and reports precision and
+  recall against the expected links; see `doc/defglos/README.md`.
 - Ids of classes and properties used by `wiktneeded` and `splitWikiDataResult()`
   are in `res/wikidata_selection.tsv` (`--rules FILE` for another file); after
   changing it, `wiktneeded --filter` reapplies the rules to an earlier result

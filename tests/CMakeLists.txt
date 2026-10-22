@@ -7,16 +7,18 @@ add_executable(tests
         WikiDataTest.cpp
         WikiTermsTest.cpp
         LuaDataTest.cpp
+        DefglosTest.cpp
 )
 
 target_link_libraries(tests
         PRIVATE
         wiktdump
+        defglos
         GTest::GTest
         GTest::Main
 )
 
-target_compile_definitions(tests PRIVATE UNIT_TEST)
+target_compile_definitions(tests PRIVATE UNIT_TEST WIKTPARSE_RES_DIR="${PROJECT_SOURCE_DIR}/res")
 
 include(GoogleTest)
 gtest_discover_tests(tests)

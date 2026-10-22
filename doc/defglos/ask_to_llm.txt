@@ -1,0 +1,29 @@
+Meanings of the word 'band', does any of the two definitions(12,13) (or both) fit the gloss (j)?
+12. (sciences) Any distinguishing line formed by chromatography, electrophoresis etc
+13. (medicine) Ellipsis of band cell.
+j. line representing a component of a protein
+#
+12 - j
+13 -
+
+
+#
+Combine the definition with the glosses for 'dog':
+4.1. Any of various mechanical devices for holding, gripping, or fastening something, particularly with a tooth-like projection.
+4.2. A click or pallet adapted to engage the teeth of a ratchet wheel, to restrain the back action.
+4.4. (transport, historical) A double-ended side spike driven through a hole in the flange of a rail on a tramway.
+f. hinged catch — see pawl
+4.1,4.1 - f
+
+
+#
+Combine the definition with the glosses for 'cat':
+1. An animal of the family Felidae:
+1.1. A domesticated species (Felis catus) of feline animal, commonly kept as a house pet. [from 8thc.]
+1.2. Any similar animal of the family Felidae, which includes lions, tigers, bobcats, leopards, cougars, cheetahs, caracals, lynxes, and other such non-domesticated species.
+a. domestic species
+b. member of the suborder (or superfamily) Feliformia (Feloidea), "cat-like" carnivorans
+c. member of the family Felidae
+d. member of the subfamily Felinae
+e. member of the subfamily Pantherinae
+f. member of the extinct subfamily Machairodontinae

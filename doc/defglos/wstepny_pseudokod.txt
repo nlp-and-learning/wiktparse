@@ -1,0 +1,71 @@
+jest should_skip, a to powinno wynikać z porównań
+
+==================
+function match_definitions_glosses(def_list, gloss_list, similarity_threshold = 1.5):
+matches = []
+unused_defs = []
+unused_glosses = []
+
+i = 0
+j = 0
+
+while i < len(def_list) and j < len(gloss_list):
+    defn = def_list[i]
+    gloss = gloss_list[j]
+
+    if should_skip(defn):
+        unused_defs.append(defn)
+        i += 1
+        continue
+
+    sim = similarity(defn, gloss)
+
+    if sim >= similarity_threshold:
+        matches.append((i, j, sim))  # zapamiętaj indeksy i dopasowanie
+        i += 1
+        j += 1
+    else:
+        # Zostaw na później – nie parujemy teraz
+        unused_defs.append(defn)
+        unused_glosses.append(gloss)
+        i += 1
+        j += 1
+
+# Do końca list, jeśli nierównej długości
+while i < len(def_list):
+    unused_defs.append(def_list[i])
+    i += 1
+
+while j < len(gloss_list):
+    unused_glosses.append(gloss_list[j])
+    j += 1
+
+# ⏳ Drugi etap – dopasowania niepozycyjne
+secondary_matches = []
+for defn in unused_defs:
+    best_gloss = None
+    best_score = 0
+    for gloss in unused_glosses:
+        score = similarity(defn, gloss)
+        if score > best_score:
+            best_score = score
+            best_gloss = gloss
+
+    if best_score >= similarity_threshold:
+        secondary_matches.append((defn, best_gloss, best_score))
+        unused_glosses.remove(best_gloss)
+    else:
+        # nie dopasowano — LLM później
+        continue
+
+# 🧠 Trzeci etap – przekazanie do LLM
+for defn in remaining unused_defs:
+    for gloss in remaining unused_glosses:
+        if llm_needed(defn, gloss):
+            query_llm(defn, gloss)
+
+return matches + secondary_matches
+----------------------
+core algorithm:
+idziemy dwoma listami
+używamy Diif

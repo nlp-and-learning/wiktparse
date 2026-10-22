@@ -1,0 +1,54 @@
+gdy gloss pasuje zarowno do definicji jak i podefinicji:
+gdy nie ma innego glosu do poddefinicji, glos do całej definicji,
+niepowinno być sytuacji gdy dwie definicje do tego samego glosu
+
+3. (architecture) A strip of decoration.
+3.1. A continuous tablet, stripe, or series of ornaments, as of carved foliage, of colour, or of brickwork.
+3.2. In Gothic architecture, the moulding, or suite of mouldings, which encircles the pillars and small shafts.
+
+f. architecture: a strip of decoration (either a continuous tablet, stripe, or series of ornaments, or, in Gothic architecture, the moulding encircling pillars and small shafts)
+
+dog: - wszystkie pasują do tej samej głownej definicji
+1 - a
+1.1 - a
+1.2 - a
+
+
+
+radzic sobie z 3. {Ellipsis of marching band.}
+
+1.? - b|f - gdy brakuje definicji dla glosu - defincija moze być taka sama jak glos
+
+częściej niekolejnosći są w ramach jednej defincji , gdzie nie po kolei poddefincje
+
+puste definicje
+28. (transitive, slang)
+31. (transitive, music)
+- nie łączyć z glossami
+
+1.3. (chiefly UK, Ireland) A boulder or large stone; or (US, Canada) a smaller stone; a pebble.
+c. large stone or boulder
+d. (US) smaller stone; pebble — see pebble
+
+- trzeba podzielić definicję na dwie
+
+
+Fasttext
+powinno być belt=strap=strip
+components=component,endoskeleton=skeleton
+parts=part
+parent=parents
+brothers,brothering,brothered = brother
+person = guy, fellow
+
+bez części w nawiasach jak  (figurative)(countable)
+(architecture) moze być bo jest w glos: "architecture:"
+(anthropology) anthropology:
+(Canada) Canada:
+
+
+Ellipsis of cat-o'-nine-tails -> cat-o'-nine-tails.
+
+cat-o'-nine-tails — see cat-o'-nine-tails - niepowinno zwiekszac freq słowa
+podobnie:  Ellipsis of drop target.||drop target — see drop target
+

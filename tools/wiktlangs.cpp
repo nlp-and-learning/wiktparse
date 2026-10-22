@@ -12,7 +12,8 @@
 //       one row per language: code canonical (en.wikt code, or a private code of
 //       res/extra_languages.tsv), name English (en.wikt canonical name, without
 //       "language"); kind: language | etymology (variety, historical stage) |
-//       family | script | extra | wikipedia; codes of other schemes from the
+//       family | script | extra | wiktionary (ISO 639-3 languages of language
+//       modules of other Wiktionaries, unknown to en.wikt) | wikipedia; codes of other schemes from the
 //       SIL tables, else the Wikidata item (P218, P220, P1394, P424) and Glottolog
 //   code_map(scheme, code, language, method)
 //       codes of other schemes (iso639-1, iso639-2, iso639-3, wikimedia, glottolog)
@@ -21,7 +22,7 @@
 //   language_name(code, in_code, name, source)
 //       the name of language code in language in_code (both canonical); source:
 //       en.wikt (canonical English names), en.wikt-alias, en.wikt-variety,
-//       wikidata-label, wikidata-alias, wikidata-other (labels and aliases of
+//       sil (English names of wiktionary languages), wikidata-label, wikidata-alias, wikidata-other (labels and aliases of
 //       another item of the language: of its English Wikipedia infobox), extra, enwiki (infobox names),
 //       wikt-module (Lua modules of Wiktionaries, wiktmodules), wikt-heading
 //       (resolved language headings of Wiktionaries, wikt2jsonl markers.tsv),
@@ -224,12 +225,16 @@ struct Iso639 {
     std::map<std::string, std::string> changeTo;      // retired -> replacement (may be empty)
     std::set<std::string> retired;
     std::set<std::string> ids; // ISO 639-3 codes
+    std::map<std::string, std::string> name; // iso3 -> reference name, of individual languages and macrolanguages
 
     explicit Iso639(const fs::path &dir) {
         // Id Part2b Part2t Part1 ...
         for (const auto &r : readTab(dir / "iso-639-3.tab")) {
             if (!r.empty())
                 ids.insert(r[0]);
+            // Scope I(ndividual) or M(acrolanguage), type not S(pecial): mis, mul, und, zxx
+            if (r.size() > 6 && (r[4] == "I" || r[4] == "M") && r[5] != "S")
+                name[r[0]] = r[6];
             if (r.size() > 3 && !r[3].empty()) {
                 part1[r[0]] = r[3];
                 fromPart1[r[3]] = r[0];
@@ -391,6 +396,11 @@ int main(int argc, char *argv[]) {
         moduleNamesFile = *(flag + 1);
         args.erase(flag, flag + 2);
     }
+    fs::path moduleOtherFile = "module_other.tsv";
+    if (auto flag = std::ranges::find(args, "--module-other"); flag != args.end() && flag + 1 != args.end()) {
+        moduleOtherFile = *(flag + 1);
+        args.erase(flag, flag + 2);
+    }
     const fs::path extraLanguagesFile = WIKTPARSE_RES_DIR "/extra_languages.tsv";
     if (auto flag = std::ranges::find(args, "--markers"); flag != args.end() && flag + 1 != args.end()) {
         markersFile = *(flag + 1);
@@ -401,9 +411,10 @@ int main(int argc, char *argv[]) {
         args.erase(flag, flag + 2);
     }
     if (!args.empty() && (args[0] == "-h" || args[0] == "--help")) {
-        std::cout << "usage: wiktlangs [--fetch-missing] [--infoboxes FILE] [--markers FILE] [--module-names FILE] [output.sqlite] [wikidata.jsonl...]\n"
+        std::cout << "usage: wiktlangs [--fetch-missing] [--infoboxes FILE] [--markers FILE] [--module-names FILE] [--module-other FILE] [output.sqlite] [wikidata.jsonl...]\n"
                      "       --markers: language markers of Wiktionaries from wikt2jsonl (default ./jsonl/markers.tsv)\n"
                      "       --module-names: language names from Lua modules, wiktmodules (default ./module_names.tsv)\n"
+                     "       --module-other: codes of Lua modules unknown to en.wikt, wiktmodules (default ./module_other.tsv)\n"
                      "       --infoboxes: Wikipedia infoboxes from wiktparse (default ./infoboxes.jsonl if present)\n"
                      "       --fetch-missing: Q ids of en.wikt not in the Wikidata files are fetched from\n"
                      "       the Wikidata API into <output>_fetched.jsonl (always read when present)\n";
@@ -570,8 +581,23 @@ int main(int argc, char *argv[]) {
         // are not yet known: none of their codes maps to an en.wikt code and their
         // name is not a name or alias of an en.wikt language. Added to lang with
         // kind "wikipedia"; varieties (lcN/ldN) with unknown codes too.
-        size_t boxes = 0, boxesKnown = 0, boxesAdded = 0, varietiesAdded = 0;
+        size_t boxes = 0, boxesKnown = 0, boxesAdded = 0, varietiesAdded = 0, boxesMerged = 0;
+        std::string mergedExamples;
         std::vector<std::pair<std::string, std::string>> otherItems; // code, another Wikidata item of it
+        // Other codes of en.wikt and extra languages (nld: nl, srp: sr), not languages merged into one (aao: ar)
+        std::set<std::string> sameLanguage;
+        {
+            std::ifstream in(extraLanguagesFile);
+            for (std::string line; std::getline(in, line);)
+                if (auto tab = line.find('\t'); tab != std::string::npos && !line.starts_with("#"))
+                    sameLanguage.insert(line.substr(0, tab));
+        }
+        for (const auto &[part3, part1] : iso.part1)
+            if (wiktCodes.contains(part1) || sameLanguage.contains(part1))
+                sameLanguage.insert(part3);
+        for (const auto &r : codeMap)
+            if (r[3] == "code" || r[3] == "iso1" || r[3] == "qid")
+                sameLanguage.insert(r[1]);
         if (fs::exists(infoboxFile)) {
             std::map<std::string, std::string> glottoQid;
             for (const auto &[q, entity] : wikidata)
@@ -655,6 +681,28 @@ int main(int argc, char *argv[]) {
                         q = glottoQid[g];
                 if (known) {
                     boxesKnown++;
+                    // Merged: none of its codes is (the ISO 639-1 form of) an en.wikt code itself
+                    bool direct = false;
+                    for (const auto &c : iso1s)
+                        direct |= wiktCodes.contains(c);
+                    for (const auto &c : iso3s)
+                        direct |= wiktCodes.contains(c) || (iso.part1.contains(c) && wiktCodes.contains(iso.part1[c]));
+                    // A language with its own ISO 639-3 code that en.wikt merges into another
+                    // (macrolanguage, retired code): added as a language of its own (Saidi Arabic, aec)
+                    std::string own;
+                    for (const auto &c : iso3s)
+                        if (own.empty() && iso.name.contains(c) && !sameLanguage.contains(c))
+                            own = c;
+                    if (!direct && !own.empty() && !wiktCodes.contains(own)) {
+                        ++boxesMerged;
+                        if (mergedExamples.size() < 300)
+                            mergedExamples += (mergedExamples.empty() ? "" : "; ") + title + " (" + own + ")";
+                        langRows.push_back({own, "wikipedia", name.empty() ? titleName : name, q, "", "", "", "", "infobox merged",
+                                            "enwiki:" + title});
+                        if (!q.empty())
+                            codeQid[own] = q;
+                        continue;
+                    }
                     // The item of the infobox may be another than that of en.wikt (Griko,
                     // Q35719, a dialect of Italiot Greek grk-ita, Q19720507): its names
                     // are names of the en.wikt language too
@@ -704,8 +752,11 @@ int main(int argc, char *argv[]) {
                     if (label.is_object())
                         nameRows.push_back({row[0], row[3], lang, label.value("value", ""), "0"});
             }
-            std::cout << boxes << " infoboxes from " << infoboxFile.string() << ": " << boxesKnown << " known, "
+            std::cout << boxes << " infoboxes from " << infoboxFile.string() << ": " << boxesKnown << " known ("
+                      << boxesMerged << " of them merged by en.wikt into another language and added with their ISO 639-3 code, "
+                      << otherItems.size() << " with another Wikidata item), "
                       << boxesAdded << " languages and " << varietiesAdded << " varieties added" << std::endl;
+            std::cout << "  merged, e.g.: " << mergedExamples << std::endl;
         }
 
         // Languages of Wiktionaries missing in English Wiktionary, with private codes (art-slovio)
@@ -742,8 +793,57 @@ int main(int argc, char *argv[]) {
             std::cout << extra << " extra languages" << std::endl;
         }
 
+        // Languages of other Wiktionaries unknown to en.wikt (wiktmodules: module_other.tsv):
+        // fr "aao" arabe saharien, merged by en.wikt into ar. Only ISO 639-3 codes (SIL);
+        // English name from SIL, item from Wikidata (P220)
+        std::vector<std::vector<std::string>> moduleOther; // wiki, code, name, module
+        size_t wiktionaryLanguages = 0;
+        if (fs::exists(moduleOtherFile)) {
+            std::map<std::string, std::string> iso3Qid;
+            for (const auto &[q, entity] : wikidata)
+                if (entity["claims"].contains("P220"))
+                    for (const auto &c : entity["claims"]["P220"])
+                        iso3Qid.emplace(c.get<std::string>(), q);
+            std::set<std::string> codes;
+            for (const auto &row : langRows)
+                codes.insert(row[0]);
+            std::map<std::string, std::set<std::string>> wikisOf;
+            std::ifstream in(moduleOtherFile);
+            for (std::string line; std::getline(in, line);) {
+                std::vector<std::string> f;
+                std::stringstream ss(line);
+                for (std::string field; std::getline(ss, field, '\t');)
+                    f.push_back(field);
+                if (f.size() == 4 && f[0] != "wiki" && iso.name.contains(f[1]) && !codes.contains(f[1]) &&
+                    !sameLanguage.contains(f[1])) {
+                    wikisOf[f[1]].insert(f[0]);
+                    moduleOther.push_back(std::move(f));
+                }
+            }
+            for (const auto &[code, wikis] : wikisOf) {
+                std::string source = "wikt-module:";
+                for (const auto &w : wikis)
+                    source += (source.ends_with(':') ? "" : ",") + w;
+                const auto q = iso3Qid.contains(code) ? iso3Qid[code] : "";
+                langRows.push_back({code, "wiktionary", iso.name[code], q, "", "", "", "", "", source});
+                ++wiktionaryLanguages;
+                if (q.empty())
+                    continue;
+                codeQid[code] = q;
+                const auto &item = wikidata[q];
+                for (const auto &[lang, label] : item["labels"].items())
+                    if (label.is_object())
+                        nameRows.push_back({code, q, lang, label.value("value", ""), "0"});
+                for (const auto &[lang, list] : item["aliases"].items())
+                    if (list.is_array())
+                        for (const auto &alias : list)
+                            nameRows.push_back({code, q, lang, alias.value("value", ""), "1"});
+            }
+            std::cout << wiktionaryLanguages << " languages of other Wiktionaries from " << moduleOtherFile.string() << std::endl;
+        }
+
         // language: one row per code; a code of several kinds keeps the first kind of kindOrder
-        static const std::vector<std::string> kindOrder = {"language", "etymology", "family", "script", "extra", "wikipedia"};
+        static const std::vector<std::string> kindOrder = {"language", "etymology", "family", "script", "extra", "wiktionary", "wikipedia"};
         auto kindRank = [](const std::string &kind) { return std::ranges::find(kindOrder, kind) - kindOrder.begin(); };
         std::map<std::string, std::vector<std::string>> languages; // code -> lang row
         for (const auto &row : langRows)
@@ -822,7 +922,7 @@ int main(int argc, char *argv[]) {
 
         // language_name: the best source of each (code, in_code, name)
         static const std::vector<std::string> sourceOrder = {
-                "en.wikt", "extra", "enwiki", "wikidata-label", "wikidata-alias", "wikidata-other", "en.wikt-alias",
+                "en.wikt", "extra", "enwiki", "sil", "wikidata-label", "wikidata-alias", "wikidata-other", "en.wikt-alias",
                 "en.wikt-variety", "wikt-module", "wikt-heading", "config-alias"};
         std::map<std::tuple<std::string, std::string, std::string>, std::string> names;
         std::map<std::string, size_t> unknownInCode;
@@ -839,7 +939,10 @@ int main(int argc, char *argv[]) {
                 best = source;
         };
         for (const auto &r : languageRows)
-            addName(r[0], "en", r[1], r[2] == "extra" ? "extra" : r[2] == "wikipedia" ? "enwiki" : "en.wikt");
+            addName(r[0], "en", r[1], r[2] == "extra"        ? "extra"
+                                    : r[2] == "wikipedia"  ? "enwiki"
+                                    : r[2] == "wiktionary" ? "sil"
+                                                           : "en.wikt");
         for (const auto &r : aliasRows)
             addName(r[0], "en", r[1], r[2] == "variety" ? "en.wikt-variety" : "en.wikt-alias");
         for (const auto &r : nameRows) // code, qid, label language, name, alias
@@ -887,6 +990,8 @@ int main(int argc, char *argv[]) {
             }
             std::cout << rows << " language names from modules of Wiktionaries" << std::endl;
         }
+        for (const auto &f : moduleOther)
+            addName(f[1], canonical(f[0]), f[2], "wikt-module");
         // Resolved language headings of Wiktionaries (wikt2jsonl: markers.tsv):
         // pl "język wietnamski" -> vi, en "Bulgarian" -> bg
         if (fs::exists(markersFile)) {

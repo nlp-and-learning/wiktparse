@@ -235,9 +235,9 @@ public:
         // Names in the wiki's language: en.wikt names (en), Wikidata labels, then aliases; languages before other kinds
         for (const auto &n : variants) {
             if (result.empty())
-                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND n.name=?2 AND n.source IN ('en.wikt','extra','enwiki','wikidata-label','wikidata-alias','wikidata-other') ORDER BY n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
+                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND n.name=?2 AND n.source IN ('en.wikt','extra','enwiki','sil','wikidata-label','wikidata-alias','wikidata-other') ORDER BY n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
             if (result.empty())
-                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND lower(n.name)=lower(?2) AND n.source IN ('en.wikt','extra','enwiki','wikidata-label','wikidata-alias','wikidata-other') ORDER BY n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
+                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND lower(n.name)=lower(?2) AND n.source IN ('en.wikt','extra','enwiki','sil','wikidata-label','wikidata-alias','wikidata-other') ORDER BY n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
         }
         // English names of en.wikt
         if (result.empty())

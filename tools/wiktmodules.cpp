@@ -8,6 +8,8 @@
 // Reads only the indexed ranges holding pages of the module namespace (828,
 // named from the dump's <siteinfo>). Output: wiki, module, kind (name-code or
 // code-data), entries, local (names that are no English en.wikt names), examples.
+// module_names.tsv: names of en.wikt codes in language modules; module_other.tsv:
+// codes of language modules unknown to en.wikt, with their names.
 #include <algorithm>
 #include <atomic>
 #include <exception>
@@ -34,6 +36,7 @@ struct Found {
     size_t entries = 0;
     size_t local = 0; // names that are no English names of en.wikt: the wiki's own
     std::vector<std::pair<std::string, std::string>> names; // code, local name
+    std::vector<std::pair<std::string, std::string>> other; // codes unknown to en.wikt, their names
 };
 
 // Modules of languages, families and etymology languages (not transliterations,
@@ -49,9 +52,9 @@ std::set<std::string> knownCodes;
 std::set<std::string> englishNames;
 
 std::vector<Found> scan(const std::string &title, const std::string &text, size_t minEntries) {
-    // ["name"] = "code"  and  m["code"] = { "Name"
+    // ["name"] = "code"  and  m["code"] = { "Name"  (fr: l['aa'] = { name = 'afar' })
     static const std::regex nameCode(R"re(\[\s*["']([^"'\]]{1,80})["']\s*\]\s*=\s*["']([a-z]{2,3}(?:-[a-zA-Z]{2,8})*)["'])re");
-    static const std::regex codeData(R"re(\w+\s*\[\s*["']([a-z]{2,3}(?:-[a-zA-Z]{2,8})*)["']\s*\]\s*=\s*(?:\w+\s*)?\{\s*["']([^"']{1,80})["'])re");
+    static const std::regex codeData(R"re(\w+\s*\[\s*["']([a-z]{2,3}(?:-[a-zA-Z]{2,8})*)["']\s*\]\s*=\s*(?:\w+\s*)?\{\s*(?:(?:name|nom|nombre)\s*=\s*)?["']([^"']{1,80})["'])re");
     std::vector<Found> result;
     for (auto [re, kind] : {std::pair{&nameCode, "name-code"}, std::pair{&codeData, "code-data"}}) {
         Found f{title, kind, "", 0};
@@ -59,8 +62,10 @@ std::vector<Found> scan(const std::string &title, const std::string &text, size_
         const int codeGroup = std::string_view(kind) == "name-code" ? 2 : 1;
         for (std::sregex_iterator it(text.begin(), text.end(), *re), end; it != end; ++it) {
             ++all;
-            if (!knownCodes.empty() && !knownCodes.contains((*it)[codeGroup].str()))
+            if (!knownCodes.empty() && !knownCodes.contains((*it)[codeGroup].str())) {
+                f.other.emplace_back((*it)[codeGroup].str(), (*it)[codeGroup == 2 ? 1 : 2].str());
                 continue;
+            }
             const auto name = (*it)[codeGroup == 2 ? 1 : 2].str();
             if (!englishNames.contains(name)) {
                 ++f.local;
@@ -81,7 +86,7 @@ std::vector<Found> scan(const std::string &title, const std::string &text, size_
 int main(int argc, char *argv[]) {
     try {
         size_t threads = 8, minEntries = 50;
-        std::string output = "modules.tsv", namesOutput = "module_names.tsv";
+        std::string output = "modules.tsv", namesOutput = "module_names.tsv", otherOutput = "module_other.tsv";
         std::vector<std::string> wikis;
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
@@ -91,10 +96,12 @@ int main(int argc, char *argv[]) {
                 output = argv[++i];
             else if (arg == "--names" && i + 1 < argc)
                 namesOutput = argv[++i];
+            else if (arg == "--other" && i + 1 < argc)
+                otherOutput = argv[++i];
             else if (arg == "--min" && i + 1 < argc)
                 minEntries = std::stoul(argv[++i]);
             else if (arg == "-h" || arg == "--help") {
-                std::cout << "usage: wiktmodules [-j N] [-o modules.tsv] [--names module_names.tsv] [--min 50] [wiki...]\n";
+                std::cout << "usage: wiktmodules [-j N] [-o modules.tsv] [--names module_names.tsv] [--other module_other.tsv] [--min 50] [wiki...]\n";
                 return 0;
             } else
                 wikis.push_back(arg);
@@ -123,6 +130,9 @@ int main(int argc, char *argv[]) {
         // Local language names for wiktlangs.sqlite (table wikt_lang_name)
         std::ofstream namesOut(namesOutput);
         namesOut << "wiki\tcode\tname\tmodule\n";
+        // Codes of language modules unknown to en.wikt: languages en.wikt does not have (wiktlangs)
+        std::ofstream otherOut(otherOutput);
+        otherOut << "wiki\tcode\tname\tmodule\n";
         std::mutex mutex;
         std::atomic<size_t> next{0};
         auto work = [&] {
@@ -148,6 +158,10 @@ int main(int argc, char *argv[]) {
                         if (isLanguageModule(f.module) && f.local >= minEntries)
                             for (const auto &[code, name] : f.names)
                                 namesOut << wiki << '\t' << code << '\t' << name << '\t' << f.module << '\n';
+                    for (const auto &f : found)
+                        if (isLanguageModule(f.module) && f.local >= minEntries)
+                            for (const auto &[code, name] : f.other)
+                                otherOut << wiki << '\t' << code << '\t' << name << '\t' << f.module << '\n';
                     for (const auto &f : found)
                         out << wiki << '\t' << f.module << '\t' << f.kind << '\t' << f.entries << '\t' << f.local << '\t' << f.examples << '\n';
                     std::cout << wiki << ": " << modules << " modules, " << found.size() << " with language tables" << std::endl;

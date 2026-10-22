@@ -55,12 +55,20 @@ dump_dir = ~/dump
   through the index only), Wikidata (`wiktNeeded_*.jsonl`), the SIL tables in
   `res/sil`, Glottolog (`res/glottolog/languoid.csv`, Glottolog 5.3, CC BY 4.0,
   see `res/glottolog/README.txt`), `res/extra_languages.tsv`, `wikt2jsonl`
-  markers and `wiktmodules` names. Also writes `wiktlangs_qid.txt` (with new ids
+  markers and `wiktmodules` names. Languages en.wikt does not have, or merges
+  into another one, are added too: ISO 639-3 codes of language modules of other
+  Wiktionaries (`module_other.tsv`, kind `wiktionary`: fr `aao` arabe saharien)
+  and of English Wikipedia infoboxes (kind `wikipedia`: Saidi Arabic `aec`).
+  Also writes `wiktlangs_qid.txt` (with new ids
   of merged items) and `wiktlangs_missing_qid.txt`. `--fetch-missing` fetches the
   missing entities from the Wikidata API into `wiktlangs_fetched.jsonl`, which
   is read on every later run. With `./infoboxes.jsonl` (from `wiktparse`, run it
   first), languages of English Wikipedia infoboxes which are not known yet and
   their unknown varieties (lcN/ldN) are added with kind `wikipedia`.
+- `wiktmodules [-j N] [-o modules.tsv] [--names module_names.tsv] [--other module_other.tsv] [wiki...]` –
+  Lua modules of all Wiktionaries that list languages (`l['aa'] = { name = 'afar' }`,
+  `["阿歐語"] = "aou"`): `module_names.tsv` names of en.wikt codes,
+  `module_other.tsv` codes unknown to en.wikt, both read by `wiktlangs`.
 - `wiktsamples [-j N] [-n pages] [-o samples] [--db wiktlangs.sqlite] [wiki...]` – writes
   `samples/<wiki>/`: raw wikitext of 5 main namespace pages of every
   Wiktionary (the words for water, dog, house, red and go, taken from English

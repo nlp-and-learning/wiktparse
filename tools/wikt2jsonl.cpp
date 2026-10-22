@@ -827,13 +827,22 @@ private:
             n.erase("text");
         for (auto &c : n["children"])
             finishNode(c, stats);
-        // Sections with nothing in them (pl {{składnia}} with no text) are left out
+        // Sections with nothing in them (pl {{składnia}} with no text) and sections with no known
+        // name (listed in unknown_headings) are left out; known sections under an unknown one stay
         auto &children = n["children"];
-        for (size_t i = children.size(); i-- > 0;)
-            if (!children[i].contains("text") && !children[i].contains("senses") &&
-                !children[i].contains("translations") && !children[i].contains("children") &&
-                children[i].value("kind", json()) != "pos")
+        for (size_t i = children.size(); i-- > 0;) {
+            json &c = children[i];
+            if (!c.contains("section")) {
+                json lifted = c.value("children", json::array());
                 children.erase(i);
+                for (size_t j = 0; j < lifted.size(); ++j)
+                    children.insert(children.begin() + static_cast<ptrdiff_t>(i + j), lifted[j]);
+                continue;
+            }
+            if (!c.contains("text") && !c.contains("senses") && !c.contains("translations") &&
+                !c.contains("children") && c.value("kind", json()) != "pos")
+                children.erase(i);
+        }
         // Empty and default fields are left out (kind follows from the section name); template
         // lines have no level of their own
         for (const char *key : {"senses", "translations", "children"})

@@ -14,7 +14,8 @@
 // wiktsamples [-j N] [-n pages] [--other N] [-o samples] [--db wiktlangs.sqlite] [wiki...]
 //
 // Output: samples/<wiki>/NN <title>.wiki and samples/<wiki>/meta.json
-// ([{"file","title","ns","reason"}]). Only the indexed ranges holding wanted
+// ([{"file","title","ns","reason","source"}], source: [bz2 block, number in it]),
+// samples/<wiki>/pages.tsv (block, index, title per page). Only the indexed ranges holding wanted
 // titles are read.
 #include <algorithm>
 #include <atomic>
@@ -262,6 +263,8 @@ struct Chosen {
     int ns;
     std::string reason;
     std::string text;
+    uint64_t block = 0; // start of the page's bz2 block in the dump
+    size_t index = 0;   // number of the page in that block, from 0
 };
 
 std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::string> &codes,
@@ -334,6 +337,18 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
             });
     if (!ok)
         throw std::runtime_error(wiki + ": " + reader.error());
+    // Where the pages are: their bz2 block and number in it, for reading them without the index
+    {
+        auto chunker = IndexChunker::from_file(path.index_path().string(), 0);
+        for (IndexChunk chunk; chunker.next_chunk(chunk);)
+            for (size_t i = 0; i < chunk.entries.size(); ++i)
+                if (auto it = pages.find(chunk.entries[i].title); it != pages.end()) {
+                    it->second.block = chunk.start_offset;
+                    it->second.index = i;
+                }
+        if (!chunker.error().empty())
+            throw std::runtime_error(wiki + ": " + std::string(chunker.error()));
+    }
 
     std::vector<Chosen> chosen;
     std::set<std::string> used;
@@ -414,11 +429,16 @@ void writeSamples(const fs::path &dir, const std::vector<Chosen> &chosen) {
     fs::remove_all(dir);
     fs::create_directories(dir);
     json meta = json::array();
+    // pages.tsv: one line per page, its bz2 block and number in it: enough to read it from the dump
+    std::ofstream positions(dir / "pages.tsv");
+    positions << "block\tindex\ttitle\n";
     for (size_t i = 0; i < chosen.size(); ++i) {
         const auto &c = chosen[i];
         auto file = fileName(i + 1, c.title);
         std::ofstream(dir / file) << c.text;
-        meta.push_back({{"file", file}, {"title", c.title}, {"ns", c.ns}, {"reason", c.reason}});
+        meta.push_back({{"file", file}, {"title", c.title}, {"ns", c.ns}, {"reason", c.reason},
+                        {"source", {c.block, c.index}}});
+        positions << c.block << '\t' << c.index << '\t' << c.title << '\n';
     }
     std::ofstream(dir / "meta.json") << meta.dump(1, '\t', false, json::error_handler_t::replace) << '\n';
 }

@@ -915,7 +915,7 @@ private:
     }
 };
 
-// source: where the page is in the dump, [start of its bz2 block, number in it]; null for samples
+// source: where the page is in the dump, [start of its bz2 block, number in it]; null for old samples
 json convertPage(const std::string &wiki, const json &config, LanguageNames &names, const SectionNames &sectionNames,
                  const std::string &title, int ns, const std::string &text, Stats &stats, bool markersOnly = false,
                  const json &source = nullptr) {
@@ -1225,7 +1225,8 @@ int main(int argc, char *argv[]) {
                 text << file.rdbuf();
                 // As from dumps: without comments
                 auto line = convertPage(wiki, config, names, sectionNames, page["title"], page["ns"],
-                                        wikilib::markup::strip_comments(text.str()), stats, markersOnly);
+                                        wikilib::markup::strip_comments(text.str()), stats, markersOnly,
+                                        page.value("source", json()));
                 if (out && !line["sections"].empty()) // pages without a recognized language are left out
                     out->add(line.dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
             }

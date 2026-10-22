@@ -22,7 +22,8 @@
       "فرانسوي": "fr",
       "نړیوال": "mul",
       "هالنډي": "nl"
-    }
+    },
+    "fallback_native": true
   },
-  "status": "aliases from the dump markers (unresolved.tsv)"
+  "status": "fixed from samples1000 pages without a language"
 }

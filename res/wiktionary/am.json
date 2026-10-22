@@ -11,7 +11,8 @@
       "ዓለም አቀፍ": "mul",
       "ጣሊያንኛ": "it",
       "ፓሊኛ": "pi"
-    }
+    },
+    "fallback_native": true
   },
-  "status": "aliases from the dump markers"
+  "status": "fixed from samples1000 pages without a language"
 }

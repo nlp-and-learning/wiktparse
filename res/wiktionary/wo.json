@@ -6,7 +6,8 @@
       "francais": "fr",
       "français": "fr",
       "Wu faraas": "fr"
-    }
+    },
+    "fallback_native": true
   },
-  "status": "aliases from the dump markers"
+  "status": "fixed from samples1000 pages without a language"
 }

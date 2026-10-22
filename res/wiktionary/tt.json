@@ -13,7 +13,13 @@
       "Удмуртча (Удмурт)": "udm",
       "Халыкара": "mul",
       "Чуашча (Чӑвашла)": "cv"
-    }
+    },
+    "also": [
+      {
+        "form": "heading-name",
+        "heading_level": 1
+      }
+    ]
   },
-  "status": "aliases from the dump markers"
+  "status": "fixed from samples1000 pages without a language"
 }

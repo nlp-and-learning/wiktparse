@@ -1,7 +1,7 @@
 wiki	profile	language_template	config
 aa	F		
 ab	F		
-af	E	{{=xx=}}	
+af	E	{{=xx=}}	af.json
 ak	F		
 am	A		am.json
 an	E	{{-xx-}}	
@@ -38,7 +38,7 @@ cy	E	{{=xx=}}
 da	E	{{=xx=}}	da.json
 de	D		de.json
 diq	B	zıwan	
-dv	E	{{-xx-}}	
+dv	E	{{-xx-}}	dv.json
 dz	F		
 el	B1		
 en	A		en.json
@@ -79,14 +79,14 @@ is	E	{{-xx-}}
 it	B1		it.json
 iu	E	{{-xx-}}	
 ja	B		ja.json
-jbo	B2		
+jbo	B2		jbo.json
 jv	B	basa	jv.json
 ka	A		ka.json
-kaa	B1		
+kaa	B1		kaa.json
 kbd	F		
 kcg	A		
 kk	A		kk.json
-kl	E	{{-xx-}}	
+kl	E	{{-xx-}}	kl.json
 km	A		km.json
 kn	A		kn.json
 ko	A		ko.json
@@ -98,11 +98,11 @@ la	B	-lingua-	la.json
 lb	B2		
 li	A		li.json
 lmo	B1		
-ln	E	{{-xx-}}	
+ln	E	{{-xx-}}	ln.json
 lo	A		lo.json
 lt	B2		
 lv	E	{{-xx-}}	
-mad	B2		
+mad	B2		mad.json
 mg	B2		
 mh	F		
 mi	E	{{=xx=}}	
@@ -153,7 +153,7 @@ si	A		si.json
 simple	A		simple.json
 sk	A		sk.json
 skr	A		skr.json
-sl	E	{{=xx=}}	
+sl	E	{{=xx=}}	sl.json
 sm	E	{{-xx-}}	
 sn	F		
 so	E	{{-xx-}}	

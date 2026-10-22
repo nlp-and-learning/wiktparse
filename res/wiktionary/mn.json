@@ -4,7 +4,13 @@
     "aliases": {
       "Монголоор": "mn",
       "Англиар": "en"
-    }
+    },
+    "also": [
+      {
+        "form": "line-template",
+        "pattern": "{{-xx-}}"
+      }
+    ]
   },
-  "status": "aliases from the dump markers (unresolved.tsv)"
+  "status": "fixed from samples1000 pages without a language"
 }

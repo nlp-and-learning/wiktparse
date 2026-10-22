@@ -4,14 +4,14 @@ ab	F
 af	E	{{=xx=}}	
 ak	F		
 am	A		
-an	A		
+an	E	{{-xx-}}	
 ang	A		
 ar	B2		
-as	C		
+as	B		as.json
 ast	C		
 av	A		
 ay	E	{{-xx-}}	
-az	B2		
+az	B	Dil	
 bcl	A		
 be	C		
 bew	B	basa	
@@ -28,7 +28,7 @@ bs	F
 btm	B2		
 ca	B1		
 ch	F		
-chr	A		
+chr	E	{{-xx-}}	
 ckb	A		
 co	E	{{-xx-}}	
 cr	F		
@@ -38,7 +38,7 @@ cy	E	{{=xx=}}
 da	E	{{=xx=}}	
 de	D		de.json
 diq	B	zıwan	
-dv	A		
+dv	E	{{-xx-}}	
 dz	F		
 el	B1		
 en	A		en.json
@@ -60,7 +60,7 @@ gom	A
 gor	B2		
 gu	A		
 guw	A		
-gv	A		
+gv	E	{{=xx=}}	
 ha	A		
 he	A		
 hi	A		
@@ -77,7 +77,7 @@ ik	E	{{-xx-}}
 io	B2		
 is	E	{{-xx-}}	
 it	B1		it.json
-iu	A		
+iu	E	{{-xx-}}	
 ja	B		ja.json
 jbo	B2		
 jv	B	basa	
@@ -86,7 +86,7 @@ kaa	B1
 kbd	F		
 kcg	A		
 kk	A		
-kl	A		
+kl	E	{{-xx-}}	
 km	A		
 kn	A		
 ko	A		
@@ -98,7 +98,7 @@ la	B	-lingua-
 lb	B2		
 li	A		
 lmo	B1		
-ln	B2		
+ln	E	{{-xx-}}	
 lo	A		
 lt	B2		
 lv	E	{{-xx-}}	
@@ -107,7 +107,7 @@ mg	B2
 mh	F		
 mi	E	{{=xx=}}	
 min	B	bahasa	
-mk	A		
+mk	E	{{-xx-}}	
 ml	A		
 mn	A		
 mni	A		
@@ -139,13 +139,13 @@ rn	F
 ro	B	limba	
 roa_rup	E	{{-xx-}}	
 ru	C		ru.json
-rw	B2		
+rw	E	{{=xx=}}	
 sa	A1		
 sat	A		
 sc	F		
 scn	E	{{-xx-}}	
 sd	A		
-sg	C		
+sg	B	Y	sg.json
 sh	A		
 shn	A		
 shy	B	langue	
@@ -172,7 +172,7 @@ th	A
 ti	E	{{-xx-}}	
 tk	B2		
 tl	A		
-tn	A		
+tn	E	{{=xx=}}	
 to	F		
 tpi	E	{{-xx-}}	
 tr	A		

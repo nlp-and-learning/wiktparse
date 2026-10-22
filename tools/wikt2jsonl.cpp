@@ -247,6 +247,9 @@ std::optional<std::string> languageMarker(const json &config, const std::string 
         if (!t)
             return std::nullopt;
         auto name = str(config, "/language/template");
+        static const std::regex bareCode(R"(^[a-z]{2,3}(-[a-z]{2,8})*$)");
+        if (name.empty() && config["language"].value("bare_code", false)) // as: ={{as}}=
+            return t->parameters.empty() && std::regex_match(t->name, bareCode) ? std::optional(t->name) : std::nullopt;
         if (!name.empty() && t->name != name) {
             // ja: =={{pt}}== besides =={{L|ja}}==
             static const std::regex code(R"(^[a-z]{2,3}(-[a-z]{2,8})*$)");

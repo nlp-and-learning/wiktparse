@@ -6,7 +6,6 @@ find_package(GTest REQUIRED)
 add_executable(tests
         WikiDataTest.cpp
         WikiTermsTest.cpp
-        LuaDataTest.cpp
         DefglosTest.cpp
 )
 

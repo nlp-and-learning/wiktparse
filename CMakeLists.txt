@@ -15,8 +15,6 @@ find_package(nlohmann_json REQUIRED)
 add_library(wiktdump STATIC
         src/dump/WikiDump.cpp
         src/dump/WikiDump.h
-        src/util/Progress.cpp
-        src/util/Progress.h
         src/titles.cpp
         src/titles.h
         src/WikiData.cpp
@@ -26,9 +24,7 @@ add_library(wiktdump STATIC
         src/util/textUtils.cpp
         src/util/textUtils.h
         src/wikitext/HeaderTerms.cpp
-        src/wikitext/HeaderTerms.h
-        src/wikitext/LuaData.cpp
-        src/wikitext/LuaData.h)
+        src/wikitext/HeaderTerms.h)
 target_include_directories(wiktdump PUBLIC src)
 # Default location of rules files (res/wikidata_selection.tsv)
 target_compile_definitions(wiktdump PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")

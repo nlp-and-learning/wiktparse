@@ -50,7 +50,7 @@
 #include "WikiData.h"
 #include "dump/WikiDump.h"
 #include "wikitext/HeaderTerms.h"
-#include "wikitext/LuaData.h"
+#include <wikilib/lua/lua_data.h>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -409,7 +409,7 @@ int main(int argc, char *argv[]) {
             }
         };
         for (const auto &[title, text] : modules) {
-            auto entries = LuaData::parseModule(text);
+            auto entries = wikilib::lua::parse_module(text);
             bool extra = std::regex_match(title, languageExtraModule);
             std::string kind = title.starts_with("Module:languages") ? "language"
                              : title.starts_with("Module:etymology") ? "etymology"
@@ -421,16 +421,16 @@ int main(int argc, char *argv[]) {
                 addAliases(code, entry);
                 if (extra)
                     continue;
-                auto q = qid(LuaData::positional(entry, 1));
-                std::string third = str(LuaData::positional(entry, 2));
+                auto q = qid(wikilib::lua::positional(entry, 1));
+                std::string third = str(wikilib::lua::positional(entry, 2));
                 // languages: family; etymology languages: parent language; families: parent
                 // family; scripts: script type (alphabet, abugida...)
                 std::string family = kind == "language" ? third : str(entry.value("family", json()));
                 std::string parent = kind == "etymology" || kind == "family" ? third : "";
                 std::string type = kind == "script" ? third : str(entry.value("type", json()));
-                std::string scripts = kind == "language" ? joined(LuaData::positional(entry, 3))
+                std::string scripts = kind == "language" ? joined(wikilib::lua::positional(entry, 3))
                                                          : joined(entry.value("scripts", json()));
-                langRows.push_back({code, kind, str(LuaData::positional(entry, 0)), q, family, parent,
+                langRows.push_back({code, kind, str(wikilib::lua::positional(entry, 0)), q, family, parent,
                                     joined(entry.value("ancestors", json())), scripts, type, title});
                 if (!q.empty())
                     codeQid[code] = q;

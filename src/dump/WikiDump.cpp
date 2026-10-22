@@ -1,19 +1,14 @@
 #include "WikiDump.h"
 
-#include <algorithm>
-#include <atomic>
-#include <iostream>
-#include <filesystem>
-#include <mutex>
 #include <optional>
 #include <stdexcept>
-#include <thread>
 
+#include <wikilib/core/progress.h>
 #include <wikilib/dump/index_chunker.h>
+#include <wikilib/dump/parallel_reader.h>
 #include <wikilib/markup/tokenizer.h>
 
 #include "../titles.h"
-#include "../util/Progress.h"
 
 using namespace wikilib::dump;
 
@@ -46,7 +41,7 @@ std::string WikiDump::pageText(std::string_view text) const {
 }
 
 bool WikiDump::forEachPage(const PageVisitor &visitor, double progressStep) {
-    std::optional<Progress> progress;
+    std::optional<wikilib::ProgressReporter> progress;
     auto report = [&](const DumpReader::ProcessProgress &p) {
         if (!progress)
             progress.emplace(p.bytes_total, progressStep);
@@ -73,112 +68,24 @@ bool WikiDump::forEachPage(const PageVisitor &visitor, double progressStep) {
 }
 
 size_t WikiDump::workerCount(size_t threads) const {
-    if (path().index_exists())
-        return std::max<size_t>(1, threads);
-    return std::max<size_t>(1, std::min(threads, path().dump_parts().size()));
-}
-
-// Multistream dump with index: workers take the next indexed range (bz2 stream
-// group of about 100 pages) and decompress it independently
-void WikiDump::forEachPageParallelIndexed(const ParallelPageVisitor &visitor, size_t threads, double progressStep) {
-    const uint64_t dumpSize = path().dump_size();
-    std::vector<IndexChunk> ranges;
-    {
-        auto chunker = IndexChunker::from_file(path().index_path().string(), dumpSize, IndexLinePolicy::RejectMalformed);
-        for (IndexChunk chunk; chunker.next_chunk(chunk);) {
-            chunk.entries.clear(); // offsets only; titles are read from the dump
-            ranges.push_back(chunk);
-        }
-        if (!chunker.error().empty())
-            throw std::runtime_error(std::string(chunker.error()));
-    }
-    if (ranges.empty())
-        throw std::runtime_error("No ranges in index " + path().index_path().string());
-    const size_t workers = workerCount(threads);
-    std::cout << ranges.size() << " indexed ranges, " << workers << " threads" << std::endl;
-
-    Progress progress(dumpSize - ranges.front().start_offset, progressStep);
-    std::mutex progressMutex;
-    std::atomic<uint64_t> doneBytes{0};
-    std::atomic<size_t> nextRange{0};
-    std::atomic<bool> failed{false};
-    std::string error;
-    auto work = [&](size_t worker) {
-        DumpReader rangeReader(path());
-        for (size_t i; !failed && (i = nextRange++) < ranges.size();) {
-            bool ok = rangeReader.process_chunk(ranges[i], [&](const Page &page) {
-                if (getTitleType(page.info.title).first != TitleType::Other)
-                    visitor(worker, page.info.title, pageText(page.content()));
-                return !failed.load();
-            });
-            if (!ok && !rangeReader.error().empty() && !failed.exchange(true)) {
-                std::lock_guard lock(progressMutex);
-                error = rangeReader.error();
-            }
-            auto bytes = doneBytes += ranges[i].end_offset - ranges[i].start_offset;
-            std::lock_guard lock(progressMutex);
-            progress.update(bytes);
-        }
-    };
-    std::vector<std::thread> pool;
-    for (size_t worker = 0; worker < workers; worker++)
-        pool.emplace_back(work, worker);
-    for (auto &thread : pool)
-        thread.join();
-    if (failed)
-        throw std::runtime_error(error);
+    return parallel_worker_count(path(), threads);
 }
 
 void WikiDump::forEachPageParallel(const ParallelPageVisitor &visitor, size_t threads, double progressStep) {
-    if (path().index_exists()) {
-        forEachPageParallelIndexed(visitor, threads, progressStep);
-        return;
-    }
-    const auto parts = path().dump_parts();
-    if (parts.empty())
-        throw std::runtime_error("Dump file not found: " + path().dump_path().string());
-    const size_t workers = workerCount(threads);
-
-    uint64_t totalBytes = 0;
-    for (const auto &part : parts)
-        totalBytes += std::filesystem::file_size(part);
-    std::vector<std::atomic<uint64_t>> partBytes(parts.size());
-    Progress progress(totalBytes, progressStep);
-    std::mutex progressMutex;
-    auto report = [&](size_t part, uint64_t bytes) {
-        partBytes[part] = bytes;
-        std::lock_guard lock(progressMutex);
-        uint64_t sum = 0;
-        for (const auto &b : partBytes)
-            sum += b;
-        progress.update(sum);
-    };
-
-    std::atomic<size_t> nextPart{0};
-    std::atomic<bool> failed{false};
-    std::string error;
-    auto work = [&](size_t worker) {
-        for (size_t part; !failed && (part = nextPart++) < parts.size();) {
-            auto partError = process_dump_file(
-                parts[part],
-                [&](const std::string &title, const std::string &content) {
-                    if (getTitleType(title).first != TitleType::Other)
-                        visitor(worker, title, pageText(content));
-                    return !failed.load();
-                },
-                [&](const DumpReader::ProcessProgress &p) { report(part, p.bytes_compressed); });
-            if (!partError.empty() && !failed.exchange(true)) {
-                std::lock_guard lock(progressMutex);
-                error = parts[part].filename().string() + ": " + partError;
-            }
-        }
-    };
-    std::vector<std::thread> pool;
-    for (size_t worker = 0; worker < workers; worker++)
-        pool.emplace_back(work, worker);
-    for (auto &thread : pool)
-        thread.join();
-    if (failed)
+    std::optional<wikilib::ProgressReporter> progress;
+    auto error = process_parallel(
+            path(), threads,
+            [&](size_t worker, const std::string &title, std::string_view content) {
+                if (getTitleType(title).first != TitleType::Other)
+                    visitor(worker, title, pageText(content));
+                return true;
+            },
+            [&](const DumpReader::ProcessProgress &p) {
+                if (!progress)
+                    progress.emplace(p.bytes_total, progressStep);
+                progress->update(p.bytes_compressed);
+            });
+    if (!error.empty())
         throw std::runtime_error(error);
 }
 
@@ -199,26 +106,13 @@ std::vector<std::string> WikiDump::extractTerms(const std::vector<std::string> &
 }
 
 std::map<std::string, std::string> WikiDump::extractMatching(const std::function<bool(const std::string &)> &filter) {
-    std::vector<IndexChunk> chunks;
-    {
-        auto chunker = IndexChunker::from_file(path().index_path().string(), path().dump_size());
-        for (IndexChunk chunk; chunker.next_chunk(chunk);) {
-            if (std::ranges::any_of(chunk.entries, [&](const auto &entry) { return filter(entry.title); }))
-                chunks.push_back(chunk);
-        }
-        if (!chunker.error().empty())
-            throw std::runtime_error(std::string(chunker.error()));
-    }
     std::map<std::string, std::string> pages;
-    for (const auto &chunk : chunks) {
-        bool ok = reader.process_chunk(chunk, [&](const Page &page) {
-            if (filter(page.info.title))
-                pages[page.info.title] = std::string(page.content());
-            return true;
-        });
-        if (!ok)
-            throw std::runtime_error(reader.error());
-    }
+    bool ok = reader.process_matching(filter, [&](const Page &page) {
+        pages[page.info.title] = std::string(page.content());
+        return true;
+    });
+    if (!ok)
+        throw std::runtime_error(reader.error());
     return pages;
 }
 

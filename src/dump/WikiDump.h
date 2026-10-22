@@ -15,8 +15,6 @@ class WikiDump {
     wikilib::dump::DumpReader reader;
     bool cleanComments;
     std::string pageText(std::string_view text) const;
-    using ParallelVisitor = std::function<void(size_t worker, const std::string &title, const std::string &text)>;
-    void forEachPageParallelIndexed(const ParallelVisitor &visitor, size_t threads, double progressStep);
 public:
     // Return false to stop visiting
     using PageVisitor = std::function<bool(const std::string &title, const std::string &text)>;
@@ -36,8 +34,8 @@ public:
     using ParallelPageVisitor = std::function<void(size_t worker, const std::string &title, const std::string &text)>;
     // Number of workers forEachPageParallel uses: threads; without index at most one per dump part
     [[nodiscard]] size_t workerCount(size_t threads) const;
-    // Reads the dump in parallel: with index, each worker takes the next indexed
-    // range (multistream); otherwise the next dump part (e.g. Wikidata)
+    // Reads the dump in parallel (wikilib::dump::process_parallel): with index, each
+    // worker takes the next indexed range (multistream); otherwise the next dump part
     void forEachPageParallel(const ParallelPageVisitor &visitor, size_t threads, double progressStep = 0.01);
     // Texts of terms in the same order; empty string for missing term
     std::vector<std::string> extractTerms(const std::vector<std::string> &terms);

@@ -1,0 +1,46 @@
+{
+  "wiki": "ja",
+  "profile": "B",
+  "language": {
+    "form": "heading-template",
+    "heading_level": 2,
+    "template": "L",
+    "code": 1,
+    "value": "code",
+    "skip_headings": [
+      "漢字"
+    ]
+  },
+  "homographs": null,
+  "pos": {
+    "form": "heading-template",
+    "example": "==={{noun}}==="
+  },
+  "sections": {
+    "form": "heading-template"
+  },
+  "senses": {
+    "marker": "#"
+  },
+  "translations": {
+    "table": {
+      "top": [
+        "trans-top"
+      ],
+      "bottom": "trans-bottom",
+      "gloss": 1,
+      "gloss_kind": "often part of speech"
+    },
+    "terms": {
+      "templates": [
+        "t",
+        "t+"
+      ],
+      "lang": 1,
+      "term": 2
+    },
+    "sense": "gloss",
+    "subpage": null
+  },
+  "status": "draft from samples (doc/wiktionary-profiles.md)"
+}

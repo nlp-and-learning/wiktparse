@@ -1,0 +1,58 @@
+{
+  "wiki": "en",
+  "profile": "A",
+  "language": {
+    "form": "heading-name",
+    "heading_level": 2,
+    "value": "name"
+  },
+  "homographs": {
+    "form": "heading",
+    "pattern": "Etymology {n}",
+    "heading_level": 3
+  },
+  "pos": {
+    "form": "heading",
+    "example": "====Noun===="
+  },
+  "sections": {
+    "form": "heading"
+  },
+  "senses": {
+    "marker": "#",
+    "nesting": "##",
+    "examples": [
+      "#:",
+      "#*"
+    ]
+  },
+  "translations": {
+    "section": "Translations",
+    "table": {
+      "top": [
+        "trans-top",
+        "trans-top-see",
+        "trans-top-also",
+        "checktrans-top"
+      ],
+      "bottom": "trans-bottom",
+      "gloss": 1,
+      "container": "multitrans"
+    },
+    "terms": {
+      "templates": [
+        "t",
+        "t+",
+        "tt",
+        "tt+",
+        "t-check",
+        "t+check"
+      ],
+      "lang": 1,
+      "term": 2
+    },
+    "sense": "gloss",
+    "subpage": "{title}/translations"
+  },
+  "status": "draft from samples (doc/wiktionary-profiles.md)"
+}

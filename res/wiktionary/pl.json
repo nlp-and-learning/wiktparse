@@ -1,0 +1,34 @@
+{
+  "wiki": "pl",
+  "profile": "D",
+  "language": {
+    "form": "heading-word-and-template",
+    "heading_level": 2,
+    "template": "język {name}",
+    "value": "name"
+  },
+  "homographs": null,
+  "pos": {
+    "form": "italic-line",
+    "after_section": "znaczenia",
+    "example": "''rzeczownik, rodzaj żeński''"
+  },
+  "sections": {
+    "form": "template-line",
+    "example": "{{synonimy}}"
+  },
+  "senses": {
+    "marker": ": ({pos}.{n})",
+    "nesting": "id"
+  },
+  "translations": {
+    "section": "tłumaczenia",
+    "table": null,
+    "terms": {
+      "line": "* {language-name}: ({sense}) [[{term}]]"
+    },
+    "sense": "number",
+    "subpage": null
+  },
+  "status": "draft from samples (doc/wiktionary-profiles.md)"
+}

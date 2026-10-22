@@ -1,0 +1,52 @@
+{
+  "wiki": "de",
+  "profile": "D",
+  "language": {
+    "form": "heading-word-and-template",
+    "heading_level": 2,
+    "template": "Sprache",
+    "name": 1,
+    "value": "name"
+  },
+  "homographs": {
+    "form": "heading",
+    "note": "one level 2 heading per homograph"
+  },
+  "pos": {
+    "form": "heading-template",
+    "template": "Wortart",
+    "pos": 1,
+    "lang": 2,
+    "heading_level": 3
+  },
+  "sections": {
+    "form": "mixed",
+    "example": "{{Bedeutungen}}, ==== {{Übersetzungen}} ===="
+  },
+  "senses": {
+    "marker": ":[{n}]",
+    "nesting": ":[{n}{letter}]"
+  },
+  "translations": {
+    "section": "Übersetzungen",
+    "table": {
+      "top": [
+        "Ü-Tabelle"
+      ],
+      "number": 1,
+      "gloss": "G",
+      "items": "Ü-Liste"
+    },
+    "terms": {
+      "templates": [
+        "Ü",
+        "Üt"
+      ],
+      "lang": 1,
+      "term": 2
+    },
+    "sense": "number-and-gloss",
+    "subpage": null
+  },
+  "status": "draft from samples (doc/wiktionary-profiles.md)"
+}

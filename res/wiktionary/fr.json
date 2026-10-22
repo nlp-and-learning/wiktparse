@@ -1,0 +1,58 @@
+{
+  "wiki": "fr",
+  "profile": "B",
+  "language": {
+    "form": "heading-template",
+    "heading_level": 2,
+    "template": "langue",
+    "code": 1,
+    "value": "code"
+  },
+  "homographs": {
+    "form": "pos-number",
+    "parameter": "num"
+  },
+  "pos": {
+    "form": "heading-template",
+    "template": "S",
+    "pos": 1,
+    "lang": 2,
+    "example": "=== {{S|nom|fr}} ==="
+  },
+  "sections": {
+    "form": "heading-template",
+    "template": "S",
+    "name": 1
+  },
+  "senses": {
+    "marker": "#",
+    "nesting": "##",
+    "examples": [
+      "#*"
+    ]
+  },
+  "translations": {
+    "section": "traductions",
+    "table": {
+      "top": [
+        "trad-début"
+      ],
+      "bottom": "trad-fin",
+      "gloss": 1,
+      "number": 2
+    },
+    "terms": {
+      "templates": [
+        "trad",
+        "trad+",
+        "trad-",
+        "trad--"
+      ],
+      "lang": 1,
+      "term": 2
+    },
+    "sense": "number-and-gloss",
+    "subpage": null
+  },
+  "status": "draft from samples (doc/wiktionary-profiles.md)"
+}

@@ -1,0 +1,43 @@
+{
+  "wiki": "nl",
+  "profile": "E",
+  "language": {
+    "form": "line-template",
+    "pattern": "{{=xx=}}",
+    "value": "code"
+  },
+  "homographs": null,
+  "pos": {
+    "form": "template-line",
+    "example": "{{-noun-|nld}}"
+  },
+  "sections": {
+    "form": "template-line",
+    "example": "{{-syn-}}"
+  },
+  "senses": {
+    "marker": "#",
+    "nesting": "##"
+  },
+  "translations": {
+    "section": "-trans-",
+    "table": {
+      "top": [
+        "trans-top"
+      ],
+      "bottom": "trans-bottom",
+      "gloss": 1,
+      "gloss_number": "^(\\d+)\\. "
+    },
+    "terms": {
+      "templates": [
+        "trad"
+      ],
+      "lang": 1,
+      "term": 2
+    },
+    "sense": "gloss",
+    "subpage": "{title}/vertalingen"
+  },
+  "status": "draft from samples (doc/wiktionary-profiles.md)"
+}

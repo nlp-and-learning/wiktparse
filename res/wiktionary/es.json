@@ -1,0 +1,49 @@
+{
+  "wiki": "es",
+  "profile": "B",
+  "language": {
+    "form": "heading-template",
+    "heading_level": 2,
+    "template": "lengua",
+    "code": 1,
+    "value": "code"
+  },
+  "homographs": {
+    "form": "heading",
+    "pattern": "Etimología {n}",
+    "heading_level": 3
+  },
+  "pos": {
+    "form": "heading-template",
+    "heading_level": 4,
+    "lang": 1,
+    "example": "==== {{sustantivo femenino|es}} ===="
+  },
+  "sections": {
+    "form": "heading"
+  },
+  "senses": {
+    "marker": ";{n}",
+    "example": ";1 {{csem|química}}: text"
+  },
+  "translations": {
+    "section": "Traducciones",
+    "table": {
+      "top": [
+        "trad-arriba"
+      ],
+      "bottom": "trad-abajo"
+    },
+    "terms": {
+      "templates": [
+        "t"
+      ],
+      "lang": 1,
+      "term": "t{i}",
+      "sense": "a{i}"
+    },
+    "sense": "number",
+    "subpage": null
+  },
+  "status": "draft from samples (doc/wiktionary-profiles.md)"
+}

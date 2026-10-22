@@ -1,0 +1,40 @@
+{
+  "wiki": "it",
+  "profile": "B1",
+  "language": {
+    "form": "heading-dash-template",
+    "heading_level": 2,
+    "value": "code"
+  },
+  "homographs": null,
+  "pos": {
+    "form": "template-line",
+    "example": "{{-sost-|it}}"
+  },
+  "sections": {
+    "form": "template-line",
+    "example": "{{-sin-}}"
+  },
+  "senses": {
+    "marker": "#",
+    "examples": [
+      "#*"
+    ]
+  },
+  "translations": {
+    "section": "-trad-",
+    "table": {
+      "top": [
+        "Trad1"
+      ],
+      "bottom": "Trad2",
+      "gloss": 1
+    },
+    "terms": {
+      "line": ":*{{{code}}}: [[{term}]]"
+    },
+    "sense": "gloss",
+    "subpage": null
+  },
+  "status": "draft from samples (doc/wiktionary-profiles.md)"
+}

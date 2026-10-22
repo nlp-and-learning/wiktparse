@@ -98,6 +98,15 @@ A profile gives defaults; a wiki file overrides them. Draft
 }
 ```
 
+`translations.sense` says how a translation finds its sense: `number`
+(pl `(1.1)`, es `a1=1`), `number-and-gloss` (fr `trad-début|gloss|1`, de
+`Ü-Tabelle|1|G=`), `gloss` (en, ru, it, nl, ja, zh; linked in HANDOFF-3),
+`order` (several tables without glosses), `none`. A gloss can be a number in
+text (nl `1. …`, mt `(1)`) or useless: a table title (te, si) or a part of
+speech (ja `名詞`).
+
+Drafts of the ten large wikis are in `res/wiktionary/<wiki>.json`.
+
 Namespaces come from the dump `<siteinfo>` (`DumpReader::read_site_info()`);
 the config only says which of them hold entries.
 

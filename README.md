@@ -75,7 +75,11 @@ dump_dir = ~/dump
 - `wikt2jsonl [-i samples100] [-o jsonl] [wiki...]` – converts pages (by default
   the samples) to JSONL with the configuration of `res/wiktionary`: language
   sections with codes, headings, senses, translations; `jsonl/stats.tsv` shows
-  per wiki how much was recognized. First version.
+  per wiki how much was recognized. One page is one line: language sections
+  with canonical codes, etymologies, parts of speech with senses and
+  translations (side by side, not linked), and every section of the page in
+  order under its English name (`res/schema/page.schema.json`;
+  `tools/validate_jsonl.py jsonl` checks the output).
 - `defglos [samples.txt] [-v] [--sweep]` – links English definitions to
   translation glosses on `res/defglos/samples.txt` and reports precision and
   recall against the expected links; see `doc/defglos/README.md`.

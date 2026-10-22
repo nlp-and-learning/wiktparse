@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Wiktionary page",
+  "description": "One page of a Wiktionary as one JSONL line (wikt2jsonl). Sections map 1:1 to the page; translations stand next to senses, not linked to them yet.",
+  "type": "object",
+  "required": ["wiki", "title", "ns", "sections"],
+  "additionalProperties": false,
+  "properties": {
+    "wiki": {"type": "string", "description": "Wiktionary code: en, pl, zh_min_nan"},
+    "title": {"type": "string"},
+    "ns": {"type": "integer", "description": "Namespace number of the page"},
+    "sections": {
+      "type": "array",
+      "description": "Language sections in page order",
+      "items": {"$ref": "#/$defs/language"}
+    }
+  },
+  "$defs": {
+    "language": {
+      "type": "object",
+      "required": ["language", "code", "native"],
+      "additionalProperties": false,
+      "properties": {
+        "language": {"type": "string", "description": "Language as written in the page (name, code or template)"},
+        "code": {"type": ["string", "null"], "description": "Canonical code (wiktlangs.sqlite), null when not known"},
+        "native": {"type": "boolean", "description": "The section is in the wiki's own language"},
+        "etymologies": {"type": "array", "items": {"$ref": "#/$defs/etymology"}},
+        "unknown_headings": {"type": "array", "items": {"type": "string"},
+                             "description": "Headings without an English section name yet"}
+      }
+    },
+    "etymology": {
+      "type": "object",
+      "required": ["index", "sections", "pos"],
+      "additionalProperties": false,
+      "properties": {
+        "index": {"type": ["integer", "null"], "description": "Number of a numbered etymology (Etymology 2), null otherwise"},
+        "sections": {"type": "array", "items": {"$ref": "#/$defs/section"}},
+        "pos": {"type": "array", "items": {"$ref": "#/$defs/partOfSpeech"}}
+      }
+    },
+    "partOfSpeech": {
+      "type": "object",
+      "required": ["pos", "heading", "senses", "sections", "translations"],
+      "additionalProperties": false,
+      "properties": {
+        "pos": {"type": ["string", "null"], "description": "English part of speech: Noun, Verb; null when the page names none"},
+        "heading": {"type": "string", "description": "Heading or line as written"},
+        "senses": {"type": "array", "items": {"$ref": "#/$defs/sense"}},
+        "sections": {"type": "array", "items": {"$ref": "#/$defs/section"}},
+        "translations": {"type": "array", "items": {"$ref": "#/$defs/translation"}}
+      }
+    },
+    "section": {
+      "type": "object",
+      "required": ["section", "heading", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "section": {"type": ["string", "null"], "description": "English section name: Synonyms, Translations; null when not known"},
+        "heading": {"type": "string", "description": "Heading or template line as written"},
+        "text": {"type": "string", "description": "Raw wikitext of the section"}
+      }
+    },
+    "sense": {
+      "type": "object",
+      "required": ["id", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "description": "1, 1.2 (from # and ##), or as written: 1.1, 1a"},
+        "text": {"type": "string", "description": "Raw wikitext of the definition"}
+      }
+    },
+    "translation": {
+      "type": "object",
+      "required": ["lang", "term", "sense"],
+      "additionalProperties": false,
+      "properties": {
+        "lang": {"type": ["string", "null"], "description": "Canonical language code, null when not known"},
+        "lang_written": {"type": "string", "description": "Language as written when it differs from lang"},
+        "term": {"type": "string"},
+        "sense": {"type": "string", "description": "Sense number given by the wiki (pl 1.1, fr/de table number, es a1), empty when none"}
+      }
+    }
+  }
+}

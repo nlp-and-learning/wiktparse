@@ -61,6 +61,12 @@ dump_dir = ~/dump
   languoids of `res/glottolog/languoid.csv` (Glottolog 5.3, CC BY 4.0, see
   `res/glottolog/README.txt` for citation); Glottolog codes of Wikidata
   missing there are noted in `wd_code_map`.
+- `wiktsamples [-j N] [-o samples] [--db wiktlangs.sqlite] [wiki...]` – writes
+  `samples/<wiki>/`: raw wikitext of 5 main namespace pages of every
+  Wiktionary (the words for water, dog, house, red and go, taken from English
+  Wiktionary translation tables; otherwise pages with the most headings) and
+  one page of another namespace, with `meta.json`; see `samples/README.md`.
+  Reads only the needed indexed ranges (about 20 s for all 198 dumps).
 - `defglos [samples.txt] [-v] [--sweep]` – links English definitions to
   translation glosses on `res/defglos/samples.txt` and reports precision and
   recall against the expected links; see `doc/defglos/README.md`.

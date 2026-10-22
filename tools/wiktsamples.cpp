@@ -1,0 +1,432 @@
+// Sample pages of every Wiktionary for designing the per-wiki configuration
+// (HANDOFF-2, step 1): samples/<wiki>/ with 5 main namespace pages as raw
+// wikitext and, when there is one, a page of another namespace.
+//
+// Pages are comparable between wikis: the words for water, dog, house, red
+// and go, taken from the first translation table of these English Wiktionary
+// entries; wiki codes become en.wikt codes through wd_code_map of
+// wiktlangs.sqlite. Missing words are replaced by main namespace pages with
+// the most headings among titles spread over the index.
+//
+// wiktsamples [-j N] [-o samples] [--db wiktlangs.sqlite] [wiki...]
+//
+// Output: samples/<wiki>/NN <title>.wiki and samples/<wiki>/meta.json
+// ([{"file","title","ns","reason"}]). Only the indexed ranges holding wanted
+// titles are read.
+#include <algorithm>
+#include <atomic>
+#include <exception>
+#include <filesystem>
+#include <format>
+#include <functional>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <mutex>
+#include <set>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include <nlohmann/json.hpp>
+#include <sqlite3.h>
+#include <wikilib/core/unicode_utils.h>
+#include <wikilib/dump/dump_reader.h>
+#include <wikilib/dump/index_chunker.h>
+#include <wikilib/templates/template_parser.h>
+
+#include "dump/WikiDump.h"
+
+namespace fs = std::filesystem;
+using json = nlohmann::json;
+using namespace wikilib::dump;
+
+namespace {
+
+struct Concept {
+    std::string word; // English Wiktionary entry
+    std::string qid;  // Wikidata item of the meaning, if any
+};
+
+const std::vector<Concept> concepts = {
+        {"water", "Q283"}, {"dog", "Q144"}, {"house", "Q3947"}, {"red", "Q3142"}, {"go", ""}};
+
+constexpr size_t mainPages = 5;
+constexpr size_t fallbackCandidates = 200; // titles spread over the index
+
+// Translations of the first table: en.wikt code -> terms in order
+using Translations = std::map<std::string, std::vector<std::string>>;
+
+// Translation templates of the first {{trans-top}} ... {{trans-bottom}} in text
+Translations firstTranslationTable(std::string_view text) {
+    Translations result;
+    bool inTable = false;
+    // Templates in text order, with those in parameter values after their template
+    // ({{multitrans|data=* Polish: {{tt+|pl|czerwony}}...}})
+    std::vector<wikilib::templates::TemplateInvocation> invocations;
+    std::function<void(std::string_view)> collect = [&](std::string_view part) {
+        for (auto &invocation : wikilib::templates::find_invocations(part)) {
+            auto parameters = invocation.parameters;
+            invocations.push_back(std::move(invocation));
+            for (const auto &[name, value] : parameters)
+                if (value.find("{{") != std::string::npos)
+                    collect(value);
+        }
+    };
+    collect(text);
+    for (const auto &invocation : invocations) {
+        const auto &name = invocation.name;
+        if (name == "trans-top" || name == "trans-top-see" || name == "trans-top-also" || name == "checktrans-top") {
+            if (inTable || !result.empty())
+                break;
+            inTable = true;
+        } else if (name == "trans-bottom") {
+            if (inTable)
+                break;
+        } else if (inTable && (name == "t" || name == "t+" || name == "tt" || name == "tt+" || name == "t-check" ||
+                               name == "t+check")) {
+            auto code = invocation.get(size_t{1});
+            auto term = invocation.get(size_t{2});
+            if (code && term && !term->empty())
+                result[std::string(*code)].emplace_back(*term);
+        }
+    }
+    return result;
+}
+
+// English section of an entry (from ==English== to the next level 2 header)
+std::string_view englishSection(std::string_view text) {
+    auto start = text.find("==English==");
+    if (start == std::string_view::npos)
+        return {};
+    auto end = text.find("\n==", start + 11);
+    while (end != std::string_view::npos && end + 3 < text.size() && text[end + 3] == '=')
+        end = text.find("\n==", end + 3);
+    return text.substr(start, end == std::string_view::npos ? std::string_view::npos : end - start);
+}
+
+// Translations of every concept from English Wiktionary (entry or its /translations subpage)
+std::vector<Translations> conceptTranslations() {
+    std::set<std::string> titles;
+    for (const auto &c : concepts) {
+        titles.insert(c.word);
+        titles.insert(c.word + "/translations");
+    }
+    auto pages = WikiDump::wiktionary("en").extractMatching([&](const std::string &t) { return titles.contains(t); });
+    std::vector<Translations> result;
+    for (const auto &c : concepts) {
+        // The subpage holds the main sense ({{see translation subpage|Noun}} on the entry)
+        auto table = firstTranslationTable(pages[c.word + "/translations"]);
+        if (table.empty())
+            table = firstTranslationTable(englishSection(pages[c.word]));
+        std::cout << "en " << c.word << ": translations into " << table.size() << " languages" << std::endl;
+        result.push_back(std::move(table));
+    }
+    return result;
+}
+
+// en.wikt codes of a wiki: from wd_code_map (Wikimedia codes), then the code itself;
+// translation tables use specific languages for some macrolanguages
+std::vector<std::string> wiktCodes(sqlite3 *db, const std::string &wiki) {
+    if (wiki == "en" || wiki == "simple")
+        return {"en"};
+    std::string code = wiki;
+    std::replace(code.begin(), code.end(), '_', '-');
+    std::vector<std::string> codes;
+    if (db) {
+        sqlite3_stmt *stmt = nullptr;
+        sqlite3_prepare_v2(db, "SELECT wikt_code FROM wd_code_map WHERE scheme='wikimedia' AND code=? AND wikt_code<>''",
+                           -1, &stmt, nullptr);
+        sqlite3_bind_text(stmt, 1, code.c_str(), -1, SQLITE_TRANSIENT);
+        while (sqlite3_step(stmt) == SQLITE_ROW)
+            codes.emplace_back(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)));
+        sqlite3_finalize(stmt);
+    }
+    codes.push_back(code);
+    static const std::map<std::string, std::vector<std::string>> specific = {
+            {"zh", {"cmn"}}, {"no", {"nb"}}, {"nan", {"nan-hbl"}}, {"ku", {"kmr"}}, {"hr", {"sh"}},
+            {"sr", {"sh"}}, {"bs", {"sh"}}, {"ms", {"zsm"}}, {"fa", {"fa-ira", "prs"}}, {"ar", {"arb"}},
+            {"et", {"ekk"}}, {"lv", {"lvs"}}, {"sw", {"swh"}}};
+    for (const auto &c : std::vector<std::string>(codes))
+        if (auto it = specific.find(c); it != specific.end())
+            codes.insert(codes.end(), it->second.begin(), it->second.end());
+    std::vector<std::string> unique;
+    for (const auto &c : codes)
+        if (std::ranges::find(unique, c) == unique.end())
+            unique.push_back(c);
+    return unique;
+}
+
+bool isCombining(char32_t c) {
+    return (c >= 0x0300 && c <= 0x036F) || (c >= 0x0591 && c <= 0x05C7) /* Hebrew points */ ||
+           (c >= 0x0610 && c <= 0x061A) || (c >= 0x064B && c <= 0x065F) || c == 0x0670 /* Arabic harakat */ ||
+           (c >= 0x1AB0 && c <= 0x1AFF) || (c >= 0x1DC0 && c <= 0x1DFF) ||
+           (c >= 0x20D0 && c <= 0x20FF) || (c >= 0xFE20 && c <= 0xFE2F);
+}
+
+std::string withoutCombining(std::string_view text) {
+    std::string result;
+    for (size_t pos = 0; pos < text.size();) {
+        size_t start = pos;
+        auto c = wikilib::unicode::decode_utf8(text, pos);
+        if (!c) {
+            pos = start + 1;
+            continue;
+        }
+        if (!isCombining(*c))
+            result += text.substr(start, pos - start);
+    }
+    return result;
+}
+
+// Title variants: as written, with the first letter lower and upper case; then
+// without stress marks (вода́ -> вода) and without all diacritics (ā -> a), as
+// en.wikt writes translations with marks that entry titles do not have
+std::vector<std::string> titleVariants(const std::string &term) {
+    std::vector<std::string> variants;
+    auto add = [&](const std::string &title) {
+        size_t pos = 0;
+        if (!wikilib::unicode::decode_utf8(title, pos))
+            return;
+        std::string head = title.substr(0, pos);
+        std::string rest = title.substr(pos);
+        for (const auto &variant : {title, wikilib::unicode::to_lower(head) + rest, wikilib::unicode::to_upper(head) + rest})
+            if (std::ranges::find(variants, variant) == variants.end())
+                variants.push_back(variant);
+    };
+    add(term);
+    add(withoutCombining(term));
+    add(wikilib::unicode::normalize(withoutCombining(wikilib::unicode::normalize(term, wikilib::unicode::NormalizationForm::NFD)),
+                                    wikilib::unicode::NormalizationForm::NFC));
+    return variants;
+}
+
+size_t headingCount(std::string_view text) {
+    size_t count = text.starts_with("=") ? 1 : 0;
+    for (size_t pos = 0; (pos = text.find("\n=", pos)) != std::string_view::npos; ++pos)
+        ++count;
+    return count;
+}
+
+// Namespaces with entries besides the main one, in the order of preference:
+// thesaurus, reconstructions, appendices
+const std::vector<std::string> thesaurusPrefixes = {"Thesaurus:", "Wikisaurus:", "Thésaurus:", "Tezaurus:"};
+const std::vector<std::string> specialPrefixes = {
+        "Thesaurus:", "Wikisaurus:", "Thésaurus:", "Tezaurus:", "Reconstruction:", "Rekonstruktion:",
+        "Reconstrucción:", "Реконструкция:", "Appendix:", "Aneks:", "Annexe:", "Anhang:", "Apéndice:",
+        "Appendice:", "Apêndice:", "Bijlage:", "Приложение:"};
+
+std::string fileName(size_t n, const std::string &title) {
+    std::string name;
+    for (char c : title)
+        name += c == '/' ? std::string("%2F") : std::string(1, c);
+    if (name.starts_with("."))
+        name = "%2E" + name.substr(1);
+    if (name.size() > 200)
+        name.resize(200);
+    return std::format("{:02} {}.wiki", n, name);
+}
+
+struct Chosen {
+    std::string title;
+    int ns;
+    std::string reason;
+    std::string text;
+};
+
+std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::string> &codes,
+                              const std::vector<Translations> &translations) {
+    auto path = WikiDump::dumpPath(WikiProject::Wiktionary, wiki);
+    // Concept titles in the order of preference
+    std::vector<std::vector<std::string>> conceptTitles(concepts.size());
+    std::set<std::string> wanted;
+    for (size_t i = 0; i < concepts.size(); ++i) {
+        if (codes == std::vector<std::string>{"en"}) {
+            conceptTitles[i].push_back(concepts[i].word);
+        } else {
+            for (const auto &code : codes)
+                if (auto it = translations[i].find(code); it != translations[i].end())
+                    for (const auto &term : it->second)
+                        for (const auto &variant : titleVariants(term))
+                            if (std::ranges::find(conceptTitles[i], variant) == conceptTitles[i].end())
+                                conceptTitles[i].push_back(variant);
+        }
+        wanted.insert(conceptTitles[i].begin(), conceptTitles[i].end());
+    }
+    // Fallback titles spread over the index, and pages of other namespaces
+    std::vector<std::string> allTitles;
+    std::map<std::string, std::string> firstByPrefix;
+    {
+        auto chunker = IndexChunker::from_file(path.index_path().string(), 0);
+        for (IndexChunk chunk; chunker.next_chunk(chunk);)
+            for (auto &entry : chunk.entries) {
+                for (const auto &prefix : specialPrefixes)
+                    if (entry.title.starts_with(prefix) && !firstByPrefix.contains(prefix))
+                        firstByPrefix[prefix] = entry.title;
+                allTitles.push_back(std::move(entry.title));
+            }
+        if (!chunker.error().empty())
+            throw std::runtime_error(wiki + ": " + std::string(chunker.error()));
+    }
+    std::set<std::string> fallback;
+    const size_t step = std::max<size_t>(1, allTitles.size() / fallbackCandidates);
+    for (size_t i = step / 2; i < allTitles.size(); i += step)
+        fallback.insert(allTitles[i]);
+    allTitles.clear();
+    for (const auto &[prefix, title] : firstByPrefix)
+        wanted.insert(title);
+    // Translation subpages and thesaurus pages of concept titles (en: water/translations, Thesaurus:dog)
+    for (const auto &titles : conceptTitles)
+        for (const auto &t : titles) {
+            wanted.insert(t + "/translations");
+            for (const auto &prefix : thesaurusPrefixes)
+                wanted.insert(prefix + t);
+        }
+
+    std::map<std::string, Chosen> pages;
+    DumpReader reader(path);
+    bool ok = reader.process_matching(
+            [&](const std::string &t) { return wanted.contains(t) || fallback.contains(t); },
+            [&](const Page &page) {
+                if (!page.info.is_redirect())
+                    pages[page.info.title] = {page.info.title, static_cast<int>(page.info.namespace_id), "",
+                                              std::string(page.content())};
+                return true;
+            });
+    if (!ok)
+        throw std::runtime_error(wiki + ": " + reader.error());
+
+    std::vector<Chosen> chosen;
+    std::set<std::string> used;
+    for (size_t i = 0; i < concepts.size(); ++i)
+        for (const auto &t : conceptTitles[i]) {
+            auto it = pages.find(t);
+            if (it == pages.end() || it->second.ns != 0 || used.contains(t))
+                continue;
+            Chosen c = it->second;
+            c.reason = "concept " + concepts[i].word + (concepts[i].qid.empty() ? "" : " (" + concepts[i].qid + ")");
+            chosen.push_back(std::move(c));
+            used.insert(t);
+            break;
+        }
+    std::vector<const Chosen *> others;
+    for (const auto &[title, page] : pages)
+        if (fallback.contains(title) && page.ns == 0 && !used.contains(title))
+            others.push_back(&page);
+    std::ranges::sort(others, [](const Chosen *a, const Chosen *b) {
+        auto ha = headingCount(a->text), hb = headingCount(b->text);
+        return ha != hb ? ha > hb : a->title < b->title;
+    });
+    for (const auto *page : others) {
+        if (chosen.size() >= mainPages)
+            break;
+        Chosen c = *page;
+        c.reason = "most headings (" + std::to_string(headingCount(c.text)) + ") among sampled titles";
+        used.insert(c.title);
+        chosen.push_back(std::move(c));
+    }
+
+    // One page outside the main namespace: translation subpage or thesaurus of a
+    // concept, otherwise the first page of a thesaurus, reconstruction or appendix
+    std::vector<std::pair<std::string, std::string>> specials; // title, reason
+    for (const auto &c : chosen)
+        if (c.reason.starts_with("concept")) {
+            specials.emplace_back(c.title + "/translations", "translation subpage of " + c.title);
+            for (const auto &prefix : thesaurusPrefixes)
+                specials.emplace_back(prefix + c.title, "thesaurus page of " + c.title);
+        }
+    for (const auto &prefix : specialPrefixes)
+        if (auto it = firstByPrefix.find(prefix); it != firstByPrefix.end())
+            specials.emplace_back(it->second, "first page of " + prefix);
+    for (const auto &[title, reason] : specials)
+        if (auto it = pages.find(title); it != pages.end()) {
+            Chosen c = it->second;
+            c.reason = reason;
+            chosen.push_back(std::move(c));
+            break;
+        }
+    return chosen;
+}
+
+void writeSamples(const fs::path &dir, const std::vector<Chosen> &chosen) {
+    fs::remove_all(dir);
+    fs::create_directories(dir);
+    json meta = json::array();
+    for (size_t i = 0; i < chosen.size(); ++i) {
+        const auto &c = chosen[i];
+        auto file = fileName(i + 1, c.title);
+        std::ofstream(dir / file) << c.text;
+        meta.push_back({{"file", file}, {"title", c.title}, {"ns", c.ns}, {"reason", c.reason}});
+    }
+    std::ofstream(dir / "meta.json") << meta.dump(1, '\t', false, json::error_handler_t::replace) << '\n';
+}
+
+} // namespace
+
+int main(int argc, char *argv[]) {
+    try {
+        size_t threads = 8;
+        fs::path output = "samples";
+        fs::path dbFile = "wiktlangs.sqlite";
+        std::vector<std::string> wikis;
+        for (int i = 1; i < argc; ++i) {
+            std::string arg = argv[i];
+            if (arg == "-j" && i + 1 < argc)
+                threads = std::max(1, std::stoi(argv[++i]));
+            else if (arg == "-o" && i + 1 < argc)
+                output = argv[++i];
+            else if (arg == "--db" && i + 1 < argc)
+                dbFile = argv[++i];
+            else if (arg == "-h" || arg == "--help") {
+                std::cout << "usage: wiktsamples [-j N] [-o samples] [--db wiktlangs.sqlite] [wiki...]\n";
+                return 0;
+            } else
+                wikis.push_back(arg);
+        }
+        if (wikis.empty())
+            wikis = WikiDump::dumpPath(WikiProject::Wiktionary, "en").available_languages();
+
+        sqlite3 *db = nullptr;
+        if (!fs::exists(dbFile) || sqlite3_open_v2(dbFile.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr) != SQLITE_OK) {
+            std::cerr << "warning: no " << dbFile << ", wiki codes are used as en.wikt codes" << std::endl;
+            sqlite3_close(db);
+            db = nullptr;
+        }
+        std::map<std::string, std::vector<std::string>> codes;
+        for (const auto &wiki : wikis)
+            codes[wiki] = wiktCodes(db, wiki);
+        sqlite3_close(db);
+
+        auto translations = conceptTranslations();
+
+        std::mutex outMutex;
+        std::atomic<size_t> next{0};
+        std::atomic<size_t> failed{0};
+        auto work = [&] {
+            for (size_t i; (i = next++) < wikis.size();) {
+                const auto &wiki = wikis[i];
+                try {
+                    auto chosen = samplesOf(wiki, codes[wiki], translations);
+                    writeSamples(output / wiki, chosen);
+                    size_t byConcept = std::ranges::count_if(chosen, [](const Chosen &c) { return c.reason.starts_with("concept"); });
+                    std::lock_guard lock(outMutex);
+                    std::cout << wiki << ": " << chosen.size() << " pages, " << byConcept << " by concept" << std::endl;
+                } catch (const std::exception &e) {
+                    failed++;
+                    std::lock_guard lock(outMutex);
+                    std::cerr << wiki << ": " << e.what() << std::endl;
+                }
+            }
+        };
+        std::vector<std::thread> pool;
+        for (size_t t = 0; t < std::min(threads, wikis.size()); ++t)
+            pool.emplace_back(work);
+        for (auto &thread : pool)
+            thread.join();
+        std::cout << wikis.size() - failed << " wikis written to " << output.string() << std::endl;
+        return failed ? 1 : 0;
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
+}

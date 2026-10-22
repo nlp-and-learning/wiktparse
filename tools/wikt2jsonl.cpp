@@ -9,7 +9,8 @@
 //
 // wikt2jsonl [-i samples100] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]
 //
-// Output: <out>/<wiki>.jsonl, one page per line:
+// Output: <out>/<wiki>.jsonl, one page per line (pages without a recognized
+// language are left out; stats.tsv counts them: pages - with_sections):
 //   {"wiki","title","ns","sections":[{"language","code","headings":[...],
 //    "native","senses":[{"id","text"}],"translations":[{"lang","term","sense"}]}]}
 // ("native": the section is in the wiki's own language)
@@ -1120,7 +1121,8 @@ int main(int argc, char *argv[]) {
                             auto line = convertPage(wiki, config, names, sectionNames, title, ns,
                                                     wikilib::markup::strip_comments(content), workerStats[worker], markersOnly,
                                                     json::array({location.block, location.index}));
-                            if (out)
+                            // Pages without a recognized language are left out
+                            if (out && !line["sections"].empty())
                                 out->add(line.dump(-1, ' ', false, json::error_handler_t::replace), title);
                             return true;
                         },
@@ -1139,7 +1141,7 @@ int main(int argc, char *argv[]) {
                 std::stringstream text;
                 text << file.rdbuf();
                 auto line = convertPage(wiki, config, names, sectionNames, page["title"], page["ns"], text.str(), stats, markersOnly);
-                if (out)
+                if (out && !line["sections"].empty()) // pages without a recognized language are left out
                     out->add(line.dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
             }
             auto row = std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", wiki, config.value("profile", ""), stats.pages,

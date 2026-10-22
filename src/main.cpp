@@ -18,8 +18,6 @@
 #include <wikilib/templates/template_parser.h>
 
 #include "headers/headerTree.h"
-#include "markup/wikinodes/TemplateParser.h"
-#include "wikitext/templates.h"
 #include "util/structs.h"
 #include "util/textUtils.h"
 
@@ -309,21 +307,6 @@ void splitWikiDataResult() {
 }
 
 
-void testTemplates() {
-    const fs::path& dir = "../pages";
-    std::vector<fs::path> pagesFiles;
-
-    for (const auto& entry : fs::recursive_directory_iterator(dir)) {
-        if (entry.is_regular_file() && entry.path().extension() == ".page") {
-            pagesFiles.push_back(entry.path());
-        }
-    }
-    for (const auto& path : pagesFiles) {
-        std::cout << path << "\n";
-        extractTemplatesFromFile(path);
-    }
-}
-
 // Template name as MediaWiki compares it: first letter case-insensitive, '_' = ' '
 std::string normalizedTemplateName(std::string name) {
     name = trim(name);
@@ -367,28 +350,6 @@ void wikipediaInfoboxes(size_t threads) {
         }
     }, threads, 0.001);
     std::cout << count << " infoboxes written to infoboxes.txt and infoboxes.jsonl" << std::endl;
-}
-
-void pagesInfoboxes() {
-    const fs::path& dir = "../pages";
-    std::vector<fs::path> pagesFiles;
-
-    for (const auto& entry : fs::recursive_directory_iterator(dir)) {
-        if (entry.is_regular_file() && entry.path().extension() == ".page1") {
-            pagesFiles.push_back(entry.path());
-        }
-    }
-    for (const auto& path : pagesFiles) {
-        auto templates = extractTemplatesFromFile(path);
-        for (auto &tstr: templates) {
-            size_t pos = 0;
-            cout << format("parse: {}\n",tstr) << flush;
-            TemplateParser parser(tstr, 0);
-            auto t = parser.parse();
-            cout << t->dump() << std::endl;
-        }
-    }
-
 }
 
 void searchForComments(const std::string &lang) {

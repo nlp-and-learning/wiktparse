@@ -55,47 +55,9 @@ target_link_libraries(wiktterms wiktdump)
 add_executable(${PROJECT_NAME} src/main.cpp
         src/headers/headers.cpp
         src/headers/headers.h
-        src/wikitext/templates.cpp
-        src/wikitext/templates.h
         src/headers/headerTree.cpp
         src/headers/headerTree.h
-        src/util/structs.h
-        src/markup/Whitespace.h
-        src/markup/wikinodes/Header.h
-        src/markup/wikinodes/HeaderParser.h
-        src/markup/wikinodes/WikiLink.h
-        src/markup/wikinodes/WikiLinkParser.h
-        src/markup/Markup.h
-        src/markup/wikinodes/Template.h
-        src/markup/wikinodes/TemplateParser.h
-        src/markup/wikinodes/TemplateParser.cpp
-        src/markup/MarkupParser.h
-        src/markup/MarkupParser.cpp
-        src/markup/tags/TaggedContent.h
-        src1/handlers/TagHandler.h
-        src1/elements/Tag.h
-        src1/elements/Tag.cpp
-        src1/elements/WikiElement.h
-        src1/elements/WikiElement.cpp
-        src1/elements/TaggedContent.h
-        src1/factory/TagFactory.cpp
-        src1/factory/TagFactory.h
-        src1/parser/Parser.h
-        src1/elements/Template.h
-        src1/elements/Template.cpp
-        src1/elements/Header.h
-        src1/elements/Header.cpp
-        src1/elements/WikiLink.h
-        src1/elements/WikiLink.cpp
-        src1/elements/ExternalLink.h
-        src1/elements/ExternalLink.cpp
-        src1/elements/TextElement.h
-        src1/elements/TextElement.cpp
-        src1/parser/ParserError.h
-        src1/parser/Parser.cpp
-        src1/elements/TaggedContent.cpp
-        src1/preprocessor/Preprocessor.cpp
-        src1/preprocessor/Preprocessor.h)
+        src/util/structs.h)
 
 target_link_libraries(${PROJECT_NAME} wiktdump)
 

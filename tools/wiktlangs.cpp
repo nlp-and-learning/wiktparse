@@ -726,8 +726,8 @@ int main(int argc, char *argv[]) {
                 for (std::string field; std::getline(ss, field, '\t');)
                     f.push_back(field);
                 // Unresolved one-off markers are other level 2 headings ('''CABELLO''' in he)
-                if (f.size() == 5 && f[0] != "wiki" && (!f[3].empty() || std::stoul(f[4]) >= 3))
-                    rows.push_back(f);
+                if (f.size() >= 5 && f[0] != "wiki" && (!f[3].empty() || std::stoul(f[4]) >= 3))
+                    rows.push_back({f.begin(), f.begin() + 5});
             }
             db.insert("INSERT INTO wikt_marker VALUES(?,?,?,?,?)", rows);
             db.exec("CREATE INDEX wikt_marker_wiki ON wikt_marker(wiki, marker);");

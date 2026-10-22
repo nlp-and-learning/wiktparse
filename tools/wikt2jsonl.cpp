@@ -422,6 +422,7 @@ struct Stats {
     size_t nativeSections = 0, nativeSenses = 0, nativeTranslations = 0;
     // Language markers as written in the wiki -> code and number of sections
     std::map<std::string, std::pair<std::string, size_t>> markers;
+    std::map<std::string, std::string> markerExamples; // a page title per marker
 
     void add(const Stats &o) {
         pages += o.pages, pagesWithSections += o.pagesWithSections, sections += o.sections;
@@ -431,6 +432,8 @@ struct Stats {
             markers[marker].first = value.first;
             markers[marker].second += value.second;
         }
+        for (const auto &[marker, title] : o.markerExamples)
+            markerExamples.emplace(marker, title);
     }
 };
 
@@ -483,6 +486,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             auto &[markerCode, count] = stats.markers[*marker];
             markerCode = code;
             ++count;
+            stats.markerExamples.emplace(*marker, title);
             sections.push_back({{"language", *marker}, {"code", code.empty() ? json() : json(code)},
                                 {"native", std::ranges::contains(native, code)},
                                 {"headings", json::array()}, {"senses", json::array()}, {"translations", json::array()}});
@@ -552,7 +556,7 @@ int main(int argc, char *argv[]) {
         std::ofstream statsFile(output / "stats.tsv");
         // For wiktlangs.sqlite (table wikt_marker): how each wiki writes languages
         std::ofstream markersFile(output / "markers.tsv");
-        markersFile << "wiki\tform\tmarker\tcode\tsections\n";
+        markersFile << "wiki\tform\tmarker\tcode\tsections\texample\n";
         std::string header = "wiki\tprofile\tpages\twith_sections\tsections\twith_code\tsenses\ttranslations\tnative_sections\tnative_senses\tnative_translations";
         statsFile << header << '\n';
         std::cout << header << '\n';
@@ -596,7 +600,7 @@ int main(int argc, char *argv[]) {
             statsFile << row << '\n';
             for (const auto &[marker, value] : stats.markers)
                 markersFile << wiki << '\t' << str(config, "/language/form") << '\t' << marker << '\t' << value.first
-                            << '\t' << value.second << '\n';
+                            << '\t' << value.second << '\t' << stats.markerExamples[marker] << '\n';
             std::cout << row << std::endl;
         }
     } catch (const std::exception &e) {

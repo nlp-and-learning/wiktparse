@@ -70,6 +70,10 @@ dump_dir = ~/dump
   the index (about 15 thousand pages, 66 MB) for testing converters without
   the dumps. Run it in the build directory; samples are not versioned.
   Reads only the needed indexed ranges (about 20 s for all 198 dumps).
+- `wikt2jsonl [-i samples100] [-o jsonl] [wiki...]` – converts pages (by default
+  the samples) to JSONL with the configuration of `res/wiktionary`: language
+  sections with codes, headings, senses, translations; `jsonl/stats.tsv` shows
+  per wiki how much was recognized. First version.
 - `defglos [samples.txt] [-v] [--sweep]` – links English definitions to
   translation glosses on `res/defglos/samples.txt` and reports precision and
   recall against the expected links; see `doc/defglos/README.md`.

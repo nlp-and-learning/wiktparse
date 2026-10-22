@@ -349,10 +349,11 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
         if (fallback.contains(title) && page.ns == 0 && !used.contains(title))
             others.push_back(&page);
     // A few pages for reading: the richest ones; many pages for testing: spread
-    // over the index, any page with a heading
+    // over the index, any page with a heading or template line
     const bool spread = mainPages > 10;
     if (spread) {
-        std::erase_if(others, [](const Chosen *c) { return headingCount(c->text) == 0; });
+        // Pages with a heading or a template line (nl, it mark sections with {{-xx-}} lines)
+        std::erase_if(others, [](const Chosen *c) { return headingCount(c->text) == 0 && c->text.find("\n{{") == std::string::npos; });
         const size_t want = mainPages - std::min(mainPages, chosen.size());
         if (others.size() > want) {
             std::vector<const Chosen *> picked;

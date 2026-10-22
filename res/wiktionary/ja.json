@@ -9,7 +9,8 @@
     "value": "code",
     "skip_headings": [
       "漢字"
-    ]
+    ],
+    "bare_code": true
   },
   "homographs": null,
   "pos": {

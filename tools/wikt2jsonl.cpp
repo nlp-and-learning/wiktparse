@@ -185,6 +185,10 @@ public:
         if (auto open = name.rfind(" ("); open != std::string::npos && name.ends_with(")"))
             variants.push_back(name.substr(0, open));
         std::string result;
+        // A code written as such ("en" from {{=en=}})
+        static const std::regex code(R"(^[a-z]{2,3}(-[a-z]+)*$)");
+        if (std::regex_match(name, code))
+            result = query("SELECT code FROM lang WHERE code=?2 AND ?1<>'' LIMIT 1", lang, name);
         for (const auto &n : variants)
             for (const auto &l : langs) {
                 if (result.empty())
@@ -266,8 +270,18 @@ std::optional<std::string> languageMarker(const json &config, const std::string 
     auto h = heading(line);
     if (!h || h->level != level)
         return std::nullopt;
-    if (form == "heading-name")
+    if (form == "heading-name") {
+        // or "[[ଓଡ଼ିଆ]]", ps "[[پښتو]]": the link text
+        static const std::regex link(R"(^\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]$)");
+        std::smatch m;
+        if (std::regex_match(h->text, m, link))
+            return m[1].str();
+        // my "{{=en=}}", "{{-en-}}": the code
+        static const std::regex codeTemplate(R"(^\{\{[=-]([a-z]{2,3}(?:-[a-z]+)*)[=-]\}\}$)");
+        if (std::regex_match(h->text, m, codeTemplate))
+            return m[1].str();
         return h->text;
+    }
     if (form == "heading-dash-template") {
         auto t = onlyTemplate(h->text);
         static const std::regex dash(R"(^-([a-z][a-z-]*)-$)");
@@ -530,7 +544,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         }
         if (marker) {
             finish();
-            std::string code = byName ? names.code(wiki, *marker, str(config, "/language/lookup")) : *marker;
+            std::string code = byName && !implicit ? names.code(wiki, *marker, str(config, "/language/lookup")) : *marker;
             if (implicit && sections.empty() && line.empty() == false)
                 sectionText += line + '\n';
             // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}

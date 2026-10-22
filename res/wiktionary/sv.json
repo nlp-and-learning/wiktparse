@@ -7,7 +7,27 @@
       "Älvdalska": "ovd",
       "Kroatiska": "hr",
       "Serbiska": "sr",
-      "Svensk romani": "rmu"
+      "Svensk romani": "rmu",
+      "Altaiska": "alt",
+      "Bikol": "bcl",
+      "Centralnahuatl": "nhn",
+      "Finsk romani": "rmf",
+      "Groningska": "gos",
+      "Guerreronahuatl": "ngu",
+      "Kanjobal": "kjb",
+      "Klassisk syriska": "syc",
+      "Magindanao": "mdh",
+      "Mauritisk kreol": "mfe",
+      "Medelnederländska": "dum",
+      "Norfuk": "pih",
+      "Piedmontesiska": "pms",
+      "Sepedi": "nso",
+      "Shetländska": "sco",
+      "Sjoriska": "cjs",
+      "Skotsk gäliska": "gd",
+      "Ursemitiska": "sem-pro",
+      "Vilamoviska": "wym",
+      "Yukatekiska": "yua"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

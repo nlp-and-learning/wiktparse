@@ -6,7 +6,9 @@
       "српски": "sr",
       "хрватски": "hr",
       "босански": "bs",
-      "српскохрватски": "sh"
+      "српскохрватски": "sh",
+      "srpski": "sr",
+      "Српски": "sr"
     }
   },
   "status": "language as the first link in parentheses after the word"

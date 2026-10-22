@@ -157,7 +157,7 @@ sl	E	{{=xx=}}
 sm	E	{{-xx-}}	
 sn	F		
 so	E	{{-xx-}}	
-sq	A		
+sq	A		sq.json
 sr	D		sr.json
 ss	A		
 st	A		
@@ -177,17 +177,17 @@ to	F
 tpi	E	{{-xx-}}	
 tr	A		tr.json
 ts	A		
-tt	A		
+tt	A		tt.json
 tw	F		
 ug	B	تىلى	
 uk	E	{{=xx=}}	
-ur	A		
+ur	A		ur.json
 uz	C		
 vec	E	{{-xx-}}	
 vi	E	{{-xx-}}	
 vo	E	{{-xx-}}	
 wa	B	L	
-wo	A		
+wo	A		wo.json
 xh	F		
 yi	F		
 yo	F		
@@ -196,4 +196,4 @@ za	E	{{-xx-}}
 zgh	B	ⵜⵓⵜⵍⴰⵢⵜ	
 zh	A		zh.json
 zh_min_nan	A		zh_min_nan.json
-zu	A		
+zu	A		zu.json

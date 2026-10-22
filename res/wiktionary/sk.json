@@ -5,7 +5,12 @@
       "Čeština": "cs",
       "Španielčina": "es",
       "Medzijazykové": "mul",
-      "Čínština": "zh"
+      "Čínština": "zh",
+      "Chorvátčina": "hr",
+      "Čibča": "chb",
+      "Kogi": "kog",
+      "Srbčina": "sr",
+      "Wiradhurijčina": "wrh"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

@@ -2,7 +2,15 @@
   "wiki": "shn",
   "language": {
     "aliases": {
-      "ထႆး": "shn"
+      "ထႆး": "shn",
+      "ၶမဵၼ်": "kht",
+      "တႆးၼိူဝ်": "tdd",
+      "ၾရၢင်ႇသဵတ်ႈ": "fr",
+      "မွၼ်း": "mnw",
+      "မွၼ်းၵဝ်ႇ": "omx",
+      "မၢၼ်ႈ": "my",
+      "လၢဝ်း": "lo",
+      "ပႃႇလိ-မွၼ်း": "pi"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

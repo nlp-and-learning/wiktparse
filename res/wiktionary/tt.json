@@ -1,0 +1,19 @@
+{
+  "wiki": "tt",
+  "language": {
+    "aliases": {
+      "İnglizçä": "en",
+      "Qırımtatarca": "crh",
+      "Suomiçä": "fi",
+      "Törekçä": "tr",
+      "Иске татарча(إيسكي تاتارچه)": "tt",
+      "Ләһчә (Полякча)": "pl",
+      "Марича (Марла)": "chm",
+      "Пали": "pi",
+      "Удмуртча (Удмурт)": "udm",
+      "Халыкара": "mul",
+      "Чуашча (Чӑвашла)": "cv"
+    }
+  },
+  "status": "aliases from the dump markers"
+}

@@ -2,7 +2,15 @@
   "wiki": "skr",
   "language": {
     "aliases": {
-      "عربی": "ar"
+      "عربی": "ar",
+      "ارد": "ur",
+      "اردو": "ur",
+      "انگلش": "en",
+      "بین الاقوامی": "mul",
+      "پُرتگالی": "pt",
+      "تُرکی": "tr",
+      "سنسکرت": "sa",
+      "فرانسیسی": "fr"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

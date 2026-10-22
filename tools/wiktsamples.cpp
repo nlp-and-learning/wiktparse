@@ -6,7 +6,10 @@
 // and go, taken from the first translation table of these English Wiktionary
 // entries; wiki codes become en.wikt codes through wd_code_map of
 // wiktlangs.sqlite. Missing words are replaced by main namespace pages with
-// the most headings among titles spread over the index.
+// the most headings among titles spread over the index. The page of another
+// namespace is a translation subpage or thesaurus page of a word, otherwise
+// the first page of a thesaurus, reconstruction or other content namespace
+// (ids 100-199 in the dump's <siteinfo>).
 //
 // wiktsamples [-j N] [-o samples] [--db wiktlangs.sqlite] [wiki...]
 //
@@ -208,13 +211,36 @@ size_t headingCount(std::string_view text) {
     return count;
 }
 
-// Namespaces with entries besides the main one, in the order of preference:
-// thesaurus, reconstructions, appendices
-const std::vector<std::string> thesaurusPrefixes = {"Thesaurus:", "Wikisaurus:", "Thésaurus:", "Tezaurus:"};
-const std::vector<std::string> specialPrefixes = {
-        "Thesaurus:", "Wikisaurus:", "Thésaurus:", "Tezaurus:", "Reconstruction:", "Rekonstruktion:",
-        "Reconstrucción:", "Реконструкция:", "Appendix:", "Aneks:", "Annexe:", "Anhang:", "Apéndice:",
-        "Appendice:", "Apêndice:", "Bijlage:", "Приложение:"};
+// Namespaces of the wiki with entries besides the main one (ids 100-199, not
+// talk), as "Name:" prefixes: thesaurus first, then reconstructions, then by id
+struct SpecialNamespaces {
+    std::vector<std::string> thesaurus;
+    std::vector<std::string> all; // in the order of preference
+};
+
+SpecialNamespaces specialNamespaces(const wikilib::dump::SiteInfo &site) {
+    auto contains = [](const std::string &name, std::initializer_list<std::string_view> words) {
+        auto lower = wikilib::unicode::to_lower(name);
+        return std::ranges::any_of(words, [&](auto word) { return lower.find(word) != std::string::npos; });
+    };
+    SpecialNamespaces result;
+    std::vector<std::string> reconstruction, other;
+    for (const auto &ns : site.namespaces) {
+        if (ns.id < 100 || ns.id > 199 || ns.is_talk || ns.name.empty())
+            continue;
+        std::string prefix = ns.name + ":";
+        if (contains(ns.name, {"saurus", "тезаурус"}))
+            result.thesaurus.push_back(prefix);
+        else if (contains(ns.name, {"econstr", "ekonstr", "еконстр"}))
+            reconstruction.push_back(prefix);
+        else
+            other.push_back(prefix);
+    }
+    result.all = result.thesaurus;
+    result.all.insert(result.all.end(), reconstruction.begin(), reconstruction.end());
+    result.all.insert(result.all.end(), other.begin(), other.end());
+    return result;
+}
 
 std::string fileName(size_t n, const std::string &title) {
     std::string name;
@@ -254,16 +280,25 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
         wanted.insert(conceptTitles[i].begin(), conceptTitles[i].end());
     }
     // Fallback titles spread over the index, and pages of other namespaces
-    std::vector<std::string> allTitles;
-    std::map<std::string, std::string> firstByPrefix;
+    DumpReader reader(path);
+    auto site = reader.read_site_info();
+    if (!site)
+        throw std::runtime_error(wiki + ": " + reader.error());
+    const auto specialNs = specialNamespaces(*site);
+    const auto &thesaurusPrefixes = specialNs.thesaurus;
+    std::vector<std::string> allTitles; // main namespace
+    std::map<std::string, std::vector<std::string>> firstByPrefix; // a few, the first may be a redirect
     {
         auto chunker = IndexChunker::from_file(path.index_path().string(), 0);
         for (IndexChunk chunk; chunker.next_chunk(chunk);)
             for (auto &entry : chunk.entries) {
-                for (const auto &prefix : specialPrefixes)
-                    if (entry.title.starts_with(prefix) && !firstByPrefix.contains(prefix))
-                        firstByPrefix[prefix] = entry.title;
-                allTitles.push_back(std::move(entry.title));
+                if (site->namespace_of(entry.title) == 0) {
+                    allTitles.push_back(std::move(entry.title));
+                    continue;
+                }
+                for (const auto &prefix : specialNs.all)
+                    if (entry.title.starts_with(prefix) && firstByPrefix[prefix].size() < 10)
+                        firstByPrefix[prefix].push_back(entry.title);
             }
         if (!chunker.error().empty())
             throw std::runtime_error(wiki + ": " + std::string(chunker.error()));
@@ -273,8 +308,9 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
     for (size_t i = step / 2; i < allTitles.size(); i += step)
         fallback.insert(allTitles[i]);
     allTitles.clear();
-    for (const auto &[prefix, title] : firstByPrefix)
-        wanted.insert(title);
+    for (const auto &[prefix, titles] : firstByPrefix)
+        for (const auto &title : titles)
+            wanted.insert(title);
     // Translation subpages and thesaurus pages of concept titles (en: water/translations, Thesaurus:dog)
     for (const auto &titles : conceptTitles)
         for (const auto &t : titles) {
@@ -284,7 +320,6 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
         }
 
     std::map<std::string, Chosen> pages;
-    DumpReader reader(path);
     bool ok = reader.process_matching(
             [&](const std::string &t) { return wanted.contains(t) || fallback.contains(t); },
             [&](const Page &page) {
@@ -335,9 +370,10 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
             for (const auto &prefix : thesaurusPrefixes)
                 specials.emplace_back(prefix + c.title, "thesaurus page of " + c.title);
         }
-    for (const auto &prefix : specialPrefixes)
+    for (const auto &prefix : specialNs.all)
         if (auto it = firstByPrefix.find(prefix); it != firstByPrefix.end())
-            specials.emplace_back(it->second, "first page of " + prefix);
+            for (const auto &title : it->second)
+                specials.emplace_back(title, "first page of " + prefix);
     for (const auto &[title, reason] : specials)
         if (auto it = pages.find(title); it != pages.end()) {
             Chosen c = it->second;

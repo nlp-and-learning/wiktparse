@@ -66,6 +66,8 @@ dump_dir = ~/dump
   Wiktionary (the words for water, dog, house, red and go, taken from English
   Wiktionary translation tables; otherwise pages with the most headings) and
   one page of another namespace, with `meta.json`; see `samples/README.md`.
+  `--other N` adds N pages of other namespaces (thesaurus, reconstructions,
+  appendices, in turn). `-n 10 --other 5 -o samples10` is for reading by hand;
   `-n 100 -o samples100` writes 100 main namespace pages per wiki spread over
   the index (about 15 thousand pages, 66 MB) for testing converters without
   the dumps. Run it in the build directory; samples are not versioned.

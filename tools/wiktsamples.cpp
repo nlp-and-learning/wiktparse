@@ -11,7 +11,7 @@
 // the first page of a thesaurus, reconstruction or other content namespace
 // (ids 100-199 in the dump's <siteinfo>).
 //
-// wiktsamples [-j N] [-n pages] [-o samples] [--db wiktlangs.sqlite] [wiki...]
+// wiktsamples [-j N] [-n pages] [--other N] [-o samples] [--db wiktlangs.sqlite] [wiki...]
 //
 // Output: samples/<wiki>/NN <title>.wiki and samples/<wiki>/meta.json
 // ([{"file","title","ns","reason"}]). Only the indexed ranges holding wanted
@@ -55,6 +55,7 @@ const std::vector<Concept> concepts = {
         {"water", "Q283"}, {"dog", "Q144"}, {"house", "Q3947"}, {"red", "Q3142"}, {"go", ""}};
 
 size_t mainPages = 5; // -n
+size_t otherPages = 1; // --other: pages outside the main namespace
 size_t fallbackCandidates = 200; // titles spread over the index, at least 4 per page
 
 // Translations of the first table: en.wikt code -> terms in order
@@ -228,6 +229,9 @@ SpecialNamespaces specialNamespaces(const wikilib::dump::SiteInfo &site) {
     for (const auto &ns : site.namespaces) {
         if (ns.id < 100 || ns.id > 199 || ns.is_talk || ns.name.empty())
             continue;
+        // Portals are navigation, not entries
+        if (ns.name == "Portal" || ns.name == "Portail" || ns.name == "Портал" || ns.name == "Portale")
+            continue;
         std::string prefix = ns.name + ":";
         if (contains(ns.name, {"saurus", "тезаурус"}))
             result.thesaurus.push_back(prefix);
@@ -297,7 +301,7 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
                     continue;
                 }
                 for (const auto &prefix : specialNs.all)
-                    if (entry.title.starts_with(prefix) && firstByPrefix[prefix].size() < 10)
+                    if (entry.title.starts_with(prefix) && firstByPrefix[prefix].size() < 20)
                         firstByPrefix[prefix].push_back(entry.title);
             }
         if (!chunker.error().empty())
@@ -386,17 +390,23 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
             for (const auto &prefix : thesaurusPrefixes)
                 specials.emplace_back(prefix + c.title, "thesaurus page of " + c.title);
         }
-    for (const auto &prefix : specialNs.all)
-        if (auto it = firstByPrefix.find(prefix); it != firstByPrefix.end())
-            for (const auto &title : it->second)
-                specials.emplace_back(title, "first page of " + prefix);
-    for (const auto &[title, reason] : specials)
-        if (auto it = pages.find(title); it != pages.end()) {
+    // Pages of the namespaces in turn, so that several namespaces are shown
+    for (size_t round = 0; round < 10; ++round)
+        for (const auto &prefix : specialNs.all)
+            if (auto it = firstByPrefix.find(prefix); it != firstByPrefix.end() && round < it->second.size())
+                specials.emplace_back(it->second[round], "page of " + prefix);
+    size_t taken = 0;
+    for (const auto &[title, reason] : specials) {
+        if (taken >= otherPages)
+            break;
+        if (auto it = pages.find(title); it != pages.end() && !used.contains(title)) {
             Chosen c = it->second;
             c.reason = reason;
+            used.insert(title);
             chosen.push_back(std::move(c));
-            break;
+            ++taken;
         }
+    }
     return chosen;
 }
 
@@ -425,6 +435,8 @@ int main(int argc, char *argv[]) {
             std::string arg = argv[i];
             if (arg == "-j" && i + 1 < argc)
                 threads = std::max(1, std::stoi(argv[++i]));
+            else if (arg == "--other" && i + 1 < argc)
+                otherPages = std::stoul(argv[++i]);
             else if (arg == "-n" && i + 1 < argc) {
                 mainPages = std::max(1, std::stoi(argv[++i]));
                 fallbackCandidates = std::max<size_t>(200, mainPages * 4);
@@ -433,7 +445,7 @@ int main(int argc, char *argv[]) {
             else if (arg == "--db" && i + 1 < argc)
                 dbFile = argv[++i];
             else if (arg == "-h" || arg == "--help") {
-                std::cout << "usage: wiktsamples [-j N] [-n pages] [-o samples] [--db wiktlangs.sqlite] [wiki...]\n";
+                std::cout << "usage: wiktsamples [-j N] [-n pages] [--other N] [-o samples] [--db wiktlangs.sqlite] [wiki...]\n";
                 return 0;
             } else
                 wikis.push_back(arg);

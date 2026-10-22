@@ -1,5 +1,7 @@
 # English Wiktionary sections not found in wiktNeeded, with their Wikidata items
 # (found with wbsearchentities). For wiktneeded --items: cut -f2 | grep ^Q
+# Further reading and References are new items with 2 labels: an identity, no names;
+# names of these sections come from the Wiktionaries (wiktionary_section_names.tsv).
 section	qid	label
 Further reading	Q139594646	Further reading (title of a section of a Wikipedia article)
 References	Q139594642	References (title of a section of a Wikipedia article)

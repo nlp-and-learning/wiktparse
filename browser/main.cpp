@@ -12,7 +12,7 @@
 #include <QProcess>
 #include <QShortcut>
 #include <QFile>
-#include <QFileDialog>
+#include <qxfiledialog.h>
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -20,6 +20,7 @@
 #include <QLineEdit>
 #include <QListWidget>
 #include <QMainWindow>
+#include <QMenuBar>
 #include <QSpinBox>
 #include <QSplitter>
 #include <QStandardItemModel>
@@ -167,13 +168,14 @@ QString label(const json &v, size_t i) {
         if (v.contains(key) && !v[key].is_null() && !(v[key].is_string() && v[key].get<std::string>().empty()))
             text += " " + scalar(v[key]).left(80);
     };
-    if (v.contains("children")) {
+    // Empty fields are left out of the JSONL, so every key is optional
+    if (v.contains("section")) {
         add("section");
         if (v.contains("heading"))
             text += " — '" + scalar(v["heading"]).left(60) + "'";
-        if (!v["senses"].empty())
+        if (v.contains("senses"))
             text += QString(" (%1 senses)").arg(v["senses"].size());
-        if (!v["translations"].empty())
+        if (v.contains("translations"))
             text += QString(" (%1 translations)").arg(v["translations"].size());
     } else if (v.contains("language")) {
         add("code");
@@ -249,6 +251,19 @@ public:
         connect(lineBox_, &QSpinBox::editingFinished, this, [this] { showLine(lineBox_->value() - 1); });
         // F4: the line, indented, in Kate itself (a read-only file in the temporary directory)
         connect(new QShortcut(QKeySequence(Qt::Key_F4), this), &QShortcut::activated, this, [this] { openInKate(); });
+
+        auto *file = menuBar()->addMenu("&File");
+        file->addAction("&Open...", QKeySequence::Open, this, [this] {
+            if (auto path = choose(this, QFileInfo(path_).absolutePath()); !path.isEmpty())
+                open(path);
+        });
+        file->addSeparator();
+        file->addAction("&Quit", QKeySequence::Quit, this, &QWidget::close);
+    }
+
+    // A JSONL file chosen in the dialog, empty when cancelled
+    static QString choose(QWidget *parent, const QString &dir = {}) {
+        return QxFileDialog::getOpenFileName(parent, "JSONL file", dir, "JSONL (*.jsonl *.jsonl.bz2 *.json);;All (*)");
     }
 
     void open(const QString &path) {
@@ -259,6 +274,9 @@ public:
             lines_ = std::make_unique<Bz2Lines>(path, index);
         else
             lines_ = std::make_unique<PlainLines>(path);
+        path_ = path;
+        doc_->setText({});
+        model_->clear();
         lineBox_->setMaximum(std::max<int>(1, static_cast<int>(lines_->count())));
         setWindowTitle(path + " — wiktbrowse");
         fillList();
@@ -268,6 +286,7 @@ public:
 
 private:
     std::unique_ptr<Lines> lines_;
+    QString path_;
     QLineEdit *filter_;
     QSpinBox *lineBox_;
     QLabel *status_;
@@ -380,8 +399,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     Browser browser;
     QString path = argc > 1 ? QString::fromLocal8Bit(argv[1])
-                            : QFileDialog::getOpenFileName(nullptr, "JSONL file", {},
-                                                           "JSONL (*.jsonl *.jsonl.bz2 *.json);;All (*)");
+                            : Browser::choose(nullptr);
     if (path.isEmpty())
         return 0;
     browser.open(path);

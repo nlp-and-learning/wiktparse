@@ -29,6 +29,15 @@ else()
 endif()
 FetchContent_MakeAvailable(qcodeedit)
 
+# qt-extra: the file dialog. The sibling checkout ../../qt-extra when present, otherwise fetched.
+set(QT_EXTRA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../qt-extra CACHE PATH "qt-extra sources")
+if(EXISTS ${QT_EXTRA_DIR}/CMakeLists.txt)
+    FetchContent_Declare(qt-extra SOURCE_DIR ${QT_EXTRA_DIR})
+else()
+    FetchContent_Declare(qt-extra GIT_REPOSITORY https://github.com/siplasplas/qt-extra.git GIT_TAG master)
+endif()
+FetchContent_MakeAvailable(qt-extra)
+
 add_executable(wiktbrowse main.cpp)
-target_link_libraries(wiktbrowse Qt6::Widgets qcodeedit::qcodeedit qcodeedit::kate nlohmann_json::nlohmann_json
+target_link_libraries(wiktbrowse Qt6::Widgets qcodeedit::qcodeedit qcodeedit::kate qt-extra nlohmann_json::nlohmann_json
         BZip2::BZip2)

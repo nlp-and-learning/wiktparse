@@ -1,6 +1,6 @@
 # How Wiktionaries differ (for the per-wiki configuration)
 
-Analysis of `samples/` (wiktsamples, dumps 2026-10-01): the pages for water,
+Analysis of `samples/` (in the build directory; wiktsamples, dumps 2026-10-01): the pages for water,
 dog, house, red and go in en, pl, fr, de, ru, es, it, nl, ja, zh, and a
 feature scan of all 198 wikis. Every difference below becomes a field of
 `res/wiktionary/<wiki>.json`; wikis of one profile share defaults.

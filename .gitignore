@@ -2,8 +2,6 @@
 pages/
 out/
 HANDOFF*.md
-# wiktsamples output, for analysis only (configurations derived from it are committed)
-samples/
 
 # Prerequisites
 *.d

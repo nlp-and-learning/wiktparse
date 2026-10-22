@@ -11,7 +11,7 @@
 // the first page of a thesaurus, reconstruction or other content namespace
 // (ids 100-199 in the dump's <siteinfo>).
 //
-// wiktsamples [-j N] [-o samples] [--db wiktlangs.sqlite] [wiki...]
+// wiktsamples [-j N] [-n pages] [-o samples] [--db wiktlangs.sqlite] [wiki...]
 //
 // Output: samples/<wiki>/NN <title>.wiki and samples/<wiki>/meta.json
 // ([{"file","title","ns","reason"}]). Only the indexed ranges holding wanted
@@ -54,8 +54,8 @@ struct Concept {
 const std::vector<Concept> concepts = {
         {"water", "Q283"}, {"dog", "Q144"}, {"house", "Q3947"}, {"red", "Q3142"}, {"go", ""}};
 
-constexpr size_t mainPages = 5;
-constexpr size_t fallbackCandidates = 200; // titles spread over the index
+size_t mainPages = 5; // -n
+size_t fallbackCandidates = 200; // titles spread over the index, at least 4 per page
 
 // Translations of the first table: en.wikt code -> terms in order
 using Translations = std::map<std::string, std::vector<std::string>>;
@@ -348,15 +348,30 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
     for (const auto &[title, page] : pages)
         if (fallback.contains(title) && page.ns == 0 && !used.contains(title))
             others.push_back(&page);
-    std::ranges::sort(others, [](const Chosen *a, const Chosen *b) {
-        auto ha = headingCount(a->text), hb = headingCount(b->text);
-        return ha != hb ? ha > hb : a->title < b->title;
-    });
+    // A few pages for reading: the richest ones; many pages for testing: spread
+    // over the index, any page with a heading
+    const bool spread = mainPages > 10;
+    if (spread) {
+        std::erase_if(others, [](const Chosen *c) { return headingCount(c->text) == 0; });
+        const size_t want = mainPages - std::min(mainPages, chosen.size());
+        if (others.size() > want) {
+            std::vector<const Chosen *> picked;
+            for (size_t i = 0; i < want; ++i)
+                picked.push_back(others[i * others.size() / want]);
+            others = std::move(picked);
+        }
+    } else {
+        std::ranges::sort(others, [](const Chosen *a, const Chosen *b) {
+            auto ha = headingCount(a->text), hb = headingCount(b->text);
+            return ha != hb ? ha > hb : a->title < b->title;
+        });
+    }
     for (const auto *page : others) {
         if (chosen.size() >= mainPages)
             break;
         Chosen c = *page;
-        c.reason = "most headings (" + std::to_string(headingCount(c.text)) + ") among sampled titles";
+        c.reason = spread ? "spread over the index"
+                          : "most headings (" + std::to_string(headingCount(c.text)) + ") among sampled titles";
         used.insert(c.title);
         chosen.push_back(std::move(c));
     }
@@ -409,12 +424,15 @@ int main(int argc, char *argv[]) {
             std::string arg = argv[i];
             if (arg == "-j" && i + 1 < argc)
                 threads = std::max(1, std::stoi(argv[++i]));
-            else if (arg == "-o" && i + 1 < argc)
+            else if (arg == "-n" && i + 1 < argc) {
+                mainPages = std::max(1, std::stoi(argv[++i]));
+                fallbackCandidates = std::max<size_t>(200, mainPages * 4);
+            } else if (arg == "-o" && i + 1 < argc)
                 output = argv[++i];
             else if (arg == "--db" && i + 1 < argc)
                 dbFile = argv[++i];
             else if (arg == "-h" || arg == "--help") {
-                std::cout << "usage: wiktsamples [-j N] [-o samples] [--db wiktlangs.sqlite] [wiki...]\n";
+                std::cout << "usage: wiktsamples [-j N] [-n pages] [-o samples] [--db wiktlangs.sqlite] [wiki...]\n";
                 return 0;
             } else
                 wikis.push_back(arg);

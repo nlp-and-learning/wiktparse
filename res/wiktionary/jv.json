@@ -1,0 +1,15 @@
+{
+  "wiki": "jv",
+  "language": {
+    "also": [
+      {
+        "form": "heading-name"
+      }
+    ],
+    "aliases": {
+      "jawa": "jv",
+      "{{jawa}}": "jv"
+    }
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

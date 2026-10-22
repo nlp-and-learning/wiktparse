@@ -9,7 +9,18 @@
       "српскохрватски": "sh",
       "srpski": "sr",
       "Српски": "sr"
-    }
+    },
+    "also": [
+      {
+        "form": "line-template",
+        "pattern": "{{-xx-}}"
+      },
+      {
+        "form": "line-template",
+        "template": "Наслов",
+        "code": 1
+      }
+    ]
   },
   "status": "language as the first link in parentheses after the word"
 }

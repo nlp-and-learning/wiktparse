@@ -1,0 +1,13 @@
+{
+  "wiki": "rw",
+  "language": {
+    "also": [
+      {
+        "form": "heading-template",
+        "heading_level": 2,
+        "bare_code": true
+      }
+    ]
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

@@ -1,0 +1,23 @@
+{
+  "wiki": "ia",
+  "language": {
+    "aliases": {
+      "Anglese": "en",
+      "Esperanto": "eo",
+      "Interlingua": "ia",
+      "Francese": "fr",
+      "Germano": "de",
+      "Italiano": "it",
+      "Espaniol": "es",
+      "Portugese": "pt",
+      "Nederlandese": "nl",
+      "Russo": "ru",
+      "Latino": "la",
+      "Svedese": "sv",
+      "Polonese": "pl",
+      "Danese": "da",
+      "Finnese": "fi"
+    }
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

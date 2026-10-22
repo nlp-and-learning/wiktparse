@@ -1,7 +1,7 @@
 {
   "wiki": "hu",
   "language": {
-    "template_regex": "^([a-z]{3})(fn|mn|ige|hsz|nm|szn|isz|ksz|nu|elotag|utotag|kif)$"
+    "template_regex": "^([a-z]{3})(fn|mn|ige|hsz|nm|szn|isz|ksz|nu|geo|tul|elotag|utotag|kif|rov)$"
   },
   "status": "fixed from samples1000 pages without a language"
 }

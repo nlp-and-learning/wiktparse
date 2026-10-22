@@ -1,0 +1,19 @@
+{
+  "wiki": "ss",
+  "language": {
+    "also": [
+      {
+        "form": "line-template",
+        "template_regex": "^([A-Z]{2,3})$"
+      }
+    ],
+    "template_regex": "^([A-Z]{2,3})$",
+    "aliases": {
+      "SS": "ss",
+      "MUL": "mul",
+      "EN": "en",
+      "ZU": "zu"
+    }
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

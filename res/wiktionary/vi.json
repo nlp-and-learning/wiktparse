@@ -1,0 +1,14 @@
+{
+  "wiki": "vi",
+  "language": {
+    "also": [
+      {
+        "form": "heading-template",
+        "heading_level": 2,
+        "template": "langname",
+        "code": 1
+      }
+    ]
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

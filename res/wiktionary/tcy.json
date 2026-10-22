@@ -4,7 +4,8 @@
     "aliases": {
       "ತುಳು": "tcy",
       "ಕನ್ನಡ": "kn"
-    }
+    },
+    "fallback_native": true
   },
   "status": "aliases from the dump markers (unresolved.tsv)"
 }

@@ -104,8 +104,8 @@ public:
         // Other forms of language markers, prepared once: {"language": merged without aliases}
         if (config["language"].contains("also")) {
             json base = config["language"];
-            base.erase("also");
-            base.erase("aliases");
+            for (const char *key : {"also", "aliases", "template", "code", "pattern", "bare_code", "name_from"})
+                base.erase(key);
             config["also_forms"] = json::array();
             for (const auto &other : config["language"]["also"]) {
                 json merged = base;
@@ -1223,7 +1223,9 @@ int main(int argc, char *argv[]) {
                 std::ifstream file(input / wiki / page["file"].get<std::string>());
                 std::stringstream text;
                 text << file.rdbuf();
-                auto line = convertPage(wiki, config, names, sectionNames, page["title"], page["ns"], text.str(), stats, markersOnly);
+                // As from dumps: without comments
+                auto line = convertPage(wiki, config, names, sectionNames, page["title"], page["ns"],
+                                        wikilib::markup::strip_comments(text.str()), stats, markersOnly);
                 if (out && !line["sections"].empty()) // pages without a recognized language are left out
                     out->add(line.dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
             }

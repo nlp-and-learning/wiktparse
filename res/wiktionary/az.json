@@ -1,0 +1,20 @@
+{
+  "wiki": "az",
+  "language": {
+    "also": [
+      {
+        "form": "heading-name",
+        "heading_level": 2
+      },
+      {
+        "form": "line-template",
+        "template": "Dil",
+        "code": 1
+      }
+    ],
+    "strip": [
+      "dili"
+    ]
+  },
+  "status": "fixed from samples1000 pages without a language"
+}

@@ -21,7 +21,8 @@
 //   language_name(code, in_code, name, source)
 //       the name of language code in language in_code (both canonical); source:
 //       en.wikt (canonical English names), en.wikt-alias, en.wikt-variety,
-//       wikidata-label, wikidata-alias, extra, enwiki (infobox names),
+//       wikidata-label, wikidata-alias, wikidata-other (labels and aliases of
+//       another item of the language: of its English Wikipedia infobox), extra, enwiki (infobox names),
 //       wikt-module (Lua modules of Wiktionaries, wiktmodules), wikt-heading
 //       (resolved language headings of Wiktionaries, wikt2jsonl markers.tsv),
 //       config-alias (res/wiktionary/<wiki>.json)
@@ -570,17 +571,18 @@ int main(int argc, char *argv[]) {
         // name is not a name or alias of an en.wikt language. Added to lang with
         // kind "wikipedia"; varieties (lcN/ldN) with unknown codes too.
         size_t boxes = 0, boxesKnown = 0, boxesAdded = 0, varietiesAdded = 0;
+        std::vector<std::pair<std::string, std::string>> otherItems; // code, another Wikidata item of it
         if (fs::exists(infoboxFile)) {
             std::map<std::string, std::string> glottoQid;
             for (const auto &[q, entity] : wikidata)
                 if (entity["claims"].contains("P1394"))
                     for (const auto &g : entity["claims"]["P1394"])
                         glottoQid[g.get<std::string>()] = q;
-            std::set<std::string> knownNames;
+            std::map<std::string, std::string> knownNames; // lower-case name or alias -> code
             for (const auto &row : langRows)
-                knownNames.insert(wikilib::unicode::to_lower(row[2]));
+                knownNames.emplace(wikilib::unicode::to_lower(row[2]), row[0]);
             for (const auto &row : aliasRows)
-                knownNames.insert(wikilib::unicode::to_lower(row[1]));
+                knownNames.emplace(wikilib::unicode::to_lower(row[1]), row[0]);
 
             static const std::regex markup(R"(<!--[\s\S]*?-->|<ref[^>]*/>|<ref[\s\S]*?</ref>|\{\{[^{}]*\}\}|<br\s*/?>)");
             static const std::regex separators(R"([\s,;/]+)");
@@ -653,6 +655,15 @@ int main(int argc, char *argv[]) {
                         q = glottoQid[g];
                 if (known) {
                     boxesKnown++;
+                    // The item of the infobox may be another than that of en.wikt (Griko,
+                    // Q35719, a dialect of Italiot Greek grk-ita, Q19720507): its names
+                    // are names of the en.wikt language too
+                    std::string code = mainCode;
+                    for (const auto &n : {name, titleName})
+                        if (auto it = knownNames.find(wikilib::unicode::to_lower(n)); code.empty() && it != knownNames.end())
+                            code = it->second;
+                    if (!q.empty() && !code.empty() && (!codeQid.contains(code) || codeQid[code] != q))
+                        otherItems.emplace_back(code, q);
                 } else {
                     // Code: ISO 639-3, else Glottolog, else the article title
                     std::string code = !iso3s.empty() ? iso3s.front() : !glottos.empty() ? glottos.front()
@@ -795,7 +806,7 @@ int main(int argc, char *argv[]) {
 
         // language_name: the best source of each (code, in_code, name)
         static const std::vector<std::string> sourceOrder = {
-                "en.wikt", "extra", "enwiki", "wikidata-label", "wikidata-alias", "en.wikt-alias",
+                "en.wikt", "extra", "enwiki", "wikidata-label", "wikidata-alias", "wikidata-other", "en.wikt-alias",
                 "en.wikt-variety", "wikt-module", "wikt-heading", "config-alias"};
         std::map<std::tuple<std::string, std::string, std::string>, std::string> names;
         std::map<std::string, size_t> unknownInCode;
@@ -817,6 +828,27 @@ int main(int argc, char *argv[]) {
             addName(r[0], "en", r[1], r[2] == "variety" ? "en.wikt-variety" : "en.wikt-alias");
         for (const auto &r : nameRows) // code, qid, label language, name, alias
             addName(r[0], canonical(r[2]), r[3], r[4] == "1" ? "wikidata-alias" : "wikidata-label");
+        // Labels and aliases of other Wikidata items of a language (infoboxes)
+        for (auto [code, q] : otherItems) {
+            auto it = wikidata.find(q);
+            if (it == wikidata.end()) {
+                missing.insert(q);
+                continue;
+            }
+            // An item with its own language in the table (Croatian: hr, of res/extra_languages.tsv, not sh)
+            for (const auto *prop : {"P218", "P220"})
+                if (auto own = claim(q, prop); languages.contains(own) && own != code) {
+                    code = own;
+                    break;
+                }
+            for (const auto &[lang, label] : it->second["labels"].items())
+                if (label.is_object())
+                    addName(code, canonical(lang), label.value("value", ""), "wikidata-other");
+            for (const auto &[lang, list] : it->second["aliases"].items())
+                if (list.is_array())
+                    for (const auto &alias : list)
+                        addName(code, canonical(lang), alias.value("value", ""), "wikidata-other");
+        }
         // Language names of Wiktionaries from their Lua modules (wiktmodules: module_names.tsv):
         // es "alemán" -> de, zh "阿歐語" -> aou
         if (fs::exists(moduleNamesFile)) {
@@ -909,6 +941,8 @@ int main(int argc, char *argv[]) {
         // for merged items also the new id, as the dump has only a redirect for the old one
         std::set<std::string> allQids;
         for (const auto &[code, q] : codeQid)
+            allQids.insert(q);
+        for (const auto &[code, q] : otherItems)
             allQids.insert(q);
         if (fs::exists(fetchedFile)) {
             std::ifstream in(fetchedFile);

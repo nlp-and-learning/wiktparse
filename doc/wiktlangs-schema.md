@@ -28,7 +28,7 @@ row of `language` is readable by itself).
 | `code` | the language named |
 | `in_code` | the language the name is written in |
 | `name` | |
-| `source` | `en.wikt` (canonical English names), `en.wikt-alias`, `en.wikt-variety`, `extra`, `enwiki` (infobox names), `wikidata-label`, `wikidata-alias`, `wikt-module` (Lua modules of Wiktionaries, `wiktmodules`), `wikt-heading` (resolved language headings of Wiktionaries, `wikt2jsonl` markers), `config-alias` (`res/wiktionary/<wiki>.json`) |
+| `source` | `en.wikt` (canonical English names), `en.wikt-alias`, `en.wikt-variety`, `extra`, `enwiki` (infobox names), `wikidata-label`, `wikidata-alias`, `wikidata-other` (labels and aliases of another Wikidata item of the language, from its English Wikipedia infobox: Griko Q35719 for `grk-ita`), `wikt-module` (Lua modules of Wiktionaries, `wiktmodules`), `wikt-heading` (resolved language headings of Wiktionaries, `wikt2jsonl` markers), `config-alias` (`res/wiktionary/<wiki>.json`) |
 
 One row per (`code`, `in_code`, `name`), with its best source in the order
 above. So "język wietnamski" is (`vi`, `pl`, `język wietnamski`,

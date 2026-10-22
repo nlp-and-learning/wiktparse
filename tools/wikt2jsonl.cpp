@@ -222,6 +222,10 @@ public:
             }
         if (result.empty())
             result = query("SELECT code FROM lang WHERE name=?2 AND ?1<>'' LIMIT 1", lang, name);
+        // Names from Lua modules of the wiki itself (wiktmodules -> wikt_lang_name)
+        for (const auto &n : variants)
+            if (result.empty())
+                result = query("SELECT code FROM wikt_lang_name WHERE wiki=?1 AND name=?2 LIMIT 1", wiki, n);
         return cache_[key] = result;
     }
 

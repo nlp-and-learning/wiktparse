@@ -33,7 +33,15 @@ struct Found {
     std::string module, kind, examples;
     size_t entries = 0;
     size_t local = 0; // names that are no English names of en.wikt: the wiki's own
+    std::vector<std::pair<std::string, std::string>> names; // code, local name
 };
+
+// Modules of languages, families and etymology languages (not transliterations,
+// pronunciations, glosses): their local names go to module_names.tsv
+bool isLanguageModule(const std::string &title) {
+    static const std::regex re(R"((lang|lengu|ziman|malbat|famil|etymolog|jęz|sprach))", std::regex::icase);
+    return std::regex_search(title, re);
+}
 
 // Codes of en.wikt (languages, families, etymology languages) from wiktlangs.sqlite: entries with
 // other "codes" are transliterations or inflection tables (五笔, hak-pron, odmiana)
@@ -54,8 +62,10 @@ std::vector<Found> scan(const std::string &title, const std::string &text, size_
             if (!knownCodes.empty() && !knownCodes.contains((*it)[codeGroup].str()))
                 continue;
             const auto name = (*it)[codeGroup == 2 ? 1 : 2].str();
-            if (!englishNames.contains(name))
+            if (!englishNames.contains(name)) {
                 ++f.local;
+                f.names.emplace_back((*it)[codeGroup].str(), name);
+            }
             if (f.entries < 3)
                 f.examples += (f.examples.empty() ? "" : "; ") + (*it)[1].str() + " = " + (*it)[2].str();
             ++f.entries;
@@ -71,7 +81,7 @@ std::vector<Found> scan(const std::string &title, const std::string &text, size_
 int main(int argc, char *argv[]) {
     try {
         size_t threads = 8, minEntries = 50;
-        std::string output = "modules.tsv";
+        std::string output = "modules.tsv", namesOutput = "module_names.tsv";
         std::vector<std::string> wikis;
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
@@ -79,10 +89,12 @@ int main(int argc, char *argv[]) {
                 threads = std::max(1, std::stoi(argv[++i]));
             else if (arg == "-o" && i + 1 < argc)
                 output = argv[++i];
+            else if (arg == "--names" && i + 1 < argc)
+                namesOutput = argv[++i];
             else if (arg == "--min" && i + 1 < argc)
                 minEntries = std::stoul(argv[++i]);
             else if (arg == "-h" || arg == "--help") {
-                std::cout << "usage: wiktmodules [-j N] [-o modules.tsv] [--min 50] [wiki...]\n";
+                std::cout << "usage: wiktmodules [-j N] [-o modules.tsv] [--names module_names.tsv] [--min 50] [wiki...]\n";
                 return 0;
             } else
                 wikis.push_back(arg);
@@ -108,6 +120,9 @@ int main(int argc, char *argv[]) {
 
         std::ofstream out(output);
         out << "wiki\tmodule\tkind\tentries\tlocal\texamples\n";
+        // Local language names for wiktlangs.sqlite (table wikt_lang_name)
+        std::ofstream namesOut(namesOutput);
+        namesOut << "wiki\tcode\tname\tmodule\n";
         std::mutex mutex;
         std::atomic<size_t> next{0};
         auto work = [&] {
@@ -129,6 +144,10 @@ int main(int argc, char *argv[]) {
                                             });
                     std::ranges::sort(found, std::greater{}, &Found::entries);
                     std::lock_guard lock(mutex);
+                    for (const auto &f : found)
+                        if (isLanguageModule(f.module) && f.local >= minEntries)
+                            for (const auto &[code, name] : f.names)
+                                namesOut << wiki << '\t' << code << '\t' << name << '\t' << f.module << '\n';
                     for (const auto &f : found)
                         out << wiki << '\t' << f.module << '\t' << f.kind << '\t' << f.entries << '\t' << f.local << '\t' << f.examples << '\n';
                     std::cout << wiki << ": " << modules << " modules, " << found.size() << " with language tables" << std::endl;

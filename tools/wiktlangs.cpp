@@ -374,6 +374,11 @@ int main(int argc, char *argv[]) {
     }
     fs::path infoboxFile = "infoboxes.jsonl";
     fs::path markersFile = "jsonl/markers.tsv";
+    fs::path moduleNamesFile = "module_names.tsv";
+    if (auto flag = std::ranges::find(args, "--module-names"); flag != args.end() && flag + 1 != args.end()) {
+        moduleNamesFile = *(flag + 1);
+        args.erase(flag, flag + 2);
+    }
     const fs::path sectionNamesFile = WIKTPARSE_RES_DIR "/wiktionary_section_names.tsv";
     if (auto flag = std::ranges::find(args, "--markers"); flag != args.end() && flag + 1 != args.end()) {
         markersFile = *(flag + 1);
@@ -384,8 +389,9 @@ int main(int argc, char *argv[]) {
         args.erase(flag, flag + 2);
     }
     if (!args.empty() && (args[0] == "-h" || args[0] == "--help")) {
-        std::cout << "usage: wiktlangs [--fetch-missing] [--infoboxes FILE] [--markers FILE] [output.sqlite] [wikidata.jsonl...]\n"
+        std::cout << "usage: wiktlangs [--fetch-missing] [--infoboxes FILE] [--markers FILE] [--module-names FILE] [output.sqlite] [wikidata.jsonl...]\n"
                      "       --markers: language markers of Wiktionaries from wikt2jsonl (default ./jsonl/markers.tsv)\n"
+                     "       --module-names: language names from Lua modules, wiktmodules (default ./module_names.tsv)\n"
                      "       --infoboxes: Wikipedia infoboxes from wiktparse (default ./infoboxes.jsonl if present)\n"
                      "       --fetch-missing: Q ids of en.wikt not in the Wikidata files are fetched from\n"
                      "       the Wikidata API into <output>_fetched.jsonl (always read when present)\n";
@@ -733,6 +739,24 @@ int main(int argc, char *argv[]) {
             db.insert("INSERT INTO wikt_marker VALUES(?,?,?,?,?)", rows);
             db.exec("CREATE INDEX wikt_marker_wiki ON wikt_marker(wiki, marker);");
             std::cout << rows.size() << " language markers of Wiktionaries from " << markersFile.string() << std::endl;
+        }
+        // Language names of Wiktionaries from their Lua modules (wiktmodules: module_names.tsv):
+        // es "alemán" -> de, zh "阿歐語" -> aou
+        db.exec("CREATE TABLE wikt_lang_name(wiki TEXT, code TEXT, name TEXT, module TEXT)");
+        if (fs::exists(moduleNamesFile)) {
+            std::vector<std::vector<std::string>> rows;
+            std::ifstream in(moduleNamesFile);
+            for (std::string line; std::getline(in, line);) {
+                std::vector<std::string> f;
+                std::stringstream ss(line);
+                for (std::string field; std::getline(ss, field, '\t');)
+                    f.push_back(field);
+                if (f.size() == 4 && f[0] != "wiki")
+                    rows.push_back(f);
+            }
+            db.insert("INSERT INTO wikt_lang_name VALUES(?,?,?,?)", rows);
+            db.exec("CREATE INDEX wikt_lang_name_wiki ON wikt_lang_name(wiki, name);");
+            std::cout << rows.size() << " language names from modules of Wiktionaries" << std::endl;
         }
         // Section headings of Wiktionaries in English (res/wiktionary_section_names.tsv)
         db.exec("CREATE TABLE wikt_section(wiki TEXT, name TEXT, section TEXT, kind TEXT)");

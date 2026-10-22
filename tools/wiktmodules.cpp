@@ -7,7 +7,7 @@
 //
 // Reads only the indexed ranges holding pages of the module namespace (828,
 // named from the dump's <siteinfo>). Output: wiki, module, kind (name-code or
-// code-data), entries, examples.
+// code-data), entries, local (names that are no English en.wikt names), examples.
 #include <algorithm>
 #include <atomic>
 #include <exception>
@@ -32,11 +32,13 @@ namespace {
 struct Found {
     std::string module, kind, examples;
     size_t entries = 0;
+    size_t local = 0; // names that are no English names of en.wikt: the wiki's own
 };
 
 // Codes of en.wikt (languages, families, etymology languages) from wiktlangs.sqlite: entries with
 // other "codes" are transliterations or inflection tables (五笔, hak-pron, odmiana)
 std::set<std::string> knownCodes;
+std::set<std::string> englishNames;
 
 std::vector<Found> scan(const std::string &title, const std::string &text, size_t minEntries) {
     // ["name"] = "code"  and  m["code"] = { "Name"
@@ -51,6 +53,9 @@ std::vector<Found> scan(const std::string &title, const std::string &text, size_
             ++all;
             if (!knownCodes.empty() && !knownCodes.contains((*it)[codeGroup].str()))
                 continue;
+            const auto name = (*it)[codeGroup == 2 ? 1 : 2].str();
+            if (!englishNames.contains(name))
+                ++f.local;
             if (f.entries < 3)
                 f.examples += (f.examples.empty() ? "" : "; ") + (*it)[1].str() + " = " + (*it)[2].str();
             ++f.entries;
@@ -88,6 +93,10 @@ int main(int argc, char *argv[]) {
             while (sqlite3_step(stmt) == SQLITE_ROW)
                 knownCodes.emplace(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)));
             sqlite3_finalize(stmt);
+            sqlite3_prepare_v2(db, "SELECT name FROM lang", -1, &stmt, nullptr);
+            while (sqlite3_step(stmt) == SQLITE_ROW)
+                englishNames.emplace(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)));
+            sqlite3_finalize(stmt);
             sqlite3_close(db);
         }
         if (knownCodes.empty())
@@ -96,7 +105,7 @@ int main(int argc, char *argv[]) {
             wikis = WikiDump::dumpPath(WikiProject::Wiktionary, "en").available_languages();
 
         std::ofstream out(output);
-        out << "wiki\tmodule\tkind\tentries\texamples\n";
+        out << "wiki\tmodule\tkind\tentries\tlocal\texamples\n";
         std::mutex mutex;
         std::atomic<size_t> next{0};
         auto work = [&] {
@@ -119,7 +128,7 @@ int main(int argc, char *argv[]) {
                     std::ranges::sort(found, std::greater{}, &Found::entries);
                     std::lock_guard lock(mutex);
                     for (const auto &f : found)
-                        out << wiki << '\t' << f.module << '\t' << f.kind << '\t' << f.entries << '\t' << f.examples << '\n';
+                        out << wiki << '\t' << f.module << '\t' << f.kind << '\t' << f.entries << '\t' << f.local << '\t' << f.examples << '\n';
                     std::cout << wiki << ": " << modules << " modules, " << found.size() << " with language tables" << std::endl;
                 } catch (const std::exception &e) {
                     std::lock_guard lock(mutex);

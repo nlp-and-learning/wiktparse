@@ -1,0 +1,25 @@
+{
+  "wiki": "no",
+  "language": {
+    "aliases": {
+      "Acehnesisk": "ace",
+      "Bosnisk": "bs",
+      "Centralnahuatl": "nhn",
+      "Dimili": "zza",
+      "Flerspråklig": "mul",
+      "Tverrspråklig": "mul",
+      "Frankoprovensalsk": "frp",
+      "Karakalpakisk": "kaa",
+      "Khakassisk": "kjh",
+      "Kroatisk": "hr",
+      "Lokano": "ilo",
+      "Luxembourgisk": "lb",
+      "Pampangan": "pam",
+      "Serbisk": "sr",
+      "Slovio": "art-slovio",
+      "Sveitsertysk": "gsw",
+      "Tatarsk": "tt"
+    }
+  },
+  "status": "aliases from the dump markers"
+}

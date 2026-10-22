@@ -118,19 +118,19 @@ mt	E	{{-xx-}}
 my	A		my.json
 na	E	{{-xx-}}	
 nah	E	{{-xx-}}	
-nds	A		
-ne	A1		
+nds	A		nds.json
+ne	A1		ne.json
 nia	F		
 nl	E	{{=xx=}}	nl.json
-nn	A		
-no	A		
+nn	A		nn.json
+no	A		no.json
 oc	E	{{=xx=}}	
 om	E	{{-xx-}}	
-or	A		
-pa	A		
+or	A		or.json
+pa	A		pa.json
 pi	F		
 pl	D		pl.json
-pnb	A		
+pnb	A		pnb.json
 ps	A		ps.json
 pt	C		
 qu	E	{{-xx-}}	
@@ -141,10 +141,10 @@ roa_rup	E	{{-xx-}}
 ru	C		ru.json
 rw	E	{{=xx=}}	
 sa	A1		sa.json
-sat	A		
+sat	A		sat.json
 sc	F		
 scn	E	{{-xx-}}	
-sd	A		
+sd	A		sd.json
 sg	B	Y	sg.json
 sh	A		sh.json
 shn	A		shn.json

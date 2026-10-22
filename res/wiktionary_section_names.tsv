@@ -422,3 +422,72 @@ my	noun	noun	pos
 my	Adjective	adjective	pos
 my	နာမ်စား	pronoun	pos
 my	ဝိဘတ်	particle	pos
+ne	परिचय	definitions	section
+no	Kilder	sources	section
+no	Referanser	references	section
+no	Arabisk tall	numeral	pos
+or	ଆଧାର	references	section
+or	ଆଧର	references	section
+or	ଆହୁରି ଦେଖନ୍ତୁ	see also	section
+or	ଅଧିକ ଦେଖନ୍ତୁ	see also	section
+or	ଉଚ୍ଚାରଣ	pronunciation	section
+or	ଉଦାହରଣ	examples	section
+or	ପ୍ରତିଶବ୍ଦ	synonyms	relation
+or	ବିଶେଷଣ	adjective	pos
+or	ବିଶେଷ୍ୟ	noun	pos
+or	ବ୍ୟବହାର	usage	section
+or	ଶବ୍ଦାର୍ଥ	definitions	section
+pa	ਉਲਥਾ	translations	section
+pa	ਅਨੁਵਾਦ	translations	section
+pa	ਤਰਜਮਾ	translations	section
+pa	ਅਰਥ	definitions	section
+pa	ਇਹ ਵੀ ਵੇਖੋ	see also	section
+pa	ਹਵਾਲੇ	references	section
+pa	ਗੈਲਰੀ	gallery	section
+pa	ਫੋਟੋ ਗੈਲਰੀ	gallery	section
+pa	ਨਾਂਵ	noun	pos
+pa	ਨਿਰੁਕਤੀ	etymology	section
+pa	ਮਿਸਾਲ	examples	section
+pnb	ناں	noun	pos
+pnb	کریا	verb	pos
+pnb	کریہ	verb	pos
+pnb	گن ناں	adjective	pos
+pnb	صِفت	adjective	pos
+pnb	ادھارن	examples	section
+pnb	ادھہارن	examples	section
+pnb	رلویں شبد	synonyms	relation
+pnb	رلدے شبد	synonyms	relation
+pnb	الٹ	antonyms	relation
+pnb	ہور ویکھو	see also	section
+pnb	Roman Pronunciation	romanization	section
+pnb	نیرکتا	etymology	section
+pnb	شبد کہانی	etymology	section
+ps	ژباړې	translations	section
+ps	نوم	noun	pos
+sat	ᱛᱚᱨᱡᱚᱢᱟ	translations	section
+sat	ᱢᱮᱱᱮᱛ	definitions	section
+sat	ᱢᱮᱱᱮᱫ	definitions	section
+sat	ᱥᱟᱰᱮ	pronunciation	section
+sat	ᱥᱟᱸᱰᱮ	pronunciation	section
+sat	ᱪᱤᱛᱟᱹᱨ	gallery	section
+sat	ᱫᱟᱹᱭᱠᱟᱹ	examples	section
+sat	ᱯᱟᱹᱨᱤᱥ	part of speech	section
+sd	حوالا	references	section
+sd	حوالو	references	section
+sd	ترجما	translations	section
+sd	اسم	noun	pos
+sd	صفت	adjective	pos
+sd	فعل	verb	pos
+sd	پڻ ڏسو	see also	section
+sd	پڻ ڏسندا	see also	section
+sd	ٻاهريان ڳنڍڻا	external links	section
+sd	لاڳاپيل لفظ ۽ اصطلاح	related terms	relation
+sd	هم معنيٰ	synonyms	relation
+sd	ضد	antonyms	relation
+sd	معنيٰ	definitions	section
+sd	تشريح	definitions	section
+sd	سمجهاڻي	definitions	section
+sd	اُچارُ	pronunciation	section
+sd	جمع	plural	section
+sd	رومن سنڌي / (لپي مَٽَ)	romanization	section
+sd	استعمال	usage	section

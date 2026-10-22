@@ -13,7 +13,13 @@
       "hindi": "hi",
       "język nowogrecki": "el",
       "język chiński standardowy": "cmn",
-      "język staroormiański": "xcl"
+      "język staroormiański": "xcl",
+      "użycie międzynarodowe": "mul",
+      "język nowopruski": "prg",
+      "język karpatorusiński": "rue",
+      "język szkocki gaelicki": "gd",
+      "język bośniacki": "bs",
+      "tetum": "tet"
     },
     "name_from": "template"
   },

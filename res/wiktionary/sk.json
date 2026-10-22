@@ -1,0 +1,12 @@
+{
+  "wiki": "sk",
+  "language": {
+    "aliases": {
+      "Čeština": "cs",
+      "Španielčina": "es",
+      "Medzijazykové": "mul",
+      "Čínština": "zh"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

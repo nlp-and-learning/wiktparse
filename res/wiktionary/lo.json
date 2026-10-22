@@ -1,0 +1,17 @@
+{
+  "wiki": "lo",
+  "language": {
+    "aliases": {
+      "ພາສາແຟັງລັງ": "fr",
+      "ພາສາຝະລັ່ງ": "fr",
+      "ພາສາເຮໄບຣ": "he",
+      "ພາສາເຊັກໂກ": "cs",
+      "ພາສາເອັສເປຣັງໂຕ": "eo",
+      "ພາສາເອັສປາໂຍນ": "es"
+    },
+    "strip": [
+      "ພາສາ"
+    ]
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

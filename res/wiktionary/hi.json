@@ -1,0 +1,13 @@
+{
+  "wiki": "hi",
+  "language": {
+    "aliases": {
+      "फ़ारसी": "fa",
+      "कन्नड़": "kn",
+      "तेलेगु": "te",
+      "मालागासी": "mg",
+      "(सायरेबियन)serbian": "sr"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

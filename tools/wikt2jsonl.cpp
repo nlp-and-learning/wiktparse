@@ -157,7 +157,9 @@ public:
     // Code of a language name written in the language of the wiki
     // Thread-safe
     // lookup: the full label when the wiki writes a short name (sr "српски" -> "{name} језик")
-    std::string code(const std::string &wiki, const std::string &name, const std::string &lookup = "") {
+    // strip: words for "language" that labels may lack (hr "jezik", th "ภาษา")
+    std::string code(const std::string &wiki, const std::string &name, const std::string &lookup = "",
+                      const std::vector<std::string> &strip = {}) {
         if (!db_ || name.empty())
             return "";
         std::lock_guard lock(mutex_);
@@ -179,6 +181,13 @@ public:
         std::vector<std::string> variants{name};
         if (auto at = lookup.find("{name}"); at != std::string::npos)
             variants.push_back(std::string(lookup).replace(at, 6, name));
+        for (const auto &word : strip)
+            if (auto at = name.find(word); at != std::string::npos)
+                variants.push_back(trim(std::string(name).erase(at, word.size())));
+        // SQLite lower() changes ASCII letters only ("Čeština")
+        for (size_t i = 0, n = variants.size(); i < n; ++i)
+            if (auto lower = wikilib::unicode::to_lower(variants[i]); lower != variants[i])
+                variants.push_back(lower);
         // skr "اُردو": without vowel marks and other combining characters
         if (auto plain = withoutCombining(name); plain != name)
             variants.push_back(plain);
@@ -534,7 +543,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         first = false;
         if (marker && requireCode && !(config.contains(json::json_pointer("/language/aliases")) &&
                                        config["language"]["aliases"].contains(*marker)) &&
-            names.code(wiki, *marker, str(config, "/language/lookup")).empty()) {
+            names.code(wiki, *marker, str(config, "/language/lookup"), config["language"].value("strip", std::vector<std::string>{})).empty()) {
             // A heading that is no language (sections at the same level: "Napomene",
             // "Референце"); counted for review, the section goes on
             auto &[markerCode, count] = stats.markers[*marker];
@@ -544,7 +553,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         }
         if (marker) {
             finish();
-            std::string code = byName && !implicit ? names.code(wiki, *marker, str(config, "/language/lookup")) : *marker;
+            std::string code = byName && !implicit ? names.code(wiki, *marker, str(config, "/language/lookup"), config["language"].value("strip", std::vector<std::string>{})) : *marker;
             if (implicit && sections.empty() && line.empty() == false)
                 sectionText += line + '\n';
             // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}

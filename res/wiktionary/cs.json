@@ -1,0 +1,12 @@
+{
+  "wiki": "cs",
+  "language": {
+    "aliases": {
+      "srbština": "sr",
+      "mezijazykové": "mul",
+      "chorvatština": "hr",
+      "klasický nahuatl": "nci"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

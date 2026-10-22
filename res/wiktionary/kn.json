@@ -1,0 +1,15 @@
+{
+  "wiki": "kn",
+  "language": {
+    "aliases": {
+      "ಮಲಾಗೇಸಿ": "mg",
+      "ಗ್ರೀಕ್": "el",
+      "ಅರ್ಮೇನಿಯನ್": "hy",
+      "ಟ್ಯಾಗಲಾಗ್": "tl",
+      "ಚೀನಿ (ವಾಡಿಕೆಯ)": "zh",
+      "ತುರ್ಕಿ": "tr",
+      "ಲ್ಯಾಟ್ವಿಯನ್": "lv"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

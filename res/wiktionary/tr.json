@@ -1,0 +1,17 @@
+{
+  "wiki": "tr",
+  "language": {
+    "aliases": {
+      "Esperanto dili": "eo",
+      "Dillerarası": "mul",
+      "Kuzey Kürtçe": "kmr",
+      "Tagalogca": "tl",
+      "Afrikanca": "af",
+      "Beyaz Rusça": "be"
+    },
+    "strip": [
+      "dili"
+    ]
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

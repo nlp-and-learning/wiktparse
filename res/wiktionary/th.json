@@ -1,0 +1,15 @@
+{
+  "wiki": "th",
+  "language": {
+    "aliases": {
+      "ภาษาร่วม": "mul",
+      "ภาษาอังกฤษกลาง": "enm",
+      "ภาษานอร์เวย์แบบบุ๊กมอล": "nb",
+      "ภาษามลายูแบบปัตตานี": "mfa"
+    },
+    "strip": [
+      "ภาษา"
+    ]
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

@@ -1,0 +1,14 @@
+{
+  "wiki": "sv",
+  "language": {
+    "aliases": {
+      "Tvärspråkligt": "mul",
+      "Bosniska": "bs",
+      "Älvdalska": "ovd",
+      "Kroatiska": "hr",
+      "Serbiska": "sr",
+      "Svensk romani": "rmu"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

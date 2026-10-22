@@ -1,0 +1,13 @@
+{
+  "wiki": "sh",
+  "language": {
+    "aliases": {
+      "Turski": "tr",
+      "Engleski": "en",
+      "Azerbejdžanski": "az",
+      "Njemački": "de",
+      "Bosanski": "bs"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

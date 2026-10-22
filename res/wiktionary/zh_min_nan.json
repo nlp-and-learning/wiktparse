@@ -1,0 +1,12 @@
+{
+  "wiki": "zh_min_nan",
+  "language": {
+    "aliases": {
+      "閩南語": "nan-hbl",
+      "Tâi-oân-ōe": "nan-hbl",
+      "Hôa-gú": "zh",
+      "Hun-lân-gú": "fi"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

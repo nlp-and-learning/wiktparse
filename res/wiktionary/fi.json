@@ -1,0 +1,12 @@
+{
+  "wiki": "fi",
+  "language": {
+    "aliases": {
+      "Kroatia": "hr",
+      "Serbia": "sr",
+      "Kansainvälinen": "mul",
+      "Galego": "gl"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

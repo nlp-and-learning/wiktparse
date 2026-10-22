@@ -1,0 +1,10 @@
+{
+  "wiki": "mn",
+  "language": {
+    "aliases": {
+      "Монголоор": "mn",
+      "Англиар": "en"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

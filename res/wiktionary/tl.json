@@ -1,0 +1,15 @@
+{
+  "wiki": "tl",
+  "language": {
+    "aliases": {
+      "Pinlandes": "fi",
+      "Olandes": "nl",
+      "Malagasi": "mg",
+      "Italyano": "it",
+      "Suweko": "sv",
+      "Unggaro": "hu",
+      "Noruwego": "no"
+    }
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

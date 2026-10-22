@@ -1,0 +1,18 @@
+{
+  "wiki": "hr",
+  "language": {
+    "aliases": {
+      "hrvatski jezik": "hr",
+      "srpski jezik": "sr",
+      "esperanto jezik": "eo",
+      "afrikanski jezik": "af",
+      "mandarinski jezik": "cmn",
+      "tajlandski jezik": "th",
+      "galicijski jezik": "gl"
+    },
+    "strip": [
+      "jezik"
+    ]
+  },
+  "status": "aliases from the dump markers (unresolved.tsv)"
+}

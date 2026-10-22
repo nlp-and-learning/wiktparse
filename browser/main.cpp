@@ -5,7 +5,8 @@
 // "go to line". Right: the selected line as indented JSON in a read-only
 // qcodeedit view (Kate highlighting and folding), and as a tree with readable
 // labels of sections and senses. F4 opens the line, indented, in Kate.
-// View > Original: the page's wikitext, read from the dump at its "source"
+// View > Original: the page's wikitext (the <text> of its <page>, entities
+// decoded) with Kate mediawiki highlighting, read from the dump at its "source"
 // ([bz2 block, number in it]); the dump directory is set in Settings and kept
 // in wiktbrowse.ini next to the binary.
 //
@@ -24,7 +25,6 @@
 #include <QListWidget>
 #include <QMainWindow>
 #include <QMenuBar>
-#include <QPlainTextEdit>
 #include <QSettings>
 #include <QXmlStreamReader>
 #include <QSpinBox>
@@ -236,11 +236,12 @@ public:
         leftLayout->addWidget(status_);
 
         tabs_ = new QTabWidget;
-        setupEditor();
+        setupEditor(json_, "json.xml");
+        setupEditor(wiki_, "mediawiki.xml");
         tree_ = new QTreeView;
         model_ = new QStandardItemModel(this);
         tree_->setModel(model_);
-        tabs_->addTab(edit_, "JSON");
+        tabs_->addTab(json_.edit, "JSON");
         tabs_->addTab(tree_, "Tree");
 
         central->addWidget(left);
@@ -266,10 +267,6 @@ public:
         file->addSeparator();
         file->addAction("&Quit", QKeySequence::Quit, this, &QWidget::close);
 
-        original_ = new QPlainTextEdit;
-        original_->setReadOnly(true);
-        original_->setLineWrapMode(QPlainTextEdit::WidgetWidth);
-        original_->setFont(edit_->area()->font());
         auto *view = menuBar()->addMenu("&View");
         originalAction_ = view->addAction("&Original (wikitext from the dump)");
         originalAction_->setCheckable(true);
@@ -304,7 +301,8 @@ public:
         else
             lines_ = std::make_unique<PlainLines>(path);
         path_ = path;
-        doc_->setText({});
+        json_.doc->setText({});
+        wiki_.doc->setText({});
         model_->clear();
         lineBox_->setMaximum(std::max<int>(1, static_cast<int>(lines_->count())));
         setWindowTitle(path + " — wiktbrowse");
@@ -323,9 +321,9 @@ private:
     static QString dumpDir() { return settings().value("dumps/dir").toString(); }
 
     void showOriginalTab(bool on) {
-        const int at = tabs_->indexOf(original_);
+        const int at = tabs_->indexOf(wiki_.edit);
         if (on && at < 0)
-            tabs_->addTab(original_, "Original");
+            tabs_->addTab(wiki_.edit, "Original");
         else if (!on && at >= 0)
             tabs_->removeTab(at);
         if (on)
@@ -388,7 +386,7 @@ private:
     }
 
     void showOriginal() {
-        if (tabs_->indexOf(original_) < 0)
+        if (tabs_->indexOf(wiki_.edit) < 0)
             return;
         QString text;
         if (!current_.is_object() || !current_.contains("wiki") || !current_.contains("source") ||
@@ -407,10 +405,9 @@ private:
             if (!error.isEmpty())
                 text = "(" + error + ")";
         }
-        original_->setPlainText(text);
+        wiki_.doc->setText(text);
     }
 
-    QPlainTextEdit *original_ = nullptr;
     QAction *originalAction_ = nullptr;
     json current_;
     std::unique_ptr<Lines> lines_;
@@ -420,53 +417,58 @@ private:
     QLabel *status_;
     QListWidget *list_;
     QTabWidget *tabs_;
-    qce::SimpleTextDocument *doc_ = nullptr;
-    qce::CodeEdit *edit_ = nullptr;
-    std::unique_ptr<qce::LineNumberGutter> lineNumbers_;
-    std::unique_ptr<qce::FoldingGutter> foldGutter_;
-    std::unique_ptr<qce::RulesHighlighter> highlighter_;
-    std::unique_ptr<qce::RuleBasedFoldingProvider> foldProvider_;
+    // A read-only qcodeedit view with Kate highlighting and folding
+    struct CodeView {
+        qce::SimpleTextDocument *doc = nullptr;
+        qce::CodeEdit *edit = nullptr;
+        std::unique_ptr<qce::LineNumberGutter> lineNumbers;
+        std::unique_ptr<qce::FoldingGutter> foldGutter;
+        std::unique_ptr<qce::RulesHighlighter> highlighter;
+        std::unique_ptr<qce::RuleBasedFoldingProvider> foldProvider;
+    };
+    CodeView json_; // the line as indented JSON
+    CodeView wiki_; // the page's wikitext from the dump
     QTreeView *tree_;
     QStandardItemModel *model_;
 
     // Read-only qcodeedit with Kate's JSON syntax (downloaded Kate data) and folding
-    void setupEditor() {
-        doc_ = new qce::SimpleTextDocument(this);
-        edit_ = new qce::CodeEdit;
-        edit_->setDocument(doc_);
-        edit_->area()->setReadOnly(true);
-        lineNumbers_ = std::make_unique<qce::LineNumberGutter>(doc_);
-        lineNumbers_->setFont(edit_->area()->font());
-        edit_->addLeftMargin(lineNumbers_.get());
-        foldGutter_ = std::make_unique<qce::FoldingGutter>(&edit_->area()->foldState(),
-                                                           [this](int line) { edit_->area()->toggleFoldAt(line); });
-        edit_->addLeftMargin(foldGutter_.get());
+    void setupEditor(CodeView &view, const QString &syntaxFile) {
+        view.doc = new qce::SimpleTextDocument(this);
+        view.edit = new qce::CodeEdit;
+        view.edit->setDocument(view.doc);
+        view.edit->area()->setReadOnly(true);
+        view.lineNumbers = std::make_unique<qce::LineNumberGutter>(view.doc);
+        view.lineNumbers->setFont(view.edit->area()->font());
+        view.edit->addLeftMargin(view.lineNumbers.get());
+        view.foldGutter = std::make_unique<qce::FoldingGutter>(&view.edit->area()->foldState(),
+                                                           [edit = view.edit](int line) { edit->area()->toggleFoldAt(line); });
+        view.edit->addLeftMargin(view.foldGutter.get());
 
         const auto theme = KateTheme::loadDefault();
-        QPalette palette = edit_->area()->palette();
+        QPalette palette = view.edit->area()->palette();
         if (theme.editorBackground.isValid()) {
             palette.setColor(QPalette::Base, theme.editorBackground);
             palette.setColor(QPalette::Window, theme.editorBackground);
         }
         if (auto normal = theme.styles.constFind("Normal"); normal != theme.styles.constEnd() && normal->fg.isValid())
             palette.setColor(QPalette::Text, normal->fg);
-        edit_->setPalette(palette);
-        edit_->area()->setPalette(palette);
-        edit_->area()->viewport()->setPalette(palette);
-        edit_->setGutterColors({theme.iconBorder, theme.lineNumbers, theme.separator});
+        view.edit->setPalette(palette);
+        view.edit->area()->setPalette(palette);
+        view.edit->area()->viewport()->setPalette(palette);
+        view.edit->setGutterColors({theme.iconBorder, theme.lineNumbers, theme.separator});
 
-        const QString syntax = qce::kate::syntaxDir() + "/json.xml";
-        highlighter_ = theme.isValid() ? KateXmlReader::load(syntax, theme) : KateXmlReader::load(syntax);
-        if (highlighter_) {
-            edit_->area()->setHighlighter(highlighter_.get());
-            foldProvider_ = std::make_unique<qce::RuleBasedFoldingProvider>(highlighter_.get());
+        const QString syntax = qce::kate::syntaxDir() + "/" + syntaxFile;
+        view.highlighter = theme.isValid() ? KateXmlReader::load(syntax, theme) : KateXmlReader::load(syntax);
+        if (view.highlighter) {
+            view.edit->area()->setHighlighter(view.highlighter.get());
+            view.foldProvider = std::make_unique<qce::RuleBasedFoldingProvider>(view.highlighter.get());
             for (const char *region : {"Brace1", "brace", "curly"})
-                foldProvider_->setPlaceholderFor(region, "{…}");
+                view.foldProvider->setPlaceholderFor(region, "{…}");
             for (const char *region : {"Bracket1", "bracket", "square"})
-                foldProvider_->setPlaceholderFor(region, "[…]");
-            edit_->area()->setFoldingProvider(foldProvider_.get());
+                view.foldProvider->setPlaceholderFor(region, "[…]");
+            view.edit->area()->setFoldingProvider(view.foldProvider.get());
         }
-        edit_->area()->setWordWrap(true);
+        view.edit->area()->setWordWrap(true);
     }
 
     void fillList() {
@@ -496,7 +498,7 @@ private:
         file.setPermissions(QFileDevice::WriteOwner | QFileDevice::ReadOwner);
         if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
             return;
-        file.write(doc_->toPlainText().toUtf8());
+        file.write(json_.doc->toPlainText().toUtf8());
         file.close();
         file.setPermissions(QFileDevice::ReadOwner | QFileDevice::ReadGroup | QFileDevice::ReadOther);
         QProcess::startDetached("kate", {path});
@@ -508,7 +510,7 @@ private:
         const QByteArray raw = lines_->line(static_cast<size_t>(line));
         json value = json::parse(raw.constData(), raw.constData() + raw.size(), nullptr, false);
         lineBox_->setValue(line + 1);
-        doc_->setText(value.is_discarded()
+        json_.doc->setText(value.is_discarded()
                               ? QString::fromUtf8(raw)
                               : QString::fromStdString(value.dump(2, ' ', false, json::error_handler_t::replace)));
         model_->clear();

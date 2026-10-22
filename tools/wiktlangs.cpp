@@ -373,12 +373,18 @@ int main(int argc, char *argv[]) {
         args.erase(flag);
     }
     fs::path infoboxFile = "infoboxes.jsonl";
+    fs::path markersFile = "jsonl/markers.tsv";
+    if (auto flag = std::ranges::find(args, "--markers"); flag != args.end() && flag + 1 != args.end()) {
+        markersFile = *(flag + 1);
+        args.erase(flag, flag + 2);
+    }
     if (auto flag = std::ranges::find(args, "--infoboxes"); flag != args.end() && flag + 1 != args.end()) {
         infoboxFile = *(flag + 1);
         args.erase(flag, flag + 2);
     }
     if (!args.empty() && (args[0] == "-h" || args[0] == "--help")) {
-        std::cout << "usage: wiktlangs [--fetch-missing] [--infoboxes FILE] [output.sqlite] [wikidata.jsonl...]\n"
+        std::cout << "usage: wiktlangs [--fetch-missing] [--infoboxes FILE] [--markers FILE] [output.sqlite] [wikidata.jsonl...]\n"
+                     "       --markers: language markers of Wiktionaries from wikt2jsonl (default ./jsonl/markers.tsv)\n"
                      "       --infoboxes: Wikipedia infoboxes from wiktparse (default ./infoboxes.jsonl if present)\n"
                      "       --fetch-missing: Q ids of en.wikt not in the Wikidata files are fetched from\n"
                      "       the Wikidata API into <output>_fetched.jsonl (always read when present)\n";
@@ -707,6 +713,24 @@ int main(int argc, char *argv[]) {
                                 r.at("bookkeeping") == "True" ? "1" : ""});
             db.insert("INSERT INTO glottolog VALUES(?,?,?,?,?,?,?,?,?)", rows);
             db.exec("CREATE INDEX glottolog_parent ON glottolog(parent); CREATE INDEX glottolog_iso3 ON glottolog(iso3);");
+        }
+        // How each Wiktionary marks languages of its sections (wikt2jsonl: jsonl/markers.tsv):
+        // pl "język wietnamski" -> vi, en "Bulgarian" -> bg, fr "fr" (code template)
+        db.exec("CREATE TABLE wikt_marker(wiki TEXT, form TEXT, marker TEXT, code TEXT, sections INTEGER)");
+        if (fs::exists(markersFile)) {
+            std::vector<std::vector<std::string>> rows;
+            std::ifstream in(markersFile);
+            for (std::string line; std::getline(in, line);) {
+                std::vector<std::string> f;
+                std::stringstream ss(line);
+                for (std::string field; std::getline(ss, field, '\t');)
+                    f.push_back(field);
+                if (f.size() == 5 && f[0] != "wiki")
+                    rows.push_back(f);
+            }
+            db.insert("INSERT INTO wikt_marker VALUES(?,?,?,?,?)", rows);
+            db.exec("CREATE INDEX wikt_marker_wiki ON wikt_marker(wiki, marker);");
+            std::cout << rows.size() << " language markers of Wiktionaries from " << markersFile.string() << std::endl;
         }
         db.exec("CREATE TABLE wd_code_map(scheme TEXT, code TEXT, qid TEXT, name TEXT, wikt_code TEXT, "
                 "method TEXT, note TEXT)");

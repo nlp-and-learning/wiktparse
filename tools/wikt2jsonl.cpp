@@ -13,7 +13,8 @@
 //   {"wiki","title","ns","sections":[{"language","code","headings":[...],
 //    "native","senses":[{"id","text"}],"translations":[{"lang","term","sense"}]}]}
 // ("native": the section is in the wiki's own language)
-// and <out>/stats.tsv (also printed): per wiki pages, sections, sections with
+// <out>/markers.tsv (wiki, form, marker as written, code, sections; read by
+// wiktlangs into table wikt_marker) and <out>/stats.tsv (also printed): per wiki pages, sections, sections with
 // a language code, senses, translations.
 #include <algorithm>
 #include <exception>
@@ -155,9 +156,9 @@ public:
         for (const auto &n : variants)
             for (const auto &l : langs) {
                 if (result.empty())
-                    result = query("SELECT code FROM lang_name WHERE lang=?1 AND name=?2 ORDER BY alias LIMIT 1", l, n);
+                    result = query("SELECT n.code FROM lang_name n WHERE n.lang=?1 AND n.name=?2 ORDER BY n.alias, (SELECT count(*) FROM lang l WHERE l.code=n.code AND l.kind='language') DESC, length(n.code) LIMIT 1", l, n);
                 if (result.empty())
-                    result = query("SELECT code FROM lang_name WHERE lang=?1 AND lower(name)=lower(?2) ORDER BY alias LIMIT 1", l, n);
+                    result = query("SELECT n.code FROM lang_name n WHERE n.lang=?1 AND lower(n.name)=lower(?2) ORDER BY n.alias, (SELECT count(*) FROM lang l WHERE l.code=n.code AND l.kind='language') DESC, length(n.code) LIMIT 1", l, n);
             }
         if (result.empty())
             result = query("SELECT code FROM lang WHERE name=?2 AND ?1<>'' LIMIT 1", lang, name);
@@ -414,6 +415,8 @@ std::vector<Translation> translations(const json &config, const std::string &tex
 struct Stats {
     size_t pages = 0, pagesWithSections = 0, sections = 0, sectionsWithCode = 0, senses = 0, translations = 0;
     size_t nativeSections = 0, nativeSenses = 0, nativeTranslations = 0;
+    // Language markers as written in the wiki -> code and number of sections
+    std::map<std::string, std::pair<std::string, size_t>> markers;
 };
 
 // Codes of the wiki's own language: entries of other languages are defined in
@@ -462,6 +465,9 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             if (auto aliases = json::json_pointer("/language/aliases"); config.contains(aliases))
                 if (auto it = config[aliases].find(*marker); it != config[aliases].end())
                     code = it->get<std::string>();
+            auto &[markerCode, count] = stats.markers[*marker];
+            markerCode = code;
+            ++count;
             sections.push_back({{"language", *marker}, {"code", code.empty() ? json() : json(code)},
                                 {"native", std::ranges::contains(native, code)},
                                 {"headings", json::array()}, {"senses", json::array()}, {"translations", json::array()}});
@@ -517,6 +523,9 @@ int main(int argc, char *argv[]) {
         LanguageNames names(dbFile);
         fs::create_directories(output);
         std::ofstream statsFile(output / "stats.tsv");
+        // For wiktlangs.sqlite (table wikt_marker): how each wiki writes languages
+        std::ofstream markersFile(output / "markers.tsv");
+        markersFile << "wiki\tform\tmarker\tcode\tsections\n";
         std::string header = "wiki\tprofile\tpages\twith_sections\tsections\twith_code\tsenses\ttranslations\tnative_sections\tnative_senses\tnative_translations";
         statsFile << header << '\n';
         std::cout << header << '\n';
@@ -538,6 +547,9 @@ int main(int argc, char *argv[]) {
                                    stats.pagesWithSections, stats.sections, stats.sectionsWithCode, stats.senses,
                                    stats.translations, stats.nativeSections, stats.nativeSenses, stats.nativeTranslations);
             statsFile << row << '\n';
+            for (const auto &[marker, value] : stats.markers)
+                markersFile << wiki << '\t' << str(config, "/language/form") << '\t' << marker << '\t' << value.first
+                            << '\t' << value.second << '\n';
             std::cout << row << std::endl;
         }
     } catch (const std::exception &e) {

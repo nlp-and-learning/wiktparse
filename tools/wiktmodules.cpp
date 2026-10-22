@@ -91,11 +91,13 @@ int main(int argc, char *argv[]) {
             sqlite3_stmt *stmt = nullptr;
             sqlite3_prepare_v2(db, "SELECT code FROM lang", -1, &stmt, nullptr);
             while (sqlite3_step(stmt) == SQLITE_ROW)
-                knownCodes.emplace(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)));
+                if (auto code = sqlite3_column_text(stmt, 0))
+                    knownCodes.emplace(reinterpret_cast<const char *>(code));
             sqlite3_finalize(stmt);
             sqlite3_prepare_v2(db, "SELECT name FROM lang", -1, &stmt, nullptr);
             while (sqlite3_step(stmt) == SQLITE_ROW)
-                englishNames.emplace(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)));
+                if (auto name = sqlite3_column_text(stmt, 0))
+                    englishNames.emplace(reinterpret_cast<const char *>(name));
             sqlite3_finalize(stmt);
             sqlite3_close(db);
         }

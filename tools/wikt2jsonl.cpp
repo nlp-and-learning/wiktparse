@@ -698,7 +698,9 @@ public:
         stack_.push_back(&root_);
     }
 
-    void line(const std::string &line) {
+    // offset: of the line in the page text (bytes); nodes get "range": [begin, end)
+    void line(const std::string &line, size_t offset) {
+        offset_ = offset;
         if (auto h = wikt2jsonl_heading(line)) {
             open(h->text, h->level, false);
             return;
@@ -715,7 +717,7 @@ public:
             auto first = trim(text.substr(0, text.find(',')));
             if (auto name = names_.find(first); name && name->kind == "pos") {
                 if (current().contains("template_pos"))
-                    stack_.pop_back(); // the previous part of speech of these definitions
+                    close(); // the previous part of speech of these definitions
                 json pos = node(name->section, "pos", text, current()["level"].get<int>() + 1, 0);
                 pos["template_pos"] = true;
                 push(std::move(pos));
@@ -733,7 +735,11 @@ public:
         current()["text"] = current()["text"].get<std::string>() + line + '\n';
     }
 
-    json finish(Stats &stats) {
+    json finish(Stats &stats, size_t end) {
+        while (stack_.size() > 1) {
+            current()["range"][1] = end;
+            stack_.pop_back();
+        }
         finishNode(root_, stats);
         return {{"sections", root_["children"]}, {"text", root_["text"]}, {"unknown_headings", unknown_}};
     }
@@ -746,8 +752,13 @@ private:
     std::vector<json *> stack_; // open nodes, root first
     json unknown_ = json::array();
     std::vector<int> counters_;
+    size_t offset_ = 0;
 
     json &current() { return *stack_.back(); }
+    void close() {
+        current()["range"][1] = offset_;
+        stack_.pop_back();
+    }
 
     int headingLevel() const {
         for (auto it = stack_.rbegin(); it != stack_.rend(); ++it)
@@ -764,6 +775,7 @@ private:
     }
 
     void push(json n) {
+        n["range"] = json::array({offset_, offset_});
         auto &children = current()["children"];
         children.push_back(std::move(n));
         stack_.push_back(&children.back());
@@ -772,7 +784,7 @@ private:
     void open(const std::string &raw, int level, bool templateLine) {
         // Close nodes at this level or deeper (template lines: also earlier template lines)
         while (stack_.size() > 1 && current()["level"].get<int>() >= level)
-            stack_.pop_back();
+            close();
         auto [key, index] = sectionKey(raw);
         auto name = names_.find(key);
         if (!name)
@@ -805,6 +817,9 @@ private:
         stats.senses += n["senses"].size();
         stats.translations += n["translations"].size();
         n.erase("template_pos");
+        // The text of sections handled in this phase is not repeated: its range points into the page
+        if (!n["senses"].empty() || !n["translations"].empty() || n["section"] == "Translations")
+            n.erase("text");
         for (auto &c : n["children"])
             finishNode(c, stats);
     }
@@ -817,11 +832,12 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     std::optional<LanguageEntry> entry;
     const bool byName = str(config, "/language/value") == "name";
     const auto native = nativeCodes(wiki, config);
-    auto finish = [&] {
+    auto finish = [&](size_t end) {
         if (!current || markersOnly || !entry)
             return;
         const size_t senses = stats.senses, translated = stats.translations;
-        current->update(entry->finish(stats));
+        current->update(entry->finish(stats, end));
+        (*current)["range"][1] = end;
         if ((*current)["native"].get<bool>()) {
             stats.nativeSections++;
             stats.nativeSenses += stats.senses - senses;
@@ -833,7 +849,9 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     const bool requireCode = byName && !implicit && config["language"].value("require_code", true);
     std::istringstream in(text);
     bool first = true;
-    for (std::string line; std::getline(in, line);) {
+    size_t offset = 0, next = 0;
+    for (std::string line; std::getline(in, line); offset = next) {
+        next = offset + line.size() + 1;
         auto marker = implicit ? (first ? std::optional(native.front()) : std::nullopt) : languageMarker(config, line);
         first = false;
         if (marker && requireCode && !(config.contains(json::json_pointer("/language/aliases")) &&
@@ -849,7 +867,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             marker.reset();
         }
         if (marker) {
-            finish();
+            finish(offset);
             std::string code = byName && !implicit ? names.code(wiki, *marker, str(config, "/language/lookup"), config["language"].value("strip", std::vector<std::string>{})) : *marker;
             const bool keepLine = implicit && sections.empty() && !line.empty();
             // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}
@@ -861,7 +879,8 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             ++count;
             stats.markerExamples.emplace(*marker, title);
             sections.push_back({{"language", *marker}, {"code", code.empty() ? json() : json(code)},
-                                {"native", std::ranges::contains(native, code)}});
+                                {"native", std::ranges::contains(native, code)},
+                                {"range", json::array({offset, text.size()})}});
             current = &sections.back();
             entry.emplace(config, sectionNames, [&](const std::string &lang) {
                 // Canonical code of a translation language: a code as such (ru "az.cyr": without the
@@ -880,16 +899,16 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
                 return code;
             }, wikt2jsonl_heading(line) ? wikt2jsonl_heading(line)->level : 1);
             if (keepLine && !markersOnly)
-                entry->line(line);
+                entry->line(line, offset);
             stats.sections++;
             stats.sectionsWithCode += !code.empty();
             continue;
         }
         if (!current || markersOnly)
             continue;
-        entry->line(line);
+        entry->line(line, offset);
     }
-    finish();
+    finish(text.size());
     stats.pages++;
     stats.pagesWithSections += !sections.empty();
     return {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"sections", sections}};

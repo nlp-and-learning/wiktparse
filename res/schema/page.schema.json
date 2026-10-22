@@ -71,6 +71,16 @@
             "type": "string"
           },
           "description": "Headings without an English section name yet"
+        },
+        "range": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[begin, end) byte offsets in the page's wikitext"
         }
       }
     },
@@ -82,10 +92,10 @@
         "heading",
         "level",
         "index",
-        "text",
         "senses",
         "translations",
-        "children"
+        "children",
+        "range"
       ],
       "additionalProperties": false,
       "properties": {
@@ -127,7 +137,7 @@
         },
         "text": {
           "type": "string",
-          "description": "Raw wikitext of the section without its subsections and senses"
+          "description": "Raw wikitext of a section not handled in this phase (none where senses or translations were read)"
         },
         "senses": {
           "type": "array",
@@ -146,6 +156,16 @@
           "items": {
             "$ref": "#/$defs/section"
           }
+        },
+        "range": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[begin, end) byte offsets in the page's wikitext"
         }
       }
     },

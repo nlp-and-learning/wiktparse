@@ -1,0 +1,199 @@
+wiki	profile	language_template	config
+aa	F		
+ab	F		
+af	E	{{=xx=}}	
+ak	F		
+am	A		
+an	A		
+ang	A		
+ar	B2		
+as	C		
+ast	C		
+av	A		
+ay	E	{{-xx-}}	
+az	B2		
+bcl	A		
+be	C		
+bew	B	basa	
+bg	E	{{-xx-}}	
+bh	F		
+bi	F		
+bjn	B	basa	
+blk	A		
+bm	F		
+bn	F		
+bo	F		
+br	E	{{=xx=}}	
+bs	F		
+btm	B2		
+ca	B1		
+ch	F		
+chr	A		
+ckb	A		
+co	E	{{-xx-}}	
+cr	F		
+cs	A		
+csb	D		
+cy	E	{{=xx=}}	
+da	E	{{=xx=}}	
+de	D		de.json
+diq	B	zıwan	
+dv	A		
+dz	F		
+el	B1		
+en	A		en.json
+eo	B	Lingvo	
+es	B	lengua	es.json
+et	E	{{-xx-}}	
+eu	E	{{-xx-}}	
+fa	A		
+fi	A		
+fj	E	{{-xx-}}	
+fo	E	{{-xx-}}	
+fr	B	langue	fr.json
+fy	E	{{-xx-}}	
+ga	E	{{-xx-}}	
+gd	E	{{=xx=}}	
+gl	E	{{-xx-}}	
+gn	A		
+gom	A		
+gor	B2		
+gu	A		
+guw	A		
+gv	A		
+ha	A		
+he	A		
+hi	A		
+hif	A		
+hr	D		
+hsb	A		
+hu	E	{{-xx-}}	
+hy	A		
+ia	E	{{-xx-}}	
+id	B	bahasa	
+ie	E	{{-xx-}}	
+ig	A		
+ik	E	{{-xx-}}	
+io	B2		
+is	E	{{-xx-}}	
+it	B1		it.json
+iu	A		
+ja	B		ja.json
+jbo	B2		
+jv	B	basa	
+ka	A		
+kaa	B1		
+kbd	F		
+kcg	A		
+kk	A		
+kl	A		
+km	A		
+kn	A		
+ko	A		
+ks	A		
+ku	B	ziman	
+kw	A		
+ky	E	{{-xx-}}	
+la	B	-lingua-	
+lb	B2		
+li	A		
+lmo	B1		
+ln	B2		
+lo	A		
+lt	B2		
+lv	E	{{-xx-}}	
+mad	B2		
+mg	B2		
+mh	F		
+mi	E	{{=xx=}}	
+min	B	bahasa	
+mk	A		
+ml	A		
+mn	A		
+mni	A		
+mnw	B2		
+mr	A		
+ms	A		
+mt	E	{{-xx-}}	
+my	A		
+na	E	{{-xx-}}	
+nah	E	{{-xx-}}	
+nds	A		
+ne	A1		
+nia	F		
+nl	E	{{=xx=}}	nl.json
+nn	A		
+no	A		
+oc	E	{{=xx=}}	
+om	E	{{-xx-}}	
+or	A		
+pa	A		
+pi	F		
+pl	D		pl.json
+pnb	A		
+ps	A		
+pt	C		
+qu	E	{{-xx-}}	
+rm	F		
+rn	F		
+ro	B	limba	
+roa_rup	E	{{-xx-}}	
+ru	C		ru.json
+rw	B2		
+sa	A1		
+sat	A		
+sc	F		
+scn	E	{{-xx-}}	
+sd	A		
+sg	C		
+sh	A		
+shn	A		
+shy	B	langue	
+si	A		
+simple	A		
+sk	A		
+skr	A1		
+sl	E	{{=xx=}}	
+sm	E	{{-xx-}}	
+sn	F		
+so	E	{{-xx-}}	
+sq	A		
+sr	A		
+ss	A		
+st	A		
+su	B2		
+sv	A		
+sw	B2		
+ta	A		
+tcy	A		
+te	A		
+tg	E	{{-xx-}}	
+th	A		
+ti	E	{{-xx-}}	
+tk	B2		
+tl	A		
+tn	A		
+to	F		
+tpi	E	{{-xx-}}	
+tr	A		
+ts	A		
+tt	A		
+tw	F		
+ug	B	تىلى	
+uk	E	{{=xx=}}	
+ur	A		
+uz	C		
+vec	E	{{-xx-}}	
+vi	E	{{-xx-}}	
+vo	E	{{-xx-}}	
+wa	B	L	
+wo	A		
+xh	F		
+yi	F		
+yo	F		
+yue	B	langue	
+za	E	{{-xx-}}	
+zgh	B	ⵜⵓⵜⵍⴰⵢⵜ	
+zh	A		zh.json
+zh_min_nan	A		
+zu	A		

@@ -105,7 +105,7 @@ A profile gives defaults; a wiki file overrides them. Draft
 text (nl `1. …`, mt `(1)`) or useless: a table title (te, si) or a part of
 speech (ja `名詞`).
 
-Drafts of the ten large wikis are in `res/wiktionary/<wiki>.json`.
+Profile defaults are in `res/wiktionary/profiles.json`, the profile of every wiki in `res/wiktionary/wikis.tsv`, and drafts of the ten large wikis (overriding their profile) in `res/wiktionary/<wiki>.json`.
 
 Namespaces come from the dump `<siteinfo>` (`DumpReader::read_site_info()`);
 the config only says which of them hold entries.

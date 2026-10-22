@@ -1,0 +1,174 @@
+{
+  "comment": "Defaults of the profiles (doc/wiktionary-profiles.md). A wiki gets its profile from wikis.tsv; <wiki>.json overrides fields; 'base' inherits another profile.",
+  "profiles": {
+    "A": {
+      "description": "heading with the language name: ==English==",
+      "language": {
+        "form": "heading-name",
+        "heading_level": 2,
+        "value": "name"
+      },
+      "pos": {
+        "form": "heading"
+      },
+      "sections": {
+        "form": "heading"
+      },
+      "senses": {
+        "marker": "#",
+        "nesting": "##"
+      },
+      "translations": {
+        "table": {
+          "top": [
+            "trans-top"
+          ],
+          "bottom": "trans-bottom",
+          "gloss": 1
+        },
+        "terms": {
+          "templates": [
+            "t",
+            "t+"
+          ],
+          "lang": 1,
+          "term": 2
+        },
+        "sense": "gloss"
+      }
+    },
+    "A1": {
+      "description": "level 1 heading with the language name: = नेपाली =",
+      "base": "A",
+      "language": {
+        "heading_level": 1
+      }
+    },
+    "B": {
+      "description": "heading with a language template taking the code: == {{langue|fr}} ==",
+      "language": {
+        "form": "heading-template",
+        "heading_level": 2,
+        "code": 1,
+        "value": "code"
+      },
+      "pos": {
+        "form": "heading"
+      },
+      "sections": {
+        "form": "heading"
+      },
+      "senses": {
+        "marker": "#",
+        "nesting": "##"
+      },
+      "translations": {
+        "terms": {
+          "templates": [
+            "t",
+            "t+",
+            "trad",
+            "trad+"
+          ],
+          "lang": 1,
+          "term": 2
+        },
+        "sense": "gloss"
+      }
+    },
+    "B1": {
+      "description": "heading with {{-xx-}}: == {{-it-}} ==",
+      "base": "B",
+      "language": {
+        "form": "heading-dash-template"
+      },
+      "pos": {
+        "form": "template-line"
+      },
+      "sections": {
+        "form": "template-line"
+      }
+    },
+    "B2": {
+      "description": "heading with a language template without a code parameter: == {{Dil...}} ==",
+      "base": "B",
+      "language": {
+        "form": "heading-template",
+        "code": null,
+        "value": "template"
+      }
+    },
+    "C": {
+      "description": "level 1 heading with the code: = {{-ru-}} =",
+      "base": "B1",
+      "language": {
+        "heading_level": 1
+      },
+      "pos": {
+        "form": "heading"
+      },
+      "sections": {
+        "form": "heading"
+      }
+    },
+    "D": {
+      "description": "heading with the word and the language: == woda ({{język polski}}) ==",
+      "language": {
+        "form": "heading-word-and-template",
+        "heading_level": 2,
+        "value": "name"
+      },
+      "pos": {
+        "form": "heading"
+      },
+      "sections": {
+        "form": "template-line"
+      },
+      "senses": {
+        "marker": ":"
+      },
+      "translations": {
+        "sense": "number"
+      }
+    },
+    "E": {
+      "description": "template line without a heading: {{-xx-}} or {{=xx=}}",
+      "language": {
+        "form": "line-template",
+        "value": "code"
+      },
+      "pos": {
+        "form": "template-line"
+      },
+      "sections": {
+        "form": "template-line"
+      },
+      "senses": {
+        "marker": "#",
+        "nesting": "##"
+      },
+      "translations": {
+        "table": {
+          "top": [
+            "trans-top"
+          ],
+          "bottom": "trans-bottom",
+          "gloss": 1
+        },
+        "terms": {
+          "templates": [
+            "t",
+            "trad"
+          ],
+          "lang": 1,
+          "term": 2
+        },
+        "sense": "gloss"
+      }
+    },
+    "F": {
+      "description": "too small or no entries in the samples; not converted until checked",
+      "skip": true
+    }
+  }
+}

@@ -118,11 +118,9 @@ int main(int argc, char *argv[]) {
         std::set<std::string> languages;
         {
             Db langs(langsFile, true);
-            for (const auto &n : langs.column("SELECT name FROM lang"))
+            for (const auto &n : langs.column("SELECT name FROM language"))
                 languages.insert(lower(n));
-            for (const auto &n : langs.column("SELECT alias FROM lang_alias"))
-                languages.insert(lower(n));
-            for (const auto &n : langs.column("SELECT name FROM lang_name WHERE lang='en'"))
+            for (const auto &n : langs.column("SELECT name FROM language_name WHERE in_code='en'"))
                 languages.insert(lower(n));
         }
 

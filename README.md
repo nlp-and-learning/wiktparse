@@ -44,23 +44,23 @@ dump_dir = ~/dump
   root); `--keep-homonyms` keeps them.
 - `wiktneeded --items FILE` always selects the listed Q ids (default
   `./wiktlangs_qid.txt` when present); redirect pages of merged items are skipped.
-- `wiktlangs [output.sqlite] [wikidata.jsonl...]` – languages, etymology
-  languages (varieties, historical stages), families and scripts of English
-  Wiktionary (`Module:languages/data...`, read through the index only) into
-  SQLite, with their names in many languages from Wikidata labels and aliases
-  (`wiktNeeded_*.jsonl`). Also writes `wiktlangs_qid.txt` (with new ids of
-  merged items) and `wiktlangs_missing_qid.txt`. `--fetch-missing` fetches the
+- `wiktlangs [--markers FILE] [--module-names FILE] [output.sqlite] [wikidata.jsonl...]` –
+  languages into SQLite (layout: `doc/wiktlangs-schema.md`): `language`, one
+  row per language (canonical code, English name, ISO 639-1/3, Glottolog,
+  Wikimedia code, Q id, family...), `language_name`, the name of a language in
+  another language (Wikidata labels and aliases, en.wikt names, Lua modules and
+  language headings of Wiktionaries, configuration aliases), and `code_map`,
+  codes of other schemes to canonical codes. Sources: English Wiktionary
+  (`Module:languages/data...`, etymology languages, families, scripts, read
+  through the index only), Wikidata (`wiktNeeded_*.jsonl`), the SIL tables in
+  `res/sil`, Glottolog (`res/glottolog/languoid.csv`, Glottolog 5.3, CC BY 4.0,
+  see `res/glottolog/README.txt`), `res/extra_languages.tsv`, `wikt2jsonl`
+  markers and `wiktmodules` names. Also writes `wiktlangs_qid.txt` (with new ids
+  of merged items) and `wiktlangs_missing_qid.txt`. `--fetch-missing` fetches the
   missing entities from the Wikidata API into `wiktlangs_fetched.jsonl`, which
-  is read on every later run. Table `wd_code_map` maps codes of Wikidata
-  languages (ISO 639-1/2/3, Wikimedia, Glottolog) to en.wikt codes, using the
-  SIL tables in `res/sil`. With `./infoboxes.jsonl` (from `wiktparse`, run it
-  first), languages of English Wikipedia infoboxes which are not known yet (no
-  code maps to en.wikt, name not an en.wikt name or alias) and their unknown
-  varieties (lcN/ldN) are added to `lang` with kind `wikipedia` (type
-  `infobox`, `infobox family` or `infobox variety`). Table `glottolog` has the
-  languoids of `res/glottolog/languoid.csv` (Glottolog 5.3, CC BY 4.0, see
-  `res/glottolog/README.txt` for citation); Glottolog codes of Wikidata
-  missing there are noted in `wd_code_map`.
+  is read on every later run. With `./infoboxes.jsonl` (from `wiktparse`, run it
+  first), languages of English Wikipedia infoboxes which are not known yet and
+  their unknown varieties (lcN/ldN) are added with kind `wikipedia`.
 - `wiktsamples [-j N] [-n pages] [-o samples] [--db wiktlangs.sqlite] [wiki...]` – writes
   `samples/<wiki>/`: raw wikitext of 5 main namespace pages of every
   Wiktionary (the words for water, dog, house, red and go, taken from English

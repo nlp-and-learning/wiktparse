@@ -130,7 +130,7 @@ std::vector<Translations> conceptTranslations() {
     return result;
 }
 
-// en.wikt codes of a wiki: from wd_code_map (Wikimedia codes), then the code itself;
+// en.wikt codes of a wiki: from code_map (Wikimedia codes), then the code itself;
 // translation tables use specific languages for some macrolanguages
 std::vector<std::string> wiktCodes(sqlite3 *db, const std::string &wiki) {
     if (wiki == "en" || wiki == "simple")
@@ -140,7 +140,7 @@ std::vector<std::string> wiktCodes(sqlite3 *db, const std::string &wiki) {
     std::vector<std::string> codes;
     if (db) {
         sqlite3_stmt *stmt = nullptr;
-        sqlite3_prepare_v2(db, "SELECT wikt_code FROM wd_code_map WHERE scheme='wikimedia' AND code=? AND wikt_code<>''",
+        sqlite3_prepare_v2(db, "SELECT language FROM code_map WHERE scheme='wikimedia' AND code=?",
                            -1, &stmt, nullptr);
         sqlite3_bind_text(stmt, 1, code.c_str(), -1, SQLITE_TRANSIENT);
         while (sqlite3_step(stmt) == SQLITE_ROW)

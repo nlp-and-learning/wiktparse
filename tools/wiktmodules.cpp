@@ -101,12 +101,12 @@ int main(int argc, char *argv[]) {
         }
         if (sqlite3 *db = nullptr; sqlite3_open_v2("wiktlangs.sqlite", &db, SQLITE_OPEN_READONLY, nullptr) == SQLITE_OK) {
             sqlite3_stmt *stmt = nullptr;
-            sqlite3_prepare_v2(db, "SELECT code FROM lang", -1, &stmt, nullptr);
+            sqlite3_prepare_v2(db, "SELECT code FROM language", -1, &stmt, nullptr);
             while (sqlite3_step(stmt) == SQLITE_ROW)
                 if (auto code = sqlite3_column_text(stmt, 0))
                     knownCodes.emplace(reinterpret_cast<const char *>(code));
             sqlite3_finalize(stmt);
-            sqlite3_prepare_v2(db, "SELECT name FROM lang", -1, &stmt, nullptr);
+            sqlite3_prepare_v2(db, "SELECT name FROM language", -1, &stmt, nullptr);
             while (sqlite3_step(stmt) == SQLITE_ROW)
                 if (auto name = sqlite3_column_text(stmt, 0))
                     englishNames.emplace(reinterpret_cast<const char *>(name));

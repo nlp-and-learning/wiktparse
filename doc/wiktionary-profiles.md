@@ -26,7 +26,7 @@ Observations:
   needed for en, ru, it, nl, ja, zh and most small wikis.
 - Language of a section is a **name** (en, zh, pl in a template, de in a
   template) or a **code** (fr, es, it, ru, ja, nl); names map to codes through
-  `wiktlangs.sqlite` (`lang_name`, labels in the wiki's language).
+  `wiktlangs.sqlite` (`language_name`, names in the wiki's language).
 - Part of speech is a heading text (en, zh), a heading template (fr, es, ja,
   de), a template line (it, nl), an italic line (pl) or an inflection template
   (ru): the POS rule is per wiki.

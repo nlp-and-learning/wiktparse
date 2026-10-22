@@ -7,18 +7,24 @@
 //   (or wiktNeeded.jsonl) in the current directory
 //
 // Tables:
-//   lang(code, kind, name, qid, family, parent, ancestors, scripts, type, module)
-//       kind: language | etymology (variety, historical stage) | family | script
-//   lang_alias(code, alias, type)      type: alias | variety | other (en.wikt)
-//   lang_name(code, qid, lang, name, alias)  Wikidata label (alias=0) or alias (1)
-//   wd_code_map(scheme, code, qid, name, wikt_code, method, note)
-//       codes of Wikidata languages (iso639-1/2/3, wikimedia, glottolog) mapped
-//       to en.wikt codes; method: code | iso1 | qid | macrolanguage | retired |
-//       none (note: private use, retired, dialect, constructed); uses SIL tables
-//       in res/sil
-//   glottolog(id, name, level, parent, family, iso3, latitude, longitude, bookkeeping)
-//       Glottolog languoids from res/glottolog/languoid.csv; Glottolog codes of
-//       Wikidata missing there are noted "not in Glottolog" in wd_code_map
+//   language(code, name, kind, iso639_1, iso639_3, glottolog, wikimedia, qid, family,
+//            parent, ancestors, scripts, type, source)
+//       one row per language: code canonical (en.wikt code, or a private code of
+//       res/extra_languages.tsv), name English (en.wikt canonical name, without
+//       "language"); kind: language | etymology (variety, historical stage) |
+//       family | script | extra | wikipedia; codes of other schemes from the
+//       SIL tables, else the Wikidata item (P218, P220, P1394, P424) and Glottolog
+//   code_map(scheme, code, language, method)
+//       codes of other schemes (iso639-1, iso639-2, iso639-3, wikimedia, glottolog)
+//       to canonical codes; method: item (the language's own code), code (the same
+//       code), iso1, qid (Wikidata item of the language), macrolanguage, retired
+//   language_name(code, in_code, name, source)
+//       the name of language code in language in_code (both canonical); source:
+//       en.wikt (canonical English names), en.wikt-alias, en.wikt-variety,
+//       wikidata-label, wikidata-alias, extra, enwiki (infobox names),
+//       wikt-module (Lua modules of Wiktionaries, wiktmodules), wikt-heading
+//       (resolved language headings of Wiktionaries, wikt2jsonl markers.tsv),
+//       config-alias (res/wiktionary/<wiki>.json)
 // With infoboxes.jsonl (wiktparse), languages of English Wikipedia infoboxes not
 // known yet (no code maps to en.wikt, name not an en.wikt name or alias) are
 // added to lang with kind "wikipedia": code = ISO 639-3, Glottolog or
@@ -36,6 +42,8 @@
 #include <regex>
 #include <set>
 #include <stdexcept>
+#include <sstream>
+#include <tuple>
 #include <string>
 #include <vector>
 
@@ -214,10 +222,13 @@ struct Iso639 {
     std::map<std::string, std::string> macrolanguage; // individual -> macrolanguage
     std::map<std::string, std::string> changeTo;      // retired -> replacement (may be empty)
     std::set<std::string> retired;
+    std::set<std::string> ids; // ISO 639-3 codes
 
     explicit Iso639(const fs::path &dir) {
         // Id Part2b Part2t Part1 ...
         for (const auto &r : readTab(dir / "iso-639-3.tab")) {
+            if (!r.empty())
+                ids.insert(r[0]);
             if (r.size() > 3 && !r[3].empty()) {
                 part1[r[0]] = r[3];
                 fromPart1[r[3]] = r[0];
@@ -522,19 +533,14 @@ int main(int argc, char *argv[]) {
                     return {r.first, "retired"};
             return {"", ""};
         };
-        std::vector<std::vector<std::string>> mapRows;
-        std::map<std::pair<std::string, std::string>, size_t> methodCounts;
+        // Codes of other schemes of Wikidata language items mapped to en.wikt codes: the
+        // code itself, its ISO 639-1 form, the item of an en.wikt language, a macrolanguage
+        // or a replacement of a retired code (quz -> qu, gre -> ell -> el)
+        std::set<std::vector<std::string>> codeMap; // scheme, code, language, method
         const std::vector<std::pair<std::string, std::string>> schemes = {
             {"P218", "iso639-1"}, {"P219", "iso639-2"}, {"P220", "iso639-3"}, {"P424", "wikimedia"}, {"P1394", "glottolog"}};
         for (const auto &[q, entity] : wikidata) {
             const auto &claims = entity["claims"];
-            std::string name;
-            if (auto en = entity["labels"].find("en"); en != entity["labels"].end() && en->is_object())
-                name = en->value("value", "");
-            std::set<std::string> classes;
-            if (claims.contains("P31"))
-                for (const auto &c : claims["P31"])
-                    classes.insert(c.get<std::string>());
             for (const auto &[prop, scheme] : schemes) {
                 if (!claims.contains(prop))
                     continue;
@@ -553,18 +559,8 @@ int main(int argc, char *argv[]) {
                         found = resolveIso3(iso.fromPart1[code], 0); // bs -> bos -> hbs (sh)
                     else if (scheme == "iso639-2" && iso.fromPart2.contains(code))
                         found = resolveIso3(iso.fromPart2[code], 0); // gre -> ell (el)
-                    std::string note;
-                    if (found.first.empty()) {
-                        found.second = "none";
-                        if (scheme == "iso639-3" && privateUse(code)) note = "private use";
-                        else if (scheme == "iso639-3" && iso.retired.contains(code)) note = "retired";
-                        else if (classes.contains("Q33384")) note = "dialect";
-                        else if (classes.contains("Q33215")) note = "constructed";
-                    }
-                    if (scheme == "glottolog" && !glottolog.empty() && !glottolog.contains(code))
-                        note = note.empty() ? "not in Glottolog" : note + ", not in Glottolog";
-                    methodCounts[{scheme, found.second}]++;
-                    mapRows.push_back({scheme, code, q, name, found.first, found.second, note});
+                    if (!found.first.empty())
+                        codeMap.insert({scheme, code, found.first, found.second});
                 }
             }
         }
@@ -701,86 +697,210 @@ int main(int argc, char *argv[]) {
                       << boxesAdded << " languages and " << varietiesAdded << " varieties added" << std::endl;
         }
 
-        Db db(output);
-        db.exec("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; BEGIN;");
-        db.exec("CREATE TABLE lang(code TEXT, kind TEXT, name TEXT, qid TEXT, family TEXT, parent TEXT, "
-                "ancestors TEXT, scripts TEXT, type TEXT, module TEXT, PRIMARY KEY(code, kind))");
-        db.exec("CREATE TABLE lang_alias(code TEXT, alias TEXT, type TEXT)");
-        db.exec("CREATE TABLE lang_name(code TEXT, qid TEXT, lang TEXT, name TEXT, alias INTEGER)");
-        db.insert("INSERT OR REPLACE INTO lang VALUES(?,?,?,?,?,?,?,?,?,?)", langRows);
-        db.insert("INSERT INTO lang_alias VALUES(?,?,?)", aliasRows);
-        db.insert("INSERT INTO lang_name VALUES(?,?,?,?,?)", nameRows);
-        db.exec("CREATE TABLE glottolog(id TEXT PRIMARY KEY, name TEXT, level TEXT, parent TEXT, family TEXT, "
-                "iso3 TEXT, latitude TEXT, longitude TEXT, bookkeeping TEXT)");
+        // Languages of Wiktionaries missing in English Wiktionary, with private codes (art-slovio)
         {
-            std::vector<std::vector<std::string>> rows;
-            for (const auto &[id, r] : glottolog)
-                rows.push_back({id, r.at("name"), r.at("level"), r.at("parent_id"), r.at("family_id"),
-                                r.at("iso639P3code"), r.at("latitude"), r.at("longitude"),
-                                r.at("bookkeeping") == "True" ? "1" : ""});
-            db.insert("INSERT INTO glottolog VALUES(?,?,?,?,?,?,?,?,?)", rows);
-            db.exec("CREATE INDEX glottolog_parent ON glottolog(parent); CREATE INDEX glottolog_iso3 ON glottolog(iso3);");
-        }
-        // How each Wiktionary marks languages of its sections (wikt2jsonl: jsonl/markers.tsv):
-        // pl "język wietnamski" -> vi, en "Bulgarian" -> bg, fr "fr" (code template)
-        db.exec("CREATE TABLE wikt_marker(wiki TEXT, form TEXT, marker TEXT, code TEXT, sections INTEGER)");
-        if (fs::exists(markersFile)) {
-            std::vector<std::vector<std::string>> rows;
-            std::ifstream in(markersFile);
+            std::ifstream in(extraLanguagesFile);
+            size_t extra = 0;
             for (std::string line; std::getline(in, line);) {
                 std::vector<std::string> f;
                 std::stringstream ss(line);
                 for (std::string field; std::getline(ss, field, '\t');)
                     f.push_back(field);
-                // Unresolved one-off markers are other level 2 headings ('''CABELLO''' in he)
-                if (f.size() >= 5 && f[0] != "wiki" && (!f[3].empty() || std::stoul(f[4]) >= 3))
-                    rows.push_back({f.begin(), f.begin() + 5});
+                if (f.size() >= 4 && f[0] != "code" && !f[0].starts_with("#")) {
+                    langRows.push_back({f[0], "extra", f[1], f[2], f[3], "", "", "", f.size() > 4 ? f[4] : "",
+                                        "res/extra_languages.tsv"});
+                    ++extra;
+                }
             }
-            db.insert("INSERT INTO wikt_marker VALUES(?,?,?,?,?)", rows);
-            db.exec("CREATE INDEX wikt_marker_wiki ON wikt_marker(wiki, marker);");
-            std::cout << rows.size() << " language markers of Wiktionaries from " << markersFile.string() << std::endl;
+            std::cout << extra << " extra languages" << std::endl;
         }
+
+        // language: one row per code; a code of several kinds keeps the first kind of kindOrder
+        static const std::vector<std::string> kindOrder = {"language", "etymology", "family", "script", "extra", "wikipedia"};
+        auto kindRank = [](const std::string &kind) { return std::ranges::find(kindOrder, kind) - kindOrder.begin(); };
+        std::map<std::string, std::vector<std::string>> languages; // code -> lang row
+        for (const auto &row : langRows)
+            if (auto it = languages.find(row[0]); it == languages.end() || kindRank(row[1]) < kindRank(it->second[1]))
+                languages[row[0]] = row;
+        auto claim = [&](const std::string &q, const char *prop) -> std::string {
+            auto it = wikidata.find(q);
+            if (q.empty() || it == wikidata.end() || !it->second["claims"].contains(prop))
+                return "";
+            return it->second["claims"][prop].front().get<std::string>();
+        };
+        std::map<std::string, std::string> iso3Glottolog;
+        for (const auto &[id, r] : glottolog)
+            if (r.at("level") == "language" && !r.at("iso639P3code").empty())
+                iso3Glottolog[r.at("iso639P3code")] = id;
+        static const std::regex languageWord(R"( languages?$)");
+        std::vector<std::vector<std::string>> languageRows;
+        std::map<std::string, std::string> wikimediaCodes; // Wikimedia code -> canonical code
+        for (const auto &[code, r] : languages) {
+            const auto &q = r[3];
+            // ISO codes of the code itself (SIL tables) before those of the Wikidata item
+            std::string iso1, iso3, glotto = claim(q, "P1394"), wikimedia = claim(q, "P424");
+            if (code.size() == 3 && iso.ids.contains(code))
+                iso3 = code;
+            else if (code.size() == 2 && iso.fromPart1.contains(code)) {
+                iso1 = code;
+                iso3 = iso.fromPart1[code];
+            }
+            if (iso3.empty())
+                iso3 = claim(q, "P220");
+            if (iso1.empty())
+                iso1 = iso.part1.contains(iso3) ? iso.part1[iso3] : claim(q, "P218");
+            if (glotto.empty() && iso3Glottolog.contains(iso3))
+                glotto = iso3Glottolog[iso3];
+            if (!wikimedia.empty() && (!wikimediaCodes.contains(wikimedia) || r[1] == "language"))
+                wikimediaCodes[wikimedia] = code;
+            for (const auto &[scheme, value] : {std::pair{"iso639-1", iso1}, {"iso639-3", iso3}, {"glottolog", glotto},
+                                                {"wikimedia", wikimedia}})
+                if (!value.empty())
+                    codeMap.insert({scheme, value, code, "item"});
+            for (const auto &[part2, part3] : iso.fromPart2) // ger, deu -> deu (de)
+                if (!iso3.empty() && part3 == iso3)
+                    codeMap.insert({"iso639-2", part2, code, "item"});
+            // English name without "language" (infobox names: "Xyz language")
+            std::string name = r[1] == "wikipedia" ? std::regex_replace(r[2], languageWord, "") : r[2];
+            languageRows.push_back({code, name, r[1], iso1, iso3, glotto, wikimedia, q, r[4], r[5], r[6], r[7], r[8], r[9]});
+        }
+
+        // Canonical code of a language a name is written in: Wikidata label languages
+        // (zh-hant, be-tarask, de-at) and Wiktionaries (zh_min_nan, simple)
+        auto canonical = [&](std::string code) -> std::string {
+            std::ranges::replace(code, '_', '-');
+            // Wiktionaries whose label language differs (as in wikt2jsonl)
+            static const std::map<std::string, std::string> labelLanguage = {
+                    {"no", "nb"}, {"simple", "en"}, {"zh-min-nan", "nan"}, {"roa-rup", "rup"}, {"bh", "bho"}};
+            if (auto it = labelLanguage.find(code); it != labelLanguage.end())
+                code = it->second;
+            if (languages.contains(code))
+                return code;
+            if (auto it = wikimediaCodes.find(code); it != wikimediaCodes.end())
+                return it->second;
+            if (auto dash = code.find('-'); dash != std::string::npos && languages.contains(code.substr(0, dash)))
+                return code.substr(0, dash);
+            // ISO 639-3 codes of no en.wikt language: its macrolanguage or replacement (diq -> zza,
+            // mo -> ro); into code_map, so that wikt2jsonl finds it too
+            std::pair<std::string, std::string> resolved;
+            if (code.size() == 3)
+                resolved = resolveIso3(code, 0);
+            else if (code.size() == 2 && iso.fromPart1.contains(code))
+                resolved = resolveIso3(iso.fromPart1[code], 0);
+            if (!languages.contains(resolved.first))
+                return "";
+            codeMap.insert({"wikimedia", code, resolved.first, resolved.second});
+            return resolved.first;
+        };
+
+        // language_name: the best source of each (code, in_code, name)
+        static const std::vector<std::string> sourceOrder = {
+                "en.wikt", "extra", "enwiki", "wikidata-label", "wikidata-alias", "en.wikt-alias",
+                "en.wikt-variety", "wikt-module", "wikt-heading", "config-alias"};
+        std::map<std::tuple<std::string, std::string, std::string>, std::string> names;
+        std::map<std::string, size_t> unknownInCode;
+        auto addName = [&](const std::string &code, const std::string &inCode, const std::string &name,
+                           const std::string &source) {
+            if (name.empty() || !languages.contains(code))
+                return;
+            if (inCode.empty()) {
+                ++unknownInCode[source];
+                return;
+            }
+            auto &best = names[{code, inCode, name}];
+            if (best.empty() || std::ranges::find(sourceOrder, source) < std::ranges::find(sourceOrder, best))
+                best = source;
+        };
+        for (const auto &r : languageRows)
+            addName(r[0], "en", r[1], r[2] == "extra" ? "extra" : r[2] == "wikipedia" ? "enwiki" : "en.wikt");
+        for (const auto &r : aliasRows)
+            addName(r[0], "en", r[1], r[2] == "variety" ? "en.wikt-variety" : "en.wikt-alias");
+        for (const auto &r : nameRows) // code, qid, label language, name, alias
+            addName(r[0], canonical(r[2]), r[3], r[4] == "1" ? "wikidata-alias" : "wikidata-label");
         // Language names of Wiktionaries from their Lua modules (wiktmodules: module_names.tsv):
         // es "alemán" -> de, zh "阿歐語" -> aou
-        db.exec("CREATE TABLE wikt_lang_name(wiki TEXT, code TEXT, name TEXT, module TEXT)");
         if (fs::exists(moduleNamesFile)) {
-            std::vector<std::vector<std::string>> rows;
+            size_t rows = 0;
             std::ifstream in(moduleNamesFile);
             for (std::string line; std::getline(in, line);) {
                 std::vector<std::string> f;
                 std::stringstream ss(line);
                 for (std::string field; std::getline(ss, field, '\t');)
                     f.push_back(field);
-                if (f.size() == 4 && f[0] != "wiki")
-                    rows.push_back(f);
+                if (f.size() == 4 && f[0] != "wiki") {
+                    addName(f[1], canonical(f[0]), f[2], "wikt-module");
+                    ++rows;
+                }
             }
-            db.insert("INSERT INTO wikt_lang_name VALUES(?,?,?,?)", rows);
-            db.exec("CREATE INDEX wikt_lang_name_wiki ON wikt_lang_name(wiki, name);");
-            std::cout << rows.size() << " language names from modules of Wiktionaries" << std::endl;
+            std::cout << rows << " language names from modules of Wiktionaries" << std::endl;
         }
-        // Languages of Wiktionaries missing in English Wiktionary, with private codes (art-slovio)
-        {
-            std::vector<std::vector<std::string>> rows;
-            std::ifstream in(extraLanguagesFile);
+        // Resolved language headings of Wiktionaries (wikt2jsonl: markers.tsv):
+        // pl "język wietnamski" -> vi, en "Bulgarian" -> bg
+        if (fs::exists(markersFile)) {
+            size_t rows = 0;
+            std::ifstream in(markersFile);
             for (std::string line; std::getline(in, line);) {
                 std::vector<std::string> f;
                 std::stringstream ss(line);
                 for (std::string field; std::getline(ss, field, '\t');)
                     f.push_back(field);
-                if (f.size() >= 4 && f[0] != "code" && !f[0].starts_with("#"))
-                    rows.push_back({f[0], "extra", f[1], f[2], f[3], "", "", "", f.size() > 4 ? f[4] : "",
-                                    "res/extra_languages.tsv"});
+                // wiki form marker code sections; names only (not code templates)
+                if (f.size() >= 5 && f[1] == "heading-name" && !f[3].empty() && f[2] != f[3]) {
+                    addName(f[3], canonical(f[0]), f[2], "wikt-heading");
+                    ++rows;
+                }
             }
-            db.insert("INSERT OR IGNORE INTO lang VALUES(?,?,?,?,?,?,?,?,?,?)", rows);
-            std::cout << rows.size() << " extra languages" << std::endl;
+            std::cout << rows << " language headings of Wiktionaries from " << markersFile.string() << std::endl;
         }
-        db.exec("CREATE TABLE wd_code_map(scheme TEXT, code TEXT, qid TEXT, name TEXT, wikt_code TEXT, "
-                "method TEXT, note TEXT)");
-        db.insert("INSERT INTO wd_code_map VALUES(?,?,?,?,?,?,?)", mapRows);
-        db.exec("CREATE INDEX wd_code_map_code ON wd_code_map(scheme, code);");
-        db.exec("CREATE INDEX lang_qid ON lang(qid); CREATE INDEX lang_alias_code ON lang_alias(code); "
-                "CREATE INDEX lang_name_code ON lang_name(code); CREATE INDEX lang_name_lang ON lang_name(lang, name); "
+        // Aliases of the wiki configurations (res/wiktionary/<wiki>.json: "Anglese" -> en in ia)
+        for (const auto &entry : fs::directory_iterator(fs::path(WIKTPARSE_RES_DIR) / "wiktionary")) {
+            if (entry.path().extension() != ".json" || entry.path().stem() == "profiles")
+                continue;
+            std::ifstream in(entry.path());
+            auto config = json::parse(in, nullptr, false);
+            if (config.is_discarded() || !config.contains("language") || !config["language"].contains("aliases"))
+                continue;
+            const auto inCode = canonical(entry.path().stem().string());
+            for (const auto &[name, code] : config["language"]["aliases"].items())
+                if (code.is_string())
+                    addName(code.get<std::string>(), inCode, name, "config-alias");
+        }
+        std::vector<std::vector<std::string>> languageNameRows;
+        for (const auto &[key, source] : names)
+            languageNameRows.push_back({std::get<0>(key), std::get<1>(key), std::get<2>(key), source});
+
+        Db db(output);
+        db.exec("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; BEGIN;");
+        db.exec("CREATE TABLE language(code TEXT PRIMARY KEY, name TEXT, kind TEXT, iso639_1 TEXT, iso639_3 TEXT, "
+                "glottolog TEXT, wikimedia TEXT, qid TEXT, family TEXT, parent TEXT, ancestors TEXT, scripts TEXT, "
+                "type TEXT, source TEXT)");
+        db.insert("INSERT INTO language VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", languageRows);
+        db.exec("CREATE TABLE language_name(code TEXT, in_code TEXT, name TEXT, source TEXT)");
+        db.insert("INSERT INTO language_name VALUES(?,?,?,?)", languageNameRows);
+        db.exec("CREATE TABLE code_map(scheme TEXT, code TEXT, language TEXT, method TEXT)");
+        {
+            // One row per scheme, code and language: the most direct method
+            static const std::vector<std::string> methodOrder = {"item", "code", "iso1", "qid", "macrolanguage", "retired"};
+            std::map<std::tuple<std::string, std::string, std::string>, std::string> best;
+            for (const auto &r : codeMap) {
+                auto &method = best[{r[0], r[1], r[2]}];
+                if (method.empty() || std::ranges::find(methodOrder, r[3]) < std::ranges::find(methodOrder, method))
+                    method = r[3];
+            }
+            std::vector<std::vector<std::string>> rows;
+            for (const auto &[key, method] : best)
+                rows.push_back({std::get<0>(key), std::get<1>(key), std::get<2>(key), method});
+            db.insert("INSERT INTO code_map VALUES(?,?,?,?)", rows);
+        }
+        db.exec("CREATE INDEX code_map_code ON code_map(code, scheme);");
+        db.exec("CREATE INDEX language_name_in ON language_name(in_code, name); "
+                "CREATE INDEX language_name_code ON language_name(code); "
+                "CREATE INDEX language_qid ON language(qid); CREATE INDEX language_english ON language(name); "
+                "CREATE INDEX language_iso639_1 ON language(iso639_1); CREATE INDEX language_iso639_3 ON language(iso639_3); "
+                "CREATE INDEX language_glottolog ON language(glottolog); CREATE INDEX language_wikimedia ON language(wikimedia); "
                 "COMMIT;");
+        for (const auto &[source, count] : unknownInCode)
+            std::cout << "  " << count << " names of " << source << " in a language without a code, left out" << std::endl;
 
         std::ofstream missingOut(output.parent_path() / (output.stem().string() + "_missing_qid.txt"));
         for (const auto &q : missing)
@@ -801,18 +921,10 @@ int main(int argc, char *argv[]) {
         std::ofstream allOut(output.parent_path() / (output.stem().string() + "_qid.txt"));
         for (const auto &q : allQids)
             allOut << q << '\n';
-        std::cout << langRows.size() << " codes (" << codeQid.size() << " with Q), " << aliasRows.size()
-                  << " aliases, " << nameRows.size() << " Wikidata names; " << missing.size()
+        std::cout << languageRows.size() << " languages (" << codeQid.size() << " with Q), "
+                  << languageNameRows.size() << " names; " << missing.size()
                   << " Q ids not in Wikidata files (listed in " << output.stem().string() << "_missing_qid.txt)"
                   << std::endl;
-        std::cout << "Wikidata codes -> en.wikt codes:" << std::endl;
-        for (const auto &[prop, scheme] : schemes) {
-            std::cout << "  " << scheme << ":";
-            for (const auto &[key, count] : methodCounts)
-                if (key.first == scheme)
-                    std::cout << " " << key.second << " " << count;
-            std::cout << std::endl;
-        }
         std::cout << "written " << output.string() << std::endl;
     } catch (const std::exception &e) {
         std::cerr << e.what() << '\n';

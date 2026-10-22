@@ -15,7 +15,7 @@
 //    "native","senses":[{"id","text"}],"translations":[{"lang","term","sense"}]}]}
 // ("native": the section is in the wiki's own language)
 // <out>/markers.tsv (wiki, form, marker as written, code, sections; read by
-// wiktlangs into table wikt_marker) and <out>/stats.tsv (also printed): per wiki pages, sections, sections with
+// wiktlangs: resolved names into language_name) and <out>/stats.tsv (also printed): per wiki pages, sections, sections with
 // a language code, senses, translations.
 #include <algorithm>
 #include <exception>
@@ -199,17 +199,18 @@ public:
         auto key = wiki + '\t' + name + '\t' + lookup;
         if (auto it = cache_.find(key); it != cache_.end())
             return it->second;
+        // The canonical code of the wiki's language, as in_code of language_name (as in wiktlangs)
         std::string lang = wiki;
         std::ranges::replace(lang, '_', '-');
-        // Labels of Chinese wikis are in traditional or simplified characters
-        // Wikidata label languages differing from wiki codes
+        // Wiktionaries whose Wikidata label language differs
         static const std::map<std::string, std::string> labelLanguage = {
                 {"no", "nb"}, {"simple", "en"}, {"zh-min-nan", "nan"}, {"roa-rup", "rup"}, {"bh", "bho"}};
         if (auto it = labelLanguage.find(lang); it != labelLanguage.end())
             lang = it->second;
-        std::vector<std::string> langs{lang};
-        if (lang == "zh")
-            langs = {"zh", "zh-hant", "zh-hans", "zh-tw", "zh-cn", "zh-hk"};
+        if (query("SELECT code FROM language WHERE code=?2 AND ?1<>''", "x", lang).empty()) {
+            auto mapped = query("SELECT m.language FROM code_map m JOIN language l ON l.code=m.language WHERE m.scheme='wikimedia' AND m.code=?2 AND ?1<>'' ORDER BY l.kind<>'language' LIMIT 1", "x", lang);
+            lang = !mapped.empty() ? mapped : lang.substr(0, lang.find('-'));
+        }
         // "esperanto (morfem)", "język norweski (bokmål)": also without the note
         std::vector<std::string> variants{name};
         if (auto at = lookup.find("{name}"); at != std::string::npos)
@@ -230,31 +231,32 @@ public:
         // A code written as such ("en" from {{=en=}})
         static const std::regex code(R"(^[a-z]{2,3}(-[a-z]+)*$)");
         if (std::regex_match(name, code))
-            result = query("SELECT code FROM lang WHERE code=?2 AND ?1<>'' LIMIT 1", lang, name);
-        for (const auto &n : variants)
-            for (const auto &l : langs) {
-                if (result.empty())
-                    result = query("SELECT n.code FROM lang_name n WHERE n.lang=?1 AND n.name=?2 ORDER BY n.alias, (SELECT count(*) FROM lang l WHERE l.code=n.code AND l.kind='language') DESC, length(n.code) LIMIT 1", l, n);
-                if (result.empty())
-                    result = query("SELECT n.code FROM lang_name n WHERE n.lang=?1 AND lower(n.name)=lower(?2) ORDER BY n.alias, (SELECT count(*) FROM lang l WHERE l.code=n.code AND l.kind='language') DESC, length(n.code) LIMIT 1", l, n);
-            }
+            result = query("SELECT code FROM language WHERE code=?2 AND ?1<>'' LIMIT 1", lang, name);
+        // Names in the wiki's language: en.wikt names (en), Wikidata labels, then aliases; languages before other kinds
+        for (const auto &n : variants) {
+            if (result.empty())
+                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND n.name=?2 AND n.source IN ('en.wikt','extra','enwiki','wikidata-label','wikidata-alias') ORDER BY n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
+            if (result.empty())
+                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND lower(n.name)=lower(?2) AND n.source IN ('en.wikt','extra','enwiki','wikidata-label','wikidata-alias') ORDER BY n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
+        }
+        // English names of en.wikt
         if (result.empty())
-            result = query("SELECT code FROM lang WHERE name=?2 AND ?1<>'' LIMIT 1", lang, name);
-        // Names from Lua modules of the wiki itself (wiktmodules -> wikt_lang_name)
+            result = query("SELECT code FROM language WHERE name=?2 AND ?1<>'' ORDER BY kind<>'language' LIMIT 1", lang, name);
+        // Names from Lua modules of Wiktionaries in the wiki's language (wiktmodules)
         for (const auto &n : variants)
             if (result.empty())
-                result = query("SELECT code FROM wikt_lang_name WHERE wiki=?1 AND name=?2 LIMIT 1", wiki, n);
+                result = query("SELECT code FROM language_name WHERE in_code=?1 AND name=?2 AND source='wikt-module' LIMIT 1", lang, n);
         return cache_[key] = result;
     }
 
-    // en.wikt code of a code of another scheme (wd_code_map: ISO 639-1/3, Wikimedia)
+    // Canonical code of a code of another scheme (ISO 639-1/3, Wikimedia, Glottolog)
     std::string mappedCode(const std::string &code) {
         if (!db_ || code.empty() || code.size() > 12)
             return "";
         std::lock_guard lock(mutex_);
         if (auto it = mapped_.find(code); it != mapped_.end())
             return it->second;
-        return mapped_[code] = query("SELECT wikt_code FROM wd_code_map WHERE code=?2 AND wikt_code<>'' AND ?1<>'' LIMIT 1", "x", code);
+        return mapped_[code] = query("SELECT m.language FROM code_map m JOIN language l ON l.code=m.language WHERE m.code=?2 AND ?1<>'' ORDER BY l.kind<>'language', m.method='retired' LIMIT 1", "x", code);
     }
 
     // A language code of wiktlangs.sqlite (en.wikt codes and extra ones)
@@ -264,7 +266,7 @@ public:
         std::lock_guard lock(mutex_);
         if (auto it = codes_.find(code); it != codes_.end())
             return it->second;
-        return codes_[code] = !query("SELECT code FROM lang WHERE code=?2 AND ?1<>'' LIMIT 1", "x", code).empty();
+        return codes_[code] = !query("SELECT code FROM language WHERE code=?2 AND ?1<>'' LIMIT 1", "x", code).empty();
     }
 
 private:

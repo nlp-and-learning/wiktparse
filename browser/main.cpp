@@ -102,8 +102,11 @@ private:
     std::vector<QString> titles_;
 };
 
-// .jsonl.bz2 in blocks with the index of wikt2jsonl --bz2: "offset compressed
-// uncompressed" per block, tab + title per page, EOF=<size>
+// A .jsonl.bz2 of independent bz2 blocks with its index (tab-separated): per
+// block "offset count uncompressed", then "\tstart\ttitle" per entry (start in
+// the uncompressed block), at the end EOF=<size>. An entry ends where the next
+// one starts, the last at uncompressed; a block where the next one starts, the
+// last at EOF.
 class Bz2Lines : public Lines {
 public:
     Bz2Lines(const QString &path, const QString &indexPath) : file_(path) {
@@ -121,16 +124,15 @@ public:
                 end = l.mid(4).toULongLong();
                 continue;
             }
+            const auto parts = l.split('\t');
             if (l.startsWith('\t')) {
-                titles_.push_back(QString::fromUtf8(l.mid(1)));
-                continue;
-            }
-            // "offset uncompressed" (older indexes: "offset compressed uncompressed")
-            auto parts = l.split(' ');
-            if (parts.size() == 2 || parts.size() == 3)
-                blocks_.push_back({parts[0].toULongLong(), 0, parts.back().toUInt(), titles_.size()});
+                if (parts.size() >= 3) {
+                    starts_.push_back(parts[1].toUInt());
+                    titles_.push_back(QString::fromUtf8(l.mid(parts[1].size() + 2)));
+                }
+            } else if (parts.size() == 3)
+                blocks_.push_back({parts[0].toULongLong(), 0, parts[2].toUInt(), titles_.size()});
         }
-        // A block's compressed length: up to the next block, the last one up to EOF (or the file end)
         if (!end)
             end = static_cast<quint64>(file_.size());
         for (size_t b = 0; b < blocks_.size(); ++b)
@@ -141,22 +143,26 @@ public:
     QByteArray line(size_t i) override {
         auto it = std::upper_bound(blocks_.begin(), blocks_.end(), i,
                                    [](size_t line, const Block &b) { return line < b.firstLine; });
-        if (it == blocks_.begin())
+        if (it == blocks_.begin() || i >= titles_.size())
             return {};
         const Block &b = *std::prev(it);
-        if (cached_ != b.offset || lines_.isEmpty()) {
+        if (cached_ != b.offset) {
             file_.seek(static_cast<qint64>(b.offset));
             QByteArray compressed = file_.read(b.compressed);
-            QByteArray text(static_cast<qsizetype>(b.uncompressed), '\0');
+            text_ = QByteArray(static_cast<qsizetype>(b.uncompressed), '\0');
             unsigned length = b.uncompressed;
-            if (BZ2_bzBuffToBuffDecompress(text.data(), &length, compressed.data(), b.compressed, 0, 0) != BZ_OK)
+            if (BZ2_bzBuffToBuffDecompress(text_.data(), &length, compressed.data(), b.compressed, 0, 0) != BZ_OK) {
+                cached_ = ~0ull;
                 return {};
-            text.truncate(length);
-            lines_ = text.split('\n');
+            }
+            text_.truncate(length);
             cached_ = b.offset;
         }
-        const size_t n = i - b.firstLine;
-        return n < static_cast<size_t>(lines_.size()) ? lines_[static_cast<qsizetype>(n)] : QByteArray();
+        const bool last = it == blocks_.end() ? i + 1 == titles_.size() : i + 1 == it->firstLine;
+        const qsizetype from = starts_[i], to = last ? text_.size() : starts_[i + 1];
+        QByteArray entry = text_.mid(from, to - from);
+        entry.chop(entry.endsWith('\n') ? 1 : 0);
+        return entry;
     }
 
 private:
@@ -168,7 +174,8 @@ private:
     QFile file_;
     std::vector<Block> blocks_;
     std::vector<QString> titles_;
-    QList<QByteArray> lines_;
+    std::vector<unsigned> starts_; // of the entries in their uncompressed block
+    QByteArray text_;              // the decompressed block at cached_
     quint64 cached_ = ~0ull;
 };
 

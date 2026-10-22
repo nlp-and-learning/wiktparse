@@ -1023,10 +1023,11 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
 }
 
 // Output of one wiki: plain JSONL, or bz2 blocks of 100 lines (each an independent
-// stream, so bzcat reads the file) with an index: a line per block "offset
-// uncompressed", then tab + title of each of its pages, at the end EOF=<size>
-// (a block's compressed length is the next offset or EOF minus its offset).
-// Thread-safe.
+// stream, so bzcat reads the file) with an index, tab-separated: a line per
+// block "offset count uncompressed", then a line "\tstart\ttitle" per page
+// (start in the uncompressed block; a page ends where the next one starts, the
+// last at uncompressed), at the end EOF=<size> (a block's compressed length is
+// the next offset or EOF minus its offset). Thread-safe.
 class JsonlWriter {
 public:
     JsonlWriter(const fs::path &base, bool compressed) : compressed_(compressed) {
@@ -1036,7 +1037,7 @@ public:
         }
         data_.open(base.string() + ".jsonl.bz2", std::ios::binary);
         index_.open(base.string() + ".jsonl.idx");
-        index_ << "# wikt2jsonl: block lines \"offset uncompressed\", then tab + title of each page; EOF=<size>\n";
+        index_ << "# wikt2jsonl index: offset\tcount\tuncompressed, then \tstart\ttitle per entry; EOF=<size>\n";
     }
     ~JsonlWriter() { close(); }
 
@@ -1046,6 +1047,7 @@ public:
             data_ << line << '\n';
             return;
         }
+        starts_.push_back(block_.size());
         block_ += line;
         block_ += '\n';
         titles_.push_back(title);
@@ -1072,6 +1074,7 @@ private:
     std::mutex mutex_;
     std::string block_;
     std::vector<std::string> titles_;
+    std::vector<size_t> starts_; // of the lines in block_
     uint64_t offset_ = 0;
 
     void flush() {
@@ -1082,12 +1085,13 @@ private:
         if (BZ2_bzBuffToBuffCompress(out.data(), &length, block_.data(), static_cast<unsigned>(block_.size()), 9, 0, 0) != BZ_OK)
             throw std::runtime_error("bz2 compression failed");
         data_.write(out.data(), length);
-        index_ << offset_ << ' ' << block_.size() << '\n';
-        for (const auto &t : titles_)
-            index_ << '\t' << t << '\n';
+        index_ << offset_ << '\t' << titles_.size() << '\t' << block_.size() << '\n';
+        for (size_t i = 0; i < titles_.size(); ++i)
+            index_ << '\t' << starts_[i] << '\t' << titles_[i] << '\n';
         offset_ += length;
         block_.clear();
         titles_.clear();
+        starts_.clear();
     }
 };
 

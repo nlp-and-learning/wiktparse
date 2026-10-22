@@ -111,19 +111,30 @@ public:
         QFile index(indexPath);
         if (!index.open(QIODevice::ReadOnly))
             return;
+        quint64 end = 0;
         while (!index.atEnd()) {
             QByteArray l = index.readLine();
             l.chop(l.endsWith('\n') ? 1 : 0);
-            if (l.startsWith('#') || l.startsWith("EOF="))
+            if (l.startsWith('#'))
                 continue;
+            if (l.startsWith("EOF=")) {
+                end = l.mid(4).toULongLong();
+                continue;
+            }
             if (l.startsWith('\t')) {
                 titles_.push_back(QString::fromUtf8(l.mid(1)));
                 continue;
             }
+            // "offset uncompressed" (older indexes: "offset compressed uncompressed")
             auto parts = l.split(' ');
-            if (parts.size() == 3)
-                blocks_.push_back({parts[0].toULongLong(), parts[1].toUInt(), parts[2].toUInt(), titles_.size()});
+            if (parts.size() == 2 || parts.size() == 3)
+                blocks_.push_back({parts[0].toULongLong(), 0, parts.back().toUInt(), titles_.size()});
         }
+        // A block's compressed length: up to the next block, the last one up to EOF (or the file end)
+        if (!end)
+            end = static_cast<quint64>(file_.size());
+        for (size_t b = 0; b < blocks_.size(); ++b)
+            blocks_[b].compressed = static_cast<unsigned>((b + 1 < blocks_.size() ? blocks_[b + 1].offset : end) - blocks_[b].offset);
     }
     [[nodiscard]] size_t count() const override { return titles_.size(); }
     [[nodiscard]] QString title(size_t i) const override { return titles_[i]; }

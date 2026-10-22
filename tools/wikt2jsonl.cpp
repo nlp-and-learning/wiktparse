@@ -1025,8 +1025,8 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
 }
 
 // Output of one wiki: plain JSONL, or bz2 blocks of 100 lines (each an independent
-// stream, so bzcat reads the file) with an index, tab-separated: a line per
-// block "offset count uncompressed", then a line "\tstart\ttitle" per page
+// stream, so bzcat reads the file) with an index, colon-separated: a line per
+// block "offset:count:uncompressed", then a line ":start:title" per page
 // (start in the uncompressed block; a page ends where the next one starts, the
 // last at uncompressed), at the end EOF=<size> (a block's compressed length is
 // the next offset or EOF minus its offset). Thread-safe.
@@ -1039,7 +1039,7 @@ public:
         }
         data_.open(base.string() + ".jsonl.bz2", std::ios::binary);
         index_.open(base.string() + ".jsonl.idx");
-        index_ << "# wikt2jsonl index: offset\tcount\tuncompressed, then \tstart\ttitle per entry; EOF=<size>\n";
+        index_ << "# wikt2jsonl index: offset:count:uncompressed, then :start:title per entry; EOF=<size>\n";
     }
     ~JsonlWriter() { close(); }
 
@@ -1087,9 +1087,9 @@ private:
         if (BZ2_bzBuffToBuffCompress(out.data(), &length, block_.data(), static_cast<unsigned>(block_.size()), 9, 0, 0) != BZ_OK)
             throw std::runtime_error("bz2 compression failed");
         data_.write(out.data(), length);
-        index_ << offset_ << '\t' << titles_.size() << '\t' << block_.size() << '\n';
+        index_ << offset_ << ':' << titles_.size() << ':' << block_.size() << '\n';
         for (size_t i = 0; i < titles_.size(); ++i)
-            index_ << '\t' << starts_[i] << '\t' << titles_[i] << '\n';
+            index_ << ':' << starts_[i] << ':' << titles_[i] << '\n';
         offset_ += length;
         block_.clear();
         titles_.clear();

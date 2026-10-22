@@ -105,8 +105,8 @@ private:
     std::vector<QString> titles_;
 };
 
-// A .jsonl.bz2 of independent bz2 blocks with its index (tab-separated): per
-// block "offset count uncompressed", then "\tstart\ttitle" per entry (start in
+// A .jsonl.bz2 of independent bz2 blocks with its index (colon-separated): per
+// block "offset:count:uncompressed", then ":start:title" per entry (start in
 // the uncompressed block), at the end EOF=<size>. An entry ends where the next
 // one starts, the last at uncompressed; a block where the next one starts, the
 // last at EOF.
@@ -127,8 +127,9 @@ public:
                 end = l.mid(4).toULongLong();
                 continue;
             }
-            const auto parts = l.split('\t');
-            if (l.startsWith('\t')) {
+            // Titles may contain ':': only the first fields are split
+            const auto parts = l.split(':');
+            if (l.startsWith(':')) {
                 if (parts.size() >= 3) {
                     starts_.push_back(parts[1].toUInt());
                     titles_.push_back(QString::fromUtf8(l.mid(parts[1].size() + 2)));

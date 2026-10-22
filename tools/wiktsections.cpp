@@ -141,6 +141,17 @@ int main(int argc, char *argv[]) {
                 continue;
             pages[heading] += std::stoul(f[2]);
         }
+        // Spellings of one heading ("Derived terms", "Derived Terms") count as the most frequent one
+        {
+            std::map<std::string, std::string> best;
+            for (const auto &[heading, count] : pages)
+                if (auto &b = best[lower(heading)]; b.empty() || count > pages[b])
+                    b = heading;
+            std::map<std::string, size_t> merged;
+            for (const auto &[heading, count] : pages)
+                merged[best[lower(heading)]] += count;
+            pages = std::move(merged);
+        }
         std::map<std::string, std::string> byLower; // lowercase -> heading
         for (auto it = pages.begin(); it != pages.end();) {
             if (it->second < minPages) {

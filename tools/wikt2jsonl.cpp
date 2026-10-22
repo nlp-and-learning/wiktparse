@@ -561,28 +561,241 @@ std::vector<std::string> nativeCodes(const std::string &wiki, const json &config
 // Known section headings per wiki (res/wiktionary_section_names.tsv): not listed as unresolved languages
 std::map<std::string, std::set<std::string>> knownSections;
 
-json convertPage(const std::string &wiki, const json &config, LanguageNames &names, const std::string &title, int ns,
-                 const std::string &text, Stats &stats, bool markersOnly = false) {
+// English parts of speech and relations; other sections keep kind "section"
+const std::set<std::string> partsOfSpeech = {
+        "noun", "verb", "adjective", "adverb", "pronoun", "proper noun", "numeral", "interjection", "conjunction",
+        "preposition", "postposition", "particle", "determiner", "article", "suffix", "prefix", "infix", "interfix",
+        "circumfix", "affix", "phrase", "prepositional phrase", "idiom", "proverb", "letter", "symbol", "participle",
+        "contraction", "abbreviation", "initialism", "acronym", "classifier", "counter", "root", "han character",
+        "kanji", "hanja", "syllable", "punctuation mark", "diacritical mark", "number", "adnominal", "verbal noun"};
+const std::set<std::string> relations = {
+        "synonyms", "antonyms", "hypernyms", "hyponyms", "meronyms", "holonyms", "troponyms", "coordinate terms",
+        "derived terms", "related terms", "compounds", "descendants", "anagrams", "idioms", "proverbs",
+        "collocations", "paronyms", "abbreviations"};
+
+struct SectionName {
+    std::string section; // English: "Synonyms"
+    std::string kind;    // pos, relation, section
+};
+
+// Names of sections of a wiki (wiktsections.sqlite): its own names (by hand), Wikidata labels in
+// its language, English names; keys are lowercase
+class SectionNames {
+public:
+    SectionNames(const fs::path &file, const std::string &wiki) {
+        sqlite3 *db = nullptr;
+        if (!fs::exists(file) || sqlite3_open_v2(file.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr) != SQLITE_OK) {
+            sqlite3_close(db);
+            return;
+        }
+        std::string lang = wiki == "simple" ? "en" : wiki;
+        std::ranges::replace(lang, '_', '-');
+        auto load = [&](const char *sql) {
+            sqlite3_stmt *stmt = nullptr;
+            sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+            sqlite3_bind_text(stmt, 1, wiki.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 2, lang.c_str(), -1, SQLITE_TRANSIENT);
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                std::string section = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                std::string name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+                names_.emplace(wikilib::unicode::to_lower(name), section);
+            }
+            sqlite3_finalize(stmt);
+        };
+        load("SELECT section, name FROM section_name WHERE lang=?1 AND source='manual'");
+        load("SELECT section, name FROM section_name WHERE lang=?2 AND source='wikidata-label'");
+        load("SELECT section, name FROM section_name WHERE lang=?2 AND source='wikidata-alias'");
+        load("SELECT section, section FROM section WHERE ?1<>'' AND ?2<>''");
+        sqlite3_close(db);
+    }
+
+    [[nodiscard]] std::optional<SectionName> find(const std::string &key) const {
+        auto it = names_.find(wikilib::unicode::to_lower(trim(key)));
+        if (it == names_.end())
+            return std::nullopt;
+        // "Synonyms", "references" (by hand): English capitalized
+        std::string section = it->second;
+        auto lower = wikilib::unicode::to_lower(section);
+        // First letter only ("Derived terms")
+        if (size_t pos = 0; !section.empty() && wikilib::unicode::decode_utf8(section, pos))
+            section = wikilib::unicode::to_upper(section.substr(0, pos)) + section.substr(pos);
+        std::string kind = partsOfSpeech.contains(lower) ? "pos" : relations.contains(lower) ? "relation" : "section";
+        return SectionName{section, kind};
+    }
+
+private:
+    std::map<std::string, std::string> names_; // first source wins
+};
+
+// Key of a heading or template line for SectionNames: the text, a template's
+// name or its first parameter (fr {{S|nom|fr}}, de {{Wortart|Substantiv|Deutsch}}),
+// without {{-…-}} dashes (it {{-sin-}}, nl {{-noun-|nld}}) and numbering ("Etymology 2")
+std::pair<std::string, int> sectionKey(std::string text) {
+    static const std::regex numbered(R"(^(.*\S)\s+(\d+)$)");
+    text = trim(text);
+    if (text.starts_with("{{"))
+        if (auto all = wikilib::templates::find_invocations(text); !all.empty())
+            text = text.substr(0, all.front().location.length()); // de "{{Wortart|Substantiv|Deutsch}}, {{n}}"
+    if (auto t = onlyTemplate(trim(text))) {
+        static const std::set<std::string> byParameter = {"S", "Wortart", "-pos-"};
+        if (byParameter.contains(t->name)) {
+            if (auto v = t->get(size_t{1}))
+                text = std::string(*v);
+        } else {
+            text = t->name;
+            while (!text.empty() && (text.front() == '-' || text.front() == '='))
+                text.erase(0, 1);
+            while (!text.empty() && (text.back() == '-' || text.back() == '='))
+                text.pop_back();
+        }
+    } else if (auto open = text.find("{{"); open != std::string::npos && open > 0) {
+        text = text.substr(0, open); // de "{{Wortart|…}}, {{n}}" is handled above; "Noun {{…}}"
+    }
+    text = trim(text);
+    std::smatch m;
+    if (std::regex_match(text, m, numbered))
+        return {m[1].str(), std::stoi(m[2].str())};
+    return {text, 0};
+}
+
+std::optional<Heading> wikt2jsonl_heading(const std::string &line) { return heading(line); }
+
+// Entries of one language section: etymologies, in them parts of speech with
+// senses, sections (raw wikitext under English names) and translations
+class LanguageEntry {
+public:
+    LanguageEntry(const json &config, const SectionNames &names) : config_(config), names_(names) {
+        entry_ = {{"etymologies", json::array({newEtymology(0)})}, {"sections", json::object()},
+                  {"unknown_headings", json::array()}};
+    }
+
+    void line(const std::string &line) {
+        std::optional<std::string> raw;
+        if (auto h = wikt2jsonl_heading(line))
+            raw = h->text;
+        else if (auto t = str(config_, "/sections/form") == "heading" ? std::nullopt : templateLine(line);
+                 t && t->name.size() < 40 && names_.find(sectionKey(trim(line)).first))
+            raw = trim(line); // {{synonimy}}, {{-sin-}}; not {{trans-top|…}}
+        if (raw) {
+            onHeading(*raw);
+            return;
+        }
+        // pl: part of speech as an italic line after {{znaczenia}}: ''rzeczownik, rodzaj żeński''
+        if (str(config_, "/pos/form") == "italic-line" && line.starts_with("''") && section_ == "Definitions") {
+            auto text = line.substr(2, line.find("''", 2) == std::string::npos ? std::string::npos : line.find("''", 2) - 2);
+            auto first = trim(text.substr(0, text.find(',')));
+            if (auto name = names_.find(first); name && name->kind == "pos") {
+                startPos(name->section, text);
+                return;
+            }
+        }
+        // Senses only under the part of speech or in its definitions (pl ": (1.1)" also marks synonyms)
+        if (auto s = section_.empty() || section_ == "Definitions" ? senseLine(config_, line, counters_) : std::nullopt) {
+            pos()["senses"].push_back({{"id", s->id}, {"text", s->text}});
+            return;
+        }
+        if (!section_.empty()) {
+            auto &sections = container()["sections"];
+            sections[section_] = sections.value(section_, std::string()) + line + '\n';
+        }
+    }
+
+    // Translations of the parts of speech from their translation sections
+    json finish(Stats &stats) {
+        for (auto &ety : entry_["etymologies"])
+            for (auto &p : ety["pos"]) {
+                if (auto it = p["sections"].find("Translations"); it != p["sections"].end())
+                    for (const auto &t : translations(config_, it->get<std::string>()))
+                        p["translations"].push_back({{"lang", t.lang}, {"term", t.term}, {"sense", t.sense}});
+                stats.senses += p["senses"].size();
+                stats.translations += p["translations"].size();
+            }
+        // The first etymology when empty (pages without etymology sections)
+        auto &etys = entry_["etymologies"];
+        if (etys.size() > 1 && etys[0]["pos"].empty() && etys[0]["sections"].empty())
+            etys.erase(0);
+        return entry_;
+    }
+
+private:
+    const json &config_;
+    const SectionNames &names_;
+    json entry_;
+    std::string section_;
+    bool inPos_ = false;
+    std::vector<int> counters_;
+
+    static json newEtymology(int index) {
+        return {{"index", index ? json(index) : json()}, {"sections", json::object()}, {"pos", json::array()}};
+    }
+    json &etymology() { return entry_["etymologies"].back(); }
+    json &pos() {
+        if (etymology()["pos"].empty())
+            startPos("", "");
+        return etymology()["pos"].back();
+    }
+    json &container() { return inPos_ ? pos() : etymology(); }
+
+    void startPos(const std::string &pos, const std::string &heading) {
+        etymology()["pos"].push_back({{"pos", pos.empty() ? json() : json(pos)}, {"heading", heading},
+                                      {"senses", json::array()}, {"sections", json::object()},
+                                      {"translations", json::array()}});
+        inPos_ = true;
+        counters_.clear();
+    }
+
+    void onHeading(const std::string &raw) {
+        auto [key, index] = sectionKey(raw);
+        auto name = names_.find(key);
+        if (!name) {
+            entry_["unknown_headings"].push_back(key);
+            section_ = key;
+            return;
+        }
+        // Wikis without homographs under etymologies (pl, it): etymology is a section like others
+        if (name->section == "Etymology" && config_.contains("homographs") && config_["homographs"].is_null()) {
+            section_ = "Etymology";
+            return;
+        }
+        if (name->section == "Etymology") {
+            // "Etymology 2", or an etymology after parts of speech: a new one
+            if (index > 0 && (etymology()["index"].is_number() || !etymology()["pos"].empty()))
+                entry_["etymologies"].push_back(newEtymology(index));
+            else if (index > 0)
+                etymology()["index"] = index;
+            else if (!etymology()["pos"].empty())
+                entry_["etymologies"].push_back(newEtymology(0));
+            inPos_ = false;
+            section_ = "Etymology";
+            return;
+        }
+        if (name->kind == "pos") {
+            startPos(name->section, raw);
+            section_.clear();
+            return;
+        }
+        section_ = name->section;
+    }
+};
+
+json convertPage(const std::string &wiki, const json &config, LanguageNames &names, const SectionNames &sectionNames,
+                 const std::string &title, int ns, const std::string &text, Stats &stats, bool markersOnly = false) {
     json sections = json::array();
     json *current = nullptr;
-    std::string sectionText;
-    std::vector<int> counters;
+    std::optional<LanguageEntry> entry;
     const bool byName = str(config, "/language/value") == "name";
     const auto native = nativeCodes(wiki, config);
     auto finish = [&] {
-        if (!current || markersOnly)
+        if (!current || markersOnly || !entry)
             return;
-        for (const auto &t : translations(config, sectionText))
-            (*current)["translations"].push_back({{"lang", t.lang}, {"term", t.term}, {"sense", t.sense}});
-        stats.translations += (*current)["translations"].size();
-        stats.senses += (*current)["senses"].size();
+        const size_t senses = stats.senses, translated = stats.translations;
+        current->update(entry->finish(stats));
         if ((*current)["native"].get<bool>()) {
             stats.nativeSections++;
-            stats.nativeSenses += (*current)["senses"].size();
-            stats.nativeTranslations += (*current)["translations"].size();
+            stats.nativeSenses += stats.senses - senses;
+            stats.nativeTranslations += stats.translations - translated;
         }
-        sectionText.clear();
-        counters.clear();
+        entry.reset();
     };
     const bool implicit = str(config, "/language/form") == "implicit";
     const bool requireCode = byName && !implicit && config["language"].value("require_code", true);
@@ -606,8 +819,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         if (marker) {
             finish();
             std::string code = byName && !implicit ? names.code(wiki, *marker, str(config, "/language/lookup"), config["language"].value("strip", std::vector<std::string>{})) : *marker;
-            if (implicit && sections.empty() && line.empty() == false)
-                sectionText += line + '\n';
+            const bool keepLine = implicit && sections.empty() && !line.empty();
             // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}
             if (auto aliases = json::json_pointer("/language/aliases"); config.contains(aliases))
                 if (auto it = config[aliases].find(*marker); it != config[aliases].end())
@@ -617,22 +829,18 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             ++count;
             stats.markerExamples.emplace(*marker, title);
             sections.push_back({{"language", *marker}, {"code", code.empty() ? json() : json(code)},
-                                {"native", std::ranges::contains(native, code)},
-                                {"headings", json::array()}, {"senses", json::array()}, {"translations", json::array()}});
+                                {"native", std::ranges::contains(native, code)}});
             current = &sections.back();
+            entry.emplace(config, sectionNames);
+            if (keepLine && !markersOnly)
+                entry->line(line);
             stats.sections++;
             stats.sectionsWithCode += !code.empty();
             continue;
         }
         if (!current || markersOnly)
             continue;
-        sectionText += line + '\n';
-        if (auto h = heading(line))
-            (*current)["headings"].push_back(h->text);
-        else if (auto t = templateLine(line); t && t->name.size() < 40)
-            (*current)["headings"].push_back("{{" + t->name + "}}");
-        else if (auto s = senseLine(config, line, counters))
-            (*current)["senses"].push_back({{"id", s->id}, {"text", s->text}});
+        entry->line(line);
     }
     finish();
     stats.pages++;
@@ -715,6 +923,7 @@ int main(int argc, char *argv[]) {
             }
             if (config.value("skip", false))
                 continue;
+            const SectionNames sectionNames("wiktsections.sqlite", wiki);
             Stats stats;
             std::ofstream out;
             if (!markersOnly)
@@ -726,7 +935,7 @@ int main(int argc, char *argv[]) {
                 std::cout << wiki << ": " << dump.path().dump_path().filename().string() << std::endl;
                 dump.forEachPageParallel(
                         [&](size_t worker, const std::string &title, const std::string &text) {
-                            auto line = convertPage(wiki, config, names, title, 0, text, workerStats[worker], markersOnly);
+                            auto line = convertPage(wiki, config, names, sectionNames, title, 0, text, workerStats[worker], markersOnly);
                             if (!markersOnly) {
                                 auto dumped = line.dump(-1, ' ', false, json::error_handler_t::replace);
                                 std::lock_guard lock(outMutex);
@@ -741,7 +950,7 @@ int main(int argc, char *argv[]) {
                 std::ifstream file(input / wiki / page["file"].get<std::string>());
                 std::stringstream text;
                 text << file.rdbuf();
-                auto line = convertPage(wiki, config, names, page["title"], page["ns"], text.str(), stats, markersOnly);
+                auto line = convertPage(wiki, config, names, sectionNames, page["title"], page["ns"], text.str(), stats, markersOnly);
                 if (!markersOnly)
                     out << line.dump(-1, ' ', false, json::error_handler_t::replace) << '\n';
             }

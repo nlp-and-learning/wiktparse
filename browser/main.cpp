@@ -9,7 +9,7 @@
 // decoded) with Kate mediawiki highlighting, read from the dump at its "source"
 // ([bz2 block, number in it]); the dump directory is set in Settings and kept
 // in wiktbrowse.ini next to the binary. Search > Find (Ctrl+F, F3, Shift+F3)
-// in the JSON and Original tabs.
+// in the JSON and Original tabs, and in the tree (expanding to the match).
 //
 // wiktbrowse [file.jsonl | file.jsonl.bz2]
 #include <QApplication>
@@ -19,6 +19,7 @@
 #include <QFile>
 #include <qxfiledialog.h>
 #include "FindBar.h"
+#include "TreeFindBar.h"
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -261,8 +262,15 @@ public:
         tree_ = new QTreeView;
         model_ = new QStandardItemModel(this);
         tree_->setModel(model_);
+        treePage_ = new QWidget;
+        auto *treeLayout = new QVBoxLayout(treePage_);
+        treeLayout->setContentsMargins(0, 0, 0, 0);
+        treeLayout->setSpacing(0);
+        treeFind_ = new TreeFindBar(treePage_, tree_);
+        treeLayout->addWidget(treeFind_);
+        treeLayout->addWidget(tree_);
         tabs_->addTab(json_.page, "JSON");
-        tabs_->addTab(tree_, "Tree");
+        tabs_->addTab(treePage_, "Tree");
 
         central->addWidget(left);
         central->addWidget(tabs_);
@@ -300,14 +308,20 @@ public:
         search->addAction("&Find...", QKeySequence::Find, this, [this] {
             if (auto *view = currentView())
                 view->find->showSearch();
+            else if (tabs_->currentWidget() == treePage_)
+                treeFind_->showSearch();
         });
         search->addAction("Find &Next", QKeySequence(Qt::Key_F3), this, [this] {
             if (auto *view = currentView())
                 view->find->findNext();
+            else if (tabs_->currentWidget() == treePage_)
+                treeFind_->findNext();
         });
         search->addAction("Find &Previous", QKeySequence(Qt::SHIFT | Qt::Key_F3), this, [this] {
             if (auto *view = currentView())
                 view->find->findNext(true);
+            else if (tabs_->currentWidget() == treePage_)
+                treeFind_->findNext(true);
         });
         auto *setup = menuBar()->addMenu("&Settings");
         setup->addAction("&Dump directory...", this, [this] {
@@ -464,6 +478,8 @@ private:
     CodeView json_; // the line as indented JSON
     CodeView wiki_; // the page's wikitext from the dump
     QTreeView *tree_;
+    QWidget *treePage_ = nullptr; // find bar and tree
+    TreeFindBar *treeFind_ = nullptr;
     QStandardItemModel *model_;
 
     // Read-only qcodeedit with Kate's JSON syntax (downloaded Kate data) and folding
@@ -570,6 +586,7 @@ private:
                 addItems(model_->invisibleRootItem(), child, QString::fromStdString(k));
         tree_->expandToDepth(2);
         tree_->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+        treeFind_->reset();
         current_ = value.is_discarded() ? json() : std::move(value);
         showOriginal();
     }

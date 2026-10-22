@@ -97,7 +97,8 @@
       "język zaparo": "zro",
       "język zelandzki": "zea"
     },
-    "name_from": "template"
+    "name_from": "template",
+    "lookup": "język {name}"
   },
   "homographs": null,
   "pos": {

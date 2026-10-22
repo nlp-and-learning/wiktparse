@@ -229,9 +229,28 @@ public:
         return cache_[key] = result;
     }
 
+    // en.wikt code of a code of another scheme (wd_code_map: ISO 639-1/3, Wikimedia)
+    std::string mappedCode(const std::string &code) {
+        if (!db_ || code.empty() || code.size() > 12)
+            return "";
+        std::lock_guard lock(mutex_);
+        return query("SELECT wikt_code FROM wd_code_map WHERE code=?2 AND wikt_code<>'' AND ?1<>'' LIMIT 1", "x", code);
+    }
+
+    // A language code of wiktlangs.sqlite (en.wikt codes and extra ones)
+    bool isCode(const std::string &code) {
+        if (!db_ || code.empty())
+            return false;
+        std::lock_guard lock(mutex_);
+        if (auto it = codes_.find(code); it != codes_.end())
+            return it->second;
+        return codes_[code] = !query("SELECT code FROM lang WHERE code=?2 AND ?1<>'' LIMIT 1", "x", code).empty();
+    }
+
 private:
     sqlite3 *db_ = nullptr;
     std::map<std::string, std::string> cache_;
+    std::map<std::string, bool> codes_;
     std::mutex mutex_;
 
     std::string query(const char *sql, const std::string &a, const std::string &b) {
@@ -451,7 +470,7 @@ std::vector<std::string> links(const std::string &text) {
     return result;
 }
 
-std::vector<Translation> translations(const json &config, const std::string &text) {
+std::vector<Translation> translations(const json &config, const std::string &text, bool lines = true) {
     std::vector<Translation> result;
     const auto &tc = config.value("translations", json::object());
     const auto terms = tc.value("terms", json::object());
@@ -505,7 +524,7 @@ std::vector<Translation> translations(const json &config, const std::string &tex
         }
     }
     // Lines of links: pl "* angielski: (1.1) [[water]]", it ":*{{en}}: [[water]]", zh "*英语：[[water]]"
-    if (terms.contains("line")) {
+    if (lines && terms.contains("line")) {
         static const std::regex line(R"(^:?\*:?\s*(\{\{([^}|]+)\}\}|[^:：]+?)\s*[:：]\s*(?:\(([0-9.,\s-]+)\)\s*)?(.*)$)");
         std::istringstream in(text);
         for (std::string l; std::getline(in, l);) {
@@ -662,12 +681,16 @@ std::pair<std::string, int> sectionKey(std::string text) {
 std::optional<Heading> wikt2jsonl_heading(const std::string &line) { return heading(line); }
 
 // Entries of one language section: etymologies, in them parts of speech with
-// senses, sections (raw wikitext under English names) and translations
+// senses and translations side by side (not linked yet). Every section of the
+// page is one element of a "sections" list, in page order: {"section" (English
+// name, null when not known), "heading" (as written), "text" (raw wikitext)}.
 class LanguageEntry {
 public:
-    LanguageEntry(const json &config, const SectionNames &names) : config_(config), names_(names) {
-        entry_ = {{"etymologies", json::array({newEtymology(0)})}, {"sections", json::object()},
-                  {"unknown_headings", json::array()}};
+    using LanguageCode = std::function<std::string(const std::string &)>;
+
+    LanguageEntry(const json &config, const SectionNames &names, LanguageCode languageCode)
+        : config_(config), names_(names), languageCode_(std::move(languageCode)) {
+        entry_ = {{"etymologies", json::array({newEtymology(0)})}, {"unknown_headings", json::array()}};
     }
 
     void line(const std::string &line) {
@@ -687,6 +710,7 @@ public:
             auto first = trim(text.substr(0, text.find(',')));
             if (auto name = names_.find(first); name && name->kind == "pos") {
                 startPos(name->section, text);
+                section_ = "Definitions"; // the definitions continue
                 return;
             }
         }
@@ -695,25 +719,31 @@ public:
             pos()["senses"].push_back({{"id", s->id}, {"text", s->text}});
             return;
         }
-        if (!section_.empty()) {
-            auto &sections = container()["sections"];
-            sections[section_] = sections.value(section_, std::string()) + line + '\n';
+        if (hasSection_) {
+            auto &last = container()["sections"].back();
+            last["text"] = last["text"].get<std::string>() + line + '\n';
         }
     }
 
-    // Translations of the parts of speech from their translation sections
+    // Translations of each part of speech, from its translation sections
     json finish(Stats &stats) {
         for (auto &ety : entry_["etymologies"])
             for (auto &p : ety["pos"]) {
-                // The translation section, or all sections when its local name is not known yet
-                std::string text;
-                if (auto it = p["sections"].find("Translations"); it != p["sections"].end())
-                    text = it->get<std::string>();
-                else
-                    for (const auto &[name, section] : p["sections"].items())
-                        text += section.get<std::string>();
-                for (const auto &t : translations(config_, text))
-                    p["translations"].push_back({{"lang", t.lang}, {"term", t.term}, {"sense", t.sense}});
+                // The translation sections, or all sections when its local name is not known yet
+                std::string text, all;
+                for (const auto &section : p["sections"]) {
+                    all += section["text"].get<std::string>();
+                    if (section["section"] == "Translations")
+                        text += section["text"].get<std::string>();
+                }
+                // Lines of names ("* angielski: [[water]]") only in a known translation section
+                for (const auto &t : text.empty() ? translations(config_, all, false) : translations(config_, text)) {
+                    std::string code = languageCode_(t.lang);
+                    json item = {{"lang", code.empty() ? json() : json(code)}, {"term", t.term}, {"sense", t.sense}};
+                    if (code != t.lang)
+                        item["lang_written"] = t.lang; // pl "angielski", it "{{en}}" -> en
+                    p["translations"].push_back(std::move(item));
+                }
                 stats.senses += p["senses"].size();
                 stats.translations += p["translations"].size();
             }
@@ -727,13 +757,15 @@ public:
 private:
     const json &config_;
     const SectionNames &names_;
+    LanguageCode languageCode_;
     json entry_;
-    std::string section_;
+    std::string section_;   // English name of the current section ("" when none)
+    bool hasSection_ = false; // the current container's last section takes the lines
     bool inPos_ = false;
     std::vector<int> counters_;
 
     static json newEtymology(int index) {
-        return {{"index", index ? json(index) : json()}, {"sections", json::object()}, {"pos", json::array()}};
+        return {{"index", index ? json(index) : json()}, {"sections", json::array()}, {"pos", json::array()}};
     }
     json &etymology() { return entry_["etymologies"].back(); }
     json &pos() {
@@ -745,10 +777,18 @@ private:
 
     void startPos(const std::string &pos, const std::string &heading) {
         etymology()["pos"].push_back({{"pos", pos.empty() ? json() : json(pos)}, {"heading", heading},
-                                      {"senses", json::array()}, {"sections", json::object()},
+                                      {"senses", json::array()}, {"sections", json::array()},
                                       {"translations", json::array()}});
         inPos_ = true;
+        hasSection_ = false;
         counters_.clear();
+    }
+
+    void addSection(const std::optional<std::string> &section, const std::string &heading) {
+        container()["sections"].push_back(
+                {{"section", section ? json(*section) : json()}, {"heading", heading}, {"text", ""}});
+        section_ = section.value_or("");
+        hasSection_ = true;
     }
 
     void onHeading(const std::string &raw) {
@@ -756,15 +796,11 @@ private:
         auto name = names_.find(key);
         if (!name) {
             entry_["unknown_headings"].push_back(key);
-            section_ = key;
+            addSection(std::nullopt, raw);
             return;
         }
-        // Wikis without homographs under etymologies (pl, it): etymology is a section like others
-        if (name->section == "Etymology" && config_.contains("homographs") && config_["homographs"].is_null()) {
-            section_ = "Etymology";
-            return;
-        }
-        if (name->section == "Etymology") {
+        // Wikis without homographs under etymologies (pl, de): etymology is a section like others
+        if (name->section == "Etymology" && !(config_.contains("homographs") && config_["homographs"].is_null())) {
             // "Etymology 2", or an etymology after parts of speech: a new one
             if (index > 0 && (etymology()["index"].is_number() || !etymology()["pos"].empty()))
                 entry_["etymologies"].push_back(newEtymology(index));
@@ -773,15 +809,13 @@ private:
             else if (!etymology()["pos"].empty())
                 entry_["etymologies"].push_back(newEtymology(0));
             inPos_ = false;
-            section_ = "Etymology";
-            return;
         }
         if (name->kind == "pos") {
             startPos(name->section, raw);
             section_.clear();
             return;
         }
-        section_ = name->section;
+        addSection(name->section, raw);
     }
 };
 
@@ -838,7 +872,22 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             sections.push_back({{"language", *marker}, {"code", code.empty() ? json() : json(code)},
                                 {"native", std::ranges::contains(native, code)}});
             current = &sections.back();
-            entry.emplace(config, sectionNames);
+            entry.emplace(config, sectionNames, [&](const std::string &lang) {
+                // Canonical code of a translation language: a code as such (ru "az.cyr": without the
+                // script), a code of another scheme (ISO 639-3 "quz"), else a name of this wiki
+                if (names.isCode(lang))
+                    return lang;
+                if (auto dot = lang.find('.'); dot != std::string::npos && names.isCode(lang.substr(0, dot)))
+                    return lang.substr(0, dot);
+                if (auto mapped = names.mappedCode(lang); !mapped.empty())
+                    return mapped;
+                std::string code = names.code(wiki, lang, str(config, "/language/lookup"),
+                                              config["language"].value("strip", std::vector<std::string>{}));
+                if (auto aliases = json::json_pointer("/language/aliases"); code.empty() && config.contains(aliases))
+                    if (auto it = config[aliases].find(lang); it != config[aliases].end())
+                        code = it->get<std::string>();
+                return code;
+            });
             if (keepLine && !markersOnly)
                 entry->line(line);
             stats.sections++;

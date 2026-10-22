@@ -7,7 +7,11 @@
     "value": "name",
     "skip_headings": [
       "跨語言"
-    ]
+    ],
+    "aliases": {
+      "跨語言": "mul",
+      "塞爾維亞-克羅地亞語": "sh"
+    }
   },
   "homographs": null,
   "pos": {

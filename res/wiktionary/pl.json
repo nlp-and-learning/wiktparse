@@ -5,7 +5,17 @@
     "form": "heading-word-and-template",
     "heading_level": 2,
     "template": "język {name}",
-    "value": "name"
+    "value": "name",
+    "aliases": {
+      "język chorwacki": "hr",
+      "język serbski": "sr",
+      "znak chiński": "mul",
+      "hindi": "hi",
+      "język nowogrecki": "el",
+      "język chiński standardowy": "cmn",
+      "język staroormiański": "xcl"
+    },
+    "name_from": "template"
   },
   "homographs": null,
   "pos": {

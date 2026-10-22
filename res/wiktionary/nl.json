@@ -4,7 +4,11 @@
   "language": {
     "form": "line-template",
     "pattern": "{{=xx=}}",
-    "value": "code"
+    "value": "code",
+    "native": [
+      "nl",
+      "nld"
+    ]
   },
   "homographs": null,
   "pos": {

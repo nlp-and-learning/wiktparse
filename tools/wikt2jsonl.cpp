@@ -11,7 +11,8 @@
 //
 // Output: <out>/<wiki>.jsonl, one page per line:
 //   {"wiki","title","ns","sections":[{"language","code","headings":[...],
-//    "senses":[{"id","text"}],"translations":[{"lang","term","sense"}]}]}
+//    "native","senses":[{"id","text"}],"translations":[{"lang","term","sense"}]}]}
+// ("native": the section is in the wiki's own language)
 // and <out>/stats.tsv (also printed): per wiki pages, sections, sections with
 // a language code, senses, translations.
 #include <algorithm>
@@ -142,9 +143,22 @@ public:
             return it->second;
         std::string lang = wiki;
         std::ranges::replace(lang, '_', '-');
-        std::string result = query("SELECT code FROM lang_name WHERE lang=?1 AND name=?2 ORDER BY alias LIMIT 1", lang, name);
-        if (result.empty())
-            result = query("SELECT code FROM lang_name WHERE lang=?1 AND lower(name)=lower(?2) ORDER BY alias LIMIT 1", lang, name);
+        // Labels of Chinese wikis are in traditional or simplified characters
+        std::vector<std::string> langs{lang};
+        if (lang == "zh")
+            langs = {"zh", "zh-hant", "zh-hans", "zh-tw", "zh-cn", "zh-hk"};
+        // "esperanto (morfem)", "język norweski (bokmål)": also without the note
+        std::vector<std::string> variants{name};
+        if (auto open = name.rfind(" ("); open != std::string::npos && name.ends_with(")"))
+            variants.push_back(name.substr(0, open));
+        std::string result;
+        for (const auto &n : variants)
+            for (const auto &l : langs) {
+                if (result.empty())
+                    result = query("SELECT code FROM lang_name WHERE lang=?1 AND name=?2 ORDER BY alias LIMIT 1", l, n);
+                if (result.empty())
+                    result = query("SELECT code FROM lang_name WHERE lang=?1 AND lower(name)=lower(?2) ORDER BY alias LIMIT 1", l, n);
+            }
         if (result.empty())
             result = query("SELECT code FROM lang WHERE name=?2 AND ?1<>'' LIMIT 1", lang, name);
         return cache_[key] = result;
@@ -255,8 +269,10 @@ std::optional<std::string> languageMarker(const json &config, const std::string 
         auto t = onlyTemplate(trim(h->text.substr(open + 1, h->text.rfind(')') - open - 1)));
         if (!t)
             return std::nullopt;
-        if (auto v = t->get(size_t{1}))
-            return std::string(*v);
+        // pl {{język hiszpański|sort key}}: the template name; de {{Sprache|Deutsch}}: parameter 1
+        if (str(config, "/language/name_from") != "template")
+            if (auto v = t->get(size_t{1}))
+                return std::string(*v);
         return t->name;
     }
     return std::nullopt;
@@ -394,7 +410,22 @@ std::vector<Translation> translations(const json &config, const std::string &tex
 
 struct Stats {
     size_t pages = 0, pagesWithSections = 0, sections = 0, sectionsWithCode = 0, senses = 0, translations = 0;
+    size_t nativeSections = 0, nativeSenses = 0, nativeTranslations = 0;
 };
+
+// Codes of the wiki's own language: entries of other languages are defined in
+// it and have no translation tables (pl: ": (1.1) [[pies]]" under a foreign word)
+std::vector<std::string> nativeCodes(const std::string &wiki, const json &config) {
+    if (config.contains(json::json_pointer("/language/native")))
+        return config["language"]["native"].get<std::vector<std::string>>();
+    static const std::map<std::string, std::vector<std::string>> special = {
+            {"simple", {"en"}}, {"zh_min_nan", {"nan", "nan-hbl"}}, {"no", {"no", "nb"}}, {"roa_rup", {"rup"}}};
+    if (auto it = special.find(wiki); it != special.end())
+        return it->second;
+    std::string code = wiki;
+    std::ranges::replace(code, '_', '-');
+    return {code};
+}
 
 json convertPage(const std::string &wiki, const json &config, LanguageNames &names, const std::string &title, int ns,
                  const std::string &text, Stats &stats) {
@@ -403,6 +434,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     std::string sectionText;
     std::vector<int> counters;
     const bool byName = str(config, "/language/value") == "name";
+    const auto native = nativeCodes(wiki, config);
     auto finish = [&] {
         if (!current)
             return;
@@ -410,6 +442,11 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             (*current)["translations"].push_back({{"lang", t.lang}, {"term", t.term}, {"sense", t.sense}});
         stats.translations += (*current)["translations"].size();
         stats.senses += (*current)["senses"].size();
+        if ((*current)["native"].get<bool>()) {
+            stats.nativeSections++;
+            stats.nativeSenses += (*current)["senses"].size();
+            stats.nativeTranslations += (*current)["translations"].size();
+        }
         sectionText.clear();
         counters.clear();
     };
@@ -418,7 +455,12 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         if (auto marker = languageMarker(config, line)) {
             finish();
             std::string code = byName ? names.code(wiki, *marker) : *marker;
+            // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}
+            if (auto aliases = json::json_pointer("/language/aliases"); config.contains(aliases))
+                if (auto it = config[aliases].find(*marker); it != config[aliases].end())
+                    code = it->get<std::string>();
             sections.push_back({{"language", *marker}, {"code", code.empty() ? json() : json(code)},
+                                {"native", std::ranges::contains(native, code)},
                                 {"headings", json::array()}, {"senses", json::array()}, {"translations", json::array()}});
             current = &sections.back();
             stats.sections++;
@@ -472,7 +514,7 @@ int main(int argc, char *argv[]) {
         LanguageNames names(dbFile);
         fs::create_directories(output);
         std::ofstream statsFile(output / "stats.tsv");
-        std::string header = "wiki\tprofile\tpages\twith_sections\tsections\twith_code\tsenses\ttranslations";
+        std::string header = "wiki\tprofile\tpages\twith_sections\tsections\twith_code\tsenses\ttranslations\tnative_sections\tnative_senses\tnative_translations";
         statsFile << header << '\n';
         std::cout << header << '\n';
         for (const auto &wiki : wikis) {
@@ -489,9 +531,9 @@ int main(int argc, char *argv[]) {
                                 .dump(-1, ' ', false, json::error_handler_t::replace)
                     << '\n';
             }
-            auto row = std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", wiki, config.value("profile", ""), stats.pages,
+            auto row = std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", wiki, config.value("profile", ""), stats.pages,
                                    stats.pagesWithSections, stats.sections, stats.sectionsWithCode, stats.senses,
-                                   stats.translations);
+                                   stats.translations, stats.nativeSections, stats.nativeSenses, stats.nativeTranslations);
             statsFile << row << '\n';
             std::cout << row << std::endl;
         }

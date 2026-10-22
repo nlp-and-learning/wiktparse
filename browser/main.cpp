@@ -4,10 +4,13 @@
 // shown line is decompressed). Left: the lines with their titles, a filter and
 // "go to line". Right: the selected line as indented JSON in a read-only
 // qcodeedit view (Kate highlighting and folding), and as a tree with readable
-// labels of sections and senses.
+// labels of sections and senses. F4 opens the line, indented, in Kate.
 //
 // wiktbrowse [file.jsonl | file.jsonl.bz2]
 #include <QApplication>
+#include <QDir>
+#include <QProcess>
+#include <QShortcut>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -244,6 +247,8 @@ public:
                 showLine(item->data(Qt::UserRole).toInt());
         });
         connect(lineBox_, &QSpinBox::editingFinished, this, [this] { showLine(lineBox_->value() - 1); });
+        // F4: the line, indented, in Kate itself (a read-only file in the temporary directory)
+        connect(new QShortcut(QKeySequence(Qt::Key_F4), this), &QShortcut::activated, this, [this] { openInKate(); });
     }
 
     void open(const QString &path) {
@@ -332,6 +337,22 @@ private:
                 break;
         }
         status_->setText(QString("%1 lines, %2 shown").arg(lines_->count()).arg(list_->count()));
+    }
+
+    void openInKate() {
+        const QString dir = QDir::tempPath() + "/wiktbrowse";
+        QDir().mkpath(dir);
+        QString name = lines_ ? lines_->title(static_cast<size_t>(lineBox_->value() - 1)) : QString();
+        name.replace('/', '_');
+        const QString path = QString("%1/%2 %3.json").arg(dir).arg(lineBox_->value()).arg(name.left(80));
+        QFile file(path);
+        file.setPermissions(QFileDevice::WriteOwner | QFileDevice::ReadOwner);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return;
+        file.write(doc_->toPlainText().toUtf8());
+        file.close();
+        file.setPermissions(QFileDevice::ReadOwner | QFileDevice::ReadGroup | QFileDevice::ReadOther);
+        QProcess::startDetached("kate", {path});
     }
 
     void showLine(int line) {

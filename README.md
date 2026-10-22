@@ -89,7 +89,8 @@ dump_dir = ~/dump
   Lines with titles (or Wikidata id and English label), a filter, the selected
   line as indented JSON in a read-only editor with Kate highlighting and
   folding, and as a tree. `.jsonl.bz2` files of `wikt2jsonl --bz2` are read
-  through their `.jsonl.idx`, decompressing only the block shown.
+  through their `.jsonl.idx`, decompressing only the block shown. F4 opens
+  the line, indented, in Kate (a read-only file in the temporary directory).
 - `defglos [samples.txt] [-v] [--sweep]` – links English definitions to
   translation glosses on `res/defglos/samples.txt` and reports precision and
   recall against the expected links; see `doc/defglos/README.md`.

@@ -6,7 +6,9 @@
       "عربی": "ar",
       "فرانسوی": "fr",
       "ایتالیایی": "it",
-      "زازاکی": "zza"
+      "زازاکی": "zza",
+      "{{عنوان|ان}}": "en",
+      "{{عنوان|فا}}": "fa"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

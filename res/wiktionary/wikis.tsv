@@ -5,7 +5,7 @@ af	E	{{=xx=}}
 ak	F		
 am	A		
 an	E	{{-xx-}}	
-ang	A		
+ang	A		ang.json
 ar	B2		
 as	B		as.json
 ast	C		
@@ -33,7 +33,7 @@ ckb	A		ckb.json
 co	E	{{-xx-}}	
 cr	F		
 cs	A		cs.json
-csb	D		
+csb	D		csb.json
 cy	E	{{=xx=}}	
 da	E	{{=xx=}}	
 de	D		de.json

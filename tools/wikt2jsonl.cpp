@@ -285,6 +285,18 @@ std::optional<std::string> languageMarker(const json &config, const std::string 
         std::smatch m;
         if (std::regex_match(h->text, m, link))
             return m[1].str();
+        // ang "{{sprǣc|en}}": a code parameter; "{{fro}}": a code as the name; fa "{{انگلیسی}}": a name;
+        // fa "{{{3|فارسی}}}": the default of a parameter
+        static const std::regex parameterDefault(R"(^\{\{\{[^|}]*\|([^}]+)\}\}\}$)");
+        if (std::regex_match(h->text, m, parameterDefault))
+            return trim(m[1].str());
+        if (auto t = onlyTemplate(h->text); t && !t->name.starts_with("=") && !t->name.starts_with("-")) {
+            static const std::regex code(R"(^[a-z]{2,3}(-[a-z]+)*$)");
+            if (auto v = t->get(size_t{1}); v && std::regex_match(std::string(*v), code))
+                return std::string(*v);
+            if (t->parameters.empty())
+                return t->name;
+        }
         // my "{{=en=}}", "{{-en-}}": the code
         static const std::regex codeTemplate(R"(^\{\{[=-]([a-z]{2,3}(?:-[a-z]+)*)[=-]\}\}$)");
         if (std::regex_match(h->text, m, codeTemplate))

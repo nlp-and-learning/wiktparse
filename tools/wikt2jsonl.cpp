@@ -680,142 +680,133 @@ std::pair<std::string, int> sectionKey(std::string text) {
 
 std::optional<Heading> wikt2jsonl_heading(const std::string &line) { return heading(line); }
 
-// Entries of one language section: etymologies, in them parts of speech with
-// senses and translations side by side (not linked yet). Every section of the
-// page is one element of a "sections" list, in page order: {"section" (English
-// name, null when not known), "heading" (as written), "text" (raw wikitext)}.
+// The sections of one language section as a tree, as the page has them: a
+// heading opens a node below the nearest heading of a lower level; a template
+// line (pl {{synonimy}}, it {{-sin-}}) opens a node one level below the last
+// heading, its siblings following. Every node: English name ("section", null
+// when not known), "kind" (pos, etymology, relation, section), "heading" as
+// written, "level", "index" (Etymology 2), raw "text", "senses" where the
+// definitions stand, "translations" in translation sections (not linked to
+// senses yet), "children".
 class LanguageEntry {
 public:
     using LanguageCode = std::function<std::string(const std::string &)>;
 
-    LanguageEntry(const json &config, const SectionNames &names, LanguageCode languageCode)
+    LanguageEntry(const json &config, const SectionNames &names, LanguageCode languageCode, int languageLevel)
         : config_(config), names_(names), languageCode_(std::move(languageCode)) {
-        entry_ = {{"etymologies", json::array({newEtymology(0)})}, {"unknown_headings", json::array()}};
+        root_ = node(std::nullopt, "", "", languageLevel, 0);
+        stack_.push_back(&root_);
     }
 
     void line(const std::string &line) {
-        std::optional<std::string> raw;
-        if (auto h = wikt2jsonl_heading(line))
-            raw = h->text;
-        else if (auto t = str(config_, "/sections/form") == "heading" ? std::nullopt : templateLine(line);
-                 t && t->name.size() < 40 && names_.find(sectionKey(trim(line)).first))
-            raw = trim(line); // {{synonimy}}, {{-sin-}}; not {{trans-top|…}}
-        if (raw) {
-            onHeading(*raw);
+        if (auto h = wikt2jsonl_heading(line)) {
+            open(h->text, h->level, false);
             return;
         }
-        // pl: part of speech as an italic line after {{znaczenia}}: ''rzeczownik, rodzaj żeński''
-        if (str(config_, "/pos/form") == "italic-line" && line.starts_with("''") && section_ == "Definitions") {
+        if (str(config_, "/sections/form") != "heading")
+            if (auto t = templateLine(line); t && t->name.size() < 40 && names_.find(sectionKey(trim(line)).first)) {
+                open(trim(line), headingLevel() + 1, true); // {{synonimy}}, {{-sin-}}; not {{trans-top|…}}
+                return;
+            }
+        // pl: part of speech as an italic line in {{znaczenia}}: ''rzeczownik, rodzaj żeński''
+        if (str(config_, "/pos/form") == "italic-line" && line.starts_with("''") &&
+            (current()["section"] == "Definitions" || current().contains("template_pos"))) {
             auto text = line.substr(2, line.find("''", 2) == std::string::npos ? std::string::npos : line.find("''", 2) - 2);
             auto first = trim(text.substr(0, text.find(',')));
             if (auto name = names_.find(first); name && name->kind == "pos") {
-                startPos(name->section, text);
-                section_ = "Definitions"; // the definitions continue
+                if (current().contains("template_pos"))
+                    stack_.pop_back(); // the previous part of speech of these definitions
+                json pos = node(name->section, "pos", text, current()["level"].get<int>() + 1, 0);
+                pos["template_pos"] = true;
+                push(std::move(pos));
+                counters_.clear();
                 return;
             }
         }
-        // Senses only under the part of speech or in its definitions (pl ": (1.1)" also marks synonyms)
-        if (auto s = section_.empty() || section_ == "Definitions" ? senseLine(config_, line, counters_) : std::nullopt) {
-            pos()["senses"].push_back({{"id", s->id}, {"text", s->text}});
-            return;
-        }
-        if (hasSection_) {
-            auto &last = container()["sections"].back();
-            last["text"] = last["text"].get<std::string>() + line + '\n';
-        }
+        // Senses where definitions stand: under a part of speech, in definitions ("#", pl ": (1.1)")
+        const auto &kind = current()["kind"];
+        if (kind == "pos" || current()["section"] == "Definitions")
+            if (auto s = senseLine(config_, line, counters_)) {
+                current()["senses"].push_back({{"id", s->id}, {"text", s->text}});
+                return;
+            }
+        current()["text"] = current()["text"].get<std::string>() + line + '\n';
     }
 
-    // Translations of each part of speech, from its translation sections
     json finish(Stats &stats) {
-        for (auto &ety : entry_["etymologies"])
-            for (auto &p : ety["pos"]) {
-                // The translation sections, or all sections when its local name is not known yet
-                std::string text, all;
-                for (const auto &section : p["sections"]) {
-                    all += section["text"].get<std::string>();
-                    if (section["section"] == "Translations")
-                        text += section["text"].get<std::string>();
-                }
-                // Lines of names ("* angielski: [[water]]") only in a known translation section
-                for (const auto &t : text.empty() ? translations(config_, all, false) : translations(config_, text)) {
-                    std::string code = languageCode_(t.lang);
-                    json item = {{"lang", code.empty() ? json() : json(code)}, {"term", t.term}, {"sense", t.sense}};
-                    if (code != t.lang)
-                        item["lang_written"] = t.lang; // pl "angielski", it "{{en}}" -> en
-                    p["translations"].push_back(std::move(item));
-                }
-                stats.senses += p["senses"].size();
-                stats.translations += p["translations"].size();
-            }
-        // The first etymology when empty (pages without etymology sections)
-        auto &etys = entry_["etymologies"];
-        if (etys.size() > 1 && etys[0]["pos"].empty() && etys[0]["sections"].empty())
-            etys.erase(0);
-        return entry_;
+        finishNode(root_, stats);
+        return {{"sections", root_["children"]}, {"text", root_["text"]}, {"unknown_headings", unknown_}};
     }
 
 private:
     const json &config_;
     const SectionNames &names_;
     LanguageCode languageCode_;
-    json entry_;
-    std::string section_;   // English name of the current section ("" when none)
-    bool hasSection_ = false; // the current container's last section takes the lines
-    bool inPos_ = false;
+    json root_;
+    std::vector<json *> stack_; // open nodes, root first
+    json unknown_ = json::array();
     std::vector<int> counters_;
 
-    static json newEtymology(int index) {
-        return {{"index", index ? json(index) : json()}, {"sections", json::array()}, {"pos", json::array()}};
-    }
-    json &etymology() { return entry_["etymologies"].back(); }
-    json &pos() {
-        if (etymology()["pos"].empty())
-            startPos("", "");
-        return etymology()["pos"].back();
-    }
-    json &container() { return inPos_ ? pos() : etymology(); }
+    json &current() { return *stack_.back(); }
 
-    void startPos(const std::string &pos, const std::string &heading) {
-        etymology()["pos"].push_back({{"pos", pos.empty() ? json() : json(pos)}, {"heading", heading},
-                                      {"senses", json::array()}, {"sections", json::array()},
-                                      {"translations", json::array()}});
-        inPos_ = true;
-        hasSection_ = false;
+    int headingLevel() const {
+        for (auto it = stack_.rbegin(); it != stack_.rend(); ++it)
+            if (!(*it)->value("template", false) && !(*it)->contains("template_pos"))
+                return (**it)["level"].get<int>();
+        return 1;
+    }
+
+    static json node(const std::optional<std::string> &section, const std::string &kind, const std::string &heading,
+                     int level, int index) {
+        return {{"section", section ? json(*section) : json()}, {"kind", kind.empty() ? json() : json(kind)},
+                {"heading", heading}, {"level", level}, {"index", index ? json(index) : json()}, {"text", ""},
+                {"senses", json::array()}, {"translations", json::array()}, {"children", json::array()}};
+    }
+
+    void push(json n) {
+        auto &children = current()["children"];
+        children.push_back(std::move(n));
+        stack_.push_back(&children.back());
+    }
+
+    void open(const std::string &raw, int level, bool templateLine) {
+        // Close nodes at this level or deeper (template lines: also earlier template lines)
+        while (stack_.size() > 1 && current()["level"].get<int>() >= level)
+            stack_.pop_back();
+        auto [key, index] = sectionKey(raw);
+        auto name = names_.find(key);
+        if (!name)
+            unknown_.push_back(key);
+        std::string kind = !name ? "" : name->section == "Etymology" ? "etymology" : name->kind;
+        json n = node(name ? std::optional(name->section) : std::nullopt, kind, raw, level, index);
+        if (templateLine)
+            n["template"] = true;
+        push(std::move(n));
         counters_.clear();
     }
 
-    void addSection(const std::optional<std::string> &section, const std::string &heading) {
-        container()["sections"].push_back(
-                {{"section", section ? json(*section) : json()}, {"heading", heading}, {"text", ""}});
-        section_ = section.value_or("");
-        hasSection_ = true;
-    }
-
-    void onHeading(const std::string &raw) {
-        auto [key, index] = sectionKey(raw);
-        auto name = names_.find(key);
-        if (!name) {
-            entry_["unknown_headings"].push_back(key);
-            addSection(std::nullopt, raw);
-            return;
+    void finishNode(json &n, Stats &stats) {
+        // Translations of translation sections; of a part of speech without one, its templates
+        bool hasTranslationSection = false;
+        for (const auto &c : n["children"])
+            hasTranslationSection |= c["section"] == "Translations";
+        std::vector<Translation> found;
+        if (n["section"] == "Translations")
+            found = translations(config_, n["text"].get<std::string>());
+        else if (n["kind"] == "pos" && !hasTranslationSection)
+            found = translations(config_, n["text"].get<std::string>(), false);
+        for (const auto &t : found) {
+            std::string code = languageCode_(t.lang);
+            json item = {{"lang", code.empty() ? json() : json(code)}, {"term", t.term}, {"sense", t.sense}};
+            if (code != t.lang)
+                item["lang_written"] = t.lang; // pl "angielski", it "{{en}}" -> en
+            n["translations"].push_back(std::move(item));
         }
-        // Wikis without homographs under etymologies (pl, de): etymology is a section like others
-        if (name->section == "Etymology" && !(config_.contains("homographs") && config_["homographs"].is_null())) {
-            // "Etymology 2", or an etymology after parts of speech: a new one
-            if (index > 0 && (etymology()["index"].is_number() || !etymology()["pos"].empty()))
-                entry_["etymologies"].push_back(newEtymology(index));
-            else if (index > 0)
-                etymology()["index"] = index;
-            else if (!etymology()["pos"].empty())
-                entry_["etymologies"].push_back(newEtymology(0));
-            inPos_ = false;
-        }
-        if (name->kind == "pos") {
-            startPos(name->section, raw);
-            section_.clear();
-            return;
-        }
-        addSection(name->section, raw);
+        stats.senses += n["senses"].size();
+        stats.translations += n["translations"].size();
+        n.erase("template_pos");
+        for (auto &c : n["children"])
+            finishNode(c, stats);
     }
 };
 
@@ -887,7 +878,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
                     if (auto it = config[aliases].find(lang); it != config[aliases].end())
                         code = it->get<std::string>();
                 return code;
-            });
+            }, wikt2jsonl_heading(line) ? wikt2jsonl_heading(line)->level : 1);
             if (keepLine && !markersOnly)
                 entry->line(line);
             stats.sections++;

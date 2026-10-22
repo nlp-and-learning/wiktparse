@@ -50,6 +50,10 @@ add_executable(wiktsections tools/wiktsections.cpp)
 target_compile_definitions(wiktsections PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
 target_link_libraries(wiktsections wiktdump SQLite::SQLite3)
 
+# Lua modules of Wiktionaries with language tables (names to codes, codes to names)
+add_executable(wiktmodules tools/wiktmodules.cpp)
+target_link_libraries(wiktmodules wiktdump SQLite::SQLite3)
+
 # Wiktionary pages to JSONL, configured by res/wiktionary
 add_executable(wikt2jsonl tools/wikt2jsonl.cpp)
 target_compile_definitions(wikt2jsonl PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")

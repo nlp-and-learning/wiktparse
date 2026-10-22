@@ -45,6 +45,11 @@ add_executable(wiktlangs tools/wiktlangs.cpp)
 target_link_libraries(wiktlangs wiktdump SQLite::SQLite3 CURL::libcurl)
 target_compile_definitions(wiktlangs PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
 
+# Section names of Wiktionaries in many languages (en headings + wiktNeeded + manual)
+add_executable(wiktsections tools/wiktsections.cpp)
+target_compile_definitions(wiktsections PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
+target_link_libraries(wiktsections wiktdump SQLite::SQLite3)
+
 # Wiktionary pages to JSONL, configured by res/wiktionary
 add_executable(wikt2jsonl tools/wikt2jsonl.cpp)
 target_compile_definitions(wikt2jsonl PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")

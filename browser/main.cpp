@@ -1,7 +1,8 @@
 // wiktbrowse: browser of JSONL files (wikt2jsonl output, one page per line).
 // Left: the lines with their titles, a filter and "go to line". Right: the
-// selected line as indented JSON in a read-only Kate view (highlighting,
-// folding), and as a tree with readable labels of sections and senses.
+// selected line as indented JSON in a read-only QCodeEditor view
+// (highlighting, line numbers), and as a tree with readable labels of
+// sections and senses (folding).
 //
 // wiktbrowse [file.jsonl]
 #include <QApplication>
@@ -20,9 +21,9 @@
 #include <QTreeView>
 #include <QVBoxLayout>
 
-#include <KTextEditor/Document>
-#include <KTextEditor/Editor>
-#include <KTextEditor/View>
+#include <QCodeEditor>
+#include <QJSONHighlighter>
+#include <QSyntaxStyle>
 
 #include <nlohmann/json.hpp>
 
@@ -132,10 +133,11 @@ public:
         leftLayout->addWidget(status_);
 
         tabs_ = new QTabWidget;
-        auto *editor = KTextEditor::Editor::instance();
-        document_ = editor->createDocument(this);
-        document_->setHighlightingMode("JSON");
-        view_ = document_->createView(tabs_);
+        view_ = new QCodeEditor;
+        view_->setReadOnly(true);
+        view_->setSyntaxStyle(QSyntaxStyle::defaultStyle());
+        view_->setHighlighter(new QJSONHighlighter);
+        view_->setWordWrapMode(QTextOption::NoWrap);
         tree_ = new QTreeView;
         model_ = new QStandardItemModel(this);
         tree_->setModel(model_);
@@ -179,8 +181,7 @@ private:
     QLabel *status_;
     QListWidget *list_;
     QTabWidget *tabs_;
-    KTextEditor::Document *document_;
-    KTextEditor::View *view_;
+    QCodeEditor *view_;
     QTreeView *tree_;
     QStandardItemModel *model_;
 
@@ -206,11 +207,8 @@ private:
         const QByteArray raw = file_.readLine();
         json value = json::parse(raw.constData(), raw.constData() + raw.size(), nullptr, false);
         lineBox_->setValue(line + 1);
-        document_->setReadWrite(true);
-        document_->setText(value.is_discarded() ? QString::fromUtf8(raw)
-                                                : QString::fromStdString(value.dump(2, ' ', false, json::error_handler_t::replace)));
-        document_->setReadWrite(false);
-        document_->setModified(false);
+        view_->setPlainText(value.is_discarded() ? QString::fromUtf8(raw)
+                                                 : QString::fromStdString(value.dump(2, ' ', false, json::error_handler_t::replace)));
         model_->clear();
         model_->setHorizontalHeaderLabels({"Key", "Value"});
         if (!value.is_discarded())

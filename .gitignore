@@ -35,3 +35,4 @@ HANDOFF*.md
 *.exe
 *.out
 *.app
+browser/build/

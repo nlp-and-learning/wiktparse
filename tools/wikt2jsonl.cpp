@@ -93,6 +93,18 @@ public:
         }
         if (!file.empty())
             mergeInto(config, readJson(dir_ / file));
+        // Headings lose zero-width characters (si "ඉංග්‍රීසි" has a joiner): aliases too
+        if (auto ptr = json::json_pointer("/language/aliases"); config.contains(ptr)) {
+            json &aliases = config[ptr];
+            for (const auto &[key, value] : json(aliases).items()) {
+                std::string plain = key;
+                for (std::string_view zw : {"\u200B", "\u200C", "\u200D", "\u200E", "\u200F"})
+                    for (size_t at; (at = plain.find(zw)) != std::string::npos;)
+                        plain.erase(at, zw.size());
+                if (plain != key && !aliases.contains(plain))
+                    aliases[plain] = value;
+            }
+        }
         return config;
     }
 

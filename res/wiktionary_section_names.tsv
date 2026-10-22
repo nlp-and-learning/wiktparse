@@ -344,3 +344,81 @@ ko	기호	symbol	pos
 ko	문자	letter	pos
 ks	مُختٔلِف زَبانہٕ	translations	section
 li	Eigenaam	proper noun	pos
+lo	ໂຕເລກ	numeral	pos
+ml	അവലംബം	references	section
+ml	ഇതും കാണുക	see also	section
+ml	ഉച്ചാരണം	pronunciation	section
+ml	ക്രിയ	verb	pos
+ml	നാമം	noun	pos
+ml	നാമവിശേഷണം	adjective	pos
+ml	വിശേഷണം	adjective	pos
+ml	സംഖ്യ	numeral	pos
+ml	തർജമ	translations	section
+ml	തർജ്ജമ	translations	section
+ml	തർജ്ജമകൾ	translations	section
+ml	തർജ്ജുമ	translations	section
+ml	തർജ്ജുമകൾ	translations	section
+ml	ഭാഷാന്തരപദം	translations	section
+ml	പദോത്പത്തി	etymology	section
+ml	പദോല്പത്തി	etymology	section
+ml	ശബ്ദോത്പത്തി	etymology	section
+ml	പര്യായം	synonyms	relation
+ml	പര്യായങ്ങൾ	synonyms	relation
+ml	പര്യായപദങ്ങൾ	synonyms	relation
+ml	വിപരീതം	antonyms	relation
+ml	വിപരീത പദം	antonyms	relation
+ml	ബന്ധപ്പെട്ട പദങ്ങൾ	related terms	relation
+ml	സാമ്യമുള്ള പദങ്ങൾ	related terms	relation
+ml	മറ്റു രൂപങ്ങൾ	alternative forms	section
+ml	വിവിധ രൂപങ്ങൾ	alternative forms	section
+ml	പഴഞ്ചൊല്ലുകൾ	proverbs	relation
+ml	പ്രയോഗം	usage	section
+ml	പ്രയോഗങ്ങൾ	usage	section
+ml	ചിത്രശാല	gallery	section
+ml	സമസ്തപദം	compounds	relation
+mn	Тодорхойлолт	definitions	section
+mn	Жишээ	examples	section
+mn	Ишлэл	references	section
+mn	Ойролцоо үг	synonyms	relation
+mn	Үгийн гарал	etymology	section
+mn	Үгийн дуудлага	pronunciation	section
+mn	Ангилал	categories	section
+mn	Зөв нэр	proper noun	pos
+mr	अर्थ	definitions	section
+mr	संदर्भ	references	section
+mr	बाह्य दुवे	external links	section
+mr	हे सुद्धा पहा	see also	section
+mr	हे सुद्धा पाहा	see also	section
+mr	समानार्थी	synonyms	relation
+mr	विशेषण	adjective	pos
+mr	नाम	noun	pos
+mr	शब्दवर्ग	part of speech	section
+mr	शब्दजाती	part of speech	section
+mr	व्याकरणिक विशेष	grammar	section
+mr	व्याकरणीक विशेष	grammar	section
+mr	उत्पत्ती-	etymology	section
+mr	संकिर्ण माहिती	notes	section
+mr	अधिक माहिती	notes	section
+ms	Rujukan	references	section
+ms	Lihat juga	see also	section
+ms	Pautan luar	external links	section
+ms	Sebutan	pronunciation	section
+ms	Takrifan	definitions	section
+ms	Tesaurus	thesaurus	section
+ms	Huruf	letter	pos
+ms	Nombor	numeral	pos
+ms	peribahasa	proverbs	relation
+my	ကိုးကား	references	section
+my	ရင်းမြစ်	sources	section
+my	ဘာသာပြန်	translations	section
+my	ဘာသာပြန်များ	translations	section
+my	Synonym	synonyms	relation
+my	Antonym	antonyms	relation
+my	ကြိယာဝိသေသန	adverb	pos
+my	Verb	verb	pos
+my	verb	verb	pos
+my	Noun	noun	pos
+my	noun	noun	pos
+my	Adjective	adjective	pos
+my	နာမ်စား	pronoun	pos
+my	ဝိဘတ်	particle	pos

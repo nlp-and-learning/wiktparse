@@ -5,6 +5,9 @@
 // "go to line". Right: the selected line as indented JSON in a read-only
 // qcodeedit view (Kate highlighting and folding), and as a tree with readable
 // labels of sections and senses. F4 opens the line, indented, in Kate.
+// View > Original: the page's wikitext, read from the dump at its "source"
+// ([bz2 block, number in it]); the dump directory is set in Settings and kept
+// in wiktbrowse.ini next to the binary.
 //
 // wiktbrowse [file.jsonl | file.jsonl.bz2]
 #include <QApplication>
@@ -21,6 +24,9 @@
 #include <QListWidget>
 #include <QMainWindow>
 #include <QMenuBar>
+#include <QPlainTextEdit>
+#include <QSettings>
+#include <QXmlStreamReader>
 #include <QSpinBox>
 #include <QSplitter>
 #include <QStandardItemModel>
@@ -259,6 +265,29 @@ public:
         });
         file->addSeparator();
         file->addAction("&Quit", QKeySequence::Quit, this, &QWidget::close);
+
+        original_ = new QPlainTextEdit;
+        original_->setReadOnly(true);
+        original_->setLineWrapMode(QPlainTextEdit::WidgetWidth);
+        original_->setFont(edit_->area()->font());
+        auto *view = menuBar()->addMenu("&View");
+        originalAction_ = view->addAction("&Original (wikitext from the dump)");
+        originalAction_->setCheckable(true);
+        originalAction_->setChecked(settings().value("view/original", false).toBool());
+        connect(originalAction_, &QAction::toggled, this, [this](bool on) {
+            settings().setValue("view/original", on);
+            showOriginalTab(on);
+        });
+        showOriginalTab(originalAction_->isChecked());
+        auto *setup = menuBar()->addMenu("&Settings");
+        setup->addAction("&Dump directory...", this, [this] {
+            auto dir = QxFileDialog::getExistingDirectory(this, "Directory of the *-pages-articles-multistream.xml.bz2 dumps",
+                                                          dumpDir());
+            if (!dir.isEmpty()) {
+                settings().setValue("dumps/dir", dir);
+                showOriginal();
+            }
+        });
     }
 
     // A JSONL file chosen in the dialog, empty when cancelled
@@ -285,6 +314,105 @@ public:
     }
 
 private:
+    // wiktbrowse.ini next to the binary
+    static QSettings &settings() {
+        static QSettings s(QCoreApplication::applicationDirPath() + "/wiktbrowse.ini", QSettings::IniFormat);
+        return s;
+    }
+
+    static QString dumpDir() { return settings().value("dumps/dir").toString(); }
+
+    void showOriginalTab(bool on) {
+        const int at = tabs_->indexOf(original_);
+        if (on && at < 0)
+            tabs_->addTab(original_, "Original");
+        else if (!on && at >= 0)
+            tabs_->removeTab(at);
+        if (on)
+            showOriginal();
+    }
+
+    // The newest dump of a wiki in the dump directory: <wiki>wiktionary-<date>-pages-articles-multistream.xml.bz2
+    static QString dumpOf(const QString &wiki) {
+        QDir dir(dumpDir());
+        auto files = dir.entryList({wiki + "wiktionary-*-pages-articles-multistream.xml.bz2"}, QDir::Files, QDir::Name);
+        return files.isEmpty() ? QString() : dir.filePath(files.last());
+    }
+
+    // The wikitext of page number index of the bz2 stream at offset: a multistream
+    // dump ends each stream (of about 100 pages), so it is read to the stream end
+    static QString pageText(const QString &path, qint64 offset, qint64 index, QString &error) {
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly) || !file.seek(offset)) {
+            error = "cannot read " + path;
+            return {};
+        }
+        bz_stream stream{};
+        if (BZ2_bzDecompressInit(&stream, 0, 0) != BZ_OK) {
+            error = "bzip2 init failed";
+            return {};
+        }
+        QByteArray xml = "<pages>", in, out(1 << 20, '\0');
+        int status = BZ_OK;
+        while (status == BZ_OK) {
+            if (stream.avail_in == 0) {
+                in = file.read(1 << 16);
+                if (in.isEmpty())
+                    break;
+                stream.next_in = in.data();
+                stream.avail_in = static_cast<unsigned>(in.size());
+            }
+            stream.next_out = out.data();
+            stream.avail_out = static_cast<unsigned>(out.size());
+            status = BZ2_bzDecompress(&stream);
+            xml.append(out.constData(), out.size() - stream.avail_out);
+        }
+        BZ2_bzDecompressEnd(&stream);
+        if (status != BZ_STREAM_END) {
+            error = QString("no bz2 stream at %1 of %2").arg(offset).arg(path);
+            return {};
+        }
+        xml += "</pages>";
+        QXmlStreamReader reader(xml);
+        qint64 page = -1;
+        while (!reader.atEnd()) {
+            if (reader.readNext() != QXmlStreamReader::StartElement)
+                continue;
+            if (reader.name() == u"page")
+                ++page;
+            else if (reader.name() == u"text" && page == index)
+                return reader.readElementText();
+        }
+        error = QString("no page %1 in the stream at %2").arg(index).arg(offset);
+        return {};
+    }
+
+    void showOriginal() {
+        if (tabs_->indexOf(original_) < 0)
+            return;
+        QString text;
+        if (!current_.is_object() || !current_.contains("wiki") || !current_.contains("source") ||
+            !current_["source"].is_array() || current_["source"].size() != 2)
+            text = "(no \"wiki\" and \"source\" in this line)";
+        else if (dumpDir().isEmpty())
+            text = "(no dump directory: Settings > Dump directory)";
+        else {
+            const auto wiki = QString::fromStdString(current_["wiki"].get<std::string>());
+            const auto path = dumpOf(wiki);
+            QString error;
+            if (path.isEmpty())
+                error = "no dump of " + wiki + " in " + dumpDir();
+            else
+                text = pageText(path, current_["source"][0].get<qint64>(), current_["source"][1].get<qint64>(), error);
+            if (!error.isEmpty())
+                text = "(" + error + ")";
+        }
+        original_->setPlainText(text);
+    }
+
+    QPlainTextEdit *original_ = nullptr;
+    QAction *originalAction_ = nullptr;
+    json current_;
     std::unique_ptr<Lines> lines_;
     QString path_;
     QLineEdit *filter_;
@@ -390,6 +518,8 @@ private:
                 addItems(model_->invisibleRootItem(), child, QString::fromStdString(k));
         tree_->expandToDepth(2);
         tree_->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+        current_ = value.is_discarded() ? json() : std::move(value);
+        showOriginal();
     }
 };
 

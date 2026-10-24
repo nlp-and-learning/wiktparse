@@ -1458,7 +1458,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     return {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"source", source}, {"sections", sections}};
 }
 
-// Output of one wiki: plain JSONL, or bz2 blocks of 100 lines (each an independent
+// Output of one wiki: plain JSONL, or bz2 blocks of 100 lines or 512 KB (each an independent
 // stream, so bzcat reads the file) with an index, colon-separated: a line per
 // block "offset:count:uncompressed", then a line ":start:title" per page
 // (start in the uncompressed block; a page ends where the next one starts, the
@@ -1487,7 +1487,7 @@ public:
         current_.text += line;
         current_.text += '\n';
         current_.titles.push_back(title);
-        if (current_.titles.size() < blockLines)
+        if (current_.titles.size() < blockLines && current_.text.size() < blockBytes)
             return;
         // A full block: compressed by this thread outside the lock (bz2 is slow), then appended
         // (pages need no order: the index tells where each one is)
@@ -1515,6 +1515,7 @@ public:
 
 private:
     static constexpr size_t blockLines = 100;
+    static constexpr size_t blockBytes = 512 * 1024; // uncompressed: a page read decompresses little
     struct Block {
         std::string text;
         std::vector<std::string> titles;
@@ -1583,7 +1584,7 @@ int main(int argc, char *argv[]) {
                 std::cout << "usage: wikt2jsonl [-i samples100 | --dump [-j N]] [--markers-only] [--bz2] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n"
                              "       --dump: all pages of the dumps, each wiki read in N threads (default 8)\n"
                              "       --markers-only: only language markers and stats, no JSONL\n"
-                             "       --bz2: <wiki>.jsonl.bz2 in blocks of 100 lines with <wiki>.jsonl.idx\n";
+                             "       --bz2: <wiki>.jsonl.bz2 in blocks of 100 lines or 512 KB with <wiki>.jsonl.idx\n";
                 return 0;
             } else
                 wikis.push_back(arg);

@@ -8,5 +8,8 @@
       }
     ]
   },
-  "status": "fixed from samples1000 pages without a language"
+  "senses": {
+    "marker": "line"
+  },
+  "status": "fixed from samples1000 pages without a language; definitions as numbered lines of === Maʼnosi ==="
 }

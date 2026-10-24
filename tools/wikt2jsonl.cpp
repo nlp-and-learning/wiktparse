@@ -532,6 +532,9 @@ std::optional<Sense> senseLine(const json &config, const std::string &line, std:
             return std::nullopt;
         while (!text.empty() && (text[0] == ':' || text[0] == '#' || text[0] == '*')) // lo ":*text"
             text = trim(text.substr(1));
+        static const std::regex number(R"(^\d+[.)]?\s+(.*)$)"); // uz "1 Biror oila…"
+        if (std::smatch n; std::regex_match(text, n, number))
+            text = n[1].str();
         if (text.empty())
             return std::nullopt;
         // Placeholders of empty entries (lo "ກະລຸນາຊ່ອຍຂຽນ…": please write)
@@ -543,7 +546,7 @@ std::optional<Sense> senseLine(const json &config, const std::string &line, std:
         return Sense{std::to_string(++counters[0]), text};
     }
     // "#", ":" of lines indented as such (lo ": definition"), ":#" of mn (":#definition")
-    if (marker.starts_with("#") || marker == ":" || marker == ":#") {
+    if (marker.starts_with("#") || marker == ":" || marker == "*" || marker == ":#") { // te "*"
         if (marker == ":#" && !line.starts_with(":#"))
             return std::nullopt;
         if (marker == ":#")

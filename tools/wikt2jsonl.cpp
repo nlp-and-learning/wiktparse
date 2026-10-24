@@ -1058,6 +1058,15 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         next = offset + line.size() + 1;
         auto marker = implicit ? (first ? std::optional(native.front()) : std::nullopt) : languageMarker(config, line);
         first = false;
+        // A code marker that is no code is no language: E {{-noun-}} besides {{-scn-}} (a section)
+        // (only of the dash forms: names as markers of other forms keep their pages)
+        if (marker && !byName && !implicit && config["language"].value("require_code", true) &&
+            (str(config, "/language/form") == "line-template" ||
+             str(config, "/language/form") == "heading-dash-template") &&
+            !(config.contains(json::json_pointer("/language/aliases")) && config["language"]["aliases"].contains(*marker)) &&
+            !names.isCode(*marker) && names.wikiCode(wiki, *marker).empty() && names.mappedCode(*marker).empty() &&
+            sectionNames.find(sectionKey(*marker).first))
+            marker.reset();
         if (marker && requireCode && !(config.contains(json::json_pointer("/language/aliases")) &&
                                        config["language"]["aliases"].contains(*marker)) &&
             markerCode(*marker).empty()) {

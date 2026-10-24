@@ -26,6 +26,8 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <tuple>
+#include <unordered_map>
 #include <set>
 #include <mutex>
 #include <shared_mutex>
@@ -214,7 +216,7 @@ public:
                 {"no", "nb"}, {"simple", "en"}, {"zh-min-nan", "nan"}, {"roa-rup", "rup"}, {"bh", "bho"}};
         if (auto it = labelLanguage.find(lang); it != labelLanguage.end())
             lang = it->second;
-        if (query("SELECT code FROM language WHERE code=?2 AND ?1<>''", "x", lang).empty()) {
+        if (!isCode(lang)) {
             auto mapped = query("SELECT m.language FROM code_map m JOIN language l ON l.code=m.language WHERE m.scheme='wikimedia' AND m.code=?2 AND ?1<>'' ORDER BY l.kind<>'language' LIMIT 1", "x", lang);
             lang = !mapped.empty() ? mapped : lang.substr(0, lang.find('-'));
         }
@@ -241,36 +243,38 @@ public:
         std::string result;
         // A code written as such ("en" from {{=en=}})
         static const std::regex code(R"(^[a-z]{2,3}(-[a-z]+)*$)");
-        if (std::regex_match(name, code))
-            result = query("SELECT code FROM language WHERE code=?2 AND ?1<>'' LIMIT 1", lang, name);
-        // Names in the wiki's language: en.wikt names (en), Wikidata labels, aliases, then the
-        // resolved headings of Wiktionaries and the aliases of the configurations; languages first
+        if (std::regex_match(name, code) && isCode(name))
+            result = name;
+        // Of the names in memory (no SQLite scans): names in the wiki's language, en.wikt
+        // names (en), Wikidata labels, aliases, then the resolved headings of Wiktionaries and
+        // the aliases of the configurations; languages first
+        const NameIndex &index = nameIndex(lang);
+        const NameIndex &english = nameIndex("");
+        auto find = [](const std::unordered_map<std::string, std::string> &map, const std::string &k) {
+            auto it = map.find(k);
+            return it == map.end() ? std::string() : it->second;
+        };
         for (const auto &n : variants) {
             if (result.empty())
-                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND n.name=?2 AND n.source IN ('en.wikt','extra','enwiki','sil','wikidata-label','wikidata-alias','wikidata-other','wikt-heading','config-alias') ORDER BY n.source='config-alias', n.source='wikt-heading', n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
+                result = find(index.exact, n);
             if (result.empty())
-                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND lower(n.name)=lower(?2) AND n.source IN ('en.wikt','extra','enwiki','sil','wikidata-label','wikidata-alias','wikidata-other','wikt-heading','config-alias') ORDER BY n.source='config-alias', n.source='wikt-heading', n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
+                result = find(index.lower, wikilib::unicode::to_lower(n));
         }
-        // English names of en.wikt
-        if (result.empty())
-            // (not the wikis' own codes: their names are no English ones)
-            result = query("SELECT code FROM language WHERE name=?2 AND ?1<>'' AND code NOT LIKE '%:%' ORDER BY kind<>'language' LIMIT 1", lang, name);
+        // English names of en.wikt (not the wikis' own codes: their names are no English ones);
         // fr "proto-munda": en.wikt "Proto-Munda"
         if (result.empty())
-            result = query("SELECT code FROM language WHERE lower(name)=lower(?2) AND ?1<>'' AND code NOT LIKE '%:%' ORDER BY kind<>'language' LIMIT 1",
-                           lang, name);
+            result = find(english.exact, name);
+        if (result.empty())
+            result = find(english.lower, wikilib::unicode::to_lower(name));
         // Names from Lua modules of Wiktionaries in the wiki's language (wiktmodules)
         for (const auto &n : variants)
             if (result.empty())
-                result = query("SELECT code FROM language_name WHERE in_code=?1 AND name=?2 AND source='wikt-module' LIMIT 1", lang, n);
+                result = find(index.module, n);
         // A name that is a whole part of names of one language only: fr "eudeve" of
         // "opata-eudeve" (opt); not pl "szkocki" ("język szkocki" sco, "gaelicki szkocki" gd)
         if (const auto lower = wikilib::unicode::to_lower(name); result.empty() && lower.size() >= 4)
-            result = query("SELECT CASE WHEN count(DISTINCT code) = 1 THEN max(code) END FROM language_name "
-                           "WHERE in_code=?1 AND (lower(name) LIKE ?2||'-%' OR lower(name) LIKE '%-'||?2 OR "
-                           "lower(name) LIKE '%-'||?2||'-%' OR lower(name) LIKE ?2||' %' OR lower(name) LIKE '% '||?2 "
-                           "OR lower(name) LIKE '% '||?2||' %')",
-                           lang, lower);
+            if (auto part = find(index.part, lower); part != ambiguous)
+                result = part;
         std::lock_guard lock(mutex_);
         return cache_[key] = result;
     }
@@ -326,6 +330,95 @@ private:
     std::map<std::string, std::string> mapped_, wikiCodes_;
     fs::path file_;
     std::shared_mutex mutex_; // of the caches: shared to read them, exclusive to add
+
+    // Names in one language (in_code), read once: exact, lower-case, of Lua modules, and the
+    // whole parts of names (before or after a '-' or ' ', between two) -> code, or ambiguous
+    struct NameIndex {
+        std::unordered_map<std::string, std::string> exact, lower, module, part;
+    };
+    static constexpr const char *ambiguous = "\x01";
+    std::map<std::string, std::unique_ptr<NameIndex>> indexes_; // "" : the English names of en.wikt
+    std::mutex indexMutex_;
+
+    const NameIndex &nameIndex(const std::string &lang) {
+        std::lock_guard lock(indexMutex_); // one thread builds it, the others wait for it once
+        auto &slot = indexes_[lang];
+        if (slot)
+            return *slot;
+        slot = std::make_unique<NameIndex>();
+        NameIndex &index = *slot;
+        // The rank of a name as in ORDER BY of the former queries: lower is better
+        using Rank = std::tuple<int, int, int, int, int, size_t>;
+        std::unordered_map<std::string, Rank> exactRank, lowerRank;
+        auto keep = [](auto &map, auto &ranks, const std::string &key, const std::string &code, const Rank &rank) {
+            auto it = ranks.find(key);
+            if (it == ranks.end() || rank < it->second) {
+                ranks[key] = rank;
+                map[key] = code;
+            }
+        };
+        sqlite3_stmt *stmt = nullptr;
+        if (lang.empty()) {
+            if (sqlite3_prepare_v2(connection(), "SELECT code, name, kind FROM language WHERE name IS NOT NULL AND code NOT LIKE '%:%'",
+                                   -1, &stmt, nullptr) == SQLITE_OK)
+                while (sqlite3_step(stmt) == SQLITE_ROW) {
+                    const std::string code = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                    const std::string name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+                    const auto *kind = sqlite3_column_text(stmt, 2);
+                    const Rank rank{0, 0, 0, 0, !kind || std::string(reinterpret_cast<const char *>(kind)) != "language", 0};
+                    keep(index.exact, exactRank, name, code, rank);
+                    keep(index.lower, lowerRank, wikilib::unicode::to_lower(name), code, rank);
+                }
+            sqlite3_finalize(stmt);
+            return index;
+        }
+        static const std::set<std::string> sources = {"en.wikt", "extra", "enwiki", "sil", "wikidata-label",
+                                                      "wikidata-alias", "wikidata-other", "wikt-heading", "config-alias"};
+        if (sqlite3_prepare_v2(connection(), "SELECT n.code, n.name, n.source, l.kind FROM language_name n "
+                                             "LEFT JOIN language l ON l.code=n.code WHERE n.in_code=?1",
+                               -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, lang.c_str(), -1, SQLITE_TRANSIENT);
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                const auto *c = sqlite3_column_text(stmt, 0), *n = sqlite3_column_text(stmt, 1), *src = sqlite3_column_text(stmt, 2),
+                           *kind = sqlite3_column_text(stmt, 3);
+                if (!c || !n)
+                    continue;
+                const std::string code = reinterpret_cast<const char *>(c), name = reinterpret_cast<const char *>(n);
+                const std::string source = src ? reinterpret_cast<const char *>(src) : "";
+                const std::string lowerName = wikilib::unicode::to_lower(name);
+                // Whole parts of every name of the language (any source)
+                for (size_t i = 0; i < lowerName.size(); ++i) {
+                    if (lowerName[i] != '-' && lowerName[i] != ' ')
+                        continue;
+                    auto add = [&](const std::string &part) {
+                        if (part.empty())
+                            return;
+                        auto [it, added] = index.part.emplace(part, code);
+                        if (!added && it->second != code)
+                            it->second = ambiguous;
+                    };
+                    add(lowerName.substr(0, i));
+                    add(lowerName.substr(i + 1));
+                    for (size_t j = i + 1; j < lowerName.size(); ++j)
+                        if (lowerName[j] == lowerName[i])
+                            add(lowerName.substr(i + 1, j - i - 1));
+                }
+                if (source == "wikt-module") {
+                    index.module.emplace(name, code);
+                    continue;
+                }
+                if (!kind || !sources.contains(source))
+                    continue; // (a code not in language: the former JOIN)
+                const Rank rank{source == "config-alias", source == "wikt-heading", source == "wikidata-other",
+                                source == "wikidata-alias", std::string(reinterpret_cast<const char *>(kind)) != "language",
+                                code.size()};
+                keep(index.exact, exactRank, name, code, rank);
+                keep(index.lower, lowerRank, lowerName, code, rank);
+            }
+        }
+        sqlite3_finalize(stmt);
+        return index;
+    }
 
     // This thread's read-only connection: queries of the threads run side by side
     sqlite3 *connection() const {

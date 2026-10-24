@@ -1,7 +1,8 @@
 // wiktlink: phase 2 on the output of wikt2jsonl (no dumps): the translations linked to pages.
 // A translation (lang L, term T) of wiki W gets
 //   "page": true  when W has a page T with a section of language L (pl.wikt "Wasser", de),
-//   "home": true  when the Wiktionary of L has a page T with a section of L (de.wikt "Wasser").
+//   "home": true  when the Wiktionary of L has a page T with a section of L (de.wikt "Wasser"),
+//   "page_title": the title found when it is not T (ru "кана́тная" -> "канатная", {{PAGENAME}}).
 // Pass 1 reads every wiki's (title, section code) pairs as 64-bit hashes; pass 2 rewrites the
 // pages with the links, in the same blocks (zstd with a dictionary per wiki, or bz2).
 //
@@ -81,6 +82,83 @@ void eachTranslation(json &node, const std::function<void(json &)> &f) {
                 eachTranslation(child, f);
 }
 
+// The term as a page title: without an interwiki prefix (kn ":en:fire"), {{PAGENAME}} as the
+// page's title (el), links as their text ("[[ristiä]] [[miekka|miekat]]" -> "ristiä miekat")
+std::string termTitle(std::string term, const std::string &pageTitle) {
+    if (auto at = term.find("{{PAGENAME}}"); at != std::string::npos)
+        term.replace(at, 12, pageTitle);
+    std::string plain;
+    for (size_t i = 0; i < term.size();) {
+        if (term.compare(i, 2, "[[") == 0) {
+            const size_t end = term.find("]]", i + 2);
+            if (end == std::string::npos)
+                break;
+            std::string link = term.substr(i + 2, end - i - 2);
+            if (auto bar = link.rfind('|'); bar != std::string::npos)
+                link = link.substr(bar + 1);
+            plain += link;
+            i = end + 2;
+        } else
+            plain += term[i++];
+    }
+    // ":en:enter fire", "en:water": an interwiki prefix
+    if (plain.starts_with(':'))
+        plain.erase(0, 1);
+    if (auto colon = plain.find(':'); colon != std::string::npos && colon >= 2 && colon <= 3 &&
+                                      std::all_of(plain.begin(), plain.begin() + static_cast<long>(colon),
+                                                  [](unsigned char c) { return c >= 'a' && c <= 'z'; }))
+        plain.erase(0, colon + 1);
+    while (!plain.empty() && (plain.front() == ' ' || plain.back() == ' '))
+        plain.front() == ' ' ? plain.erase(0, 1) : plain.erase(plain.size() - 1);
+    return plain;
+}
+
+// The term without marks that page titles leave out: combining accents (ru "кана́тная"
+// U+0301), Arabic harakat, Hebrew points, Latin macrons and breves (la "aqua" of "ăquā")
+std::string withoutMarks(const std::string &text) {
+    std::string out;
+    for (size_t i = 0; i < text.size();) {
+        const auto c0 = static_cast<unsigned char>(text[i]);
+        const size_t length = c0 < 0x80 ? 1 : c0 < 0xE0 ? 2 : c0 < 0xF0 ? 3 : 4;
+        uint32_t cp = length == 1 ? c0 : c0 & (0x7F >> length);
+        for (size_t k = 1; k < length && i + k < text.size(); ++k)
+            cp = cp << 6 | (static_cast<unsigned char>(text[i + k]) & 0x3F);
+        const bool mark = (cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x064B && cp <= 0x0652) || cp == 0x0670 ||
+                          (cp >= 0x0591 && cp <= 0x05C7);
+        // Latin vowels with macron or breve: the vowel
+        static const std::map<uint32_t, char> latin = {
+                {0x0100, 'A'}, {0x0101, 'a'}, {0x0102, 'A'}, {0x0103, 'a'}, {0x0112, 'E'}, {0x0113, 'e'}, {0x0114, 'E'},
+                {0x0115, 'e'}, {0x012A, 'I'}, {0x012B, 'i'}, {0x012C, 'I'}, {0x012D, 'i'}, {0x014C, 'O'}, {0x014D, 'o'},
+                {0x014E, 'O'}, {0x014F, 'o'}, {0x016A, 'U'}, {0x016B, 'u'}, {0x016C, 'U'}, {0x016D, 'u'}, {0x0232, 'Y'},
+                {0x0233, 'y'}};
+        if (auto it = latin.find(cp); it != latin.end())
+            out += it->second;
+        else if (!mark)
+            out.append(text, i, length);
+        i += length;
+    }
+    return out;
+}
+
+// Languages whose entries stand under another code: en.wikt ==Chinese== (zh) for the cmn, yue
+// translations; Norwegian (no) for nb, nn
+const std::vector<std::string> &equivalents(const std::string &code) {
+    static const std::map<std::string, std::vector<std::string>> map = [] {
+        std::map<std::string, std::vector<std::string>> m;
+        for (const char *c : {"cmn", "yue", "wuu", "hak", "nan", "gan", "hsn", "cdo", "cjy", "cpx", "czh", "mnp", "cnp",
+                              "csp", "zh-cn", "zh-tw", "zh-hans", "zh-hant"})
+            m[c] = {"zh"};
+        m["zh"] = {"cmn"};
+        m["nb"] = {"no"};
+        m["nn"] = {"no"};
+        m["no"] = {"nb", "nn"};
+        return m;
+    }();
+    static const std::vector<std::string> none;
+    auto it = map.find(code);
+    return it == map.end() ? none : it->second;
+}
+
 double seconds(std::chrono::steady_clock::time_point since) {
     return std::chrono::duration<double>(std::chrono::steady_clock::now() - since).count();
 }
@@ -153,15 +231,33 @@ int main(int argc, char *argv[]) {
         for (const auto &[wiki, path] : files)
             for (const auto &code : nativeCodes(wiki))
                 homeWiki.emplace(code, wiki);
+        for (const auto &[code, wiki] : std::map<std::string, std::string>(homeWiki))
+            for (const auto &other : equivalents(code))
+                homeWiki.emplace(other, wiki); // cmn: zh.wiktionary
         auto has = [&](const std::string &wiki, const std::string &title, const std::string &code) {
             auto it = sections.find(wiki);
             return it != sections.end() && std::ranges::binary_search(it->second, key(title, code));
+        };
+        // The title of a page of the term with a section of the language (or an equivalent one),
+        // exact or without marks; empty for none
+        auto find = [&](const std::string &wiki, const std::string &term, const std::string &code) -> std::string {
+            const std::string bare = withoutMarks(term);
+            for (const std::string *title : {&term, &bare}) {
+                if (title == &bare && bare == term)
+                    break;
+                if (has(wiki, *title, code))
+                    return *title;
+                for (const auto &other : equivalents(code))
+                    if (has(wiki, *title, other))
+                        return *title;
+            }
+            return {};
         };
 
         // Pass 2: the pages with their translations linked
         fs::create_directories(output);
         std::ofstream stats(output / "stats.tsv");
-        stats << "wiki\ttranslations\tpage\thome\tboth\tnone\tno_lang\n";
+        stats << "wiki\ttranslations\tpage\thome\tboth\tnone\tno_lang\tno_term\n";
         for (const auto &[wiki, path] : files) {
             if (!only.empty() && !std::ranges::contains(only, wiki))
                 continue;
@@ -169,13 +265,14 @@ int main(int argc, char *argv[]) {
             BlockReader reader(path);
             JsonlWriter out(output / wiki, compression, 9, threads, fs::file_size(path));
             struct Count {
-                size_t translations = 0, page = 0, home = 0, both = 0, none = 0, noLang = 0;
+                size_t translations = 0, page = 0, home = 0, both = 0, none = 0, noLang = 0, noTerm = 0;
             };
             std::vector<Count> counts(threads);
             forBlocks(reader, threads, [&](size_t worker, size_t block) {
                 auto &c = counts[worker];
                 for (const auto &line : reader.lines(block)) {
                     json page = json::parse(line);
+                    const std::string title = page["title"].get<std::string>();
                     for (auto &s : page["sections"])
                         eachTranslation(s, [&](json &t) {
                             ++c.translations;
@@ -184,14 +281,23 @@ int main(int argc, char *argv[]) {
                                 return;
                             }
                             const std::string lang = t["lang"].get<std::string>();
-                            const std::string &term = t["term"].get_ref<const std::string &>();
-                            const bool local = has(wiki, term, lang);
+                            const std::string term = termTitle(t["term"].get<std::string>(), title);
+                            if (term.empty()) {
+                                ++c.noTerm;
+                                return;
+                            }
+                            const std::string localTitle = find(wiki, term, lang);
                             const auto home = homeWiki.find(lang);
-                            const bool inHome = home != homeWiki.end() && home->second != wiki && has(home->second, term, lang);
+                            const std::string homeTitle =
+                                    home != homeWiki.end() && home->second != wiki ? find(home->second, term, lang) : "";
+                            const bool local = !localTitle.empty(), inHome = !homeTitle.empty();
                             if (local)
                                 t["page"] = true;
                             if (inHome)
                                 t["home"] = true;
+                            // The page found under another title (without marks, of {{PAGENAME}}, of links)
+                            if (const auto &found = local ? localTitle : homeTitle; !found.empty() && found != t["term"].get<std::string>())
+                                t["page_title"] = found;
                             c.page += local;
                             c.home += inHome;
                             c.both += local && inHome;
@@ -205,10 +311,10 @@ int main(int argc, char *argv[]) {
             Count total;
             for (const auto &c : counts) {
                 total.translations += c.translations, total.page += c.page, total.home += c.home;
-                total.both += c.both, total.none += c.none, total.noLang += c.noLang;
+                total.both += c.both, total.none += c.none, total.noLang += c.noLang, total.noTerm += c.noTerm;
             }
-            stats << std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\n", wiki, total.translations, total.page, total.home,
-                                 total.both, total.none, total.noLang);
+            stats << std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n", wiki, total.translations, total.page, total.home,
+                                 total.both, total.none, total.noLang, total.noTerm);
             std::cout << std::format("{}: {} translations, page {}, home {}, none {} ({:.0f} s)", wiki,
                                      total.translations, total.page, total.home, total.none, seconds(wikiStarted))
                       << std::endl;

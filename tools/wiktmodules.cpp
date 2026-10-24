@@ -9,7 +9,8 @@
 // named from the dump's <siteinfo>). Output: wiki, module, kind (name-code or
 // code-data), entries, local (names that are no English en.wikt names), examples.
 // module_names.tsv: names of en.wikt codes in language modules; module_other.tsv:
-// codes of language modules unknown to en.wikt, with their names.
+// codes of language modules unknown to en.wikt, with their names, also the
+// wiki's own codes unlike ISO ones (fr proto-khasique, tsolyáni).
 #include <algorithm>
 #include <atomic>
 #include <exception>
@@ -75,6 +76,15 @@ std::vector<Found> scan(const std::string &title, const std::string &text, size_
                 f.examples += (f.examples.empty() ? "" : "; ") + (*it)[1].str() + " = " + (*it)[2].str();
             ++f.entries;
         }
+        // Codes unlike ISO codes with a name field (fr: l['proto-khasique'] = { name = 'proto-khasique' }):
+        // the wiki's own codes of languages en.wikt does not have
+        if (std::string_view(kind) == "code-data") {
+            static const std::regex nameKey(R"re(\w+\s*\[\s*["']([^"'\]]{1,80})["']\s*\]\s*=\s*\{\s*(?:name|nom|nombre)\s*=\s*["']([^"']{1,80})["'])re");
+            static const std::regex isoLike(R"([a-z]{2,3}(?:-[a-zA-Z]{2,8})*)");
+            for (std::sregex_iterator it(text.begin(), text.end(), nameKey), end; it != end; ++it)
+                if (!std::regex_match((*it)[1].str(), isoLike))
+                    f.other.emplace_back((*it)[1].str(), (*it)[2].str());
+        }
         if (f.entries >= minEntries && f.entries * 2 >= all)
             result.push_back(std::move(f));
     }
@@ -108,7 +118,10 @@ int main(int argc, char *argv[]) {
         }
         if (sqlite3 *db = nullptr; sqlite3_open_v2("wiktlangs.sqlite", &db, SQLITE_OPEN_READONLY, nullptr) == SQLITE_OK) {
             sqlite3_stmt *stmt = nullptr;
-            sqlite3_prepare_v2(db, "SELECT code FROM language", -1, &stmt, nullptr);
+            // Codes of en.wikt and the extra ones; not those the modules themselves or the
+            // infoboxes brought (kinds wiktionary, wikipedia), which would else not be written again
+            sqlite3_prepare_v2(db, "SELECT code FROM language WHERE kind NOT IN ('wiktionary', 'wikipedia')", -1, &stmt,
+                               nullptr);
             while (sqlite3_step(stmt) == SQLITE_ROW)
                 if (auto code = sqlite3_column_text(stmt, 0))
                     knownCodes.emplace(reinterpret_cast<const char *>(code));

@@ -242,10 +242,11 @@ public:
         }
         // English names of en.wikt
         if (result.empty())
-            result = query("SELECT code FROM language WHERE name=?2 AND ?1<>'' ORDER BY kind<>'language' LIMIT 1", lang, name);
+            // (not the wikis' own codes: their names are no English ones)
+            result = query("SELECT code FROM language WHERE name=?2 AND ?1<>'' AND code NOT LIKE '%:%' ORDER BY kind<>'language' LIMIT 1", lang, name);
         // fr "proto-munda": en.wikt "Proto-Munda"
         if (result.empty())
-            result = query("SELECT code FROM language WHERE lower(name)=lower(?2) AND ?1<>'' ORDER BY kind<>'language' LIMIT 1",
+            result = query("SELECT code FROM language WHERE lower(name)=lower(?2) AND ?1<>'' AND code NOT LIKE '%:%' ORDER BY kind<>'language' LIMIT 1",
                            lang, name);
         // Names from Lua modules of Wiktionaries in the wiki's language (wiktmodules)
         for (const auto &n : variants)
@@ -272,6 +273,18 @@ public:
         return mapped_[code] = query("SELECT m.language FROM code_map m JOIN language l ON l.code=m.language WHERE m.code=?2 AND ?1<>'' ORDER BY l.kind<>'language', m.method='retired' LIMIT 1", "x", code);
     }
 
+    // A Wiktionary's own code (fr "proto-khasique", "eudeve"): a known language or
+    // <wiki>:<code> (code_map, scheme wikt-<wiki>); empty for none
+    std::string wikiCode(const std::string &wiki, const std::string &code) {
+        if (!db_ || code.empty())
+            return "";
+        std::lock_guard lock(mutex_);
+        const auto key = wiki + '\t' + code;
+        if (auto it = wikiCodes_.find(key); it != wikiCodes_.end())
+            return it->second;
+        return wikiCodes_[key] = query("SELECT language FROM code_map WHERE scheme='wikt-'||?1 AND code=?2 LIMIT 1", wiki, code);
+    }
+
     // A language code of wiktlangs.sqlite (en.wikt codes and extra ones)
     bool isCode(const std::string &code) {
         if (!db_ || code.empty())
@@ -286,7 +299,7 @@ private:
     sqlite3 *db_ = nullptr;
     std::map<std::string, std::string> cache_;
     std::map<std::string, bool> codes_;
-    std::map<std::string, std::string> mapped_;
+    std::map<std::string, std::string> mapped_, wikiCodes_;
     std::mutex mutex_;
 
     std::string query(const char *sql, const std::string &a, const std::string &b) {
@@ -987,9 +1000,12 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         if (marker) {
             finish(offset);
             std::string code = byName && !implicit ? markerCode(*marker) : *marker;
-            if (!byName && !implicit && !names.isCode(code))
-                if (auto mapped = names.mappedCode(code); !mapped.empty())
+            if (!byName && !implicit && !names.isCode(code)) {
+                if (auto own = names.wikiCode(wiki, code); !own.empty())
+                    code = own; // the wiki's own code (fr proto-khasique)
+                else if (auto mapped = names.mappedCode(code); !mapped.empty())
                     code = mapped; // a code of another scheme in a code template
+            }
             const bool keepLine = implicit && sections.empty() && !line.empty();
             // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}
             if (auto aliases = json::json_pointer("/language/aliases"); config.contains(aliases))
@@ -1007,6 +1023,8 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
                 // script), a code of another scheme (ISO 639-3 "quz"), else a name of this wiki
                 if (names.isCode(lang))
                     return lang;
+                if (auto own = names.wikiCode(wiki, lang); !own.empty())
+                    return own; // the wiki's own code (fr proto-khasique, eudeve)
                 if (auto dot = lang.find('.'); dot != std::string::npos && names.isCode(lang.substr(0, dot)))
                     return lang.substr(0, dot);
                 if (auto mapped = names.mappedCode(lang); !mapped.empty())

@@ -16,9 +16,11 @@
 //       modules of other Wiktionaries, unknown to en.wikt) | wikipedia; codes of other schemes from the
 //       SIL tables, else the Wikidata item (P218, P220, P1394, P424) and Glottolog
 //   code_map(scheme, code, language, method)
-//       codes of other schemes (iso639-1, iso639-2, iso639-3, wikimedia, glottolog)
-//       to canonical codes; method: item (the language's own code), code (the same
-//       code), iso1, qid (Wikidata item of the language), macrolanguage, retired
+//       codes of other schemes (iso639-1, iso639-2, iso639-3, wikimedia, glottolog,
+//       wikt-<wiki>: a Wiktionary's own codes) to canonical codes; method: item (the
+//       language's own code), code (the same code), iso1, qid (Wikidata item of the
+//       language), macrolanguage, retired, name (wikt-: by its name), wiki (wikt-: a
+//       language <wiki>:<code> of its own, kind wiktionary)
 //   language_name(code, in_code, name, source)
 //       the name of language code in language in_code (both canonical); source:
 //       en.wikt (canonical English names), en.wikt-alias, en.wikt-variety,
@@ -806,6 +808,7 @@ int main(int argc, char *argv[]) {
         // fr "aao" arabe saharien, merged by en.wikt into ar. Only ISO 639-3 codes (SIL);
         // English name from SIL, item from Wikidata (P220)
         std::vector<std::vector<std::string>> moduleOther; // wiki, code, name, module
+        std::vector<std::vector<std::string>> wikiOwn;     // codes of a wiki unlike ISO ones: wiki, code, name, module
         size_t wiktionaryLanguages = 0;
         if (fs::exists(moduleOtherFile)) {
             std::map<std::string, std::string> iso3Qid;
@@ -823,6 +826,11 @@ int main(int argc, char *argv[]) {
                 std::stringstream ss(line);
                 for (std::string field; std::getline(ss, field, '\t');)
                     f.push_back(field);
+                static const std::regex isoLike(R"([a-z]{2,3}(?:-[a-zA-Z]{2,8})*)");
+                if (f.size() == 4 && f[0] != "wiki" && !std::regex_match(f[1], isoLike)) {
+                    wikiOwn.push_back(std::move(f));
+                    continue;
+                }
                 if (f.size() == 4 && f[0] != "wiki" && iso.name.contains(f[1]) && !codes.contains(f[1]) &&
                     !sameLanguage.contains(f[1])) {
                     wikisOf[f[1]].insert(f[0]);
@@ -1031,6 +1039,74 @@ int main(int argc, char *argv[]) {
             for (const auto &[name, code] : config["language"]["aliases"].items())
                 if (code.is_string())
                     addName(code.get<std::string>(), inCode, name, "config-alias");
+        }
+        // The wiki's own codes (fr proto-khasique, tsolyáni): a language of the wiki's
+        // names when its name is that of one language only (code_map, scheme wikt-<wiki>),
+        // else a language of its own, code <wiki>:<code>
+        {
+            std::map<std::pair<std::string, std::string>, std::set<std::string>> byName; // in_code, lower name -> codes
+            // in_code, a whole part of a name (between hyphens, spaces) -> codes: fr eudeve of opata-eudeve (opt)
+            std::map<std::pair<std::string, std::string>, std::set<std::string>> byPart;
+            for (const auto &[key, source] : names) {
+                const auto lower = wikilib::unicode::to_lower(std::get<2>(key));
+                byName[{std::get<1>(key), lower}].insert(std::get<0>(key));
+                size_t start = 0;
+                for (size_t i = 0; i <= lower.size(); ++i)
+                    if (i == lower.size() || lower[i] == '-' || lower[i] == ' ') {
+                        if (i > start && (start > 0 || i < lower.size()))
+                            byPart[{std::get<1>(key), lower.substr(start, i - start)}].insert(std::get<0>(key));
+                        start = i + 1;
+                    }
+            }
+            size_t asNames = 0, ownLanguages = 0;
+            for (const auto &f : wikiOwn) {
+                const auto inCode = canonical(f[0]);
+                const auto scheme = "wikt-" + f[0];
+                std::string found;
+                // Its name in the wiki's language, else in English (fr slovio: Slovio, art-slovio;
+                // proto-munda: Proto-Munda, mun-pro)
+                // One code, or of several the only one of kind language (fr gaulois: cel-gau, not the
+                // variety xtg)
+                auto only = [&](const std::set<std::string> &codes) -> std::string {
+                    if (codes.size() == 1)
+                        return *codes.begin();
+                    std::string language;
+                    for (const auto &c : codes)
+                        if (auto it = languages.find(c); it != languages.end() && it->second[1] == "language") {
+                            if (!language.empty())
+                                return "";
+                            language = c;
+                        }
+                    return language;
+                };
+                for (const auto &language : {inCode, std::string("en")})
+                    for (const auto &n : {f[2], f[1]})
+                        if (auto it = byName.find({language, wikilib::unicode::to_lower(n)}); found.empty() && it != byName.end())
+                            found = only(it->second);
+                // A one-word name that is a whole part of the names of one language only
+                if (const auto lower = wikilib::unicode::to_lower(f[2]);
+                    found.empty() && lower.size() >= 4 && lower.find_first_of("- ") == std::string::npos)
+                    if (auto it = byPart.find({inCode, lower}); it != byPart.end() && it->second.size() == 1)
+                        found = *it->second.begin();
+                if (!found.empty()) {
+                    codeMap.insert({scheme, f[1], found, "name"});
+                    ++asNames;
+                    continue;
+                }
+                const auto code = f[0] + ":" + f[1];
+                if (languages.contains(code))
+                    continue;
+                languages[code] = {code, "wiktionary", f[2], "", "", "", "", "", "", "wikt-module:" + f[0]};
+                languageRows.push_back({code, f[2], "wiktionary", "", "", "", "", "", "", "", "", "", "", "wikt-module:" + f[0]});
+                codeMap.insert({scheme, f[1], code, "wiki"});
+                addName(code, inCode, f[2], "wikt-module");
+                ++ownLanguages;
+            }
+            if (!wikiOwn.empty())
+                std::cout << std::format("{} own codes of Wiktionaries: {} names of known languages, {} languages of their own "
+                                         "(<wiki>:<code>)",
+                                         wikiOwn.size(), asNames, ownLanguages)
+                          << std::endl;
         }
         std::vector<std::vector<std::string>> languageNameRows;
         for (const auto &[key, source] : names)

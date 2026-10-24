@@ -6,7 +6,10 @@
     "heading_level": 2,
     "template": "langue",
     "code": 1,
-    "value": "code"
+    "value": "code",
+    "aliases": {
+      "conventions internationales": "mul"
+    }
   },
   "homographs": {
     "form": "pos-number",

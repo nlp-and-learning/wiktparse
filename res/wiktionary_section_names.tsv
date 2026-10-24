@@ -835,3 +835,28 @@ ja	verb	Verb	section
 ja	name	Proper noun	section
 ja	adj	Adjective	section
 ja	syn	Synonyms	section
+mg	ana	Noun	section
+mg	e-ana	Noun form	section
+mg	ana-pr	Proper noun	section
+mg	mat	Verb	section
+mg	e-mat	Verb form	section
+mg	mpam	Adjective	section
+mg	tamb	Adverb	section
+mg	solo-ana	Pronoun	section
+mg	mpampitohy	Conjunction	section
+mg	mp.ank-teny	Preposition	section
+mg	tenim-piontanana	Interjection	section
+mg	tovona	Prefix	section
+mg	tovana	Suffix	section
+mg	isa	Numeral	section
+mg	litera	Letter	section
+mg	rômanizasiona	Romanization	section
+mg	fomba fiteny	Idiom	section
+mg	etim	Etymology	section
+mg	fanononana	Pronunciation	section
+mg	tsiahy	References	section
+mg	famakiana fanampiny	Further reading	section
+mg	teny mifandraika	Related terms	section
+mg	anagr	Anagrams	section
+mg	dika	Translations	section
+mg	dika-mitovy	Synonyms	section

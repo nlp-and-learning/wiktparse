@@ -1,0 +1,13 @@
+{
+  "wiki": "mg",
+  "language": {
+    "template_regex": "^=([^=]+)=$"
+  },
+  "pos": {
+    "form": "template-line"
+  },
+  "sections": {
+    "form": "template-line"
+  },
+  "status": "language code of {{=xx=}}; parts of speech and sections as template lines {{-ana-|xx}}"
+}

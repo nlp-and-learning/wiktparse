@@ -355,6 +355,22 @@ std::optional<std::string> languageMarkerOfForm(const json &config, const std::s
 // Language of a line: the template ways (language.parameter: nds {{…|SPRAAK=ga}};
 // language.template_regex: kk {{srces}}, hu {{engfn}}), the configured form, then
 // the other forms of language.also (la {{caput|la}} and =={{-en-}}==)
+// The code captured by language.template_regex from a template name, if it matches
+std::optional<std::string> templateRegexCode(const json &language, const std::string &name) {
+    if (!language.contains("template_regex"))
+        return std::nullopt;
+    std::smatch m;
+    // Compiled once per pattern and thread
+    thread_local std::map<std::string, std::regex> compiled;
+    const auto &pattern = language["template_regex"].get_ref<const std::string &>();
+    auto it = compiled.find(pattern);
+    if (it == compiled.end())
+        it = compiled.emplace(pattern, std::regex(pattern)).first;
+    if (std::regex_match(name, m, it->second) && m.size() > 1)
+        return m[1].str();
+    return std::nullopt;
+}
+
 std::optional<std::string> languageMarker(const json &config, const std::string &line) {
     const auto &language = config["language"];
     if (language.contains("parameter") || language.contains("template_regex"))
@@ -362,20 +378,12 @@ std::optional<std::string> languageMarker(const json &config, const std::string 
             if (language.contains("parameter"))
                 if (auto v = t->get(language["parameter"].get<std::string>()); v && !v->empty())
                     return std::string(*v);
-            if (language.contains("template_regex")) {
-                std::smatch m;
-                // Compiled once per pattern and thread
-                thread_local std::map<std::string, std::regex> compiled;
-                const auto &pattern = language["template_regex"].get_ref<const std::string &>();
-                auto it = compiled.find(pattern);
-                if (it == compiled.end())
-                    it = compiled.emplace(pattern, std::regex(pattern)).first;
-                if (std::regex_match(t->name, m, it->second) && m.size() > 1)
-                    return m[1].str();
-            }
+            if (auto code = templateRegexCode(language, t->name))
+                return code;
         }
+    // The regex also on a marker of a heading: mg =={{=mg=}}== -> mg
     if (auto marker = languageMarkerOfForm(config, line))
-        return marker;
+        return templateRegexCode(language, *marker).value_or(*marker);
     if (config.contains("also_forms"))
         for (const auto &alternative : config["also_forms"])
             if (auto marker = languageMarkerOfForm(alternative, line))
@@ -681,7 +689,8 @@ const std::set<std::string> partsOfSpeech = {
         "circumfix", "affix", "phrase", "prepositional phrase", "idiom", "proverb", "letter", "symbol", "participle",
         "contraction", "abbreviation", "initialism", "acronym", "classifier", "counter", "root", "han character",
         "kanji", "hanja", "syllable", "punctuation mark", "diacritical mark", "number", "adnominal", "verbal noun",
-        "inflected form"};
+        "inflected form", "noun form", "verb form", "adjective form", "adverb form", "pronoun form", "participle form",
+        "romanization"};
 const std::set<std::string> relations = {
         "synonyms", "antonyms", "hypernyms", "hyponyms", "meronyms", "holonyms", "troponyms", "coordinate terms",
         "derived terms", "related terms", "compounds", "descendants", "anagrams", "idioms", "proverbs",
@@ -694,9 +703,16 @@ struct SectionName {
 
 // Names of sections of a wiki (wiktsections.sqlite): its own names (by hand), Wikidata labels in
 // its language, English names; keys are lowercase
+// Section names of res/wiktionary_section_names.tsv by wiki: lower-case name -> section,
+// read directly, so that a change there needs no new wiktsections.sqlite
+std::map<std::string, std::vector<std::pair<std::string, std::string>>> manualSectionNames;
+
 class SectionNames {
 public:
     SectionNames(const fs::path &file, const std::string &wiki) {
+        if (auto it = manualSectionNames.find(wiki); it != manualSectionNames.end())
+            for (const auto &[name, section] : it->second)
+                names_.emplace(name, section);
         sqlite3 *db = nullptr;
         if (!fs::exists(file) || sqlite3_open_v2(file.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr) != SQLITE_OK) {
             sqlite3_close(db);
@@ -1192,8 +1208,11 @@ int main(int argc, char *argv[]) {
         Configs configs(configDir);
         for (const auto &line : readLines((configDir.parent_path() / "wiktionary_section_names.tsv").string())) {
             auto f = split(line, '\t');
-            if (f.size() >= 2 && f[0] != "wiki" && !f[0].starts_with("#"))
+            if (f.size() >= 2 && f[0] != "wiki" && !f[0].starts_with("#")) {
                 knownSections[f[0]].insert(f[1]);
+                if (f.size() >= 3)
+                    manualSectionNames[f[0]].emplace_back(wikilib::unicode::to_lower(f[1]), f[2]);
+            }
         }
         LanguageNames names(dbFile);
         fs::create_directories(output);

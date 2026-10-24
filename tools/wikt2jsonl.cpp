@@ -1170,7 +1170,8 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         bool sectionLine = false;
         if (marker && !byName && !implicit && config["language"].value("require_code", true) &&
             (str(config, "/language/form") == "line-template" ||
-             str(config, "/language/form") == "heading-dash-template") &&
+             str(config, "/language/form") == "heading-dash-template" ||
+             dashTemplate(line) == 1) && // ug {{-noun-}} of a form of language.also
             !(config.contains(json::json_pointer("/language/aliases")) && config["language"]["aliases"].contains(*marker)) &&
             !names.isCode(*marker) && names.wikiCode(wiki, *marker).empty() && names.mappedCode(*marker).empty() &&
             !(marker->size() > 2 && marker->front() == '-' && marker->back() == '-' &&

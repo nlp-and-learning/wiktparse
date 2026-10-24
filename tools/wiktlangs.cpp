@@ -226,6 +226,7 @@ struct Iso639 {
     std::map<std::string, std::string> macrolanguage; // individual -> macrolanguage
     std::map<std::string, std::string> changeTo;      // retired -> replacement (may be empty)
     std::set<std::string> retired;
+    std::map<std::string, std::string> retiredName; // retired code -> its reference name
     std::set<std::string> ids; // ISO 639-3 codes
     std::map<std::string, std::string> name; // iso3 -> reference name, of individual languages and macrolanguages
 
@@ -251,6 +252,8 @@ struct Iso639 {
         for (const auto &r : readTab(dir / "iso-639-3_Retirements.tab"))
             if (!r.empty()) {
                 retired.insert(r[0]);
+                if (r.size() > 1)
+                    retiredName[r[0]] = r[1];
                 if (r.size() > 3 && !r[3].empty())
                     changeTo[r[0]] = r[3];
             }
@@ -809,6 +812,7 @@ int main(int argc, char *argv[]) {
         // English name from SIL, item from Wikidata (P220)
         std::vector<std::vector<std::string>> moduleOther; // wiki, code, name, module
         std::vector<std::vector<std::string>> wikiOwn;     // codes of a wiki unlike ISO ones: wiki, code, name, module
+        std::map<std::string, std::string> retiredLanguages; // retired ISO codes of modules without replacement: name
         size_t wiktionaryLanguages = 0;
         if (fs::exists(moduleOtherFile)) {
             std::map<std::string, std::string> iso3Qid;
@@ -829,6 +833,22 @@ int main(int argc, char *argv[]) {
                 static const std::regex isoLike(R"([a-z]{2,3}(?:-[a-zA-Z]{2,8})*)");
                 if (f.size() == 4 && f[0] != "wiki" && !std::regex_match(f[1], isoLike)) {
                     wikiOwn.push_back(std::move(f));
+                    continue;
+                }
+                // Like an ISO code but no current one: a retired code (its replacement, or the code
+                // itself when it has none: pii Pini), else a code of the wiki's own (fr fc franc-comtois)
+                if (f.size() == 4 && f[0] != "wiki" && !iso.name.contains(f[1]) && !codes.contains(f[1]) &&
+                    !sameLanguage.contains(f[1])) {
+                    if (iso.retired.contains(f[1])) {
+                        if (const auto r = resolveIso3(f[1], 0); !r.first.empty())
+                            codeMap.insert({"iso639-3", f[1], r.first, r.second});
+                        else {
+                            if (!retiredLanguages.contains(f[1]))
+                                retiredLanguages[f[1]] = iso.retiredName.contains(f[1]) ? iso.retiredName[f[1]] : f[2];
+                            moduleOther.push_back(std::move(f)); // its names in the wikis
+                        }
+                    } else
+                        wikiOwn.push_back(std::move(f));
                     continue;
                 }
                 if (f.size() == 4 && f[0] != "wiki" && iso.name.contains(f[1]) && !codes.contains(f[1]) &&
@@ -856,7 +876,12 @@ int main(int argc, char *argv[]) {
                         for (const auto &alias : list)
                             nameRows.push_back({code, q, lang, alias.value("value", ""), "1"});
             }
-            std::cout << wiktionaryLanguages << " languages of other Wiktionaries from " << moduleOtherFile.string() << std::endl;
+            for (const auto &[code, name] : retiredLanguages) {
+                langRows.push_back({code, "wiktionary", name, "", "", "", "", "", "retired ISO 639-3", "SIL retirements"});
+                ++wiktionaryLanguages;
+            }
+            std::cout << wiktionaryLanguages << " languages of other Wiktionaries from " << moduleOtherFile.string() << " ("
+                      << retiredLanguages.size() << " of them retired ISO 639-3 codes)" << std::endl;
         }
 
         // language: one row per code; a code of several kinds keeps the first kind of kindOrder
@@ -1065,18 +1090,22 @@ int main(int argc, char *argv[]) {
                 std::string found;
                 // Its name in the wiki's language, else in English (fr slovio: Slovio, art-slovio;
                 // proto-munda: Proto-Munda, mun-pro)
-                // One code, or of several the only one of kind language (fr gaulois: cel-gau, not the
-                // variety xtg)
+                // One code, or of a language and varieties the language (fr gaulois: cel-gau, not the
+                // variety xtg); a language and a family are no answer (fr dogon: dds or qfa-dgn)
                 auto only = [&](const std::set<std::string> &codes) -> std::string {
                     if (codes.size() == 1)
                         return *codes.begin();
                     std::string language;
-                    for (const auto &c : codes)
-                        if (auto it = languages.find(c); it != languages.end() && it->second[1] == "language") {
+                    for (const auto &c : codes) {
+                        const auto it = languages.find(c);
+                        const auto kind = it == languages.end() ? std::string() : it->second[1];
+                        if (kind == "language") {
                             if (!language.empty())
                                 return "";
                             language = c;
-                        }
+                        } else if (kind != "etymology")
+                            return "";
+                    }
                     return language;
                 };
                 for (const auto &language : {inCode, std::string("en")})

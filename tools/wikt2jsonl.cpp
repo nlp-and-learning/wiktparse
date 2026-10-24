@@ -1537,7 +1537,8 @@ private:
     std::vector<Block> blocks_; // the block being filled, per worker
     uint64_t offset_ = 0;
     // zstd: a dictionary of the wiki, trained on its first blocks (kept back until then)
-    static constexpr size_t trainBytes = 8 << 20, dictionaryBytes = 112640;
+    // (pl: 8 -> 32 MB of training 1% smaller, more no gain; a 1 MB dictionary 7% smaller than 110 KB)
+    static constexpr size_t trainBytes = 32 << 20, maxDictionaryBytes = 1 << 20;
     fs::path base_;
     std::mutex trainMutex_;
     std::vector<Block> waiting_;
@@ -1580,7 +1581,7 @@ private:
                 samples.append(b.text, b.starts[i], end - b.starts[i]);
                 sizes.push_back(end - b.starts[i]);
             }
-        std::string dict(dictionaryBytes, '\0');
+        std::string dict(std::clamp<size_t>(samples.size() / 32, 16 << 10, maxDictionaryBytes), '\0');
         size_t made = sizes.size() >= 10 ? ZDICT_trainFromBuffer(dict.data(), dict.size(), samples.data(), sizes.data(),
                                                                   static_cast<unsigned>(sizes.size()))
                                          : 0;
@@ -1674,7 +1675,7 @@ int main(int argc, char *argv[]) {
                              "       --markers-only: only language markers and stats, no JSONL\n"
                              "       --bz2, --zstd: <wiki>.jsonl.bz2 or .jsonl.zst in blocks of 100 lines or 512 KB\n"
                              "              with <wiki>.jsonl.idx; --level: bz2 1-9, zstd 1-22 (9);\n"
-                             "              zstd with a dictionary <wiki>.jsonl.dict of the first 8 MB\n";
+                             "              zstd with a dictionary <wiki>.jsonl.dict of the first 32 MB\n";
                 return 0;
             } else
                 wikis.push_back(arg);

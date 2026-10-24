@@ -575,6 +575,7 @@ std::optional<Sense> senseLine(const json &config, const std::string &line, std:
 struct Translation {
     std::string lang, term, sense;
     std::string gloss; // of the table (en {{trans-top|domestic species}})
+    bool generic = false; // not by the configuration: kept only when its language is known
 };
 
 // Templates of text, nested ones after their template
@@ -705,6 +706,31 @@ std::vector<Translation> translations(const json &config, const std::string &tex
             std::string lang = m[2].matched ? m[2].str() : trim(m[1].str());
             for (const auto &term : links(m[4].str()))
                 result.push_back({lang, term, m[3].matched && m[3].length() ? m[3].str() : lineSense, lineGloss});
+        }
+    }
+    // A translation section the configuration finds nothing in: any template of a code and a term
+    // (ug {{ter|en|water}}, is {{þýðing|af|Mali}}, hsb {{p|dsb|a}}), else lines of links
+    // (kk "#**Ағылшынша: [[home]]", tk "*{{en}}: [[water]]"); kept only of known languages
+    if (lines && result.empty()) {
+        static const std::regex code(R"(^[a-z]{2,3}(-[a-z]{2,8})*$)");
+        for (const auto &t : allTemplates(text)) {
+            auto lang = t.get(size_t{1});
+            auto term = t.get(size_t{2});
+            if (lang && term && std::regex_match(std::string(*lang), code) && !trim(std::string(*term)).empty() &&
+                std::string(*term).find("{{") == std::string::npos)
+                result.push_back({std::string(*lang), trim(std::string(*term)), "", "", true});
+        }
+        if (result.empty()) {
+            static const std::regex line(R"(^[:#]*\*+:?\s*(\{\{([^}|]+)\}\}|(?:(?!：)[^:])+?)\s*(?::|：)\s*(.*)$)");
+            std::istringstream in(text);
+            for (std::string l; std::getline(in, l);) {
+                std::smatch m;
+                if (!std::regex_match(l, m, line))
+                    continue;
+                std::string lang = m[2].matched ? m[2].str() : trim(m[1].str());
+                for (const auto &term : links(m[3].str()))
+                    result.push_back({lang, term, "", "", true});
+            }
         }
     }
     return result;
@@ -1048,6 +1074,8 @@ private:
             found = translations(config_, n["text"].get<std::string>(), false);
         for (const auto &t : found) {
             std::string code = languageCode_(t.lang);
+            if (t.generic && code.empty())
+                continue;
             json item = {{"lang", code.empty() ? json() : json(code)}, {"term", t.term}};
             if (!t.sense.empty())
                 item["sense"] = t.sense;

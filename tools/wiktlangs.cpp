@@ -598,6 +598,9 @@ int main(int argc, char *argv[]) {
         for (const auto &r : codeMap)
             if (r[3] == "code" || r[3] == "iso1" || r[3] == "qid")
                 sameLanguage.insert(r[1]);
+        if (!fs::exists(infoboxFile))
+            std::cerr << "warning: no " << infoboxFile.string()
+                      << " (wiktparse --infoboxes): the languages of Wikipedia infoboxes are left out" << std::endl;
         if (fs::exists(infoboxFile)) {
             std::map<std::string, std::string> glottoQid;
             for (const auto &[q, entity] : wikidata)

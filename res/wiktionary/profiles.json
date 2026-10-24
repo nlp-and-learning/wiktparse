@@ -125,7 +125,7 @@
         "form": "template-line"
       },
       "senses": {
-        "marker": ":"
+        "marker": ": ({pos}.{n})"
       },
       "translations": {
         "sense": "number"

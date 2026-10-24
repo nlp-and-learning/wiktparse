@@ -98,5 +98,11 @@
       "ພາສາ"
     ]
   },
+  "senses": {
+    "marker": "line",
+    "ignore": [
+      "ກະລຸນາ"
+    ]
+  },
   "status": "aliases from the dump markers (unresolved.tsv)"
 }

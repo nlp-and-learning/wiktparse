@@ -17,5 +17,8 @@
       "Rusça": "ru"
     }
   },
+  "senses": {
+    "marker": ":[{n}]"
+  },
   "status": "fixed from samples1000 language names without a code"
 }

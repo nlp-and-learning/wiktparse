@@ -524,11 +524,35 @@ struct Sense {
 std::optional<Sense> senseLine(const json &config, const std::string &line, std::vector<int> &counters) {
     const auto marker = str(config, "/senses/marker", "#");
     std::smatch m;
-    if (marker.starts_with("#")) {
+    // "line": every text line of the definitions (lo ===ຄວາມໝາຍ=== without marks)
+    if (marker == "line") {
+        auto text = trim(line);
+        if (text.empty() || text.starts_with("{{") || text.starts_with("[[Category:") || text.starts_with("*") ||
+            text.starts_with("<") || text.starts_with("|") || text.starts_with("}}"))
+            return std::nullopt;
+        while (!text.empty() && (text[0] == ':' || text[0] == '#' || text[0] == '*')) // lo ":*text"
+            text = trim(text.substr(1));
+        if (text.empty())
+            return std::nullopt;
+        // Placeholders of empty entries (lo "ກະລຸນາຊ່ອຍຂຽນ…": please write)
+        if (auto ignore = json::json_pointer("/senses/ignore"); config.contains(ignore))
+            for (const auto &prefix : config[ignore])
+                if (text.starts_with(prefix.get<std::string>()))
+                    return std::nullopt;
+        counters.resize(1, 0);
+        return Sense{std::to_string(++counters[0]), text};
+    }
+    // "#", ":" of lines indented as such (lo ": definition"), ":#" of mn (":#definition")
+    if (marker.starts_with("#") || marker == ":" || marker == ":#") {
+        if (marker == ":#" && !line.starts_with(":#"))
+            return std::nullopt;
+        if (marker == ":#")
+            return senseLine({{"senses", {{"marker", "#"}}}}, line.substr(1), counters);
+        const char c = marker[0];
         size_t depth = 0;
-        while (depth < line.size() && line[depth] == '#')
+        while (depth < line.size() && line[depth] == c)
             ++depth;
-        if (depth == 0 || (depth < line.size() && (line[depth] == ':' || line[depth] == '*')))
+        if (depth == 0 || (depth < line.size() && (line[depth] == ':' || line[depth] == '*' || line[depth] == '#')))
             return std::nullopt;
         counters.resize(depth, 0);
         counters[depth - 1]++;
@@ -905,7 +929,8 @@ public:
         const auto &kind = current()["kind"];
         if (kind == "pos" || current()["section"] == "Definitions")
             if (auto s = senseLine(config_, line, counters_)) {
-                current()["senses"].push_back({{"id", s->id}, {"text", s->text}});
+                if (!s->text.empty()) // not the empty "#" and ":(1.1)" of unwritten entries
+                    current()["senses"].push_back({{"id", s->id}, {"text", s->text}});
                 return;
             }
         current()["text"] = current()["text"].get<std::string>() + line + '\n';

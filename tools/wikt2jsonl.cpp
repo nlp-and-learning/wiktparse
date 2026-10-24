@@ -1069,15 +1069,28 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         next = offset + line.size() + 1;
         auto marker = implicit ? (first ? std::optional(native.front()) : std::nullopt) : languageMarker(config, line);
         first = false;
-        // A code marker that is no code is no language: E {{-noun-}} besides {{-scn-}} (a section)
+        // A code marker that is no code is no language: E {{-noun-}} besides {{-scn-}}, ga {{-fuaim-}}
+        // after {{t|et}}: a section of the open language. Before any language it opens one: the
+        // code at its end (nah {{-noun-nci-}}), else the wiki's (vo {{-pedefom-}}, gl {{-topon-|gl}}).
         // (only of the dash forms: names as markers of other forms keep their pages)
+        bool sectionLine = false;
         if (marker && !byName && !implicit && config["language"].value("require_code", true) &&
             (str(config, "/language/form") == "line-template" ||
              str(config, "/language/form") == "heading-dash-template") &&
             !(config.contains(json::json_pointer("/language/aliases")) && config["language"]["aliases"].contains(*marker)) &&
             !names.isCode(*marker) && names.wikiCode(wiki, *marker).empty() && names.mappedCode(*marker).empty() &&
-            sectionNames.find(sectionKey(*marker).first))
-            marker.reset();
+            !(marker->size() > 2 && marker->front() == '-' && marker->back() == '-' &&
+              names.isCode(marker->substr(1, marker->size() - 2))) &&
+            (current || sectionNames.find(sectionKey(*marker).first) || templateLine(line))) {
+            if (current) {
+                marker.reset();
+            } else {
+                auto dash = marker->rfind('-');
+                auto tail = dash == std::string::npos ? std::string() : marker->substr(dash + 1);
+                marker = names.isCode(tail) ? tail : native.front();
+                sectionLine = true;
+            }
+        }
         if (marker && requireCode && !(config.contains(json::json_pointer("/language/aliases")) &&
                                        config["language"]["aliases"].contains(*marker)) &&
             markerCode(*marker).empty()) {
@@ -1104,7 +1117,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
                 else if (auto named = markerCode(code); !named.empty())
                     code = named; // a name in a code template (btm {{Mandailing}}, az {{Dil|Azərbaycan dili}})
             }
-            const bool keepLine = implicit && sections.empty() && !line.empty();
+            const bool keepLine = (implicit && sections.empty() && !line.empty()) || sectionLine;
             // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}
             if (auto aliases = json::json_pointer("/language/aliases"); config.contains(aliases))
                 if (auto it = config[aliases].find(*marker); it != config[aliases].end())

@@ -1,0 +1,13 @@
+{
+  "wiki": "ga",
+  "language": {
+    "also": [
+      {
+        "form": "line-template",
+        "template": "t",
+        "code": 1
+      }
+    ]
+  },
+  "status": "language of {{t|et}} besides {{-ga-}}; sections {{-fuaim-}}, {{-ainm-|et}}"
+}

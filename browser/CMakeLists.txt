@@ -1,4 +1,4 @@
-# wiktbrowse: browser of wikt2jsonl output (.jsonl, or .jsonl.bz2 with its
+# wiktbrowse: browser of wikt2jsonl output (.jsonl, or .jsonl.bz2 / .jsonl.zst with its
 # .idx). A separate project, so that wiktparse itself needs no Qt:
 #   cmake -S browser -B browser/build -DCMAKE_BUILD_TYPE=Release && cmake --build browser/build
 cmake_minimum_required(VERSION 3.24)
@@ -10,6 +10,8 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(nlohmann_json REQUIRED)
 find_package(BZip2 REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(ZSTD REQUIRED IMPORTED_TARGET libzstd)
 
 # qcodeedit (LGPL-3.0): the editor widget with Kate syntax highlighting and
 # folding. The sibling checkout ../../qcodeedit when present, otherwise fetched.
@@ -40,4 +42,4 @@ FetchContent_MakeAvailable(qt-extra)
 
 add_executable(wiktbrowse main.cpp FindBar.cpp FindBar.h TreeFindBar.cpp TreeFindBar.h)
 target_link_libraries(wiktbrowse Qt6::Widgets qcodeedit::qcodeedit qcodeedit::kate qt-extra nlohmann_json::nlohmann_json
-        BZip2::BZip2)
+        BZip2::BZip2 PkgConfig::ZSTD)

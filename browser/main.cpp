@@ -1,7 +1,7 @@
 // wiktbrowse: browser of JSONL files (wikt2jsonl output, one page per line; any
 // JSONL, e.g. the Wikidata entities of wiktNeeded):
-// plain .jsonl, or .jsonl.bz2 with its .jsonl.idx (only the block of the
-// shown line is decompressed). Left: the lines with their titles, a filter and
+// plain .jsonl, or .jsonl.bz2 / .jsonl.zst (with its .jsonl.dict) with its
+// .jsonl.idx (only the block of the shown line is decompressed). Left: the lines with their titles, a filter and
 // "go to line". Right: the selected line as indented JSON in a read-only
 // qcodeedit view (Kate highlighting and folding), and as a tree with readable
 // labels of sections and senses. F4 opens the line, indented, in Kate.
@@ -11,7 +11,7 @@
 // in wiktbrowse.ini next to the binary. Search > Find (Ctrl+F, F3, Shift+F3)
 // in the JSON and Original tabs, and in the tree (expanding to the match).
 //
-// wiktbrowse [file.jsonl | file.jsonl.bz2]
+// wiktbrowse [file.jsonl | file.jsonl.bz2 | file.jsonl.zst]
 #include <QApplication>
 #include <QDir>
 #include <QProcess>
@@ -38,6 +38,7 @@
 #include <QVBoxLayout>
 
 #include <bzlib.h>
+#include <zstd.h>
 #include <qce/CodeEdit.h>
 #include <qce/CodeEditArea.h>
 #include <qce/RuleBasedFoldingProvider.h>
@@ -105,15 +106,25 @@ private:
     std::vector<QString> titles_;
 };
 
-// A .jsonl.bz2 of independent bz2 blocks with its index (colon-separated): per
+// A .jsonl.bz2 of independent bz2 blocks, or a .jsonl.zst of zstd frames compressed
+// with the dictionary <wiki>.jsonl.dict, with its index (colon-separated): per
 // block "offset:count:uncompressed", then ":start:title" per entry (start in
 // the uncompressed block), at the end EOF=<size>. An entry ends where the next
 // one starts, the last at uncompressed; a block where the next one starts, the
 // last at EOF.
-class Bz2Lines : public Lines {
+class BlockLines : public Lines {
 public:
-    Bz2Lines(const QString &path, const QString &indexPath) : file_(path) {
+    // dictionaryPath: of zstd frames (an empty file: none); empty for bz2
+    BlockLines(const QString &path, const QString &indexPath, const QString &dictionaryPath = {})
+        : file_(path), zstd_(!dictionaryPath.isNull()) {
         file_.open(QIODevice::ReadOnly);
+        if (zstd_) {
+            QFile dictionary(dictionaryPath);
+            const QByteArray data = dictionary.open(QIODevice::ReadOnly) ? dictionary.readAll() : QByteArray();
+            if (!data.isEmpty()) // a small wiki has none
+                dictionary_.reset(ZSTD_createDDict(data.constData(), static_cast<size_t>(data.size())));
+            context_.reset(ZSTD_createDCtx());
+        }
         QFile index(indexPath);
         if (!index.open(QIODevice::ReadOnly))
             return;
@@ -154,12 +165,26 @@ public:
             file_.seek(static_cast<qint64>(b.offset));
             QByteArray compressed = file_.read(b.compressed);
             text_ = QByteArray(static_cast<qsizetype>(b.uncompressed), '\0');
-            unsigned length = b.uncompressed;
-            if (BZ2_bzBuffToBuffDecompress(text_.data(), &length, compressed.data(), b.compressed, 0, 0) != BZ_OK) {
-                cached_ = ~0ull;
-                return {};
+            size_t length = b.uncompressed;
+            if (zstd_) {
+                length = dictionary_ ? ZSTD_decompress_usingDDict(context_.get(), text_.data(), text_.size(),
+                                                                  compressed.constData(),
+                                                                  static_cast<size_t>(compressed.size()), dictionary_.get())
+                                     : ZSTD_decompressDCtx(context_.get(), text_.data(), text_.size(), compressed.constData(),
+                                                           static_cast<size_t>(compressed.size()));
+                if (ZSTD_isError(length)) {
+                    cached_ = ~0ull;
+                    return {};
+                }
+            } else {
+                unsigned bz2Length = b.uncompressed;
+                if (BZ2_bzBuffToBuffDecompress(text_.data(), &bz2Length, compressed.data(), b.compressed, 0, 0) != BZ_OK) {
+                    cached_ = ~0ull;
+                    return {};
+                }
+                length = bz2Length;
             }
-            text_.truncate(length);
+            text_.truncate(static_cast<qsizetype>(length));
             cached_ = b.offset;
         }
         const bool last = it == blocks_.end() ? i + 1 == titles_.size() : i + 1 == it->firstLine;
@@ -176,6 +201,9 @@ private:
         size_t firstLine;
     };
     QFile file_;
+    bool zstd_;
+    std::unique_ptr<ZSTD_DDict, decltype(&ZSTD_freeDDict)> dictionary_{nullptr, ZSTD_freeDDict};
+    std::unique_ptr<ZSTD_DCtx, decltype(&ZSTD_freeDCtx)> context_{nullptr, ZSTD_freeDCtx};
     std::vector<Block> blocks_;
     std::vector<QString> titles_;
     std::vector<unsigned> starts_; // of the entries in their uncompressed block
@@ -352,16 +380,19 @@ public:
     // in the directory of the file opened last (kept in the settings)
     static QString choose(QWidget *parent) {
         return QxFileDialog::getOpenFileName(parent, "JSONL file", settings().value("files/dir").toString(),
-                                             "JSONL (*.jsonl *.jsonl.bz2 *.json);;All (*)");
+                                             "JSONL (*.jsonl *.jsonl.bz2 *.jsonl.zst *.json);;All (*)");
     }
 
     void open(const QString &path) {
         settings().setValue("files/dir", QFileInfo(path).absolutePath());
-        QString index = path;
-        if (path.endsWith(".bz2"))
-            index = path.left(path.size() - 4) + ".idx";
-        if (path.endsWith(".bz2") && QFileInfo::exists(index))
-            lines_ = std::make_unique<Bz2Lines>(path, index);
+        // <base>.jsonl.bz2 or .jsonl.zst: <base>.jsonl.idx; zstd also <base>.jsonl.dict
+        const bool bz2 = path.endsWith(".bz2"), zst = path.endsWith(".zst");
+        const QString base = bz2 || zst ? path.left(path.size() - 4) : path;
+        const QString index = base + ".idx", dictionary = base + ".dict";
+        if (bz2 && QFileInfo::exists(index))
+            lines_ = std::make_unique<BlockLines>(path, index);
+        else if (zst && QFileInfo::exists(index))
+            lines_ = std::make_unique<BlockLines>(path, index, dictionary);
         else
             lines_ = std::make_unique<PlainLines>(path);
         path_ = path;

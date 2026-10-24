@@ -1473,8 +1473,11 @@ enum class Compression { none, bz2, zstd };
 
 class JsonlWriter {
 public:
-    JsonlWriter(const fs::path &base, Compression compression, int level, size_t workers = 1)
-        : compression_(compression), level_(level), base_(base), blocks_(std::max<size_t>(workers, 1)) {
+    // expected: an estimate of the compressed bytes of the whole output (0: not known), for the
+    // size of the zstd dictionary
+    JsonlWriter(const fs::path &base, Compression compression, int level, size_t workers = 1, uint64_t expected = 0)
+        : compression_(compression), level_(level), base_(base), expected_(expected),
+          blocks_(std::max<size_t>(workers, 1)) {
         if (compression == Compression::none) {
             data_.open(base.string() + ".jsonl");
             return;
@@ -1540,6 +1543,7 @@ private:
     // (pl: 8 -> 32 MB of training 1% smaller, more no gain; a 1 MB dictionary 7% smaller than 110 KB)
     static constexpr size_t trainBytes = 32 << 20, maxDictionaryBytes = 1 << 20;
     fs::path base_;
+    uint64_t expected_;
     std::mutex trainMutex_;
     std::vector<Block> waiting_;
     size_t waitingBytes_ = 0;
@@ -1581,13 +1585,23 @@ private:
                 samples.append(b.text, b.starts[i], end - b.starts[i]);
                 sizes.push_back(end - b.starts[i]);
             }
-        std::string dict(std::clamp<size_t>(samples.size() / 32, 16 << 10, maxDictionaryBytes), '\0');
-        size_t made = sizes.size() >= 10 ? ZDICT_trainFromBuffer(dict.data(), dict.size(), samples.data(), sizes.data(),
-                                                                  static_cast<unsigned>(sizes.size()))
-                                         : 0;
-        if (sizes.size() < 10 || ZDICT_isError(made))
-            made = 0; // too few pages: a dictionary of nothing
-        dict.resize(made);
+        // Its size from the expected compressed output: 1 MB from 14 MB on (a dictionary saves
+        // some 7%), below half the saving, none under 16 KB; each block is compressed once
+        // (a wiki whose output all waited: of that, some 0.12 of it; a larger one: of its dump)
+        double compressed = 0.12 * static_cast<double>(waitingBytes_);
+        if (waitingBytes_ >= trainBytes)
+            compressed = std::max(compressed, static_cast<double>(expected_));
+        size_t size = std::min<size_t>(maxDictionaryBytes, static_cast<size_t>(0.035 * compressed));
+        if (size * 8 > samples.size())
+            size = samples.size() / 8; // not most of the samples
+        std::string dict;
+        if (size >= (16 << 10) && sizes.size() >= 10) {
+            dict.resize(size);
+            const size_t trained = ZDICT_trainFromBuffer(dict.data(), dict.size(), samples.data(), sizes.data(),
+                                                         static_cast<unsigned>(sizes.size()));
+            dict.resize(ZDICT_isError(trained) ? 0 : trained);
+        }
+        const size_t made = dict.size();
         std::ofstream(base_.string() + ".jsonl.dict", std::ios::binary).write(dict.data(), static_cast<std::streamsize>(made));
         dictionary_ = ZSTD_createCDict(dict.data(), dict.size(), level_);
         waitingBytes_ = 0;
@@ -1735,7 +1749,9 @@ int main(int argc, char *argv[]) {
                               : 1;
             std::optional<JsonlWriter> out;
             if (!markersOnly)
-                out.emplace(output / wiki, compression, level ? level : 9, workers);
+                // (the compressed output of a dump: some 0.6 of the dump; pl 109 of 181 MB)
+                out.emplace(output / wiki, compression, level ? level : 9, workers,
+                            fromDumps ? WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki).dump_size() * 6 / 10 : 0);
             if (fromDumps) {
                 auto path = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki);
                 wikilib::dump::DumpReader reader(path);

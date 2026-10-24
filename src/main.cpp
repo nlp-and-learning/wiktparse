@@ -320,12 +320,13 @@ std::string normalizedTemplateName(std::string name) {
 // read in parallel threads (indexed multistream ranges):
 // infoboxes.txt - raw templates; infoboxes.jsonl - one infobox per line:
 // {"title":..,"template":..,"params":{"name":"raw value",..}}; positional
-// parameters are named "1", "2"...
+// parameters are named "1", "2"... Both are written as .part and renamed at the
+// end, so that a stopped run leaves the files of the last complete one.
 void wikipediaInfoboxes(size_t threads) {
     auto wikiDump = WikiDump::wikipedia("en");
     std::cout << wikiDump.path().dump_path().string() << std::endl;
-    std::ofstream out("infoboxes.txt");
-    std::ofstream jsonl("infoboxes.jsonl");
+    std::ofstream out("infoboxes.txt.part");
+    std::ofstream jsonl("infoboxes.jsonl.part");
     std::mutex outMutex;
     std::atomic<size_t> count{0};
     wikiDump.forEachPageParallel([&](size_t, const std::string &title, const std::string &text) {
@@ -349,6 +350,12 @@ void wikipediaInfoboxes(size_t threads) {
             count++;
         }
     }, threads, 0.001);
+    out.close();
+    jsonl.close();
+    if (!out || !jsonl)
+        throw std::runtime_error("cannot write infoboxes.txt.part or infoboxes.jsonl.part");
+    std::filesystem::rename("infoboxes.txt.part", "infoboxes.txt");
+    std::filesystem::rename("infoboxes.jsonl.part", "infoboxes.jsonl");
     std::cout << count << " infoboxes written to infoboxes.txt and infoboxes.jsonl" << std::endl;
 }
 

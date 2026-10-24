@@ -788,6 +788,12 @@ int main(int argc, char *argv[]) {
                         if (list.is_array())
                             for (const auto &alias : list)
                                 nameRows.push_back({f[0], f[2], lang, alias.value("value", ""), "1"});
+                    // Its Wikimedia codes (P424) that are no language of their own:
+                    // be-x-old -> be-tarask (the item also has "be", which stays Belarusian)
+                    if (it->second["claims"].contains("P424"))
+                        for (const auto &code : it->second["claims"]["P424"])
+                            if (const auto c = code.get<std::string>(); c != f[0] && !wiktCodes.contains(c))
+                                codeMap.insert({"wikimedia", c, f[0], "item"});
                 }
             }
             std::cout << extra << " extra languages" << std::endl;

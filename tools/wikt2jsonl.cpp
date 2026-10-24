@@ -232,16 +232,21 @@ public:
         static const std::regex code(R"(^[a-z]{2,3}(-[a-z]+)*$)");
         if (std::regex_match(name, code))
             result = query("SELECT code FROM language WHERE code=?2 AND ?1<>'' LIMIT 1", lang, name);
-        // Names in the wiki's language: en.wikt names (en), Wikidata labels, then aliases; languages before other kinds
+        // Names in the wiki's language: en.wikt names (en), Wikidata labels, aliases, then the
+        // resolved headings of Wiktionaries and the aliases of the configurations; languages first
         for (const auto &n : variants) {
             if (result.empty())
-                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND n.name=?2 AND n.source IN ('en.wikt','extra','enwiki','sil','wikidata-label','wikidata-alias','wikidata-other') ORDER BY n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
+                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND n.name=?2 AND n.source IN ('en.wikt','extra','enwiki','sil','wikidata-label','wikidata-alias','wikidata-other','wikt-heading','config-alias') ORDER BY n.source='config-alias', n.source='wikt-heading', n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
             if (result.empty())
-                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND lower(n.name)=lower(?2) AND n.source IN ('en.wikt','extra','enwiki','sil','wikidata-label','wikidata-alias','wikidata-other') ORDER BY n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
+                result = query("SELECT n.code FROM language_name n JOIN language l ON l.code=n.code WHERE n.in_code=?1 AND lower(n.name)=lower(?2) AND n.source IN ('en.wikt','extra','enwiki','sil','wikidata-label','wikidata-alias','wikidata-other','wikt-heading','config-alias') ORDER BY n.source='config-alias', n.source='wikt-heading', n.source='wikidata-other', n.source='wikidata-alias', l.kind<>'language', length(n.code) LIMIT 1", lang, n);
         }
         // English names of en.wikt
         if (result.empty())
             result = query("SELECT code FROM language WHERE name=?2 AND ?1<>'' ORDER BY kind<>'language' LIMIT 1", lang, name);
+        // fr "proto-munda": en.wikt "Proto-Munda"
+        if (result.empty())
+            result = query("SELECT code FROM language WHERE lower(name)=lower(?2) AND ?1<>'' ORDER BY kind<>'language' LIMIT 1",
+                           lang, name);
         // Names from Lua modules of Wiktionaries in the wiki's language (wiktmodules)
         for (const auto &n : variants)
             if (result.empty())
@@ -589,7 +594,10 @@ std::vector<Translation> translations(const json &config, const std::string &tex
     }
     // Lines of links: pl "* angielski: (1.1) [[water]]", it ":*{{en}}: [[water]]", zh "*英语：[[water]]"
     if (lines && terms.contains("line")) {
-        static const std::regex line(R"(^:?\*:?\s*(\{\{([^}|]+)\}\}|[^:：]+?)\s*[:：]\s*(?:\(([0-9.,\s-]+)\)\s*)?(.*)$)");
+        // std::regex works on bytes: the full-width colon (3 bytes in UTF-8) is an
+        // alternative, not a member of a bracket ([:：] would take its bytes one by
+        // one, and ż, ü, whose second byte is one of them, would end a name)
+        static const std::regex line(R"(^:?\*+:?\s*(\{\{([^}|]+)\}\}|(?:(?!：)[^:])+?)\s*(?::|：)\s*(?:\(([0-9.,\s-]+)\)\s*)?(.*)$)");
         std::istringstream in(text);
         for (std::string l; std::getline(in, l);) {
             std::smatch m;
@@ -994,6 +1002,9 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
                     return lang.substr(0, dot);
                 if (auto mapped = names.mappedCode(lang); !mapped.empty())
                     return mapped;
+                // A code with a script, region or variety (cu-Cyrl, zh-cn, gcf-mq): its language
+                if (auto dash = lang.find('-'); dash != std::string::npos && names.isCode(lang.substr(0, dash)))
+                    return lang.substr(0, dash);
                 std::string code = names.code(wiki, lang, str(config, "/language/lookup"),
                                               config["language"].value("strip", std::vector<std::string>{}));
                 if (auto aliases = json::json_pointer("/language/aliases"); code.empty() && config.contains(aliases))

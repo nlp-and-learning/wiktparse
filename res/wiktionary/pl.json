@@ -95,7 +95,8 @@
       "język zachodnioflamandzki": "vls",
       "język zachodniopendżabski": "pnb",
       "język zaparo": "zro",
-      "język zelandzki": "zea"
+      "język zelandzki": "zea",
+      "język białoruski (taraszkiewica)": "be-tarask"
     },
     "name_from": "template",
     "lookup": "język {name}"

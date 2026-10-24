@@ -17,6 +17,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <set>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -159,6 +160,79 @@ const std::vector<std::string> &equivalents(const std::string &code) {
     return it == map.end() ? none : it->second;
 }
 
+// Translation subpages: en "water/translations", zh "水/翻譯" (the base page links to them)
+const std::vector<std::string> subpageSuffixes = {"/translations", "/翻譯"};
+
+std::string subpageBase(const std::string &title) {
+    for (const auto &suffix : subpageSuffixes)
+        if (title.size() > suffix.size() && title.ends_with(suffix))
+            return title.substr(0, title.size() - suffix.size());
+    return {};
+}
+
+// The parts of speech of a section tree with their Translations child, in page order
+void partsOfSpeech(json &node, std::vector<json *> &out) {
+    for (const char *k : {"sections", "children"})
+        if (auto it = node.find(k); it != node.end())
+            for (auto &child : *it) {
+                if (child.contains("translations") || child.value("section", "") == "Translations")
+                    continue;
+                bool hasTranslations = false;
+                if (auto c = child.find("children"); c != child.end())
+                    for (const auto &g : *c)
+                        hasTranslations |= g.value("section", "") == "Translations";
+                if (hasTranslations)
+                    out.push_back(&child);
+                partsOfSpeech(child, out);
+            }
+}
+
+// The Translations of a subpage into its base page: for each language and part of speech of the
+// subpage, the first part of speech of the same name of that language on the page without
+// translations of its own gets the subpage's Translations node; the number merged
+size_t mergeSubpage(json &page, json subpage) {
+    size_t merged = 0;
+    for (auto &subLanguage : subpage["sections"]) {
+        std::vector<json *> from;
+        partsOfSpeech(subLanguage, from);
+        for (auto &language : page["sections"]) {
+            if (language.value("code", json()) != subLanguage.value("code", json()))
+                continue;
+            for (json *pos : from) {
+                json translations;
+                for (const auto &g : (*pos)["children"])
+                    if (g.value("section", "") == "Translations")
+                        translations = g;
+                // The target: a part of speech of that name without a Translations child
+                std::function<json *(json &)> target = [&](json &node) -> json * {
+                    for (const char *k : {"sections", "children"})
+                        if (auto it = node.find(k); it != node.end())
+                            for (auto &child : *it) {
+                                if (child.value("section", "") == pos->value("section", "")) {
+                                    bool has = false;
+                                    if (auto c = child.find("children"); c != child.end())
+                                        for (const auto &g : *c)
+                                            has |= g.value("section", "") == "Translations";
+                                    if (!has)
+                                        return &child;
+                                }
+                                if (json *found = target(child))
+                                    return found;
+                            }
+                    return nullptr;
+                };
+                translations["subpage"] = true;
+                if (json *to = target(language))
+                    (*to)["children"].push_back(std::move(translations));
+                else // no such part of speech: under the language, not lost
+                    language["sections"].push_back(std::move(translations));
+                ++merged;
+            }
+        }
+    }
+    return merged;
+}
+
 double seconds(std::chrono::steady_clock::time_point since) {
     return std::chrono::duration<double>(std::chrono::steady_clock::now() - since).count();
 }
@@ -201,13 +275,21 @@ int main(int argc, char *argv[]) {
 
         // Pass 1: (title, code) of every section of every wiki
         std::map<std::string, std::vector<uint64_t>> sections;
+        // Translation subpages by wiki and base title (only the rewritten wikis)
+        std::map<std::string, std::map<std::string, std::string>> subpages;
+        std::mutex subpageMutex;
         for (const auto &[wiki, path] : files) {
             BlockReader reader(path);
             std::vector<std::vector<uint64_t>> found(threads);
+            const bool rewritten = only.empty() || std::ranges::contains(only, wiki);
             forBlocks(reader, threads, [&](size_t worker, size_t block) {
                 for (const auto &line : reader.lines(block)) {
                     const json page = json::parse(line);
                     const std::string &title = page["title"].get_ref<const std::string &>();
+                    if (auto base = subpageBase(title); rewritten && !base.empty()) {
+                        std::lock_guard lock(subpageMutex);
+                        subpages[wiki][base] = line;
+                    }
                     for (const auto &s : page["sections"])
                         if (s.contains("code") && s["code"].is_string())
                             found[worker].push_back(key(title, s["code"].get<std::string>()));
@@ -257,15 +339,18 @@ int main(int argc, char *argv[]) {
         // Pass 2: the pages with their translations linked
         fs::create_directories(output);
         std::ofstream stats(output / "stats.tsv");
-        stats << "wiki\ttranslations\tpage\thome\tboth\tnone\tno_lang\tno_term\n";
+        stats << "wiki\ttranslations\tpage\thome\tboth\tnone\tno_lang\tno_term\tsubpages\n";
         for (const auto &[wiki, path] : files) {
             if (!only.empty() && !std::ranges::contains(only, wiki))
                 continue;
             const auto wikiStarted = std::chrono::steady_clock::now();
             BlockReader reader(path);
             JsonlWriter out(output / wiki, compression, 9, threads, fs::file_size(path));
+            // Translation subpages of this wiki, and the base pages they went into
+            const auto subIt = subpages.find(wiki);
+            const std::map<std::string, std::string> *wikiSubpages = subIt == subpages.end() ? nullptr : &subIt->second;
             struct Count {
-                size_t translations = 0, page = 0, home = 0, both = 0, none = 0, noLang = 0, noTerm = 0;
+                size_t translations = 0, page = 0, home = 0, both = 0, none = 0, noLang = 0, noTerm = 0, subpages = 0;
             };
             std::vector<Count> counts(threads);
             forBlocks(reader, threads, [&](size_t worker, size_t block) {
@@ -273,6 +358,18 @@ int main(int argc, char *argv[]) {
                 for (const auto &line : reader.lines(block)) {
                     json page = json::parse(line);
                     const std::string title = page["title"].get<std::string>();
+                    // A subpage goes into its base page (of a section of its language), not on its own
+                    if (auto base = subpageBase(title); !base.empty()) {
+                        bool intoBase = false;
+                        for (const auto &s : page["sections"])
+                            intoBase |= s.contains("code") && s["code"].is_string() &&
+                                        has(wiki, base, s["code"].get<std::string>());
+                        if (intoBase)
+                            continue;
+                    }
+                    if (wikiSubpages)
+                        if (auto it = wikiSubpages->find(title); it != wikiSubpages->end())
+                            c.subpages += mergeSubpage(page, json::parse(it->second)) > 0;
                     for (auto &s : page["sections"])
                         eachTranslation(s, [&](json &t) {
                             ++c.translations;
@@ -311,10 +408,10 @@ int main(int argc, char *argv[]) {
             Count total;
             for (const auto &c : counts) {
                 total.translations += c.translations, total.page += c.page, total.home += c.home;
-                total.both += c.both, total.none += c.none, total.noLang += c.noLang, total.noTerm += c.noTerm;
+                total.both += c.both, total.none += c.none, total.noLang += c.noLang, total.noTerm += c.noTerm, total.subpages += c.subpages;
             }
-            stats << std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n", wiki, total.translations, total.page, total.home,
-                                 total.both, total.none, total.noLang, total.noTerm);
+            stats << std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n", wiki, total.translations, total.page, total.home,
+                                 total.both, total.none, total.noLang, total.noTerm, total.subpages);
             std::cout << std::format("{}: {} translations, page {}, home {}, none {} ({:.0f} s)", wiki,
                                      total.translations, total.page, total.home, total.none, seconds(wikiStarted))
                       << std::endl;

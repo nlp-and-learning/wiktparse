@@ -147,6 +147,10 @@
         },
         "media": {
           "$ref": "#/$defs/media"
+        },
+        "subpage": {
+          "type": "boolean",
+          "description": "wiktlink: Translations of the translation subpage (en water/translations) merged here"
         }
       },
       "description": "A section; empty sections and empty or default fields are left out; template lines have no level; the kind (part of speech, relation) follows from the English name (wiktsections.sqlite)"

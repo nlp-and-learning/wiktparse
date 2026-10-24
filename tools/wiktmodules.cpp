@@ -146,6 +146,10 @@ int main(int argc, char *argv[]) {
             wikis.clear();
             for (auto &[size, wiki] : sized)
                 wikis.push_back(std::move(wiki));
+            std::cout << "order (largest dumps first):";
+            for (size_t i = 0; i < sized.size() && i < 8; ++i)
+                std::cout << ' ' << wikis[i] << " (" << sized[i].first / 1000000 << " MB)";
+            std::cout << (sized.size() > 8 ? " ..." : "") << std::endl;
         }
 
         std::ofstream out(output);

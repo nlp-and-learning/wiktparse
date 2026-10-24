@@ -182,7 +182,7 @@ std::string withoutCombining(std::string_view text) {
 
 class LanguageNames {
 public:
-    explicit LanguageNames(const fs::path &file) {
+    explicit LanguageNames(const fs::path &file) : file_(file) {
         if (!fs::exists(file) || sqlite3_open_v2(file.string().c_str(), &db_, SQLITE_OPEN_READONLY, nullptr) != SQLITE_OK) {
             std::cerr << "warning: no " << file << ", language names are not resolved" << std::endl;
             sqlite3_close(db_);
@@ -205,9 +205,7 @@ public:
             if (auto it = cache_.find(key); it != cache_.end())
                 return it->second;
         }
-        std::lock_guard lock(mutex_);
-        if (auto it = cache_.find(key); it != cache_.end())
-            return it->second;
+        // A miss: the queries without the lock, on this thread's connection
         // The canonical code of the wiki's language, as in_code of language_name (as in wiktlangs)
         std::string lang = wiki;
         std::ranges::replace(lang, '_', '-');
@@ -273,6 +271,7 @@ public:
                            "lower(name) LIKE '%-'||?2||'-%' OR lower(name) LIKE ?2||' %' OR lower(name) LIKE '% '||?2 "
                            "OR lower(name) LIKE '% '||?2||' %')",
                            lang, lower);
+        std::lock_guard lock(mutex_);
         return cache_[key] = result;
     }
 
@@ -285,10 +284,9 @@ public:
             if (auto it = mapped_.find(code); it != mapped_.end())
                 return it->second;
         }
+        auto result = query("SELECT m.language FROM code_map m JOIN language l ON l.code=m.language WHERE m.code=?2 AND ?1<>'' ORDER BY l.kind<>'language', m.method='retired' LIMIT 1", "x", code);
         std::lock_guard lock(mutex_);
-        if (auto it = mapped_.find(code); it != mapped_.end())
-            return it->second;
-        return mapped_[code] = query("SELECT m.language FROM code_map m JOIN language l ON l.code=m.language WHERE m.code=?2 AND ?1<>'' ORDER BY l.kind<>'language', m.method='retired' LIMIT 1", "x", code);
+        return mapped_[code] = result;
     }
 
     // A Wiktionary's own code (fr "proto-khasique", "eudeve"): a known language or
@@ -302,10 +300,9 @@ public:
             if (auto it = wikiCodes_.find(key); it != wikiCodes_.end())
                 return it->second;
         }
+        auto result = query("SELECT language FROM code_map WHERE scheme='wikt-'||?1 AND code=?2 LIMIT 1", wiki, code);
         std::lock_guard lock(mutex_);
-        if (auto it = wikiCodes_.find(key); it != wikiCodes_.end())
-            return it->second;
-        return wikiCodes_[key] = query("SELECT language FROM code_map WHERE scheme='wikt-'||?1 AND code=?2 LIMIT 1", wiki, code);
+        return wikiCodes_[key] = result;
     }
 
     // A language code of wiktlangs.sqlite (en.wikt codes and extra ones)
@@ -317,10 +314,9 @@ public:
             if (auto it = codes_.find(code); it != codes_.end())
                 return it->second;
         }
+        const bool known = !query("SELECT code FROM language WHERE code=?2 AND ?1<>'' LIMIT 1", "x", code).empty();
         std::lock_guard lock(mutex_);
-        if (auto it = codes_.find(code); it != codes_.end())
-            return it->second;
-        return codes_[code] = !query("SELECT code FROM language WHERE code=?2 AND ?1<>'' LIMIT 1", "x", code).empty();
+        return codes_[code] = known;
     }
 
 private:
@@ -328,12 +324,28 @@ private:
     std::map<std::string, std::string> cache_;
     std::map<std::string, bool> codes_;
     std::map<std::string, std::string> mapped_, wikiCodes_;
-    std::shared_mutex mutex_; // shared: cache hits; exclusive: a query (one SQLite connection)
+    fs::path file_;
+    std::shared_mutex mutex_; // of the caches: shared to read them, exclusive to add
+
+    // This thread's read-only connection: queries of the threads run side by side
+    sqlite3 *connection() const {
+        struct Connection {
+            sqlite3 *db = nullptr;
+            ~Connection() { sqlite3_close(db); }
+        };
+        thread_local std::map<std::string, Connection> connections;
+        auto &c = connections[file_.string()];
+        if (!c.db && sqlite3_open_v2(file_.string().c_str(), &c.db, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr) != SQLITE_OK) {
+            sqlite3_close(c.db);
+            c.db = nullptr;
+        }
+        return c.db;
+    }
 
     std::string query(const char *sql, const std::string &a, const std::string &b) {
         sqlite3_stmt *stmt = nullptr;
         std::string result;
-        if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+        if (sqlite3_prepare_v2(connection(), sql, -1, &stmt, nullptr) == SQLITE_OK) {
             sqlite3_bind_text(stmt, 1, a.c_str(), -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(stmt, 2, b.c_str(), -1, SQLITE_TRANSIENT);
             if (sqlite3_step(stmt) == SQLITE_ROW)
@@ -357,7 +369,7 @@ struct Heading {
 std::optional<Heading> heading(const std::string &line) {
     static const std::regex re(R"(^(=+)\s*(.*?)\s*(=+)\s*$)");
     std::smatch m;
-    if (!std::regex_match(line, m, re) || m[2].length() == 0)
+    if (!line.starts_with('=') || line.size() > 2000 || !std::regex_match(line, m, re) || m[2].length() == 0)
         return std::nullopt;
     return Heading{static_cast<int>(std::min(m[1].length(), m[3].length())), m[2].str()};
 }
@@ -544,6 +556,9 @@ struct Sense {
     std::string id, text;
 };
 
+// Lines longer are not matched by std::regex: its recursion per character overflows the stack
+constexpr size_t maxRegexLine = 20000;
+
 // Sense line by the configured marker; ids are explicit or the order of '#' lines
 std::optional<Sense> senseLine(const json &config, const std::string &line, std::vector<int> &counters) {
     const auto marker = str(config, "/senses/marker", "#");
@@ -557,7 +572,7 @@ std::optional<Sense> senseLine(const json &config, const std::string &line, std:
         while (!text.empty() && (text[0] == ':' || text[0] == '#' || text[0] == '*')) // lo ":*text"
             text = trim(text.substr(1));
         static const std::regex number(R"(^\d+[.)]?\s+(.*)$)"); // uz "1 Biror oila…"
-        if (std::smatch n; std::regex_match(text, n, number))
+        if (std::smatch n; text.size() < maxRegexLine && std::regex_match(text, n, number))
             text = n[1].str();
         if (text.empty())
             return std::nullopt;
@@ -591,7 +606,7 @@ std::optional<Sense> senseLine(const json &config, const std::string &line, std:
     static const std::regex parenthesized(R"(^:\s*\(([0-9.]+[a-z]?)\)\s*(.*)$)"), bracketed(R"(^:\s*\[([0-9]+[a-z]?)\]\s*(.*)$)"),
             semicolon(R"(^;([0-9]+)\s*(.*)$)");
     const auto &re = marker.starts_with(": (") ? parenthesized : marker.starts_with(":[") ? bracketed : semicolon;
-    if (std::regex_match(line, m, re))
+    if (line.size() < maxRegexLine && std::regex_match(line, m, re))
         return Sense{m[1].str(), trim(m[2].str())};
     return std::nullopt;
 }
@@ -659,14 +674,31 @@ std::vector<std::string> links(const std::string &text) {
 }
 
 // Names of sound and picture files in wikitext, in order, once each
+// (a scan, no std::regex: its recursion per character overflows the stack on long sections)
 std::vector<std::string> mediaFiles(const std::string &text) {
-    static const std::regex file(
-            R"(([^\[\]{}|=\n:<>]+\.(?:ogg|oga|wav|mp3|flac|opus|webm|mid|jpg|jpeg|png|svg|gif|tif|tiff|webp)))",
-            std::regex::icase);
+    static const std::vector<std::string> extensions = {"ogg", "oga", "wav", "mp3", "flac", "opus", "webm", "mid",
+                                                        "jpg", "jpeg", "png", "svg", "gif", "tif", "tiff", "webp"};
+    static const std::string_view delimiters = "[]{}|=\n:<>";
     std::vector<std::string> result;
-    for (std::sregex_iterator it(text.begin(), text.end(), file), end; it != end; ++it)
-        if (auto name = trim((*it)[1].str()); !name.empty() && !std::ranges::contains(result, name))
+    for (size_t dot = text.find('.'); dot != std::string::npos; dot = text.find('.', dot + 1)) {
+        // The extension: letters after the dot up to a delimiter or the end
+        size_t end = dot + 1;
+        while (end < text.size() && std::isalnum(static_cast<unsigned char>(text[end])))
+            ++end;
+        std::string extension = text.substr(dot + 1, end - dot - 1);
+        std::ranges::transform(extension, extension.begin(), [](unsigned char c) { return std::tolower(c); });
+        if (!std::ranges::contains(extensions, extension) ||
+            (end < text.size() && delimiters.find(text[end]) == std::string_view::npos && text[end] != ' ' &&
+             text[end] != '\t' && text[end] != '\r' && text[end] != ',' && text[end] != ')'))
+            continue;
+        // The name: back to a delimiter (the namespace before ':' left out)
+        size_t start = dot;
+        while (start > 0 && delimiters.find(text[start - 1]) == std::string_view::npos)
+            --start;
+        if (auto name = trim(text.substr(start, end - start)); name.size() > extension.size() + 1 &&
+                                                                 !std::ranges::contains(result, name))
             result.push_back(name);
+    }
     return result;
 }
 
@@ -829,7 +861,7 @@ std::vector<Translation> translations(const json &config, const std::string &tex
                 }
             }
             std::smatch m;
-            if (!std::regex_match(l, m, line))
+            if (l.size() >= maxRegexLine || !std::regex_match(l, m, line))
                 continue;
             std::string lang = m[2].matched ? m[2].str() : trim(m[1].str());
             for (const auto &[term, genders] : linkPieces(m[4].str())) {
@@ -859,7 +891,7 @@ std::vector<Translation> translations(const json &config, const std::string &tex
             std::istringstream in(text);
             for (std::string l; std::getline(in, l);) {
                 std::smatch m;
-                if (!std::regex_match(l, m, line))
+                if (l.size() >= maxRegexLine || !std::regex_match(l, m, line))
                     continue;
                 std::string lang = m[2].matched ? m[2].str() : trim(m[1].str());
                 for (const auto &[term, genders] : linkPieces(m[3].str())) {
@@ -1541,7 +1573,7 @@ private:
     uint64_t offset_ = 0;
     // zstd: a dictionary of the wiki, trained on its first blocks (kept back until then)
     // (pl: 8 -> 32 MB of training 1% smaller, more no gain; a 1 MB dictionary 7% smaller than 110 KB)
-    static constexpr size_t trainBytes = 32 << 20, maxDictionaryBytes = 1 << 20;
+    static constexpr size_t trainBytes = 32 << 20, maxDictionaryBytes = 512 << 10;
     fs::path base_;
     uint64_t expected_;
     std::mutex trainMutex_;
@@ -1585,7 +1617,7 @@ private:
                 samples.append(b.text, b.starts[i], end - b.starts[i]);
                 sizes.push_back(end - b.starts[i]);
             }
-        // Its size from the expected compressed output: 1 MB from 14 MB on (a dictionary saves
+        // Its size from the expected compressed output: 0.5 MB from 14 MB on (a dictionary saves
         // some 7%), below half the saving, none under 16 KB; each block is compressed once
         // (a wiki whose output all waited: of that, some 0.12 of it; a larger one: of its dump)
         double compressed = 0.12 * static_cast<double>(waitingBytes_);

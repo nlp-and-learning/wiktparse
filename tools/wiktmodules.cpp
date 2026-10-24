@@ -137,6 +137,16 @@ int main(int argc, char *argv[]) {
             std::cerr << "warning: no ./wiktlangs.sqlite, entries are not checked against language codes" << std::endl;
         if (wikis.empty())
             wikis = WikiDump::dumpPath(WikiProject::Wiktionary, "en").available_languages();
+        // The largest dumps first: none of them is left for one thread at the end
+        {
+            std::vector<std::pair<uint64_t, std::string>> sized;
+            for (const auto &wiki : wikis)
+                sized.emplace_back(WikiDump::dumpPath(WikiProject::Wiktionary, wiki).dump_size(), wiki);
+            std::ranges::sort(sized, std::greater{});
+            wikis.clear();
+            for (auto &[size, wiki] : sized)
+                wikis.push_back(std::move(wiki));
+        }
 
         std::ofstream out(output);
         out << "wiki\tmodule\tkind\tentries\tlocal\texamples\n";

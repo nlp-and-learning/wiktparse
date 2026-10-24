@@ -66,5 +66,24 @@
       "Yap": "yap"
     }
   },
-  "status": "aliases from the dump markers (unresolved.tsv)"
+  "status": "aliases from the dump markers (unresolved.tsv)",
+  "translations": {
+    "section": "Käännökset",
+    "table": {
+      "top": [
+        "kohta"
+      ],
+      "number": 1,
+      "gloss": 2
+    },
+    "terms": {
+      "templates": [
+        "käännös"
+      ],
+      "lang": 1,
+      "term": 2,
+      "line": "*{language-name}: [[{term}]]"
+    },
+    "sense": "number"
+  }
 }

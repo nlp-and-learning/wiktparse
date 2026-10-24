@@ -40,7 +40,7 @@ de	D		de.json
 diq	B	zıwan	
 dv	E	{{-xx-}}	dv.json
 dz	F		
-el	B1		
+el	B1		el.json
 en	A		en.json
 eo	B	Lingvo	
 es	B	lengua	es.json
@@ -132,7 +132,7 @@ pi	F
 pl	D		pl.json
 pnb	A		pnb.json
 ps	A		ps.json
-pt	C		
+pt	C		pt.json
 qu	E	{{-xx-}}	
 rm	F		
 rn	F		

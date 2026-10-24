@@ -1,0 +1,22 @@
+{
+  "wiki": "el",
+  "translations": {
+    "section": "μεταφράσεις",
+    "table": {
+      "top": [
+        "μτφ-αρχή"
+      ],
+      "bottom": "μτφ-τέλος",
+      "gloss": 1
+    },
+    "terms": {
+      "templates": [
+        "τ"
+      ],
+      "lang": 1,
+      "term": 2,
+      "line": "* {{{code}}} : [[{term}]]"
+    },
+    "sense": "gloss"
+  }
+}

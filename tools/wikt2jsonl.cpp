@@ -543,6 +543,7 @@ std::optional<Sense> senseLine(const json &config, const std::string &line, std:
 
 struct Translation {
     std::string lang, term, sense;
+    std::string gloss; // of the table (en {{trans-top|domestic species}})
 };
 
 // Templates of text, nested ones after their template
@@ -579,19 +580,28 @@ std::vector<Translation> translations(const json &config, const std::string &tex
     const auto senseParam = terms.value("sense", std::string());
     const auto table = tc.value("table", json());
     std::string tableSense; // number of the current table (fr, de)
+    std::string tableGloss; // gloss of the current table (en, sv)
     for (const auto &t : allTemplates(text)) {
         if (table.is_object() && table.contains("top") &&
             std::ranges::contains(table["top"].get<std::vector<std::string>>(), t.name)) {
             tableSense.clear();
+            tableGloss.clear();
             if (table.contains("number") && table["number"].is_number_integer())
                 if (auto v = t.get(static_cast<size_t>(table["number"].get<int>())))
                     tableSense = trim(std::string(*v));
+            // gloss: a positional parameter (1) or a named one (de "G")
+            if (const auto g = table.value("gloss", json()); g.is_number_integer()) {
+                if (auto v = t.get(static_cast<size_t>(g.get<int>())))
+                    tableGloss = trim(std::string(*v));
+            } else if (g.is_string())
+                if (auto v = t.get(g.get<std::string>()))
+                    tableGloss = trim(std::string(*v));
             // ru: {{перев-блок|gloss|en={{t|en|water}}|ab=[[аӡы]]}}
             if (table.value("items", std::string()) == "code-parameters")
                 for (const auto &[key, value] : t.parameters)
                     if (!key.empty() && value.find("{{") == std::string::npos)
                         for (const auto &term : links(value))
-                            result.push_back({key, term, tableSense});
+                            result.push_back({key, term, tableSense, tableGloss});
             continue;
         }
         if (std::ranges::find(names, t.name) == names.end())
@@ -601,7 +611,7 @@ std::vector<Translation> translations(const json &config, const std::string &tex
             continue;
         if (termParam.is_number_integer()) {
             if (auto term = t.get(static_cast<size_t>(termParam.get<int>())); term && !term->empty())
-                result.push_back({std::string(*lang), std::string(*term), tableSense});
+                result.push_back({std::string(*lang), std::string(*term), tableSense, tableGloss});
         } else {
             // es: {{t|en|a1=1|t1=water|t2=...}}
             auto pattern = termParam.get<std::string>();
@@ -618,7 +628,7 @@ std::vector<Translation> translations(const json &config, const std::string &tex
                     if (auto s = t.get(skey))
                         sense = std::string(*s);
                 }
-                result.push_back({std::string(*lang), std::string(*term), sense});
+                result.push_back({std::string(*lang), std::string(*term), sense, tableGloss});
             }
         }
     }
@@ -628,14 +638,42 @@ std::vector<Translation> translations(const json &config, const std::string &tex
         // alternative, not a member of a bracket ([:：] would take its bytes one by
         // one, and ż, ü, whose second byte is one of them, would end a name)
         static const std::regex line(R"(^:?\*+:?\s*(\{\{([^}|]+)\}\}|(?:(?!：)[^:])+?)\s*(?::|：)\s*(?:\(([0-9.,\s-]+)\)\s*)?(.*)$)");
+        // The table a line is in: its number and gloss, from the parameters of its top
+        // template on the line (fi "{{kohta|1|H₂O|" is closed lines below)
+        std::vector<std::string> tops;
+        if (table.is_object() && table.contains("top"))
+            tops = table["top"].get<std::vector<std::string>>();
+        const std::string bottom = table.is_object() ? table.value("bottom", std::string()) : std::string();
+        std::string lineSense, lineGloss;
         std::istringstream in(text);
         for (std::string l; std::getline(in, l);) {
+            for (size_t at = l.find("{{"); at != std::string::npos; at = l.find("{{", at + 2)) {
+                const auto end = l.find("}}", at);
+                std::vector<std::string> fields;
+                std::stringstream parts(l.substr(at + 2, end == std::string::npos ? std::string::npos : end - at - 2));
+                for (std::string f; std::getline(parts, f, '|');)
+                    fields.push_back(trim(f));
+                if (fields.empty())
+                    continue;
+                if (fields[0] == bottom) {
+                    lineSense.clear();
+                    lineGloss.clear();
+                } else if (std::ranges::contains(tops, fields[0])) {
+                    auto field = [&](const json &index) {
+                        return index.is_number_integer() && size_t(index.get<int>()) < fields.size()
+                                       ? fields[size_t(index.get<int>())]
+                                       : std::string();
+                    };
+                    lineSense = field(table.value("number", json()));
+                    lineGloss = field(table.value("gloss", json()));
+                }
+            }
             std::smatch m;
             if (!std::regex_match(l, m, line))
                 continue;
             std::string lang = m[2].matched ? m[2].str() : trim(m[1].str());
             for (const auto &term : links(m[4].str()))
-                result.push_back({lang, term, m[3].str()});
+                result.push_back({lang, term, m[3].matched && m[3].length() ? m[3].str() : lineSense, lineGloss});
         }
     }
     return result;
@@ -745,6 +783,8 @@ public:
             return std::nullopt;
         // "Synonyms", "references" (by hand): English capitalized
         std::string section = it->second;
+        if (section == "Translation" || section == "translation")
+            section = "Translations"; // a singular label of Wikidata (pt "Tradução")
         auto lower = wikilib::unicode::to_lower(section);
         // First letter only ("Derived terms")
         if (size_t pos = 0; !section.empty() && wikilib::unicode::decode_utf8(section, pos))
@@ -919,6 +959,8 @@ private:
             json item = {{"lang", code.empty() ? json() : json(code)}, {"term", t.term}};
             if (!t.sense.empty())
                 item["sense"] = t.sense;
+            if (!t.gloss.empty())
+                item["gloss"] = t.gloss;
             if (code != t.lang)
                 item["lang_written"] = t.lang; // pl "angielski", it "{{en}}" -> en
             n["translations"].push_back(std::move(item));
@@ -1045,6 +1087,10 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
                     return lang.substr(0, dot);
                 if (auto mapped = names.mappedCode(lang); !mapped.empty())
                     return mapped;
+                // ko "영어(en)": a name with its code in brackets
+                static const std::regex bracketCode(R"(^.*\(([a-z]{2,3}(?:-[a-zA-Z]+)*)\)$)");
+                if (std::smatch m; std::regex_match(lang, m, bracketCode) && names.isCode(m[1].str()))
+                    return m[1].str();
                 // A code with a script, region or variety (cu-Cyrl, zh-cn, gcf-mq): its language
                 if (auto dash = lang.find('-'); dash != std::string::npos && names.isCode(lang.substr(0, dash)))
                     return lang.substr(0, dash);

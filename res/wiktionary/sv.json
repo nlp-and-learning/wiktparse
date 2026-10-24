@@ -30,5 +30,24 @@
       "Yukatekiska": "yua"
     }
   },
-  "status": "aliases from the dump markers (unresolved.tsv)"
+  "status": "aliases from the dump markers (unresolved.tsv)",
+  "translations": {
+    "section": "Översättningar",
+    "table": {
+      "top": [
+        "ö-topp"
+      ],
+      "bottom": "ö-botten",
+      "gloss": 1
+    },
+    "terms": {
+      "templates": [
+        "ö",
+        "ö+"
+      ],
+      "lang": 1,
+      "term": 2
+    },
+    "sense": "gloss"
+  }
 }

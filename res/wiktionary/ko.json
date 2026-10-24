@@ -100,5 +100,12 @@
       "야이오어": "yay"
     }
   },
-  "status": "aliases from the dump markers (unresolved.tsv)"
+  "status": "aliases from the dump markers (unresolved.tsv)",
+  "translations": {
+    "section": "번역",
+    "terms": {
+      "line": "* {language-name}({code}): [[{term}]]"
+    },
+    "sense": null
+  }
 }

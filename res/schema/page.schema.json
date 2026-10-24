@@ -188,6 +188,10 @@
         "sense": {
           "type": "string",
           "description": "Sense number given by the wiki (pl 1.1, fr/de table number, es a1), empty when none"
+        },
+        "gloss": {
+          "type": "string",
+          "description": "Gloss of the sense of the translation table (en {{trans-top|domestic species}}, sv {{ö-topp|vätska}}): to be matched to a definition"
         }
       }
     }

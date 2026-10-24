@@ -1,0 +1,23 @@
+{
+  "wiki": "pt",
+  "translations": {
+    "section": "Tradução",
+    "table": {
+      "top": [
+        "tradini",
+        "trad-início"
+      ],
+      "bottom": "tradfim",
+      "gloss": 1
+    },
+    "terms": {
+      "templates": [
+        "trad",
+        "trad-"
+      ],
+      "lang": 1,
+      "term": 2
+    },
+    "sense": "gloss"
+  }
+}

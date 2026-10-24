@@ -290,7 +290,7 @@ public:
 
         auto *file = menuBar()->addMenu("&File");
         file->addAction("&Open...", QKeySequence::Open, this, [this] {
-            if (auto path = choose(this, QFileInfo(path_).absolutePath()); !path.isEmpty())
+            if (auto path = choose(this); !path.isEmpty())
                 open(path);
         });
         file->addSeparator();
@@ -349,11 +349,14 @@ public:
     }
 
     // A JSONL file chosen in the dialog, empty when cancelled
-    static QString choose(QWidget *parent, const QString &dir = {}) {
-        return QxFileDialog::getOpenFileName(parent, "JSONL file", dir, "JSONL (*.jsonl *.jsonl.bz2 *.json);;All (*)");
+    // in the directory of the file opened last (kept in the settings)
+    static QString choose(QWidget *parent) {
+        return QxFileDialog::getOpenFileName(parent, "JSONL file", settings().value("files/dir").toString(),
+                                             "JSONL (*.jsonl *.jsonl.bz2 *.json);;All (*)");
     }
 
     void open(const QString &path) {
+        settings().setValue("files/dir", QFileInfo(path).absolutePath());
         QString index = path;
         if (path.endsWith(".bz2"))
             index = path.left(path.size() - 4) + ".idx";

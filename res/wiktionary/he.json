@@ -3,5 +3,8 @@
   "language": {
     "form": "implicit"
   },
-  "status": "level 2 headings are the entry word: one Hebrew section per page"
+  "senses": {
+    "entry_level": 2
+  },
+  "status": "level 2 headings are the entry word: one Hebrew section per page, the definitions below them"
 }

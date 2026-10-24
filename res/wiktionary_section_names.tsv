@@ -971,3 +971,12 @@ tg	Мазмун	Definitions	section
 ka	ქართული არსებითი სახელი	Noun	pos
 ka	რუსული არსებითი სახელი	Noun	pos
 ta	விளக்கம்	Definitions	section
+sr	Значење	Definitions	section
+sr	Синоними	Synonyms	relation
+sr	Антоними	Antonyms	relation
+sr	Именица	Noun	pos
+sr	Глагол	Verb	pos
+sr	Придев	Adjective	pos
+sr	Прилог	Adverb	pos
+ka	კატეგორია	Part of speech	pos
+ka	მნიშვნელობა	Definitions	section

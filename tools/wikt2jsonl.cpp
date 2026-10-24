@@ -756,7 +756,7 @@ const std::set<std::string> partsOfSpeech = {
         "contraction", "abbreviation", "initialism", "acronym", "classifier", "counter", "root", "han character",
         "kanji", "hanja", "syllable", "punctuation mark", "diacritical mark", "number", "adnominal", "verbal noun",
         "inflected form", "noun form", "verb form", "adjective form", "adverb form", "pronoun form", "participle form",
-        "romanization"};
+        "romanization", "part of speech" /* kk ===Сөз табы===: the part of speech as a line, the senses */};
 const std::set<std::string> relations = {
         "synonyms", "antonyms", "hypernyms", "hyponyms", "meronyms", "holonyms", "troponyms", "coordinate terms",
         "derived terms", "related terms", "compounds", "descendants", "anagrams", "idioms", "proverbs",
@@ -923,6 +923,17 @@ public:
             open(h->text, h->level, false);
             return;
         }
+        // sr: a section as a template over lines: {{Значење|, "# …", }}
+        if (config_.contains(json::json_pointer("/sections/block_templates"))) {
+            static const std::regex blockStart(R"(^\{\{([^|{}]+)\|\s*$)");
+            std::smatch m;
+            if (std::regex_match(line, m, blockStart)) { // also unknown ones ({{Примери|): not definitions
+                open("{{" + trim(m[1].str()) + "}}", headingLevel() + 1, true);
+                return;
+            }
+            if (trim(line) == "}}" && current().value("template", false))
+                return;
+        }
         // A template line with the name of a section; where sections are headings only a
         // {{-…-}} one or one without parameters (an, co {{-noun-}}; not es {{sinónimo|…}}
         // of a definition); not {{trans-top|…}}, no known name
@@ -1009,6 +1020,9 @@ private:
             close();
         auto [key, index] = sectionKey(raw);
         auto name = names_.find(key, dashTemplate(raw));
+        // he ==הָלַךְ==: a heading of this level is the entry word, its definitions below
+        if (!name && level == num(config_, "/senses/entry_level", 0))
+            name = SectionName{"Definitions", "section"};
         if (!name)
             unknown_.push_back(key);
         std::string kind = !name ? "" : name->section == "Etymology" ? "etymology" : name->kind;

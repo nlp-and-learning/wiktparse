@@ -1366,8 +1366,9 @@ int main(int argc, char *argv[]) {
         std::vector<std::string> wikis;
         bool fromDumps = false, markersOnly = false, compress = false;
         size_t threads = 8;
-        for (int i = 1; i < argc; ++i) {
-            std::string arg = argv[i];
+        for (int i = argc == 1 ? 0 : 1; i < argc; ++i) {
+            // No arguments: the usage, no run by accident over an earlier output
+            std::string arg = argc == 1 ? "--help" : argv[i];
             if (arg == "-i" && i + 1 < argc)
                 input = argv[++i];
             else if (arg == "-o" && i + 1 < argc)

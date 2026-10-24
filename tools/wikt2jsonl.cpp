@@ -27,6 +27,7 @@
 #include <map>
 #include <set>
 #include <mutex>
+#include <shared_mutex>
 #include <optional>
 #include <regex>
 #include <sstream>
@@ -195,8 +196,13 @@ public:
                       const std::vector<std::string> &strip = {}) {
         if (!db_ || name.empty())
             return "";
-        std::lock_guard lock(mutex_);
         auto key = wiki + '\t' + name + '\t' + lookup;
+        {
+            std::shared_lock shared(mutex_); // threads read the cache together
+            if (auto it = cache_.find(key); it != cache_.end())
+                return it->second;
+        }
+        std::lock_guard lock(mutex_);
         if (auto it = cache_.find(key); it != cache_.end())
             return it->second;
         // The canonical code of the wiki's language, as in_code of language_name (as in wiktlangs)
@@ -271,6 +277,11 @@ public:
     std::string mappedCode(const std::string &code) {
         if (!db_ || code.empty() || code.size() > 12)
             return "";
+        {
+            std::shared_lock shared(mutex_);
+            if (auto it = mapped_.find(code); it != mapped_.end())
+                return it->second;
+        }
         std::lock_guard lock(mutex_);
         if (auto it = mapped_.find(code); it != mapped_.end())
             return it->second;
@@ -282,8 +293,13 @@ public:
     std::string wikiCode(const std::string &wiki, const std::string &code) {
         if (!db_ || code.empty())
             return "";
-        std::lock_guard lock(mutex_);
         const auto key = wiki + '\t' + code;
+        {
+            std::shared_lock shared(mutex_);
+            if (auto it = wikiCodes_.find(key); it != wikiCodes_.end())
+                return it->second;
+        }
+        std::lock_guard lock(mutex_);
         if (auto it = wikiCodes_.find(key); it != wikiCodes_.end())
             return it->second;
         return wikiCodes_[key] = query("SELECT language FROM code_map WHERE scheme='wikt-'||?1 AND code=?2 LIMIT 1", wiki, code);
@@ -293,6 +309,11 @@ public:
     bool isCode(const std::string &code) {
         if (!db_ || code.empty())
             return false;
+        {
+            std::shared_lock shared(mutex_);
+            if (auto it = codes_.find(code); it != codes_.end())
+                return it->second;
+        }
         std::lock_guard lock(mutex_);
         if (auto it = codes_.find(code); it != codes_.end())
             return it->second;
@@ -304,7 +325,7 @@ private:
     std::map<std::string, std::string> cache_;
     std::map<std::string, bool> codes_;
     std::map<std::string, std::string> mapped_, wikiCodes_;
-    std::mutex mutex_;
+    std::shared_mutex mutex_; // shared: cache hits; exclusive: a query (one SQLite connection)
 
     std::string query(const char *sql, const std::string &a, const std::string &b) {
         sqlite3_stmt *stmt = nullptr;
@@ -1457,25 +1478,35 @@ public:
     ~JsonlWriter() { close(); }
 
     void add(const std::string &line, const std::string &title) {
-        std::lock_guard lock(mutex_);
+        std::unique_lock lock(mutex_);
         if (!compressed_) {
             data_ << line << '\n';
             return;
         }
-        starts_.push_back(block_.size());
-        block_ += line;
-        block_ += '\n';
-        titles_.push_back(title);
-        if (titles_.size() >= blockLines)
-            flush();
+        current_.starts.push_back(current_.text.size());
+        current_.text += line;
+        current_.text += '\n';
+        current_.titles.push_back(title);
+        if (current_.titles.size() < blockLines)
+            return;
+        // A full block: compressed by this thread outside the lock (bz2 is slow), then appended
+        // (pages need no order: the index tells where each one is)
+        Block block = std::exchange(current_, {});
+        lock.unlock();
+        write(std::move(block));
     }
 
     void close() {
-        std::lock_guard lock(mutex_);
+        std::unique_lock lock(mutex_);
         if (!data_.is_open())
             return;
         if (compressed_) {
-            flush();
+            if (!current_.titles.empty()) {
+                Block block = std::exchange(current_, {});
+                lock.unlock();
+                write(std::move(block));
+                lock.lock();
+            }
             index_ << "EOF=" << offset_ << '\n';
             index_.close();
         }
@@ -1484,29 +1515,29 @@ public:
 
 private:
     static constexpr size_t blockLines = 100;
+    struct Block {
+        std::string text;
+        std::vector<std::string> titles;
+        std::vector<size_t> starts; // of the lines in text
+    };
     bool compressed_;
     std::ofstream data_, index_;
     std::mutex mutex_;
-    std::string block_;
-    std::vector<std::string> titles_;
-    std::vector<size_t> starts_; // of the lines in block_
+    Block current_;
     uint64_t offset_ = 0;
 
-    void flush() {
-        if (titles_.empty())
-            return;
-        std::string out(block_.size() + block_.size() / 100 + 600, '\0');
+    void write(Block block) {
+        std::string out(block.text.size() + block.text.size() / 100 + 600, '\0');
         auto length = static_cast<unsigned>(out.size());
-        if (BZ2_bzBuffToBuffCompress(out.data(), &length, block_.data(), static_cast<unsigned>(block_.size()), 9, 0, 0) != BZ_OK)
+        if (BZ2_bzBuffToBuffCompress(out.data(), &length, block.text.data(), static_cast<unsigned>(block.text.size()), 9,
+                                     0, 0) != BZ_OK)
             throw std::runtime_error("bz2 compression failed");
+        std::lock_guard lock(mutex_);
         data_.write(out.data(), length);
-        index_ << offset_ << ':' << titles_.size() << ':' << block_.size() << '\n';
-        for (size_t i = 0; i < titles_.size(); ++i)
-            index_ << ':' << starts_[i] << ':' << titles_[i] << '\n';
+        index_ << offset_ << ':' << block.titles.size() << ':' << block.text.size() << '\n';
+        for (size_t i = 0; i < block.titles.size(); ++i)
+            index_ << ':' << block.starts[i] << ':' << block.titles[i] << '\n';
         offset_ += length;
-        block_.clear();
-        titles_.clear();
-        starts_.clear();
     }
 };
 

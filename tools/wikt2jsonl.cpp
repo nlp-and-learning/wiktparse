@@ -779,8 +779,17 @@ public:
 
     [[nodiscard]] std::optional<SectionName> find(const std::string &key) const {
         auto it = names_.find(wikilib::unicode::to_lower(trim(key)));
-        if (it == names_.end())
-            return std::nullopt;
+        if (it == names_.end()) {
+            // Abbreviations of parts of speech in templates of many wikis: id {{-n-|id}}, an {{-adj-}}
+            static const std::map<std::string, std::string> abbreviations = {
+                    {"n", "noun"}, {"v", "verb"}, {"adj", "adjective"}, {"adv", "adverb"}, {"pron", "pronoun"},
+                    {"num", "numeral"}, {"prep", "preposition"}, {"conj", "conjunction"}, {"interj", "interjection"},
+                    {"suf", "suffix"}, {"pref", "prefix"}, {"propn", "proper noun"}, {"prop", "proper noun"},
+                    {"noun.masc", "noun"}, {"noun.fem", "noun"}, {"noun.neut", "noun"}, {"phr", "phrase"}};
+            const auto a = abbreviations.find(wikilib::unicode::to_lower(trim(key)));
+            if (a == abbreviations.end() || (it = names_.find(a->second)) == names_.end())
+                return std::nullopt;
+        }
         // "Synonyms", "references" (by hand): English capitalized
         std::string section = it->second;
         if (section == "Translation" || section == "translation")
@@ -855,11 +864,17 @@ public:
             open(h->text, h->level, false);
             return;
         }
-        if (str(config_, "/sections/form") != "heading")
-            if (auto t = templateLine(line); t && t->name.size() < 40 && names_.find(sectionKey(trim(line)).first)) {
-                open(trim(line), headingLevel() + 1, true); // {{synonimy}}, {{-sin-}}; not {{trans-top|…}}
-                return;
-            }
+        // A template line with the name of a section; where sections are headings only a
+        // {{-…-}} one or one without parameters (an, co {{-noun-}}; not es {{sinónimo|…}}
+        // of a definition); not {{trans-top|…}}, no known name
+        if (auto t = templateLine(line);
+            t && t->name.size() < 40 &&
+            (str(config_, "/sections/form") != "heading" || t->parameters.empty() ||
+             (t->name.size() > 2 && t->name.starts_with('-') && t->name.ends_with('-'))) &&
+            names_.find(sectionKey(trim(line)).first)) {
+            open(trim(line), headingLevel() + 1, true); // {{synonimy}}, {{-sin-}}
+            return;
+        }
         // pl: part of speech as an italic line in {{znaczenia}}: ''rzeczownik, rodzaj żeński''
         if (str(config_, "/pos/form") == "italic-line" && line.starts_with("''") &&
             (current()["section"] == "Definitions" || current().contains("template_pos"))) {

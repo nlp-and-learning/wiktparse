@@ -61,6 +61,11 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(ZSTD REQUIRED IMPORTED_TARGET libzstd)
 target_link_libraries(wikt2jsonl wiktdump SQLite::SQLite3 PkgConfig::ZSTD)
 
+# Phase 2 on the wikt2jsonl output: translations linked to pages (in the wiki, in the language's wiki)
+find_package(BZip2 REQUIRED)
+add_executable(wiktlink tools/wiktlink.cpp)
+target_link_libraries(wiktlink BZip2::BZip2 PkgConfig::ZSTD nlohmann_json::nlohmann_json)
+
 # Sample pages of every Wiktionary (water, dog, house, red, go) for the per-wiki configuration
 add_executable(wiktsamples tools/wiktsamples.cpp)
 target_link_libraries(wiktsamples wiktdump SQLite::SQLite3)

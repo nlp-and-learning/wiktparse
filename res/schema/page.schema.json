@@ -223,6 +223,14 @@
         "tr": {
           "type": "string",
           "description": "Transliteration (tr=, ts=)"
+        },
+        "page": {
+          "type": "boolean",
+          "description": "wiktlink: this wiki has a page of the term with a section of the language"
+        },
+        "home": {
+          "type": "boolean",
+          "description": "wiktlink: the Wiktionary of the language has a page of the term with a section of the language"
         }
       }
     }

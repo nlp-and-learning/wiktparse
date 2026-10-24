@@ -62,7 +62,7 @@ dump_dir = ~/dump
   Also writes `wiktlangs_qid.txt` (with new ids
   of merged items) and `wiktlangs_missing_qid.txt`. `--fetch-missing` fetches the
   missing entities from the Wikidata API into `wiktlangs_fetched.jsonl`, which
-  is read on every later run. With `./infoboxes.jsonl` (from `wiktparse`, run it
+  is read on every later run. With `./infoboxes.jsonl` (from `wiktparse --infoboxes`, run it
   first), languages of English Wikipedia infoboxes which are not known yet and
   their unknown varieties (lcN/ldN) are added with kind `wikipedia`.
 - `wiktmodules [-j N] [-o modules.tsv] [--names module_names.tsv] [--other module_other.tsv] [wiki...]` –

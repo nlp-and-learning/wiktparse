@@ -384,9 +384,19 @@ void collectAllHeaders() {
     allHeaders.print(out);
 }
 
-// wiktparse [threads]   (default 16)
+// wiktparse --infoboxes [threads]   (default 16)
+// Without arguments only tells what it does: reading the dump takes long.
 int main(int argc, char *argv[]) {
-    size_t threads = argc > 1 ? std::max<size_t>(1, std::stoul(argv[1])) : 16;
+    const std::vector<std::string> args(argv + 1, argv + argc);
+    if (args.empty() || args[0] != "--infoboxes") {
+        std::cout << "usage: wiktparse --infoboxes [threads]   (default 16 threads)\n"
+                     "  reads the dump of English Wikipedia and writes the language infoboxes\n"
+                     "  (Infobox language, language family) to ./infoboxes.jsonl, for wiktlangs.\n"
+                     "The browser of the JSONL files is wiktbrowse, a project of its own: browser/\n"
+                     "(browser/build/wiktbrowse file.jsonl). The other tools: see README.md.\n";
+        return args.empty() || args[0] == "-h" || args[0] == "--help" ? 0 : 1;
+    }
+    const size_t threads = args.size() > 1 ? std::max<size_t>(1, std::stoul(args[1])) : 16;
     wikipediaInfoboxes(threads);
     //splitWikiDataResult();
 }

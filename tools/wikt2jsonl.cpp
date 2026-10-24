@@ -251,6 +251,14 @@ public:
         for (const auto &n : variants)
             if (result.empty())
                 result = query("SELECT code FROM language_name WHERE in_code=?1 AND name=?2 AND source='wikt-module' LIMIT 1", lang, n);
+        // A name that is a whole part of names of one language only: fr "eudeve" of
+        // "opata-eudeve" (opt); not pl "szkocki" ("język szkocki" sco, "gaelicki szkocki" gd)
+        if (const auto lower = wikilib::unicode::to_lower(name); result.empty() && lower.size() >= 4)
+            result = query("SELECT CASE WHEN count(DISTINCT code) = 1 THEN max(code) END FROM language_name "
+                           "WHERE in_code=?1 AND (lower(name) LIKE ?2||'-%' OR lower(name) LIKE '%-'||?2 OR "
+                           "lower(name) LIKE '%-'||?2||'-%' OR lower(name) LIKE ?2||' %' OR lower(name) LIKE '% '||?2 "
+                           "OR lower(name) LIKE '% '||?2||' %')",
+                           lang, lower);
         return cache_[key] = result;
     }
 
@@ -288,7 +296,8 @@ private:
             sqlite3_bind_text(stmt, 1, a.c_str(), -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(stmt, 2, b.c_str(), -1, SQLITE_TRANSIENT);
             if (sqlite3_step(stmt) == SQLITE_ROW)
-                result = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                if (const auto text = sqlite3_column_text(stmt, 0)) // NULL: none
+                    result = reinterpret_cast<const char *>(text);
         }
         sqlite3_finalize(stmt);
         return result;

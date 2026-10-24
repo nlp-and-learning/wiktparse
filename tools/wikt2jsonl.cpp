@@ -805,8 +805,23 @@ public:
         sqlite3_close(db);
     }
 
-    [[nodiscard]] std::optional<SectionName> find(const std::string &key) const {
+    // compound: of a {{-…-}} template, whose name may have a language code (is {{-is-nafnorð-}},
+    // nah {{-noun-nci-}}); not of others ({{it-flexion}}, {{sb-plural}})
+    // Headword templates (shn {{shn-noun}}, om {{En-noun}}): a part of speech after a code only
+    [[nodiscard]] std::optional<SectionName> find(const std::string &key, int compound = 0) const {
         auto it = names_.find(wikilib::unicode::to_lower(trim(key)));
+        if (const auto dash = key.find('-'); compound && it == names_.end() && dash != std::string::npos) {
+            static const std::regex code(R"(^[A-Za-z]{2,3}$)");
+            const auto first = key.substr(0, dash), last = key.substr(key.rfind('-') + 1);
+            if (auto rest = names_.find(wikilib::unicode::to_lower(trim(key.substr(dash + 1))));
+                rest != names_.end() && (compound == 1 || std::regex_match(first, code)))
+                it = rest;
+            else if (auto head = names_.find(wikilib::unicode::to_lower(trim(key.substr(0, key.rfind('-')))));
+                     head != names_.end() && (compound == 1 || std::regex_match(last, code)))
+                it = head;
+            if (it != names_.end() && compound == 2 && !partsOfSpeech.contains(wikilib::unicode::to_lower(it->second)))
+                it = names_.end();
+        }
         if (it == names_.end()) {
             // Abbreviations of parts of speech in templates of many wikis: id {{-n-|id}}, an {{-adj-}}
             static const std::map<std::string, std::string> abbreviations = {
@@ -851,7 +866,7 @@ std::pair<std::string, int> sectionKey(std::string text) {
         if (auto all = wikilib::templates::find_invocations(text); !all.empty())
             text = text.substr(0, all.front().location.length()); // de "{{Wortart|Substantiv|Deutsch}}, {{n}}"
     if (auto t = onlyTemplate(trim(text))) {
-        static const std::set<std::string> byParameter = {"S", "Wortart", "-pos-"};
+        static const std::set<std::string> byParameter = {"S", "Wortart", "-pos-", "H"}; // wa {{H|sustantif|wa}}
         if (byParameter.contains(t->name)) {
             if (auto v = t->get(size_t{1}))
                 text = std::string(*v);
@@ -873,6 +888,15 @@ std::pair<std::string, int> sectionKey(std::string text) {
 }
 
 std::optional<Heading> wikt2jsonl_heading(const std::string &line) { return heading(line); }
+
+// How a key may be compound (SectionNames::find): 1 of a {{-…-}} template (is {{-is-nafnorð-}}),
+// 2 of another template (headwords {{shn-noun}}), 0 of no template
+int dashTemplate(const std::string &text) {
+    auto t = onlyTemplate(trim(text));
+    if (!t)
+        return 0;
+    return t->name.size() > 2 && t->name.starts_with('-') && t->name.ends_with('-') ? 1 : 2;
+}
 
 // The sections of one language section as a tree, as the page has them: a
 // heading opens a node below the nearest heading of a lower level; a template
@@ -906,7 +930,7 @@ public:
             t && t->name.size() < 40 &&
             (str(config_, "/sections/form") != "heading" || t->parameters.empty() ||
              (t->name.size() > 2 && t->name.starts_with('-') && t->name.ends_with('-'))) &&
-            names_.find(sectionKey(trim(line)).first)) {
+            names_.find(sectionKey(trim(line)).first, dashTemplate(line))) {
             open(trim(line), headingLevel() + 1, true); // {{synonimy}}, {{-sin-}}
             return;
         }
@@ -984,7 +1008,7 @@ private:
         while (stack_.size() > 1 && current()["level"].get<int>() >= level)
             close();
         auto [key, index] = sectionKey(raw);
-        auto name = names_.find(key);
+        auto name = names_.find(key, dashTemplate(raw));
         if (!name)
             unknown_.push_back(key);
         std::string kind = !name ? "" : name->section == "Etymology" ? "etymology" : name->kind;
@@ -1106,7 +1130,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             !names.isCode(*marker) && names.wikiCode(wiki, *marker).empty() && names.mappedCode(*marker).empty() &&
             !(marker->size() > 2 && marker->front() == '-' && marker->back() == '-' &&
               names.isCode(marker->substr(1, marker->size() - 2))) &&
-            (current || sectionNames.find(sectionKey(*marker).first) || templateLine(line))) {
+            (current || sectionNames.find(sectionKey(*marker).first, 1) || templateLine(line))) {
             if (current) {
                 marker.reset();
             } else {

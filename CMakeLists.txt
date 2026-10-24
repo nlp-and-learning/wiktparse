@@ -57,7 +57,9 @@ target_link_libraries(wiktmodules wiktdump SQLite::SQLite3)
 # Wiktionary pages to JSONL, configured by res/wiktionary
 add_executable(wikt2jsonl tools/wikt2jsonl.cpp)
 target_compile_definitions(wikt2jsonl PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
-target_link_libraries(wikt2jsonl wiktdump SQLite::SQLite3)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(ZSTD REQUIRED IMPORTED_TARGET libzstd)
+target_link_libraries(wikt2jsonl wiktdump SQLite::SQLite3 PkgConfig::ZSTD)
 
 # Sample pages of every Wiktionary (water, dog, house, red, go) for the per-wiki configuration
 add_executable(wiktsamples tools/wiktsamples.cpp)

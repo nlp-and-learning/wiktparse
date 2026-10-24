@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <atomic>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -40,6 +41,8 @@
 #include <wikilib/templates/template_parser.h>
 
 #include <bzlib.h>
+#include <zdict.h>
+#include <zstd.h>
 #include <wikilib/core/progress.h>
 #include <wikilib/dump/dump_reader.h>
 #include <wikilib/dump/parallel_reader.h>
@@ -1458,31 +1461,37 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     return {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"source", source}, {"sections", sections}};
 }
 
-// Output of one wiki: plain JSONL, or bz2 blocks of 100 lines or 512 KB (each an independent
-// stream, so bzcat reads the file) with an index, colon-separated: a line per
-// block "offset:count:uncompressed", then a line ":start:title" per page
-// (start in the uncompressed block; a page ends where the next one starts, the
-// last at uncompressed), at the end EOF=<size> (a block's compressed length is
+// Output of one wiki: plain JSONL, or blocks of 100 lines or 512 KB compressed one by one,
+// bz2 or zstd (each an independent stream or frame, so bzcat and zstdcat read the file),
+// with an index, colon-separated: a line per block "offset:count:uncompressed", then a line
+// ":start:title" per page (start in the uncompressed block; a page ends where the next one
+// starts, the last at uncompressed), at the end EOF=<size> (a block's compressed length is
 // the next offset or EOF minus its offset). Thread-safe: each worker fills a block of its
 // own (pages of one part of the dump, not interleaved with other threads' pages), compresses
 // it outside the lock and appends it; blocks need no order, the index tells where pages are.
+enum class Compression { none, bz2, zstd };
+
 class JsonlWriter {
 public:
-    JsonlWriter(const fs::path &base, bool compressed, size_t workers = 1)
-        : compressed_(compressed), blocks_(std::max<size_t>(workers, 1)) {
-        if (!compressed) {
+    JsonlWriter(const fs::path &base, Compression compression, int level, size_t workers = 1)
+        : compression_(compression), level_(level), base_(base), blocks_(std::max<size_t>(workers, 1)) {
+        if (compression == Compression::none) {
             data_.open(base.string() + ".jsonl");
             return;
         }
-        data_.open(base.string() + ".jsonl.bz2", std::ios::binary);
+        data_.open(base.string() + (compression == Compression::bz2 ? ".jsonl.bz2" : ".jsonl.zst"), std::ios::binary);
         index_.open(base.string() + ".jsonl.idx");
-        index_ << "# wikt2jsonl index: offset:count:uncompressed, then :start:title per entry; EOF=<size>\n";
+        index_ << "# wikt2jsonl index (" << (compression == Compression::bz2 ? "bz2" : "zstd, dictionary <wiki>.jsonl.dict")
+               << "): offset:count:uncompressed, then :start:title per entry; EOF=<size>\n";
     }
-    ~JsonlWriter() { close(); }
+    ~JsonlWriter() {
+        close();
+        ZSTD_freeCDict(dictionary_);
+    }
 
     // worker: the calling thread's number, below the workers of the constructor
     void add(size_t worker, const std::string &line, const std::string &title) {
-        if (!compressed_) {
+        if (compression_ == Compression::none) {
             std::lock_guard lock(mutex_);
             data_ << line << '\n';
             return;
@@ -1493,17 +1502,20 @@ public:
         block.text += '\n';
         block.titles.push_back(title);
         if (block.titles.size() >= blockLines || block.text.size() >= blockBytes)
-            write(std::exchange(block, {}));
+            submit(std::exchange(block, {}));
     }
 
     // After all workers are done
     void close() {
         if (!data_.is_open())
             return;
-        if (compressed_) {
+        if (compression_ != Compression::none) {
             for (auto &block : blocks_)
                 if (!block.titles.empty())
-                    write(std::exchange(block, {}));
+                    submit(std::exchange(block, {}));
+            if (compression_ == Compression::zstd && !dictionary_) // a small wiki: what there is
+                for (auto &block : train())
+                    write(std::move(block));
             index_ << "EOF=" << offset_ << '\n';
             index_.close();
         }
@@ -1518,24 +1530,97 @@ private:
         std::vector<std::string> titles;
         std::vector<size_t> starts; // of the lines in text
     };
-    bool compressed_;
+    Compression compression_;
+    int level_;
     std::ofstream data_, index_;
     std::mutex mutex_;          // of the files
     std::vector<Block> blocks_; // the block being filled, per worker
     uint64_t offset_ = 0;
+    // zstd: a dictionary of the wiki, trained on its first blocks (kept back until then)
+    static constexpr size_t trainBytes = 8 << 20, dictionaryBytes = 112640;
+    fs::path base_;
+    std::mutex trainMutex_;
+    std::vector<Block> waiting_;
+    size_t waitingBytes_ = 0;
+    std::atomic<ZSTD_CDict *> dictionary_ = nullptr;
+
+    void submit(Block block) {
+        if (compression_ != Compression::zstd || dictionary_) {
+            write(std::move(block));
+            return;
+        }
+        std::vector<Block> ready;
+        {
+            std::lock_guard lock(trainMutex_);
+            if (!dictionary_) {
+                waitingBytes_ += block.text.size();
+                waiting_.push_back(std::move(block));
+                if (waitingBytes_ < trainBytes)
+                    return;
+                ready = trainLocked();
+            } else
+                ready.push_back(std::move(block));
+        }
+        for (auto &b : ready)
+            write(std::move(b));
+    }
+
+    std::vector<Block> train() {
+        std::lock_guard lock(trainMutex_);
+        return trainLocked();
+    }
+
+    // The dictionary from the pages of the waiting blocks, written to <wiki>.jsonl.dict
+    std::vector<Block> trainLocked() {
+        std::string samples;
+        std::vector<size_t> sizes;
+        for (const auto &b : waiting_)
+            for (size_t i = 0; i < b.starts.size(); ++i) {
+                const size_t end = i + 1 < b.starts.size() ? b.starts[i + 1] : b.text.size();
+                samples.append(b.text, b.starts[i], end - b.starts[i]);
+                sizes.push_back(end - b.starts[i]);
+            }
+        std::string dict(dictionaryBytes, '\0');
+        size_t made = sizes.size() >= 10 ? ZDICT_trainFromBuffer(dict.data(), dict.size(), samples.data(), sizes.data(),
+                                                                  static_cast<unsigned>(sizes.size()))
+                                         : 0;
+        if (sizes.size() < 10 || ZDICT_isError(made))
+            made = 0; // too few pages: a dictionary of nothing
+        dict.resize(made);
+        std::ofstream(base_.string() + ".jsonl.dict", std::ios::binary).write(dict.data(), static_cast<std::streamsize>(made));
+        dictionary_ = ZSTD_createCDict(dict.data(), dict.size(), level_);
+        waitingBytes_ = 0;
+        return std::exchange(waiting_, {});
+    }
+
+    std::string compress(const std::string &text) const {
+        if (compression_ == Compression::zstd) {
+            thread_local std::unique_ptr<ZSTD_CCtx, decltype(&ZSTD_freeCCtx)> context(ZSTD_createCCtx(), ZSTD_freeCCtx);
+            std::string out(ZSTD_compressBound(text.size()), '\0');
+            const size_t length = ZSTD_compress_usingCDict(context.get(), out.data(), out.size(), text.data(), text.size(),
+                                                           dictionary_.load());
+            if (ZSTD_isError(length))
+                throw std::runtime_error(std::string("zstd compression failed: ") + ZSTD_getErrorName(length));
+            out.resize(length);
+            return out;
+        }
+        std::string out(text.size() + text.size() / 100 + 600, '\0');
+        auto length = static_cast<unsigned>(out.size());
+        if (BZ2_bzBuffToBuffCompress(out.data(), &length, const_cast<char *>(text.data()),
+                                     static_cast<unsigned>(text.size()), level_, 0, 0) != BZ_OK)
+            throw std::runtime_error("bz2 compression failed");
+        out.resize(length);
+        return out;
+    }
 
     void write(Block block) {
-        std::string out(block.text.size() + block.text.size() / 100 + 600, '\0');
-        auto length = static_cast<unsigned>(out.size());
-        if (BZ2_bzBuffToBuffCompress(out.data(), &length, block.text.data(), static_cast<unsigned>(block.text.size()), 9,
-                                     0, 0) != BZ_OK)
-            throw std::runtime_error("bz2 compression failed");
+        const std::string out = compress(block.text);
         std::lock_guard lock(mutex_);
-        data_.write(out.data(), length);
+        data_.write(out.data(), static_cast<std::streamsize>(out.size()));
         index_ << offset_ << ':' << block.titles.size() << ':' << block.text.size() << '\n';
         for (size_t i = 0; i < block.titles.size(); ++i)
             index_ << ':' << block.starts[i] << ':' << block.titles[i] << '\n';
-        offset_ += length;
+        offset_ += out.size();
     }
 };
 
@@ -1558,7 +1643,9 @@ int main(int argc, char *argv[]) {
         fs::path input = "samples100", output = "jsonl", dbFile = "wiktlangs.sqlite";
         fs::path configDir = WIKTPARSE_RES_DIR "/wiktionary";
         std::vector<std::string> wikis;
-        bool fromDumps = false, markersOnly = false, compress = false;
+        bool fromDumps = false, markersOnly = false;
+        Compression compression = Compression::none;
+        int level = 0; // 0: of the format (bz2 9, zstd 9)
         size_t threads = 8;
         for (int i = argc == 1 ? 0 : 1; i < argc; ++i) {
             // No arguments: the usage, no run by accident over an earlier output
@@ -1574,14 +1661,20 @@ int main(int argc, char *argv[]) {
             else if (arg == "--markers-only")
                 markersOnly = true;
             else if (arg == "--bz2")
-                compress = true;
+                compression = Compression::bz2;
+            else if (arg == "--zstd")
+                compression = Compression::zstd;
+            else if (arg == "--level" && i + 1 < argc)
+                level = std::stoi(argv[++i]);
             else if (arg == "-j" && i + 1 < argc)
                 threads = std::max(1, std::stoi(argv[++i]));
             else if (arg == "-h" || arg == "--help") {
-                std::cout << "usage: wikt2jsonl [-i samples100 | --dump [-j N]] [--markers-only] [--bz2] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n"
+                std::cout << "usage: wikt2jsonl [-i samples100 | --dump [-j N]] [--markers-only] [--bz2 | --zstd [--level N]] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n"
                              "       --dump: all pages of the dumps, each wiki read in N threads (default 8)\n"
                              "       --markers-only: only language markers and stats, no JSONL\n"
-                             "       --bz2: <wiki>.jsonl.bz2 in blocks of 100 lines or 512 KB with <wiki>.jsonl.idx\n";
+                             "       --bz2, --zstd: <wiki>.jsonl.bz2 or .jsonl.zst in blocks of 100 lines or 512 KB\n"
+                             "              with <wiki>.jsonl.idx; --level: bz2 1-9, zstd 1-22 (9);\n"
+                             "              zstd with a dictionary <wiki>.jsonl.dict of the first 8 MB\n";
                 return 0;
             } else
                 wikis.push_back(arg);
@@ -1641,7 +1734,7 @@ int main(int argc, char *argv[]) {
                               : 1;
             std::optional<JsonlWriter> out;
             if (!markersOnly)
-                out.emplace(output / wiki, compress, workers);
+                out.emplace(output / wiki, compression, level ? level : 9, workers);
             if (fromDumps) {
                 auto path = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki);
                 wikilib::dump::DumpReader reader(path);

@@ -1463,10 +1463,13 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
 // block "offset:count:uncompressed", then a line ":start:title" per page
 // (start in the uncompressed block; a page ends where the next one starts, the
 // last at uncompressed), at the end EOF=<size> (a block's compressed length is
-// the next offset or EOF minus its offset). Thread-safe.
+// the next offset or EOF minus its offset). Thread-safe: each worker fills a block of its
+// own (pages of one part of the dump, not interleaved with other threads' pages), compresses
+// it outside the lock and appends it; blocks need no order, the index tells where pages are.
 class JsonlWriter {
 public:
-    JsonlWriter(const fs::path &base, bool compressed) : compressed_(compressed) {
+    JsonlWriter(const fs::path &base, bool compressed, size_t workers = 1)
+        : compressed_(compressed), blocks_(std::max<size_t>(workers, 1)) {
         if (!compressed) {
             data_.open(base.string() + ".jsonl");
             return;
@@ -1477,36 +1480,30 @@ public:
     }
     ~JsonlWriter() { close(); }
 
-    void add(const std::string &line, const std::string &title) {
-        std::unique_lock lock(mutex_);
+    // worker: the calling thread's number, below the workers of the constructor
+    void add(size_t worker, const std::string &line, const std::string &title) {
         if (!compressed_) {
+            std::lock_guard lock(mutex_);
             data_ << line << '\n';
             return;
         }
-        current_.starts.push_back(current_.text.size());
-        current_.text += line;
-        current_.text += '\n';
-        current_.titles.push_back(title);
-        if (current_.titles.size() < blockLines && current_.text.size() < blockBytes)
-            return;
-        // A full block: compressed by this thread outside the lock (bz2 is slow), then appended
-        // (pages need no order: the index tells where each one is)
-        Block block = std::exchange(current_, {});
-        lock.unlock();
-        write(std::move(block));
+        auto &block = blocks_.at(worker); // only this worker's: no lock
+        block.starts.push_back(block.text.size());
+        block.text += line;
+        block.text += '\n';
+        block.titles.push_back(title);
+        if (block.titles.size() >= blockLines || block.text.size() >= blockBytes)
+            write(std::exchange(block, {}));
     }
 
+    // After all workers are done
     void close() {
-        std::unique_lock lock(mutex_);
         if (!data_.is_open())
             return;
         if (compressed_) {
-            if (!current_.titles.empty()) {
-                Block block = std::exchange(current_, {});
-                lock.unlock();
-                write(std::move(block));
-                lock.lock();
-            }
+            for (auto &block : blocks_)
+                if (!block.titles.empty())
+                    write(std::exchange(block, {}));
             index_ << "EOF=" << offset_ << '\n';
             index_.close();
         }
@@ -1523,8 +1520,8 @@ private:
     };
     bool compressed_;
     std::ofstream data_, index_;
-    std::mutex mutex_;
-    Block current_;
+    std::mutex mutex_;          // of the files
+    std::vector<Block> blocks_; // the block being filled, per worker
     uint64_t offset_ = 0;
 
     void write(Block block) {
@@ -1638,16 +1635,20 @@ int main(int argc, char *argv[]) {
                 continue;
             const SectionNames sectionNames("wiktsections.sqlite", wiki);
             Stats stats;
+            const size_t workers =
+                    fromDumps ? wikilib::dump::parallel_worker_count(
+                                        WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki), threads)
+                              : 1;
             std::optional<JsonlWriter> out;
             if (!markersOnly)
-                out.emplace(output / wiki, compress);
+                out.emplace(output / wiki, compress, workers);
             if (fromDumps) {
                 auto path = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki);
                 wikilib::dump::DumpReader reader(path);
                 auto site = reader.read_site_info();
                 if (!site)
                     throw std::runtime_error(wiki + ": " + reader.error());
-                std::vector<Stats> workerStats(wikilib::dump::parallel_worker_count(path, threads));
+                std::vector<Stats> workerStats(workers);
                 std::cout << wiki << ": " << path.dump_path().filename().string() << std::endl;
                 std::optional<wikilib::ProgressReporter> progress;
                 auto error = wikilib::dump::process_parallel(
@@ -1662,7 +1663,7 @@ int main(int argc, char *argv[]) {
                                                     json::array({location.block, location.index}));
                             // Pages without a recognized language are left out
                             if (out && !line["sections"].empty())
-                                out->add(line.dump(-1, ' ', false, json::error_handler_t::replace), title);
+                                out->add(worker, line.dump(-1, ' ', false, json::error_handler_t::replace), title);
                             return true;
                         },
                         [&](const wikilib::dump::DumpReader::ProcessProgress &p) {
@@ -1684,7 +1685,7 @@ int main(int argc, char *argv[]) {
                                         wikilib::markup::strip_comments(text.str()), stats, markersOnly,
                                         page.value("source", json()));
                 if (out && !line["sections"].empty()) // pages without a recognized language are left out
-                    out->add(line.dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
+                    out->add(0, line.dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
             }
             auto row = std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", wiki, config.value("profile", ""), stats.pages,
                                    stats.pagesWithSections, stats.sections, stats.sectionsWithCode, stats.senses,

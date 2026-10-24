@@ -305,6 +305,19 @@ public:
             showOriginalTab(on);
         });
         showOriginalTab(originalAction_->isChecked());
+        // Rows kept in view around a search match (or the match on the last row)
+        auto *margin = view->addAction("&Rows around search matches");
+        margin->setCheckable(true);
+        margin->setChecked(settings().value("view/searchMargin", true).toBool());
+        auto applyMargin = [this](bool on) {
+            for (auto *v : {&json_, &wiki_})
+                v->find->setMarginRows(on ? 4 : 0);
+        };
+        applyMargin(margin->isChecked());
+        connect(margin, &QAction::toggled, this, [applyMargin](bool on) {
+            settings().setValue("view/searchMargin", on);
+            applyMargin(on);
+        });
         auto *search = menuBar()->addMenu("&Search");
         search->addAction("&Find...", QKeySequence::Find, this, [this] {
             if (auto *view = currentView())

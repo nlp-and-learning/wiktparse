@@ -24,6 +24,8 @@ public:
     void showSearch();
     void findNext(bool backwards = false);
     QWidget *space() const { return m_space; }
+    // Rows kept in view above or below a match when scrolling to it (0: none)
+    void setMarginRows(int rows) { m_marginRows = rows; }
 
 private:
     struct Match {
@@ -63,4 +65,5 @@ private:
     QVector<Match> m_matches;
     QVector<int> m_lineStarts;
     int m_current = -1;
+    int m_marginRows = 4;
 };

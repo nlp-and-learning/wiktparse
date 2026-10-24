@@ -288,6 +288,8 @@ void FindBar::activate(int index) {
     const auto start = positionFor(match.start);
     const auto end = positionFor(match.end);
     revealRange(start, end);
+    // Rows around the match stay in view (setSelection would only show it, at the bottom)
+    area->ensureVisible(end, m_marginRows);
     area->setSelection(start, end);
     reveal(area->visualRow(start));
     updateHighlights();

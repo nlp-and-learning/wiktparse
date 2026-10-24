@@ -1052,3 +1052,18 @@ csb	dolmaczënk	Translations	section
 sl	Prevodi	Translations	section
 fy	Oersettings	Translations	section
 ru	Перевод	Translations	section
+de	Partizip I	Participle	pos
+de	Redewendung	Idiom	pos
+de	Wortverbindung	Phrase	pos
+de	Komparativ	Adjective form	pos
+de	Superlativ	Adjective form	pos
+de	Gebundenes Lexem	Affix	pos
+fr	nom de famille	Proper noun	pos
+fr	prénom	Proper noun	pos
+fr	variante typographique	Alternative forms	section
+fr	pronom indéfini	Pronoun	pos
+fr	nom scientifique	Proper noun	pos
+fr	symbole	Symbol	pos
+fr	adjectif numéral	Numeral	pos
+fr	gentilés	Related terms	relation
+fr	variantes dialectales	Alternative forms	section

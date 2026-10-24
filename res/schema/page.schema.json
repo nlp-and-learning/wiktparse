@@ -72,6 +72,9 @@
           "type": "string",
           "description": "Raw wikitext before the first section"
         },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
         "sections": {
           "type": "array",
           "items": {
@@ -122,7 +125,7 @@
         },
         "text": {
           "type": "string",
-          "description": "Raw wikitext of a section not handled in this phase (none where senses or translations were read)"
+          "description": "Raw wikitext of the section; of a part of speech what is no sense (headword line, inflection templates); none in translation sections"
         },
         "senses": {
           "type": "array",
@@ -141,6 +144,9 @@
           "items": {
             "$ref": "#/$defs/section"
           }
+        },
+        "media": {
+          "$ref": "#/$defs/media"
         }
       },
       "description": "A section; empty sections and empty or default fields are left out; template lines have no level; the kind (part of speech, relation) follows from the English name (wiktsections.sqlite)"
@@ -160,8 +166,22 @@
         "text": {
           "type": "string",
           "description": "Raw wikitext of the definition"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Raw wikitext of the examples and quotations below the definition (#:, #*)"
         }
       }
+    },
+    "media": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Names of Wikimedia Commons files (sounds, pictures) in the text, without the namespace"
     },
     "translation": {
       "type": "object",
@@ -192,6 +212,17 @@
         "gloss": {
           "type": "string",
           "description": "Gloss of the sense of the translation table (en {{trans-top|domestic species}}, sv {{ö-topp|vätska}}): to be matched to a definition"
+        },
+        "gender": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Gender and number marks as written: m, f, n, c, m-p, ż"
+        },
+        "tr": {
+          "type": "string",
+          "description": "Transliteration (tr=, ts=)"
         }
       }
     }

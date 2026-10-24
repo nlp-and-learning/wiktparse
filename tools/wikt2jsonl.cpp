@@ -576,7 +576,39 @@ struct Translation {
     std::string lang, term, sense;
     std::string gloss; // of the table (en {{trans-top|domestic species}})
     bool generic = false; // not by the configuration: kept only when its language is known
+    std::vector<std::string> gender; // de {{Ü|de|Hund}} {{m}}, en {{t|de|Hund|m}}
+    std::string tr;                  // transliteration: en {{t|ru|вода|tr=voda}}
 };
+
+// A gender or number mark: m, f, n, c, m-p, pl ż (żeński), mf
+bool genderMark(std::string_view s) {
+    static const std::regex mark(R"(^(m|f|n|c|ż|mf|fm|p|pl|du|s|sg)(-?(p|pl|s|sg|d|du|an|in))?$)");
+    return !s.empty() && s.size() < 8 && std::regex_match(std::string(s), mark);
+}
+
+// Gender and transliteration of a translation template: params after the term, g=, g2=, tr=
+void templateExtras(const TemplateInvocation &t, size_t termParam, Translation &item) {
+    for (size_t i = termParam + 1; i < termParam + 5; ++i)
+        if (auto v = t.get(i); v && genderMark(trim(std::string(*v))))
+            item.gender.push_back(trim(std::string(*v)));
+    for (const char *key : {"g", "g1", "g2", "g3", "gen"})
+        if (auto v = t.get(std::string(key)); v && !trim(std::string(*v)).empty())
+            item.gender.push_back(trim(std::string(*v)));
+    for (const char *key : {"tr", "ts", "translit", "R"})
+        if (auto v = t.get(std::string(key)); v && !trim(std::string(*v)).empty()) {
+            item.tr = trim(std::string(*v));
+            break;
+        }
+}
+
+// Gender templates of a piece of a translation line: "[[Hund]] {{m}}"
+std::vector<std::string> lineGenders(const std::string &piece) {
+    std::vector<std::string> result;
+    for (const auto &t : wikilib::templates::find_invocations(piece))
+        if (t.parameters.empty() && genderMark(trim(t.name)))
+            result.push_back(trim(t.name));
+    return result;
+}
 
 // Templates of text, nested ones after their template
 std::vector<TemplateInvocation> allTemplates(std::string_view text) {
@@ -599,6 +631,43 @@ std::vector<std::string> links(const std::string &text) {
     std::vector<std::string> result;
     for (std::sregex_iterator it(text.begin(), text.end(), link), end; it != end; ++it)
         result.push_back(trim((*it)[1].str()));
+    return result;
+}
+
+// Names of sound and picture files in wikitext, in order, once each
+std::vector<std::string> mediaFiles(const std::string &text) {
+    static const std::regex file(
+            R"(([^\[\]{}|=\n:<>]+\.(?:ogg|oga|wav|mp3|flac|opus|webm|mid|jpg|jpeg|png|svg|gif|tif|tiff|webp)))",
+            std::regex::icase);
+    std::vector<std::string> result;
+    for (std::sregex_iterator it(text.begin(), text.end(), file), end; it != end; ++it)
+        if (auto name = trim((*it)[1].str()); !name.empty() && !std::ranges::contains(result, name))
+            result.push_back(name);
+    return result;
+}
+
+// Links of a translation line with the genders of their piece: "[[Hund]] {{m}}, [[Rüde]] {{m}}"
+// (pieces split at , and ; outside [[…]] and {{…}})
+std::vector<std::pair<std::string, std::vector<std::string>>> linkPieces(const std::string &text) {
+    std::vector<std::pair<std::string, std::vector<std::string>>> result;
+    std::vector<std::string> pieces(1);
+    int depth = 0;
+    for (size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        if ((c == '[' || c == '{') && i + 1 < text.size() && text[i + 1] == c)
+            ++depth;
+        else if ((c == ']' || c == '}') && i + 1 < text.size() && text[i + 1] == c && depth > 0)
+            --depth;
+        if (depth == 0 && (c == ',' || c == ';'))
+            pieces.emplace_back();
+        else
+            pieces.back() += c;
+    }
+    for (const auto &piece : pieces) {
+        const auto genders = lineGenders(piece);
+        for (const auto &term : links(piece))
+            result.emplace_back(term, genders);
+    }
     return result;
 }
 
@@ -642,8 +711,11 @@ std::vector<Translation> translations(const json &config, const std::string &tex
         if (!lang)
             continue;
         if (termParam.is_number_integer()) {
-            if (auto term = t.get(static_cast<size_t>(termParam.get<int>())); term && !term->empty())
-                result.push_back({std::string(*lang), std::string(*term), tableSense, tableGloss});
+            if (auto term = t.get(static_cast<size_t>(termParam.get<int>())); term && !term->empty()) {
+                Translation item{std::string(*lang), std::string(*term), tableSense, tableGloss};
+                templateExtras(t, static_cast<size_t>(termParam.get<int>()), item);
+                result.push_back(std::move(item));
+            }
         } else {
             // es: {{t|en|a1=1|t1=water|t2=...}}
             auto pattern = termParam.get<std::string>();
@@ -661,6 +733,38 @@ std::vector<Translation> translations(const json &config, const std::string &tex
                         sense = std::string(*s);
                 }
                 result.push_back({std::string(*lang), std::string(*term), sense, tableGloss});
+            }
+        }
+    }
+    // Genders as templates after a translation template: de "{{Ü|de|Hund}} {{m}}", up to the next , or ;
+    if (!names.empty() && termParam.is_number_integer()) {
+        std::istringstream in(text);
+        for (std::string l; std::getline(in, l);) {
+            if (l.find("{{") == std::string::npos)
+                continue;
+            auto all = wikilib::templates::find_invocations(l);
+            for (size_t i = 0; i < all.size(); ++i) {
+                if (!std::ranges::contains(names, all[i].name))
+                    continue;
+                const size_t from = all[i].location.end.offset;
+                size_t to = l.size();
+                for (size_t j = i + 1; j < all.size(); ++j)
+                    if (std::ranges::contains(names, all[j].name)) {
+                        to = all[j].location.begin.offset;
+                        break;
+                    }
+                auto after = l.substr(from, to - from);
+                after = after.substr(0, after.find_first_of(",;"));
+                auto genders = lineGenders(after);
+                auto lang = all[i].get(static_cast<size_t>(langParam));
+                auto term = all[i].get(static_cast<size_t>(termParam.get<int>()));
+                if (genders.empty() || !lang || !term)
+                    continue;
+                for (auto &item : result)
+                    if (item.gender.empty() && item.lang == *lang && item.term == *term) {
+                        item.gender = genders;
+                        break;
+                    }
             }
         }
     }
@@ -704,8 +808,11 @@ std::vector<Translation> translations(const json &config, const std::string &tex
             if (!std::regex_match(l, m, line))
                 continue;
             std::string lang = m[2].matched ? m[2].str() : trim(m[1].str());
-            for (const auto &term : links(m[4].str()))
-                result.push_back({lang, term, m[3].matched && m[3].length() ? m[3].str() : lineSense, lineGloss});
+            for (const auto &[term, genders] : linkPieces(m[4].str())) {
+                Translation item{lang, term, m[3].matched && m[3].length() ? m[3].str() : lineSense, lineGloss};
+                item.gender = genders;
+                result.push_back(std::move(item));
+            }
         }
     }
     // A translation section the configuration finds nothing in: any template of a code and a term
@@ -717,8 +824,11 @@ std::vector<Translation> translations(const json &config, const std::string &tex
             auto lang = t.get(size_t{1});
             auto term = t.get(size_t{2});
             if (lang && term && std::regex_match(std::string(*lang), code) && !trim(std::string(*term)).empty() &&
-                std::string(*term).find("{{") == std::string::npos)
-                result.push_back({std::string(*lang), trim(std::string(*term)), "", "", true});
+                std::string(*term).find("{{") == std::string::npos) {
+                Translation item{std::string(*lang), trim(std::string(*term)), "", "", true};
+                templateExtras(t, 2, item);
+                result.push_back(std::move(item));
+            }
         }
         if (result.empty()) {
             static const std::regex line(R"(^[:#]*\*+:?\s*(\{\{([^}|]+)\}\}|(?:(?!：)[^:])+?)\s*(?::|：)\s*(.*)$)");
@@ -728,8 +838,11 @@ std::vector<Translation> translations(const json &config, const std::string &tex
                 if (!std::regex_match(l, m, line))
                     continue;
                 std::string lang = m[2].matched ? m[2].str() : trim(m[1].str());
-                for (const auto &term : links(m[3].str()))
-                    result.push_back({lang, term, "", "", true});
+                for (const auto &[term, genders] : linkPieces(m[3].str())) {
+                    Translation item{lang, term, "", "", true};
+                    item.gender = genders;
+                    result.push_back(std::move(item));
+                }
             }
         }
     }
@@ -948,6 +1061,17 @@ public:
     // offset: of the line in the page text (bytes); nodes get "range": [begin, end)
     void line(const std::string &line, size_t offset) {
         offset_ = offset;
+        // The next line of an example whose template goes on: en "#* {{quote-book|en|…" "|passage=…" "}}"
+        if (exampleDepth_ > 0) {
+            if (auto &senses = current()["senses"]; !senses.empty() && senses.back().contains("examples") &&
+                                                    !wikt2jsonl_heading(line)) {
+                auto &last = senses.back()["examples"].back();
+                last = last.get<std::string>() + '\n' + line;
+                exampleDepth_ += templateDepth(line);
+                return;
+            }
+            exampleDepth_ = 0;
+        }
         if (auto h = wikt2jsonl_heading(line)) {
             open(h->text, h->level, false);
             return;
@@ -997,6 +1121,23 @@ public:
                     current()["senses"].push_back({{"id", s->id}, {"text", s->text}});
                 return;
             }
+        // Examples and quotations of the last sense: "#:", "#*", "##:" (en, fr, it…); "#*:" the
+        // text of a quotation, after its source
+        if (auto &senses = current()["senses"]; !senses.empty() && line.starts_with('#')) {
+            size_t depth = 0;
+            while (depth < line.size() && line[depth] == '#')
+                ++depth;
+            if (depth < line.size() && (line[depth] == ':' || line[depth] == '*')) {
+                size_t start = depth;
+                while (start < line.size() && (line[start] == ':' || line[start] == '*'))
+                    ++start;
+                if (auto example = trim(line.substr(start)); !example.empty()) {
+                    senses.back()["examples"].push_back(example);
+                    exampleDepth_ = templateDepth(example);
+                }
+                return;
+            }
+        }
         current()["text"] = current()["text"].get<std::string>() + line + '\n';
     }
 
@@ -1005,6 +1146,8 @@ public:
         json result = {{"sections", root_.value("children", json::array())}};
         if (root_.contains("text") && !root_["text"].get<std::string>().empty())
             result["text"] = root_["text"];
+        if (root_.contains("media"))
+            result["media"] = root_["media"]; // pictures before the first section
         if (!unknown_.empty())
             result["unknown_headings"] = unknown_;
         return result;
@@ -1015,6 +1158,18 @@ private:
     const SectionNames &names_;
     LanguageCode languageCode_;
     json root_;
+    int exampleDepth_ = 0; // templates the last example leaves open
+
+    // {{ less }} of a text
+    static int templateDepth(const std::string &text) {
+        int depth = 0;
+        for (size_t i = 0; i + 1 < text.size(); ++i)
+            if (text[i] == text[i + 1] && (text[i] == '{' || text[i] == '}')) {
+                depth += text[i] == '{' ? 1 : -1;
+                ++i;
+            }
+        return depth;
+    }
     std::vector<json *> stack_; // open nodes, root first
     json unknown_ = json::array();
     std::vector<int> counters_;
@@ -1081,6 +1236,10 @@ private:
                 item["sense"] = t.sense;
             if (!t.gloss.empty())
                 item["gloss"] = t.gloss;
+            if (!t.gender.empty())
+                item["gender"] = t.gender;
+            if (!t.tr.empty())
+                item["tr"] = t.tr;
             if (code != t.lang)
                 item["lang_written"] = t.lang; // pl "angielski", it "{{en}}" -> en
             n["translations"].push_back(std::move(item));
@@ -1089,7 +1248,13 @@ private:
         stats.translations += n["translations"].size();
         n.erase("template_pos");
         // The text of sections handled in this phase is not repeated: "source" points into the dump
-        if (!n["senses"].empty() || !n["translations"].empty() || n["section"] == "Translations")
+        // Files of Wikimedia Commons: sounds of the pronunciation, pictures ([[Plik:Pl-woda.ogg]],
+        // {{audio|De-rot.ogg}}), without the namespace, which every wiki names in its language
+        if (auto files = mediaFiles(n.value("text", std::string())); !files.empty())
+            n["media"] = files;
+        // (of a part of speech the rest of the text stays: its headword line, inflection templates)
+        if (!n["translations"].empty() || n["section"] == "Translations" ||
+            trim(n.value("text", std::string())).empty())
             n.erase("text");
         for (auto &c : n["children"])
             finishNode(c, stats);

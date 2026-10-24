@@ -1,0 +1,10 @@
+{
+  "wiki": "gor",
+  "language": {
+    "aliases": {
+      "Indonesia": "id",
+      "Enggeleti": "en"
+    }
+  },
+  "status": "fixed from samples1000 language names without a code"
+}

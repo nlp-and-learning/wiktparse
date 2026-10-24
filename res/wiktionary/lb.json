@@ -1,0 +1,7 @@
+{
+  "wiki": "lb",
+  "language": {
+    "template_regex": "^=([^=]+)=$"
+  },
+  "status": "language code of =={{=lb=}}=="
+}

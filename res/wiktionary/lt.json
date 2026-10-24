@@ -1,0 +1,7 @@
+{
+  "wiki": "lt",
+  "language": {
+    "template_regex": "^([a-z]{2,3})v$"
+  },
+  "status": "language code of == {{ltv}} == (lt + v), {{frv}}, {{lvv}}"
+}

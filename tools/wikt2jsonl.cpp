@@ -220,8 +220,12 @@ public:
                 variants.push_back(trim(std::string(name).erase(at, word.size())));
         // SQLite lower() changes ASCII letters only ("Čeština")
         for (size_t i = 0, n = variants.size(); i < n; ++i)
-            if (auto lower = wikilib::unicode::to_lower(variants[i]); lower != variants[i])
+            if (auto lower = wikilib::unicode::to_lower(variants[i]); lower != variants[i]) {
                 variants.push_back(lower);
+                // az "İngilis dili": lowered "i̇ngilis", without the combining dot
+                if (auto plain = withoutCombining(lower); plain != lower)
+                    variants.push_back(plain);
+            }
         // skr "اُردو": without vowel marks and other combining characters
         if (auto plain = withoutCombining(name); plain != name)
             variants.push_back(plain);
@@ -785,7 +789,14 @@ public:
                     {"n", "noun"}, {"v", "verb"}, {"adj", "adjective"}, {"adv", "adverb"}, {"pron", "pronoun"},
                     {"num", "numeral"}, {"prep", "preposition"}, {"conj", "conjunction"}, {"interj", "interjection"},
                     {"suf", "suffix"}, {"pref", "prefix"}, {"propn", "proper noun"}, {"prop", "proper noun"},
-                    {"noun.masc", "noun"}, {"noun.fem", "noun"}, {"noun.neut", "noun"}, {"phr", "phrase"}};
+                    {"noun.masc", "noun"}, {"noun.fem", "noun"}, {"noun.neut", "noun"}, {"phr", "phrase"},
+                    {"subst", "noun"}, {"sb", "noun"},
+                    // and of other sections: vec {{-etim-}}, scn {{-hyph-}}, da {{-decl-}}
+                    {"etym", "etymology"}, {"etim", "etymology"}, {"ety", "etymology"}, {"etymo", "etymology"},
+                    {"ref", "references"}, {"hyph", "hyphenation"}, {"trans", "translations"},
+                    {"trad", "translations"}, {"pronun", "pronunciation"}, {"phon", "pronunciation"},
+                    {"phono", "pronunciation"}, {"decl", "declension"}, {"relat", "related terms"},
+                    {"syn", "synonyms"}, {"ant", "antonyms"}};
             const auto a = abbreviations.find(wikilib::unicode::to_lower(trim(key)));
             if (a == abbreviations.end() || (it = names_.find(a->second)) == names_.end())
                 return std::nullopt;
@@ -1083,10 +1094,15 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             finish(offset);
             std::string code = byName && !implicit ? markerCode(*marker) : *marker;
             if (!byName && !implicit && !names.isCode(code)) {
-                if (auto own = names.wikiCode(wiki, code); !own.empty())
+                if (code.size() > 2 && code.front() == '-' && code.back() == '-' &&
+                    names.isCode(code.substr(1, code.size() - 2)))
+                    code = code.substr(1, code.size() - 2); // su =={{-en-}}== besides =={{sunda}}==
+                else if (auto own = names.wikiCode(wiki, code); !own.empty())
                     code = own; // the wiki's own code (fr proto-khasique)
                 else if (auto mapped = names.mappedCode(code); !mapped.empty())
                     code = mapped; // a code of another scheme in a code template
+                else if (auto named = markerCode(code); !named.empty())
+                    code = named; // a name in a code template (btm {{Mandailing}}, az {{Dil|Azərbaycan dili}})
             }
             const bool keepLine = implicit && sections.empty() && !line.empty();
             // Names missing in wiktlangs.sqlite: "language": {"aliases": {"język chorwacki": "hr"}}

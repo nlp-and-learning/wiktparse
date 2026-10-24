@@ -1,0 +1,21 @@
+{
+  "wiki": "tk",
+  "language": {
+    "aliases": {
+      "Türkmençe": "tk",
+      "Türkçe": "tr",
+      "Iňlisçe": "en",
+      "Esperantoça": "eo",
+      "Ispança": "es",
+      "Nemesçe": "de",
+      "Paliçe": "pi",
+      "Finçe": "fi",
+      "Azerbaýjança": "az",
+      "Azerbaycança": "az",
+      "Özbekçe": "uz",
+      "Fransuzça": "fr",
+      "Rusça": "ru"
+    }
+  },
+  "status": "fixed from samples1000 language names without a code"
+}

@@ -6,7 +6,7 @@ ak	F
 am	A		am.json
 an	E	{{-xx-}}	
 ang	A		ang.json
-ar	B2		
+ar	B	اللغة	ar.json
 as	B		as.json
 ast	C		
 av	A		
@@ -57,7 +57,7 @@ gd	E	{{=xx=}}	gd.json
 gl	E	{{-xx-}}	
 gn	A		gn.json
 gom	A		gom.json
-gor	B2		
+gor	B2		gor.json
 gu	E	{{-xx-}}	gu.json
 guw	A		guw.json
 gv	E	{{=xx=}}	
@@ -95,12 +95,12 @@ ku	B	ziman
 kw	A		kw.json
 ky	E	{{-xx-}}	
 la	B	-lingua-	la.json
-lb	B2		
+lb	B2		lb.json
 li	A		li.json
 lmo	B1		
 ln	E	{{-xx-}}	ln.json
 lo	A		lo.json
-lt	B2		
+lt	B2		lt.json
 lv	E	{{-xx-}}	
 mad	B2		mad.json
 mg	B2		mg.json
@@ -170,7 +170,7 @@ te	A		te.json
 tg	E	{{-xx-}}	
 th	A		th.json
 ti	E	{{-xx-}}	
-tk	B2		
+tk	B	Dil	tk.json
 tl	A		tl.json
 tn	E	{{=xx=}}	tn.json
 to	F		

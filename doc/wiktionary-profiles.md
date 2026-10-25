@@ -53,7 +53,7 @@ From the feature scan (the most frequent marker of the sample pages):
 | C. level 1 heading, code | `= {{-ru-}} =` | ru pt ast be uz; also `= {{en…}} =` as, `= {{Y|xx}} =` sg |
 | D. heading with the word and the language | `== woda ({{język polski}}) ==` | pl de hr csb |
 | E. template line, no heading | `{{-xx-}}` or `{{=xx=}}` on its own line | `{{-xx-}}`: ay bg co et eu fj fo fy ga gl hu ia ie ik is ky lv mt na nah om qu roa_rup scn sm so tg ti tpi vec vi vo za; `{{=xx=}}`: af br cy da gd mi nl oc sl uk |
-| F. too small or no entries in samples | – | aa ab ak bh bi bm bn bo bs ch cr dz kbd mh nia pi rm rn sc sn to tw xh yi yo |
+| F. too small or no entries in samples | – | aa ab ak bh bi bm bo bs ch cr dz mh pi rm rn sc sn to tw xh yo (bn, kbd, nia, yi configured since: bn B `{{ভাষা|xx}}`; kbd E without a marker, translations under `{{инджылыбзэ}}` lines; nia E with `{{nia}}` lines, senses `:1.`; yi A, its `{{word|…}}` boxes not read) |
 
 Translation templates found in samples (most frequent per wiki): `t` (da eo
 es ga gl hu ia id ky mni mt sw tr uk vec vi zu), `t+` (ckb fy kcg la lt wa),

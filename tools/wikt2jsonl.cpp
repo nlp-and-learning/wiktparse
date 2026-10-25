@@ -543,6 +543,10 @@ std::optional<std::string> languageMarkerOfForm(const json &config, const std::s
         }
         static const std::regex dash(R"(^-([a-z][a-z-]*)-$)"), eq(R"(^=([a-z][a-z-]*)=$)");
         std::smatch m;
+        // nia "{{nia}}", "{{id}}": the code alone
+        static const std::regex bareCode(R"(^[a-z]{2,3}(-[a-z]{2,8})*$)");
+        if (config["language"].value("bare_code", false))
+            return t->parameters.empty() && std::regex_match(t->name, bareCode) ? std::optional(t->name) : std::nullopt;
         auto pattern = str(config, "/language/pattern", "{{-xx-}}");
         if (pattern == "{{=xx=}}" ? std::regex_match(t->name, m, eq) : std::regex_match(t->name, m, dash))
             return m[1].str();
@@ -699,8 +703,11 @@ std::optional<Sense> senseLine(const json &config, const std::string &line, std:
         return Sense{id, trim(line.substr(depth))};
     }
     static const std::regex parenthesized(R"(^:\s*\(([0-9.]+[a-z]?)\)\s*(.*)$)"), bracketed(R"(^:\s*\[([0-9]+[a-z]?)\]\s*(.*)$)"),
-            semicolon(R"(^;([0-9]+)\s*(.*)$)");
-    const auto &re = marker.starts_with(": (") ? parenthesized : marker.starts_with(":[") ? bracketed : semicolon;
+            semicolon(R"(^;([0-9]+)\s*(.*)$)"), dotted(R"(^:\s*([0-9]+)\.\s*(.*)$)"); // nia ":1. text"
+    const auto &re = marker.starts_with(": (")   ? parenthesized
+                     : marker.starts_with(":[")  ? bracketed
+                     : marker.starts_with(":{n}.") ? dotted
+                                                   : semicolon;
     if (line.size() < maxRegexLine && std::regex_match(line, m, re))
         return Sense{m[1].str(), trim(m[2].str())};
     return std::nullopt;
@@ -883,6 +890,55 @@ std::vector<Translation> translations(const json &config, const std::string &tex
     const auto table = tc.value("table", json());
     std::string tableSense; // number of the current table (fr, de)
     std::string tableGloss; // gloss of the current table (en, sv)
+    // kbd: a language template on its own line ({{инджылыбзэ}}), then "*унэ: 1. house, dwelling 2. family":
+    // the first line of the language is the entry (the next ones are phrases), its text the translations
+    // (plain words, "N." the sense numbers, notes in parentheses left out)
+    if (terms.value("form", std::string()) == "language-lines") {
+        static const std::regex number(R"(^\s*([0-9]+)\.\s*)");
+        std::string lang;
+        bool taken = true;
+        std::istringstream in(text);
+        for (std::string l; std::getline(in, l);) {
+            l = trim(l);
+            if (auto t = templateLine(l); t && t->parameters.empty()) {
+                lang = t->name;
+                taken = false;
+                continue;
+            }
+            const auto colon = l.find(':');
+            if (taken || lang.empty() || !l.starts_with("*") || colon == std::string::npos)
+                continue;
+            taken = true;
+            std::string rest = l.substr(colon + 1);
+            for (size_t open; (open = rest.find('(')) != std::string::npos;)
+                rest.erase(open, rest.find(')', open) == std::string::npos ? std::string::npos
+                                                                            : rest.find(')', open) - open + 1);
+            // "1. house, dwelling 2. family": the pieces between numbers
+            std::vector<std::pair<std::string, std::string>> parts; // sense, text
+            static const std::regex inner(R"((?:^|\s)([0-9]+)\.\s)");
+            std::string sense;
+            size_t from = 0;
+            for (std::sregex_iterator it(rest.begin(), rest.end(), inner), end; it != end; ++it) {
+                parts.emplace_back(sense, rest.substr(from, static_cast<size_t>(it->position(0)) - from));
+                sense = (*it)[1].str();
+                from = static_cast<size_t>(it->position(0) + it->length(0));
+            }
+            parts.emplace_back(sense, rest.substr(from));
+            for (const auto &[s, piece] : parts)
+                for (const auto &word : split(piece, ',')) // also ";"
+                    for (const auto &w : split(word, ';')) {
+                        auto term = trim(w);
+                        while (!term.empty() && std::string_view(".:").find(term.back()) != std::string_view::npos)
+                            term = trim(term.substr(0, term.size() - 1));
+                        // "see "…"", "см. …": references, not translations
+                        if (term.empty() || term.find('"') != std::string::npos || term.find("{{") != std::string::npos ||
+                            term.starts_with("см.") || term.starts_with("see "))
+                            continue;
+                        result.push_back({lang, term, s, ""});
+                    }
+        }
+        return result;
+    }
     for (const auto &t : allTemplates(text)) {
         if (table.is_object() && table.contains("top") &&
             std::ranges::contains(table["top"].get<std::vector<std::string>>(), t.name)) {
@@ -1009,6 +1065,15 @@ std::vector<Translation> translations(const json &config, const std::string &tex
             if (l.size() >= maxRegexLine || !std::regex_match(l, m, line))
                 continue;
             std::string lang = m[2].matched ? m[2].str() : trim(m[1].str());
+            // nia "* {{-en-}}: [[red]]"
+            if (m[2].matched && lang.size() > 2 && lang.front() == '-' && lang.back() == '-')
+                lang = lang.substr(1, lang.size() - 2);
+            // bn "* [[ইংরেজি]]: [[dog]]": the name is a link
+            if (lang.starts_with("[[") && lang.ends_with("]]")) {
+                lang = lang.substr(2, lang.size() - 4);
+                if (auto bar = lang.find('|'); bar != std::string::npos)
+                    lang = lang.substr(bar + 1);
+            }
             for (const auto &[term, genders] : linkPieces(m[4].str())) {
                 Translation item{lang, term, m[3].matched && m[3].length() ? m[3].str() : lineSense, lineGloss};
                 item.gender = genders;
@@ -1225,6 +1290,14 @@ std::pair<std::string, int> sectionKey(std::string text) {
         text = text.substr(0, open); // de "{{Wortart|…}}, {{n}}" is handled above; "Noun {{…}}"
     }
     text = trim(text);
+    // bn "ব্যুৎপত্তি ১", hi "व्युत्पत्ति २": digits of other scripts (U+09E6, U+0966 and on) as ASCII
+    for (const char *zero : {"০", "०"})
+        for (int d = 0; d < 10; ++d) {
+            std::string digit = zero;
+            digit[2] = static_cast<char>(digit[2] + d);
+            for (size_t at; (at = text.find(digit)) != std::string::npos;)
+                text.replace(at, digit.size(), std::string(1, static_cast<char>('0' + d)));
+        }
     std::smatch m;
     if (std::regex_match(text, m, numbered))
         return {m[1].str(), std::stoi(m[2].str())};

@@ -1,0 +1,23 @@
+{
+  "wiki": "kbd",
+  "language": {
+    "fallback_native": true,
+    "aliases": {
+      "инджылыбзэ": "en",
+      "урысыбзэ": "ru"
+    }
+  },
+  "senses": {
+    "marker": "#"
+  },
+  "translations": {
+    "section": "зэдзэкӀахэр",
+    "table": null,
+    "terms": {
+      "form": "language-lines",
+      "templates": []
+    },
+    "sense": "number"
+  },
+  "status": "from samples1000: one language, no marker; template line sections ({{мыхьэнэ}}, {{зэдзэкӀахэр}}); translations under {{инджылыбзэ}}, {{урысыбзэ}} as \"*унэ: 1. house 2. family\""
+}

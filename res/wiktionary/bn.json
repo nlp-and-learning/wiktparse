@@ -1,0 +1,40 @@
+{
+  "wiki": "bn",
+  "language": {
+    "template": "ভাষা",
+    "also": [
+      {
+        "form": "heading-template",
+        "heading_level": 2,
+        "template": "langname",
+        "code": 1
+      },
+      {
+        "form": "heading-name",
+        "heading_level": 2
+      }
+    ]
+  },
+  "translations": {
+    "section": "অনুবাদ",
+    "table": {
+      "top": [
+        "অনুবাদ-শীর্ষ",
+        "trans-top"
+      ],
+      "bottom": "অনুবাদ-নিচ",
+      "gloss": 1
+    },
+    "terms": {
+      "line": "* [[{language-name}]]: [[{term}]]",
+      "templates": [
+        "t",
+        "t+"
+      ],
+      "lang": 1,
+      "term": 2
+    },
+    "sense": "gloss"
+  },
+  "status": "from samples1000: {{ভাষা|xx}} headings, also {{langname|xx}} and names"
+}

@@ -1,0 +1,20 @@
+{
+  "wiki": "nia",
+  "language": {
+    "form": "line-template",
+    "bare_code": true
+  },
+  "senses": {
+    "marker": ":{n}."
+  },
+  "translations": {
+    "section": "eluaha",
+    "table": null,
+    "terms": {
+      "line": "* {{-en-}}: [[{term}]]",
+      "templates": []
+    },
+    "sense": "none"
+  },
+  "status": "from samples1000: {{nia}} or {{id}} line, template line sections ({{definisi}}, {{eluaha}}), senses \":1. {{nom}} text\""
+}

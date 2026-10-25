@@ -21,7 +21,7 @@ bi	F
 bjn	B	basa	
 blk	A		blk.json
 bm	F		
-bn	F		
+bn	B	ভাষা	bn.json
 bo	F		
 br	E	{{=xx=}}	
 bs	F		
@@ -83,7 +83,7 @@ jbo	B2		jbo.json
 jv	B	basa	jv.json
 ka	A		ka.json
 kaa	B1		kaa.json
-kbd	F		
+kbd	E		kbd.json
 kcg	A		
 kk	A		kk.json
 kl	E	{{-xx-}}	kl.json
@@ -120,7 +120,7 @@ na	E	{{-xx-}}
 nah	E	{{-xx-}}	
 nds	A		nds.json
 ne	A1		ne.json
-nia	F		
+nia	E		nia.json
 nl	E	{{=xx=}}	nl.json
 nn	A		nn.json
 no	A		no.json
@@ -189,7 +189,7 @@ vo	E	{{-xx-}}
 wa	B	L	
 wo	A		wo.json
 xh	F		
-yi	F		
+yi	A		yi.json
 yo	F		
 yue	B	langue	yue.json
 za	E	{{-xx-}}	

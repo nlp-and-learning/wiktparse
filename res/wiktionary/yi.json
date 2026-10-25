@@ -1,0 +1,23 @@
+{
+  "wiki": "yi",
+  "language": {
+    "fallback_native": true,
+    "aliases": {
+      "אינטערנאציאנאלע": "mul"
+    }
+  },
+  "translations": {
+    "terms": {
+      "templates": [
+        "trad",
+        "trad-",
+        "t",
+        "t+"
+      ],
+      "lang": 1,
+      "term": 2
+    },
+    "sense": "none"
+  },
+  "status": "from samples1000: ==טערקיש== headings of other languages; Yiddish entries are a {{word|…|EN={{trad|en|house|}}}} box without a marker"
+}

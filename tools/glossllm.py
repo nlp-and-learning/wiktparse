@@ -2,8 +2,8 @@
 """Glosses of translation tables linked to definitions by an LLM (HANDOFF-3, stage 5).
 
 One request per entry: its numbered definitions and the glosses to link; the answer is JSON
-(a definition id or none, and a confidence) by the schema given to Ollama (local models, and
-cloud ones such as glm-4.7:cloud by the same API).
+(a definition id or none, and a confidence) by the schema given to Ollama (local models), or
+as JSON from cometapi:glm-4.7 (COMETAPI_KEY), zai:glm-4.7 (ZAI_API_KEY), anthropic:<model>.
 
   glossllm.py --eval  --gold ../res/defglos/gold-en.json --model qwen3:14b [-j 4]
       accuracy on the reviewed links (a subsense or its parent counts), none included;
@@ -69,6 +69,28 @@ def ask_anthropic(model, system, user, glosses):
     return text[text.find('{'):text.rfind('}') + 1]
 
 
+# OpenAI-compatible providers: <prefix>:<model>, the key from the environment
+PROVIDERS = {'cometapi': ('https://api.cometapi.com/v1/chat/completions', 'COMETAPI_KEY'),
+             'zai': ('https://api.z.ai/api/paas/v4/chat/completions', 'ZAI_API_KEY')}
+
+
+def ask_openai(provider, model, system, user, glosses):
+    """The answer text of an OpenAI-compatible provider (cometapi:glm-4.7, zai:glm-4.7)"""
+    url, key = PROVIDERS[provider]
+    if not os.environ.get(key):
+        raise RuntimeError(f'{key} is not set')
+    body = {'model': model, 'temperature': 0.2, 'max_tokens': 200 + 60 * len(glosses),
+            'response_format': {'type': 'json_object'},
+            'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}]}
+    if model.startswith('glm'):
+        body['thinking'] = {'type': 'disabled'}  # GLM 4.5+: no reasoning, a short answer
+    request = urllib.request.Request(url, json.dumps(body).encode(),
+                                     {'Content-Type': 'application/json', 'Authorization': f'Bearer {os.environ[key]}'})
+    with urllib.request.urlopen(request, timeout=120) as r:
+        text = json.load(r)['choices'][0]['message']['content'] or ''
+    return text[text.find('{'):text.rfind('}') + 1]
+
+
 def ask(model, title, pos, defs, glosses, url='http://localhost:11434', fallback=False):
     """{gloss index: (definition id or None, confidence)}; fallback: a second model, which may
     answer null"""
@@ -76,6 +98,9 @@ def ask(model, title, pos, defs, glosses, url='http://localhost:11434', fallback
     if model.startswith('anthropic:'):
         content = ask_anthropic(model.removeprefix('anthropic:'), system, prompt(title, pos, defs, glosses), glosses)
         return parse(content, defs, glosses)
+    if model.split(':', 1)[0] in PROVIDERS:
+        provider, name = model.split(':', 1)
+        return parse(ask_openai(provider, name, system, prompt(title, pos, defs, glosses), glosses), defs, glosses)
     body = {'model': model, 'stream': False, 'format': schema(defs, glosses),
             # (a limit: JSON by a schema may run on without an end, spaces or repeated items)
             'options': {'temperature': 0.2, 'num_ctx': 4096, 'num_predict': 60 + 40 * len(glosses)},
@@ -213,8 +238,9 @@ def main():
     parser.add_argument('-o', '--output')
     parser.add_argument('--wiki', default='en')
     parser.add_argument('--model', default='qwen3:14b')
-    parser.add_argument('--fallback', help='a second model for the unsure answers: glm-4.7:cloud, qwen2.5:32b, '
-                                           'anthropic:claude-haiku-5-5 (ANTHROPIC_API_KEY)')
+    parser.add_argument('--fallback', help='a second model for the unsure answers: cometapi:glm-4.7 (COMETAPI_KEY), '
+                                           'zai:glm-4.7 (ZAI_API_KEY), anthropic:claude-haiku-5-5 (ANTHROPIC_API_KEY), '
+                                           'or an Ollama model')
     parser.add_argument('--confidence', type=float, default=0.8, help='accepted from this confidence')
     parser.add_argument('-j', '--jobs', type=int, default=4, help='requests at a time (OLLAMA_NUM_PARALLEL)')
     parser.add_argument('--limit', type=int, help='--eval: the first entries only')
@@ -224,6 +250,11 @@ def main():
                         help='--apply: every definition of an entry, also those surely of other glosses')
     args = parser.parse_args()
     args.output = args.output or f'glossllm-{args.wiki}.tsv'
+    for model in filter(None, (args.model, args.fallback)):  # a missing key: now, not per request
+        prefix = model.split(':', 1)[0]
+        key = PROVIDERS[prefix][1] if prefix in PROVIDERS else 'ANTHROPIC_API_KEY' if prefix == 'anthropic' else None
+        if key and not os.environ.get(key):
+            sys.exit(f'{model}: {key} is not set')
     (run_eval if args.eval else run_apply)(args)
 
 

@@ -217,8 +217,9 @@ def batched(args):
 
 
 def ask_cascade(args, title, pos, defs, glosses, notes=None):
-    """The main model; the glosses it is unsure of (below --confidence) to --fallback"""
-    answer = ask(args.model, title, pos, defs, glosses, notes=notes)
+    """The main model; the glosses it is unsure of (below --confidence, or null) to --fallback.
+    With a fallback the main model may say null (a cheap model leaves the hard ones)"""
+    answer = ask(args.model, title, pos, defs, glosses, notes=notes, fallback=bool(args.fallback))
     if not args.fallback:
         return answer
     unsure = [k for k in range(len(glosses)) if answer.get(k, (None, 0.0))[1] < args.confidence or answer.get(k, (None,))[0] is None]

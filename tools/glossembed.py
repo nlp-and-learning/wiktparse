@@ -13,7 +13,9 @@ definition when it is ahead of the second by a margin.
       the glosses without a link: wiki, title, language, path of the node, gloss, sense id,
       score, margin; for wiktglos --extra
 
-Embeddings come from Ollama (/api/embed), cached in glossembed-<model>.npz.
+Embeddings by sentence-transformers on the GPU (--backend st; the venv with torch and
+sentence-transformers: ~/.venvs/embed/bin/python glossembed.py ...), else by Ollama
+(/api/embed; --backend ollama); auto: the first that works. Cached in glossembed-<model>.npz.
 """
 import argparse
 import hashlib
@@ -90,9 +92,31 @@ def entry_data(node, tables):
     return defs, glosses
 
 
+# Ollama model names and their sentence-transformers (Hugging Face) models
+HF_MODELS = {'qwen3-embedding:4b': 'Qwen/Qwen3-Embedding-4B', 'qwen3-embedding:0.6b': 'Qwen/Qwen3-Embedding-0.6B',
+             'qwen3-embedding:8b': 'Qwen/Qwen3-Embedding-8B', 'embeddinggemma': 'google/embeddinggemma-300m',
+             'nomic-embed-text': 'nomic-ai/nomic-embed-text-v1.5'}
+
+
 class Embedder:
-    def __init__(self, model, url='http://localhost:11434'):
-        self.model, self.url = model, url
+    """Normalized embeddings of texts, cached on disk; by sentence-transformers on the GPU
+    (backend st), else by Ollama (backend ollama); auto: st when it loads, else Ollama."""
+
+    def __init__(self, model, backend='auto', url='http://localhost:11434'):
+        self.model, self.url, self.st = model, url, None
+        if backend in ('auto', 'st'):
+            try:
+                from sentence_transformers import SentenceTransformer
+                import torch
+                name = HF_MODELS.get(model, model)
+                self.st = SentenceTransformer(name, device='cuda' if torch.cuda.is_available() else 'cpu',
+                                              trust_remote_code=True, model_kwargs={'torch_dtype': torch.float16})
+                print(f'sentence-transformers: {name}', file=sys.stderr)
+            except Exception as e:  # no package, no model: Ollama
+                if backend == 'st':
+                    raise
+                print(f'sentence-transformers not used ({type(e).__name__}: {str(e)[:120]}), Ollama: {model}',
+                      file=sys.stderr)
         self.cache_path = 'glossembed-' + re.sub(r'[^\w.-]', '_', model) + '.npz'
         self.cache = {}
         if os.path.exists(self.cache_path):
@@ -103,20 +127,26 @@ class Embedder:
     def key(text):
         return hashlib.sha1(text.encode()).hexdigest()[:16]
 
-    def embed(self, texts, batch=128):
-        missing = list(dict.fromkeys(t for t in texts if self.key(t) not in self.cache))
+    def _compute(self, texts):
+        if self.st is not None:
+            return self.st.encode(texts, batch_size=128, normalize_embeddings=True, convert_to_numpy=True).astype(np.float32)
+        body = json.dumps({'model': self.model, 'input': texts, 'truncate': True}).encode()
+        request = urllib.request.Request(self.url + '/api/embed', body, {'Content-Type': 'application/json'})
+        with urllib.request.urlopen(request, timeout=600) as r:
+            vectors = np.array(json.load(r)['embeddings'], dtype=np.float32)
+        return vectors / (np.linalg.norm(vectors, axis=1, keepdims=True) + 1e-9)
+
+    def embed(self, texts, batch=1024):
+        """All texts at once: the missing ones by length (batches of similar texts), cached"""
+        missing = sorted(dict.fromkeys(t for t in texts if self.key(t) not in self.cache), key=len)
         for i in range(0, len(missing), batch):
             part = missing[i:i + batch]
-            body = json.dumps({'model': self.model, 'input': part, 'truncate': True}).encode()
-            request = urllib.request.Request(self.url + '/api/embed', body, {'Content-Type': 'application/json'})
-            with urllib.request.urlopen(request, timeout=600) as r:
-                vectors = np.array(json.load(r)['embeddings'], dtype=np.float32)
-            vectors /= np.linalg.norm(vectors, axis=1, keepdims=True) + 1e-9
-            for t, v in zip(part, vectors):
+            for t, v in zip(part, self._compute(part)):
                 self.cache[self.key(t)] = v
             print(f'\r  embedded {min(i + batch, len(missing))}/{len(missing)}', end='', file=sys.stderr, flush=True)
         if missing:
             print(file=sys.stderr)
+            self.save()
         return np.array([self.cache[self.key(t)] for t in texts])
 
     def save(self):
@@ -124,19 +154,31 @@ class Embedder:
             np.savez(self.cache_path, keys=np.array(list(self.cache)), vectors=np.array(list(self.cache.values())))
 
 
-def predict(embedder, title, defs, glosses):
-    """For each gloss: (best index, score, margin over the second)."""
-    query = QUERY if 'qwen' in embedder.model else ''
-    d = embedder.embed([f'{title}: {text}' for _, text in defs])
-    g = embedder.embed([f'{query}{title}: {plain(text)}' for text in glosses])
-    sims = g @ d.T
-    result = []
-    for row in sims:
-        order = np.argsort(-row)
-        best = row[order[0]]
-        second = row[order[1]] if len(order) > 1 else -1.0
-        result.append((int(order[0]), float(best), float(best - second)))
-    return result
+def texts(embedder, title, defs, glosses):
+    """The texts of an entry to embed: its definitions, its glosses (qwen: as queries)"""
+    query = QUERY if 'qwen' in embedder.model.lower() else ''
+    return [f'{title}: {text}' for _, text in defs], [f'{query}{title}: {plain(text)}' for text in glosses]
+
+
+def predict_all(embedder, cases):
+    """cases: (title, defs, glosses); for each case and gloss (best index, score, margin over the
+    second); the texts of all cases embedded together"""
+    parts = [texts(embedder, title, defs, glosses) for title, defs, glosses in cases]
+    flat = [t for d, g in parts for t in d + g]
+    vectors = embedder.embed(flat)
+    results, at = [], 0
+    for d, g in parts:
+        dv, gv = vectors[at:at + len(d)], vectors[at + len(d):at + len(d) + len(g)]
+        at += len(d) + len(g)
+        sims = gv @ dv.T
+        row_results = []
+        for row in sims:
+            order = np.argsort(-row)
+            best = row[order[0]]
+            second = row[order[1]] if len(order) > 1 else -1.0
+            row_results.append((int(order[0]), float(best), float(best - second)))
+        results.append(row_results)
+    return results
 
 
 def related(a, b):
@@ -159,11 +201,10 @@ def run_eval(args, embedder):
     cases = cases[:args.entries]
     print(f'{len(cases)} entries with confident links', file=sys.stderr)
     results = []
-    for title, defs, sure in cases:
-        glosses = list(sure)
-        for gloss, (best, score, margin) in zip(glosses, predict(embedder, title, defs, glosses)):
+    predicted = predict_all(embedder, [(title, defs, list(sure)) for title, defs, sure in cases])
+    for (title, defs, sure), rows in zip(cases, predicted):
+        for gloss, (best, score, margin) in zip(sure, rows):
             results.append((margin, score, any(related(defs[best][0], s) for s in sure[gloss])))
-    embedder.save()
     results.sort(reverse=True)
     n = len(results)
     print(f'{n} glosses; accuracy {sum(r[2] for r in results) / n:.3f}')
@@ -174,23 +215,21 @@ def run_eval(args, embedder):
 
 
 def run_apply(args, embedder):
-    out = open(args.output, 'w', encoding='utf-8')
-    out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\n')
-    count = 0
+    cases = []
     for page in pages(args.input, args.wiki):
         for code, path, node, tables in entries(page):
             defs, glosses = entry_data(node, tables)
             open_glosses = [g for g, v in glosses.items() if not v[0]]
-            if not open_glosses or len(defs) < 2:
-                continue
-            for gloss, (best, score, margin) in zip(open_glosses, predict(embedder, page['title'], defs, open_glosses)):
-                where = '/'.join(f'{k}:{i}' for k, i in path)
-                out.write(f"{args.wiki}\t{page['title']}\t{code}\t{where}\t{gloss}\t{defs[best][0]}\t{score:.3f}\t{margin:.3f}\n")
-                count += 1
-        if count and count % 5000 < 3:
-            embedder.save()
-    embedder.save()
-    print(f'{count} glosses written to {args.output}', file=sys.stderr)
+            if open_glosses and len(defs) >= 2:
+                cases.append((page['title'], code, '/'.join(f'{k}:{i}' for k, i in path), defs, open_glosses))
+    print(f'{len(cases)} entries, {sum(len(c[4]) for c in cases)} glosses without a link', file=sys.stderr)
+    predicted = predict_all(embedder, [(title, defs, glosses) for title, _, _, defs, glosses in cases])
+    with open(args.output, 'w', encoding='utf-8') as out:
+        out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\n')
+        for (title, code, where, defs, glosses), rows in zip(cases, predicted):
+            for gloss, (best, score, margin) in zip(glosses, rows):
+                out.write(f"{args.wiki}\t{title}\t{code}\t{where}\t{gloss}\t{defs[best][0]}\t{score:.3f}\t{margin:.3f}\n")
+    print(f'written to {args.output}', file=sys.stderr)
 
 
 def main():
@@ -203,9 +242,10 @@ def main():
     parser.add_argument('--wiki', default='en')
     parser.add_argument('--model', default='qwen3-embedding:4b')
     parser.add_argument('--entries', type=int, default=3000)
+    parser.add_argument('--backend', choices=('auto', 'st', 'ollama'), default='auto')
     args = parser.parse_args()
     args.output = args.output or f'glossembed-{args.wiki}.tsv'
-    embedder = Embedder(args.model)
+    embedder = Embedder(args.model, args.backend)
     (run_eval if args.eval else run_apply)(args, embedder)
 
 

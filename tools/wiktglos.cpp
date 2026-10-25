@@ -6,7 +6,7 @@
 // linked gloss gets "sense_ids" (["1", "1.2"]), "sense_method" (positional, best; number for a
 // gloss that is a sense number, ja "語義1"; single for the one definition of an entry) and
 // "sense_score"; --extra: links by embeddings (glossembed.py --apply) for the glosses left
-// ("embedding"). Input: wiktlink output (deterministic again: the TSV is of its entries).
+// ("embedding"; "llm" of glossllm-*.tsv). Input: wiktlink output (deterministic again: the TSV is of its entries).
 //
 // wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [wiki...]
 #include <algorithm>
@@ -167,6 +167,7 @@ void collectSenses(const json &node, std::vector<defglos::Item> &defs) {
 struct Extra {
     std::string id;
     double score;
+    std::string method; // embedding (glossembed-*), llm (glossllm-*)
 };
 using Extras = std::map<std::string, Extra>;
 
@@ -191,7 +192,8 @@ Extras readExtras(const std::vector<fs::path> &files) {
                 from = tab + 1;
             }
             if (f.size() >= 9 && f[8] == "1")
-                extras[extraKey(f[1], f[2], f[3], f[4])] = {f[5], std::stod(f[6])};
+                extras[extraKey(f[1], f[2], f[3], f[4])] = {
+                        f[5], std::stod(f[6]), file.filename().string().starts_with("glossllm") ? "llm" : "embedding"};
         }
     }
     return extras;
@@ -268,7 +270,7 @@ void linkNode(json &node, const std::string &title, Count &count, const std::str
                 for (const auto &[gloss, index] : glossIndex)
                     if (index == g)
                         if (auto it = extras->find(extraKey(title, language, path, gloss)); it != extras->end())
-                            results[g] = {{it->second.id}, "embedding", it->second.score};
+                            results[g] = {{it->second.id}, it->second.method, it->second.score};
     // One definition only: every gloss is of it (en Panama: "country")
     if (entry.defs.size() == 1)
         for (auto &r : results)

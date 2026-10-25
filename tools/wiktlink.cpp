@@ -318,6 +318,7 @@ int main(int argc, char *argv[]) {
                 all.insert(all.end(), f.begin(), f.end());
             std::ranges::sort(all);
             all.erase(std::unique(all.begin(), all.end()), all.end());
+            std::cout << std::format("pass 1: {} {} pairs ({:.0f} s)", wiki, all.size(), seconds(started)) << std::endl;
         }
         size_t pairs = 0;
         for (const auto &[wiki, keys] : sections)

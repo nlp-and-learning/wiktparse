@@ -19,6 +19,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -74,6 +75,20 @@ PROVIDERS = {'cometapi': ('https://api.cometapi.com/v1/chat/completions', 'COMET
              'zai': ('https://api.z.ai/api/paas/v4/chat/completions', 'ZAI_API_KEY')}
 
 
+def load_env(path='.env'):
+    """KEY=VALUE lines of .env into the environment, for keys not set (ZAI_API_KEY)"""
+    if os.path.exists(path):
+        for line in open(path, encoding='utf-8'):
+            line = line.strip().removeprefix('export ').strip()
+            if '=' in line and not line.startswith('#'):
+                key, value = line.split('=', 1)
+                os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+class OutOfCredit(Exception):
+    """The provider refuses for money or limits: the run stops, its results kept"""
+
+
 def ask_openai(provider, model, system, user, glosses):
     """The answer text of an OpenAI-compatible provider (cometapi:glm-4.7, zai:glm-4.7)"""
     url, key = PROVIDERS[provider]
@@ -86,9 +101,22 @@ def ask_openai(provider, model, system, user, glosses):
         body['thinking'] = {'type': 'disabled'}  # GLM 4.5+: no reasoning, a short answer
     request = urllib.request.Request(url, json.dumps(body).encode(),
                                      {'Content-Type': 'application/json', 'Authorization': f'Bearer {os.environ[key]}'})
-    with urllib.request.urlopen(request, timeout=120) as r:
-        text = json.load(r)['choices'][0]['message']['content'] or ''
-    return text[text.find('{'):text.rfind('}') + 1]
+    for attempt in range(8):
+        try:
+            with urllib.request.urlopen(request, timeout=120) as r:
+                text = json.load(r)['choices'][0]['message']['content'] or ''
+            return text[text.find('{'):text.rfind('}') + 1]
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode(errors='replace')[:300]
+            low = detail.lower()
+            # Money (z.ai 1113 insufficient balance, 402): stop; a rate limit (z.ai 1302, 429): wait
+            if e.code in (401, 402, 403) or any(w in low for w in ('balance', 'insufficient', 'arrear', 'credit', '"1113"')):
+                raise OutOfCredit(f'{provider}: HTTP {e.code} {detail}') from e
+            if e.code == 429 or 'rate limit' in low:
+                time.sleep(min(60, 2 ** attempt))
+                continue
+            raise
+    raise RuntimeError(f'{provider}: still rate limited')
 
 
 def ask(model, title, pos, defs, glosses, url='http://localhost:11434', fallback=False):
@@ -187,6 +215,10 @@ def run_eval(args):
 
 
 def run_apply(args):
+    """In parts: the entries done (also those without an answer) in <output>.done, the links
+    appended to <output>; --limit entries per run; stops when the provider refuses for money"""
+    done_path = args.output + '.done'
+    done = set(open(done_path, encoding='utf-8').read().splitlines()) if os.path.exists(done_path) else set()
     cases = []
     for page in ge.pages(args.input, args.wiki):
         for code, path, node, tables in ge.entries(page):
@@ -197,35 +229,57 @@ def run_apply(args):
             # request, fewer to confuse); all of them when none is left
             taken = {i for g, (ids, method, score) in glosses.items() if g not in todo and method in SURE for i in ids or []}
             free = [(i, text) for i, text in defs if i not in taken]
-            if args.free and len(free) >= 1:
+            where = '/'.join(f'{k}:{i}' for k, i in path)
+            if args.free and free:
                 defs = free
-            if todo and len(defs) >= (1 if args.free else 2):
-                cases.append((page['title'], code, '/'.join(f'{k}:{i}' for k, i in path), node.get('section'), defs, todo,
-                              {g: glosses[g] for g in todo}))
-    print(f'{len(cases)} entries, {sum(len(c[5]) for c in cases)} glosses', file=sys.stderr)
-    started, done = time.time(), 0
-    with open(args.output, 'w', encoding='utf-8') as out, concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
-        out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
-        futures = {pool.submit(ask_cascade, args, title, pos, defs, todo): (title, code, where, todo, before)
-                   for title, code, where, pos, defs, todo, before in cases}
+            if todo and len(defs) >= (1 if args.free else 2) and f"{page['title']}\t{code}\t{where}" not in done:
+                cases.append((page['title'], code, where, node.get('section'), defs, todo))
+    total = len(cases)
+    if args.limit:
+        cases = cases[:args.limit]
+    print(f'{total} entries to do ({len(done)} done before), now {len(cases)}', file=sys.stderr)
+    new_file = not os.path.exists(args.output)
+    started, finished, links, stopped = time.time(), 0, 0, None
+    review_path = args.output.removesuffix('.tsv') + '.txt'
+    with open(args.output, 'a', encoding='utf-8') as out, open(done_path, 'a', encoding='utf-8') as done_file, \
+            open(review_path, 'a', encoding='utf-8') as review, concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
+        if new_file:
+            out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
+        futures = {pool.submit(ask_cascade, args, title, pos, defs, todo): (title, code, where, pos, defs, todo)
+                   for title, code, where, pos, defs, todo in cases}
         for future in concurrent.futures.as_completed(futures):
-            title, code, where, todo, before = futures[future]
+            title, code, where, pos, defs, todo = futures[future]
             try:
                 answer = future.result()
-            except Exception as error:
-                print(f'  error {title}: {error}', file=sys.stderr)
+            except OutOfCredit as e:
+                stopped = stopped or str(e)
+                for f in futures:
+                    f.cancel()
                 continue
+            except Exception as error:  # this entry again in the next run
+                print(f'\n  error {title}: {error}', file=sys.stderr)
+                continue
+            # For review before wiktglos --extra: the entry, each gloss with its definition
+            texts = dict(defs)
+            review.write(f'== {title} ({pos}) [{code} {where}]\n')
             for k, gloss in enumerate(todo):
                 got, confidence = answer.get(k, (None, 0.0))
-                if got is None:
-                    continue
-                accepted = int(confidence >= args.confidence)
-                out.write(f'{args.wiki}\t{title}\t{code}\t{where}\t{gloss}\t{got}\t{confidence:.2f}\t\t{accepted}\n')
-            done += 1
-            if done % 100 == 0:
-                rate = done / (time.time() - started)
-                print(f'\r  {done}/{len(cases)} entries, {rate:.1f}/s', end='', file=sys.stderr, flush=True)
-    print(f'\nwritten to {args.output}', file=sys.stderr)
+                review.write(f'  «{gloss}» -> {got or "none"} ({confidence:.2f})'
+                             + (f'  {texts.get(got, "")[:150]}' if got else '') + '\n')
+                if got is not None:
+                    out.write(f'{args.wiki}\t{title}\t{code}\t{where}\t{gloss}\t{got}\t{confidence:.2f}\t\t'
+                              f'{int(confidence >= args.confidence)}\n')
+                    links += 1
+            done_file.write(f'{title}\t{code}\t{where}\n')
+            finished += 1
+            if finished % 50 == 0:
+                out.flush(), done_file.flush()
+                print(f'\r  {finished}/{len(cases)} entries, {finished / (time.time() - started):.1f}/s', end='',
+                      file=sys.stderr, flush=True)
+    print(f'\n{finished} entries done, {links} links appended to {args.output} (to review: {review_path}); '
+          f'{total - len(done) - finished} entries left', file=sys.stderr)
+    if stopped:
+        sys.exit(f'stopped: {stopped}')
 
 
 def main():
@@ -243,13 +297,14 @@ def main():
                                            'or an Ollama model')
     parser.add_argument('--confidence', type=float, default=0.8, help='accepted from this confidence')
     parser.add_argument('-j', '--jobs', type=int, default=4, help='requests at a time (OLLAMA_NUM_PARALLEL)')
-    parser.add_argument('--limit', type=int, help='--eval: the first entries only')
+    parser.add_argument('--limit', type=int, help='the first entries only (--apply: of those not done yet)')
     parser.add_argument('--recheck', action='store_true',
                         help='--apply: also the glosses linked by best and embedding (some 10%% of them wrong)')
     parser.add_argument('--all-definitions', dest='free', action='store_false',
                         help='--apply: every definition of an entry, also those surely of other glosses')
     args = parser.parse_args()
     args.output = args.output or f'glossllm-{args.wiki}.tsv'
+    load_env()
     for model in filter(None, (args.model, args.fallback)):  # a missing key: now, not per request
         prefix = model.split(':', 1)[0]
         key = PROVIDERS[prefix][1] if prefix in PROVIDERS else 'ANTHROPIC_API_KEY' if prefix == 'anthropic' else None

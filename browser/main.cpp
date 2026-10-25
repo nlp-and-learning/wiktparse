@@ -14,6 +14,7 @@
 //
 // wiktbrowse [file.jsonl | file.jsonl.bz2 | file.jsonl.zst]
 #include <QApplication>
+#include <QComboBox>
 #include <QDir>
 #include <QProcess>
 #include <QShortcut>
@@ -315,6 +316,11 @@ public:
         list_ = new QListWidget;
         auto *top = new QHBoxLayout;
         top->addWidget(filter_);
+        // titles starting with the filter, or also the ones containing it
+        filterMode_ = new QComboBox;
+        filterMode_->addItems({"starts with", "contains"});
+        filterMode_->setCurrentIndex(settings().value("view/filterContains", true).toBool() ? 1 : 0);
+        top->addWidget(filterMode_);
         top->addWidget(lineBox_);
         leftLayout->addLayout(top);
         leftLayout->addWidget(list_);
@@ -394,6 +400,10 @@ public:
         resize(1400, 900);
 
         connect(filter_, &QLineEdit::textChanged, this, [this] { fillList(); });
+        connect(filterMode_, &QComboBox::currentIndexChanged, this, [this](int index) {
+            settings().setValue("view/filterContains", index == 1);
+            fillList();
+        });
         connect(list_, &QListWidget::currentRowChanged, this, [this](int row) {
             if (auto *item = list_->item(row))
                 showLine(item->data(Qt::UserRole).toInt());
@@ -967,6 +977,7 @@ private:
     std::unique_ptr<Lines> lines_;
     QString path_;
     QLineEdit *filter_;
+    QComboBox *filterMode_; // starts with / contains
     QSpinBox *lineBox_;
     QLabel *status_;
     QListWidget *list_;
@@ -1064,13 +1075,14 @@ private:
             // the title itself first, then the titles starting with the filter, then the ones containing
             // it; each group sorted by title ("bal", "bal maskowy", "balet"… then "kabała"…)
             std::vector<std::pair<int, size_t>> found; // group, line
+            const bool contains = filterMode_->currentIndex() == 1;
             for (size_t i = 0; i < lines_->count() && found.size() < limit; ++i) {
                 const QString title = lines_->title(i);
                 if (title.compare(text, Qt::CaseInsensitive) == 0)
                     found.emplace_back(0, i);
                 else if (title.startsWith(text, Qt::CaseInsensitive))
                     found.emplace_back(1, i);
-                else if (title.contains(text, Qt::CaseInsensitive))
+                else if (contains && title.contains(text, Qt::CaseInsensitive))
                     found.emplace_back(2, i);
             }
             std::ranges::stable_sort(found, [&](const auto &a, const auto &b) {

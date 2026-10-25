@@ -99,6 +99,11 @@ dump_dir = ~/dump
   folding, and as a tree. `.jsonl.bz2` files of `wikt2jsonl --bz2` are read
   through their `.jsonl.idx`, decompressing only the block shown. F4 opens
   the line, indented, in Kate (a read-only file in the temporary directory).
+- `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
+  the pages of a sample taken from a block output (`wikt2jsonl --dump`,
+  `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,
+  for the browser (needs `zstandard`). `/translations` subpages are already
+  merged into their pages, so they are not found on their own.
 - `defglos [samples.txt] [-v] [--sweep]` – links English definitions to
   translation glosses on `res/defglos/samples.txt` and reports precision and
   recall against the expected links; see `doc/defglos/README.md`.

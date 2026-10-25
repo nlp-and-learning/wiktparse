@@ -796,6 +796,38 @@ std::vector<std::string> mediaFiles(const std::string &text) {
     return result;
 }
 
+// The pages a translation section without translations refers to: [{"title", "gloss"}]
+// (en {{trans-see|domestic animal|dog}}, {{trans-see|colour}}, tr {{çeviri yönlendirme|X}};
+// else the links of a short text: nl "zie [[weer#Vertalingen]]")
+json seeAlso(const std::string &text) {
+    json result = json::array();
+    for (const auto &t : wikilib::templates::find_invocations(text)) {
+        if (t.name == "trans-see") {
+            std::vector<std::string> values;
+            for (size_t i = 1; auto v = t.get(i); ++i)
+                values.push_back(trim(std::string(*v)));
+            for (size_t i = values.size() > 1 ? 1 : 0; i < values.size(); ++i)
+                if (!values[i].empty())
+                    result.push_back(values.size() > 1 ? json{{"title", values[i]}, {"gloss", values[0]}}
+                                                       : json{{"title", values[i]}});
+        } else if (t.name == "çeviri yönlendirme" || t.name == "Çeviri yönlendirme") {
+            if (auto v = t.get(size_t{1}); v && !trim(std::string(*v)).empty())
+                result.push_back({{"title", trim(std::string(*v))}});
+        }
+    }
+    // (links to a section of another page only, not unread lists of translations)
+    if (static const std::regex anchored(R"(\[\[([^\]|#:]+)#[^\]|]+(?:\|[^\]]*)?\]\])");
+        result.empty() && trim(text).size() < 300) {
+        std::vector<std::string> targets;
+        for (std::sregex_iterator it(text.begin(), text.end(), anchored), end; it != end; ++it)
+            targets.push_back(trim((*it)[1].str()));
+        if (!targets.empty() && targets.size() <= 3)
+            for (const auto &target : targets)
+                result.push_back({{"title", target}});
+    }
+    return result;
+}
+
 // Links of a translation line with the genders of their piece: "[[Hund]] {{m}}, [[Rüde]] {{m}}"
 // (pieces split at , and ; outside [[…]] and {{…}})
 std::vector<std::pair<std::string, std::vector<std::string>>> linkPieces(const std::string &text) {
@@ -1402,6 +1434,11 @@ private:
         // {{audio|De-rot.ogg}}), without the namespace, which every wiki names in its language
         if (auto files = mediaFiles(n.value("text", std::string())); !files.empty())
             n["media"] = files;
+        // Translations on another page: en {{trans-see|gloss|color}}, tr {{çeviri yönlendirme|X}},
+        // nl "zie [[weer#Vertalingen]]" (en {{see translation subpage}}: wiktlink merges the subpage)
+        if (n["section"] == "Translations" && n["translations"].empty())
+            if (auto see = seeAlso(n.value("text", std::string())); !see.empty())
+                n["see"] = see;
         // (of a part of speech the rest of the text stays: its headword line, inflection templates)
         if (!n["translations"].empty() || n["section"] == "Translations" ||
             trim(n.value("text", std::string())).empty())
@@ -1421,7 +1458,7 @@ private:
                 continue;
             }
             if (!c.contains("text") && !c.contains("senses") && !c.contains("translations") &&
-                !c.contains("children") && c.value("kind", json()) != "pos")
+                !c.contains("children") && !c.contains("see") && c.value("kind", json()) != "pos")
                 children.erase(i);
         }
         // Empty and default fields are left out (kind follows from the section name); template

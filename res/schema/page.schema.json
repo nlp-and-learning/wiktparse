@@ -148,6 +148,20 @@
         "media": {
           "$ref": "#/$defs/media"
         },
+        "see": {
+          "type": "array",
+          "description": "Translations on other pages (en {{trans-see|gloss|color}}, tr {{çeviri yönlendirme}}, nl zie [[weer#Vertalingen]])",
+          "items": {
+            "type": "object",
+            "required": ["title"],
+            "additionalProperties": false,
+            "properties": {
+              "title": {"type": "string"},
+              "gloss": {"type": "string"},
+              "page": {"type": "boolean", "description": "wiktlink: the page has a section of the language"}
+            }
+          }
+        },
         "subpage": {
           "type": "boolean",
           "description": "wiktlink: Translations of the translation subpage (en water/translations) merged here"

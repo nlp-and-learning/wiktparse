@@ -2,7 +2,9 @@
 // A translation (lang L, term T) of wiki W gets
 //   "page": true  when W has a page T with a section of language L (pl.wikt "Wasser", de),
 //   "home": true  when the Wiktionary of L has a page T with a section of L (de.wikt "Wasser"),
-//   "page_title": the title found when it is not T (ru "кана́тная" -> "канатная", {{PAGENAME}}).
+//   "page_title": the title found when it is not T (ru "кана́тная" -> "канатная", {{PAGENAME}});
+// a reference of a translation section to another page (wikt2jsonl "see": en {{trans-see}})
+// gets "page": true when that page has a section of the language.
 // Pass 1 reads every wiki's (title, section code) pairs as 64-bit hashes; pass 2 rewrites the
 // pages with the links, in the same blocks (zstd with a dictionary per wiki, or bz2).
 //
@@ -233,6 +235,17 @@ size_t mergeSubpage(json &page, json subpage) {
     return merged;
 }
 
+// Every node of a section tree with references to other pages ("see" of wikt2jsonl)
+void eachSee(json &node, const std::function<void(json &)> &f) {
+    if (auto it = node.find("see"); it != node.end())
+        for (auto &e : *it)
+            f(e);
+    for (const char *key : {"sections", "children"})
+        if (auto it = node.find(key); it != node.end())
+            for (auto &child : *it)
+                eachSee(child, f);
+}
+
 double seconds(std::chrono::steady_clock::time_point since) {
     return std::chrono::duration<double>(std::chrono::steady_clock::now() - since).count();
 }
@@ -339,7 +352,7 @@ int main(int argc, char *argv[]) {
         // Pass 2: the pages with their translations linked
         fs::create_directories(output);
         std::ofstream stats(output / "stats.tsv");
-        stats << "wiki\ttranslations\tpage\thome\tboth\tnone\tno_lang\tno_term\tsubpages\n";
+        stats << "wiki\ttranslations\tpage\thome\tboth\tnone\tno_lang\tno_term\tsubpages\tsee\tsee_found\n";
         for (const auto &[wiki, path] : files) {
             if (!only.empty() && !std::ranges::contains(only, wiki))
                 continue;
@@ -350,7 +363,7 @@ int main(int argc, char *argv[]) {
             const auto subIt = subpages.find(wiki);
             const std::map<std::string, std::string> *wikiSubpages = subIt == subpages.end() ? nullptr : &subIt->second;
             struct Count {
-                size_t translations = 0, page = 0, home = 0, both = 0, none = 0, noLang = 0, noTerm = 0, subpages = 0;
+                size_t translations = 0, page = 0, home = 0, both = 0, none = 0, noLang = 0, noTerm = 0, subpages = 0, see = 0, seeFound = 0;
             };
             std::vector<Count> counts(threads);
             forBlocks(reader, threads, [&](size_t worker, size_t block) {
@@ -370,6 +383,16 @@ int main(int argc, char *argv[]) {
                     if (wikiSubpages)
                         if (auto it = wikiSubpages->find(title); it != wikiSubpages->end())
                             c.subpages += mergeSubpage(page, json::parse(it->second)) > 0;
+                    // References to the translations of other pages: their page, of this language
+                    for (auto &s : page["sections"])
+                        if (s.contains("code") && s["code"].is_string())
+                            eachSee(s, [&](json &e) {
+                                ++c.see;
+                                if (has(wiki, termTitle(e.value("title", std::string()), title), s["code"].get<std::string>())) {
+                                    e["page"] = true;
+                                    ++c.seeFound;
+                                }
+                            });
                     for (auto &s : page["sections"])
                         eachTranslation(s, [&](json &t) {
                             ++c.translations;
@@ -409,9 +432,11 @@ int main(int argc, char *argv[]) {
             for (const auto &c : counts) {
                 total.translations += c.translations, total.page += c.page, total.home += c.home;
                 total.both += c.both, total.none += c.none, total.noLang += c.noLang, total.noTerm += c.noTerm, total.subpages += c.subpages;
+                total.see += c.see, total.seeFound += c.seeFound;
             }
-            stats << std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n", wiki, total.translations, total.page, total.home,
-                                 total.both, total.none, total.noLang, total.noTerm, total.subpages);
+            stats << std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n", wiki, total.translations, total.page,
+                                 total.home, total.both, total.none, total.noLang, total.noTerm, total.subpages, total.see,
+                                 total.seeFound);
             std::cout << std::format("{}: {} translations, page {}, home {}, none {} ({:.0f} s)", wiki,
                                      total.translations, total.page, total.home, total.none, seconds(wikiStarted))
                       << std::endl;

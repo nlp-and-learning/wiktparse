@@ -118,6 +118,9 @@ def ask_cascade(args, title, pos, defs, glosses):
     return answer
 
 
+SURE = ('positional', 'single', 'number')
+
+
 def run_eval(args):
     gold = json.load(open(args.gold, encoding='utf-8'))
     # One request per entry: the reviewed glosses of it
@@ -163,7 +166,13 @@ def run_apply(args):
         for code, path, node, tables in ge.entries(page):
             defs, glosses = ge.entry_data(node, tables)
             todo = [g for g, (ids, method, score) in glosses.items() if not ids or method in ('best', 'embedding')]
-            if todo and len(defs) >= 2:
+            # The definitions the easy methods left: not those surely of other glosses (a shorter
+            # request, fewer to confuse); all of them when none is left
+            taken = {i for g, (ids, method, score) in glosses.items() if g not in todo and method in SURE for i in ids or []}
+            free = [(i, text) for i, text in defs if i not in taken]
+            if args.free and len(free) >= 1:
+                defs = free
+            if todo and len(defs) >= (1 if args.free else 2):
                 cases.append((page['title'], code, '/'.join(f'{k}:{i}' for k, i in path), node.get('section'), defs, todo,
                               {g: glosses[g] for g in todo}))
     print(f'{len(cases)} entries, {sum(len(c[5]) for c in cases)} glosses', file=sys.stderr)
@@ -207,6 +216,8 @@ def main():
     parser.add_argument('--confidence', type=float, default=0.8, help='accepted from this confidence')
     parser.add_argument('-j', '--jobs', type=int, default=4, help='requests at a time (OLLAMA_NUM_PARALLEL)')
     parser.add_argument('--limit', type=int, help='--eval: the first entries only')
+    parser.add_argument('--all-definitions', dest='free', action='store_false',
+                        help='--apply: every definition of an entry, also those surely of other glosses')
     args = parser.parse_args()
     args.output = args.output or f'glossllm-{args.wiki}.tsv'
     (run_eval if args.eval else run_apply)(args)

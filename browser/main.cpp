@@ -242,6 +242,15 @@ QString label(const json &v, size_t i) {
             text += QString(" (%1 senses)").arg(v["senses"].size());
         if (v.contains("translations"))
             text += QString(" (%1 translations)").arg(v["translations"].size());
+        // a part of speech: the translations of its sections ("children": Translations)
+        else if (v.contains("children") && v["children"].is_array()) {
+            size_t below = 0;
+            for (const auto &child : v["children"])
+                if (child.is_object() && child.contains("translations"))
+                    below += child["translations"].size();
+            if (below)
+                text += QString(" (%1 translations below)").arg(below);
+        }
     } else if (v.contains("language")) {
         add("code");
         add("language");

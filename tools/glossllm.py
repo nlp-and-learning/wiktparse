@@ -47,9 +47,21 @@ def schema(defs, glosses):
         'required': ['gloss', 'definition', 'confidence']}}}, 'required': ['links']}
 
 
-def prompt(title, pos, defs, glosses):
+def examples(node):
+    """The first usage example of each sense of a node (id -> text), as words"""
+    found = {}
+    for holder in [node] + [c for c in node.get('children', []) if c.get('section') == node.get('section')]:
+        for s in holder.get('senses', []):
+            if s.get('examples'):
+                found[s['id']] = ge.plain(s['examples'][0])[:100]
+    return found
+
+
+def prompt(title, pos, defs, glosses, notes=None):
+    """notes: per definition id, words after it (an example, the glosses it already has)"""
+    notes = notes or {}
     lines = [f'Entry: {title} ({pos})', 'Definitions:']
-    lines += [f'  {i}: {text[:300]}' for i, text in defs if text.strip(' .')]
+    lines += [f'  {i}: {text[:300]}' + (f'  [{notes[i]}]' if i in notes else '') for i, text in defs if text.strip(' .')]
     lines += ['Glosses to link:'] + [f'  [{k}] {ge.plain(g)}' for k, g in enumerate(glosses)]
     return '\n'.join(lines)
 
@@ -119,21 +131,21 @@ def ask_openai(provider, model, system, user, glosses):
     raise RuntimeError(f'{provider}: still rate limited')
 
 
-def ask(model, title, pos, defs, glosses, url='http://localhost:11434', fallback=False):
+def ask(model, title, pos, defs, glosses, url='http://localhost:11434', fallback=False, notes=None):
     """{gloss index: (definition id or None, confidence)}; fallback: a second model, which may
     answer null"""
     system = SYSTEM_FALLBACK if fallback else SYSTEM
     if model.startswith('anthropic:'):
-        content = ask_anthropic(model.removeprefix('anthropic:'), system, prompt(title, pos, defs, glosses), glosses)
+        content = ask_anthropic(model.removeprefix('anthropic:'), system, prompt(title, pos, defs, glosses, notes), glosses)
         return parse(content, defs, glosses)
     if model.split(':', 1)[0] in PROVIDERS:
         provider, name = model.split(':', 1)
-        return parse(ask_openai(provider, name, system, prompt(title, pos, defs, glosses), glosses), defs, glosses)
+        return parse(ask_openai(provider, name, system, prompt(title, pos, defs, glosses, notes), glosses), defs, glosses)
     body = {'model': model, 'stream': False, 'format': schema(defs, glosses),
             # (a limit: JSON by a schema may run on without an end, spaces or repeated items)
             'options': {'temperature': 0.2, 'num_ctx': 4096, 'num_predict': 60 + 40 * len(glosses)},
             'messages': [{'role': 'system', 'content': system},
-                         {'role': 'user', 'content': prompt(title, pos, defs, glosses)}]}
+                         {'role': 'user', 'content': prompt(title, pos, defs, glosses, notes)}]}
     if model.startswith(('qwen3', 'gpt-oss', 'deepseek-r1')):
         body['think'] = 'low' if model.startswith('gpt-oss') else False
     request = urllib.request.Request(url + '/api/chat', json.dumps(body).encode(), {'Content-Type': 'application/json'})
@@ -157,14 +169,14 @@ def parse(content, defs, glosses):
     return result
 
 
-def ask_cascade(args, title, pos, defs, glosses):
+def ask_cascade(args, title, pos, defs, glosses, notes=None):
     """The main model; the glosses it is unsure of (below --confidence) to --fallback"""
-    answer = ask(args.model, title, pos, defs, glosses)
+    answer = ask(args.model, title, pos, defs, glosses, notes=notes)
     if not args.fallback:
         return answer
     unsure = [k for k in range(len(glosses)) if answer.get(k, (None, 0.0))[1] < args.confidence or answer.get(k, (None,))[0] is None]
     if unsure:
-        second = ask(args.fallback, title, pos, defs, [glosses[k] for k in unsure], fallback=True)
+        second = ask(args.fallback, title, pos, defs, [glosses[k] for k in unsure], fallback=True, notes=notes)
         for j, k in enumerate(unsure):
             if j in second:
                 got, confidence = second[j]
@@ -225,15 +237,22 @@ def run_apply(args):
             defs, glosses = ge.entry_data(node, tables)
             todo = [g for g, (ids, method, score) in glosses.items()
                     if not ids or (args.recheck and method in ('best', 'embedding'))]
-            # The definitions the easy methods left: not those surely of other glosses (a shorter
-            # request, fewer to confuse); all of them when none is left
-            taken = {i for g, (ids, method, score) in glosses.items() if g not in todo and method in SURE for i in ids or []}
-            free = [(i, text) for i, text in defs if i not in taken]
+            # Every definition, with its first example and the glosses the easy methods surely gave
+            # it (a gloss may be of a definition that has another: en "it", calculator); --free-only:
+            # only the definitions without such glosses (shorter, but those glosses lost)
+            notes = examples(node) if args.examples else {}
+            taken = {}
+            for g, (ids, method, score) in glosses.items():
+                if g not in todo and method in SURE:
+                    for i in ids or []:
+                        taken.setdefault(i, []).append(g)
+            for i, gs in taken.items():
+                notes[i] = (notes[i] + '; ' if i in notes else '') + 'linked: ' + ', '.join(gs)[:120]
+            if args.free_only:
+                defs = [(i, text) for i, text in defs if i not in taken] or defs
             where = '/'.join(f'{k}:{i}' for k, i in path)
-            if args.free and free:
-                defs = free
-            if todo and len(defs) >= (1 if args.free else 2) and f"{page['title']}\t{code}\t{where}" not in done:
-                cases.append((page['title'], code, where, node.get('section'), defs, todo))
+            if todo and len(defs) >= 2 and f"{page['title']}\t{code}\t{where}" not in done:
+                cases.append((page['title'], code, where, node.get('section'), defs, todo, notes))
     total = len(cases)
     if args.limit:
         cases = cases[:args.limit]
@@ -245,8 +264,8 @@ def run_apply(args):
             open(review_path, 'a', encoding='utf-8') as review, concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
         if new_file:
             out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
-        futures = {pool.submit(ask_cascade, args, title, pos, defs, todo): (title, code, where, pos, defs, todo)
-                   for title, code, where, pos, defs, todo in cases}
+        futures = {pool.submit(ask_cascade, args, title, pos, defs, todo, notes): (title, code, where, pos, defs, todo)
+                   for title, code, where, pos, defs, todo, notes in cases}
         for future in concurrent.futures.as_completed(futures):
             title, code, where, pos, defs, todo = futures[future]
             try:
@@ -300,8 +319,10 @@ def main():
     parser.add_argument('--limit', type=int, help='the first entries only (--apply: of those not done yet)')
     parser.add_argument('--recheck', action='store_true',
                         help='--apply: also the glosses linked by best and embedding (some 10%% of them wrong)')
-    parser.add_argument('--all-definitions', dest='free', action='store_false',
-                        help='--apply: every definition of an entry, also those surely of other glosses')
+    parser.add_argument('--free-only', action='store_true',
+                        help='--apply: only the definitions without glosses of the easy methods')
+    parser.add_argument('--no-examples', dest='examples', action='store_false',
+                        help='--apply: no usage example after each definition')
     args = parser.parse_args()
     args.output = args.output or f'glossllm-{args.wiki}.tsv'
     load_env()

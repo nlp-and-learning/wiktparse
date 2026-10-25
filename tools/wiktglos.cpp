@@ -45,7 +45,7 @@ std::string plainText(const std::string &text) {
     static const std::map<std::string, int> wordTemplates = {
             {"l", 2},     {"m", 2},      {"ll", 2},    {"w", 1},     {"taxfmt", 1}, {"taxlink", 1},
             {"vern", 1},  {"gloss", 1},  {"gl", 1},    {"q", 1},     {"qualifier", 1}, {"i", 1},
-            {"ngd", 1},   {"n-g", 1},    {"non-gloss definition", 1}, {"sense", 1},     {"s", 1}};
+            {"ngd", 1},   {"n-g", 1},    {"non-gloss definition", 1}, {"non-gloss", 1}, {"sense", 1},     {"s", 1}};
     std::string out;
     size_t i = 0;
     for (const auto &t : wikilib::templates::find_invocations(text)) {
@@ -56,6 +56,19 @@ std::string plainText(const std::string &text) {
         if (auto it = wordTemplates.find(t.name); it != wordTemplates.end()) {
             if (auto v = t.get(static_cast<size_t>(it->second)))
                 out += " " + std::string(*v) + " ";
+        } else if (!t.name.ends_with(" of") && t.name != "lb" && t.name != "place" && [&] {
+                       // Another template of a sentence: its text ({{non-gloss|The third-person …}})
+                       int sentences = 0;
+                       for (const auto &[key, value] : t.parameters)
+                           sentences += key.empty() || std::isdigit(static_cast<unsigned char>(key[0]))
+                                                ? value.find(' ') != std::string::npos && value.size() > 15
+                                                : 0;
+                       return sentences == 1;
+                   }()) {
+            for (const auto &[key, value] : t.parameters)
+                if ((key.empty() || std::isdigit(static_cast<unsigned char>(key[0]))) && value.find(' ') != std::string::npos &&
+                    value.size() > 15)
+                    out += " " + value + " ";
         } else if (t.name == "place") {
             // en {{place|en|capital city|c/Guyana|;|named for …}}: "capital city Guyana" (the
             // definition of most proper nouns of places)

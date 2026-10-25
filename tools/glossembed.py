@@ -45,7 +45,7 @@ def pages(directory, wiki):
 
 LABELS = {'lb', 'lbl', 'label', 'tlb'}
 WORDS = {'l': 2, 'm': 2, 'll': 2, 'w': 1, 'taxfmt': 1, 'taxlink': 1, 'vern': 1, 'gloss': 1, 'gl': 1,
-         'q': 1, 'qualifier': 1, 'i': 1, 'ngd': 1, 'n-g': 1, 'non-gloss definition': 1, 'sense': 1, 's': 1}
+         'q': 1, 'qualifier': 1, 'i': 1, 'ngd': 1, 'n-g': 1, 'non-gloss definition': 1, 'non-gloss': 1, 'sense': 1, 's': 1}
 
 
 def plain(text):
@@ -67,6 +67,10 @@ def plain(text):
             return ' ' + ' '.join(a for a in args[1:] if a not in ('_', 'and', 'or', '&')) + ': '
         if name in WORDS and len(args) >= WORDS[name]:
             return ' ' + args[WORDS[name] - 1] + ' '
+        # Another template of a sentence: its text ({{non-gloss|The third-person … pronoun …}})
+        sentences = [a for a in args if ' ' in a and len(a) > 15]
+        if len(sentences) == 1:
+            return ' ' + sentences[0] + ' '
         return ' '
     for _ in range(3):  # nested templates, inside out
         text = re.sub(r'\{\{([^{}]*)\}\}', template, text)

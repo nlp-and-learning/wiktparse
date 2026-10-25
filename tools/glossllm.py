@@ -567,6 +567,73 @@ def run_agree(args):
           f'for wiktglos --extra {out_path}; by hand: {review_path}', file=sys.stderr)
 
 
+def run_vote(args):
+    """A third model (--model, which may answer null) votes on the review files of --agree:
+    choice = the answer it shares with a or b (a none and its null: none), else empty; the
+    files rewritten as <review>.voted.tsv with choice, ready for --from-review; in parts"""
+    for path in args.vote:
+        rows = list(csv.DictReader(open(path, encoding='utf-8'), delimiter='\t'))
+        wiki = rows[0]['wiki'] if rows else ''
+        out_path = path.removesuffix('.tsv') + '.voted.tsv'
+        done = {}
+        if os.path.exists(out_path):  # a run before: its votes kept
+            for r in csv.DictReader(open(out_path, encoding='utf-8'), delimiter='\t'):
+                done[(r['title'], r['language'], r['path'], r['gloss'])] = r
+        todo = {}
+        for r in rows:
+            key = (r['title'], r['language'], r['path'], r['gloss'])
+            if key not in done:
+                todo.setdefault(key[:3], []).append(r)
+        entries = {}
+        if todo:
+            for page in ge.pages(args.input, wiki):
+                for code, where, node, tables in ge.entries(page):
+                    key = (page['title'], code, '/'.join(f'{k}:{i}' for k, i in where))
+                    if key in todo:
+                        entries[key] = (node.get('section'), ge.entry_data(node, tables)[0], examples(node))
+        print(f'{path}: {sum(len(v) for v in todo.values())} glosses of {len(todo)} entries to vote '
+              f'({len(done)} voted before)', file=sys.stderr)
+        started, finished = time.time(), 0
+        votes = __import__('collections').Counter()
+        fields = list(rows[0].keys()) if rows else []
+        new_file = not os.path.exists(out_path)
+        with open(out_path, 'a', encoding='utf-8') as out, concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
+            if new_file:
+                out.write('\t'.join(fields) + '\n')
+            futures = {pool.submit(ask, args.model, key[0], entries[key][0], entries[key][1],
+                                   [r['gloss'] for r in group], fallback=True, notes=entries[key][2]): group
+                       for key, group in todo.items() if key in entries}
+            try:
+                for future in concurrent.futures.as_completed(futures):
+                    group = futures[future]
+                    try:
+                        answer = future.result()
+                    except OutOfCredit:
+                        raise
+                    except Exception as error:
+                        print(f"\n  error {group[0]['title']}: {error}", file=sys.stderr)
+                        continue
+                    for k, r in enumerate(group):
+                        third = answer.get(k, (None, 0.0))[0] or 'none'
+                        choice = 'a' if third == r['a'] else 'b' if third == r['b'] else ''
+                        votes[choice or 'third other'] += 1
+                        r = dict(r, choice=choice if choice else '')
+                        out.write('\t'.join((r.get(f) or '').replace('\t', ' ') for f in fields) + '\n')
+                    finished += 1
+                    if finished % 10 == 0 or finished == len(futures):
+                        out.flush()
+                        rate = finished / (time.time() - started)
+                        left = (len(futures) - finished) / rate if rate else 0
+                        print(f'\r  {finished}/{len(futures)} entries, {rate:.2f}/s, {int(left // 60)}:{int(left % 60):02d} left, '
+                              f"a {votes['a']} b {votes['b']} other {votes['third other']}, "
+                              f'tokens in {TOKENS["in"]} out {TOKENS["out"]}   ', end='', file=sys.stderr, flush=True)
+            except (OutOfCredit, KeyboardInterrupt) as e:
+                print(f'\n  stopped: {str(e) or "interrupted"}', file=sys.stderr)
+                pool.shutdown(wait=False, cancel_futures=True)
+        print(f"\n{path}: votes a {votes['a']}, b {votes['b']}, neither {votes['third other']}; "
+              f'next: --from-review {out_path}', file=sys.stderr)
+
+
 def run_from_review(args):
     """Review files with choice filled (a, b, a definition id, none): -o <review>.chosen.tsv for
     wiktglos --extra (method manual)"""
@@ -594,6 +661,8 @@ def main():
     mode.add_argument('--check', metavar='TSV', help='the links of a glossllm TSV confirmed by --verify')
     mode.add_argument('--agree', nargs=2, metavar=('A.tsv', 'B.tsv'),
                       help='the links two models agree on (the same glosses by --apply -o of each)')
+    mode.add_argument('--vote', nargs='+', metavar='REVIEW.tsv',
+                      help='a third model (--model) votes on review files of --agree: <review>.voted.tsv')
     mode.add_argument('--from-review', nargs='+', metavar='REVIEW.tsv',
                       help='review files of --agree with choice filled, to <review>.chosen.tsv')
     parser.add_argument('--gold', default='../res/defglos/gold-en.json')
@@ -627,7 +696,7 @@ def main():
             sys.exit(f'{model}: {key} is not set')
     if args.check and not args.verify:
         sys.exit('--check needs --verify MODEL')
-    (run_from_review if args.from_review else run_agree if args.agree else run_check if args.check
+    (run_vote if args.vote else run_from_review if args.from_review else run_agree if args.agree else run_check if args.check
      else run_eval if args.eval else run_apply)(args)
 
 

@@ -90,6 +90,10 @@ set_target_properties(defglos_eval PROPERTIES OUTPUT_NAME defglos)
 target_compile_definitions(defglos_eval PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
 target_link_libraries(defglos_eval defglos)
 
+# Phase 2: glosses of translation tables linked to definitions (defglos) on the wiktlink output
+add_executable(wiktglos tools/wiktglos.cpp)
+target_link_libraries(wiktglos defglos BZip2::BZip2 PkgConfig::ZSTD)
+
 add_executable(${PROJECT_NAME} src/main.cpp
         src/headers/headers.cpp
         src/headers/headers.h

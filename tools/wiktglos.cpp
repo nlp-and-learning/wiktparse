@@ -239,11 +239,19 @@ void linkNode(json &node, const std::string &title, Count &count, const std::str
     };
     std::vector<Result> results(entry.glosses.size());
     // A gloss that is a sense number: ja "語義1", "1.", "sense 2"
-    static const std::regex number(R"(^\s*(?:語義|sense|meaning|znaczenie)?\s*(\d+(?:\.\d+)*)\.?\s*$)", std::regex::icase);
+    // (ja "語義1:", "名詞語義1", "意味2", "語義1・2"; multibyte marks as alternatives, not in brackets)
+    static const std::regex number(
+            R"(^\s*(?:名詞|動詞|形容詞)?\s*(?:語義|意味|sense|meaning|znaczenie)?\s*(\d+(?:\.\d+)*)(?:\s*(?:・|,|、)\s*(\d+(?:\.\d+)*))?\s*(?:\.|:|：)?\s*$)",
+            std::regex::icase);
     for (size_t g = 0; g < entry.glosses.size(); ++g)
-        if (std::smatch m; std::regex_match(entry.glosses[g].text, m, number))
-            if (std::ranges::any_of(entry.defs, [&](const auto &d) { return d.id == m[1].str(); }))
-                results[g] = {{m[1].str()}, "number", 1.0};
+        if (std::smatch m; std::regex_match(entry.glosses[g].text, m, number)) {
+            std::vector<std::string> ids;
+            for (size_t k : {1u, 2u})
+                if (m[k].matched && std::ranges::any_of(entry.defs, [&](const auto &d) { return d.id == m[k].str(); }))
+                    ids.push_back(m[k].str());
+            if (!ids.empty())
+                results[g] = {ids, "number", 1.0};
+        }
     // The definitions and glosses by their words (defglos)
     const defglos::Similarity similarity(entry);
     for (const auto &link : defglos::match(entry, similarity))

@@ -380,7 +380,7 @@ def run_apply(args):
                       f'{int(left // 3600)}:{int(left % 3600 // 60):02d}:{int(left % 60):02d} left, '
                       f'tokens in {TOKENS["in"]} out {TOKENS["out"]}   ', end='', file=sys.stderr, flush=True)
     print(f'\n{finished} entries done, {links} links appended to {args.output} (to review: {review_path}); '
-          f'{total - len(done) - finished} entries left', file=sys.stderr)
+          f'{total - finished} entries left', file=sys.stderr)
     if stopped:
         sys.exit(f'stopped: {stopped}')
 

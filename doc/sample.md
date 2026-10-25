@@ -1,12 +1,12 @@
-# jsonl_wordnet: a sample of parsed Wiktionaries for a multilingual wordnet
+# wiktparse sample: parsed Wiktionaries, closed over translations
 
-Pages of 177 Wiktionaries parsed into JSON by
+`wiktparse-sample-20261001.zip`. Pages of 177 Wiktionaries parsed into JSON by
 [wiktparse](https://github.com/nlp-and-learning/wiktparse.git): language
 sections, parts of speech, definitions with examples, translations with the
 definition they belong to, and links of every translation to the pages of its
 term in other Wiktionaries. The sample is closed over translations, so that
-both ends of a translation are in it, and is meant for building a wordnet of
-synsets linked across languages.
+both ends of a translation are in it; it is the working sample for a planned
+multilingual wordnet (synsets linked across languages), not the wordnet itself.
 
 ## Source and license
 

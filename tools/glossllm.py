@@ -595,9 +595,11 @@ def run_vote(args):
               f'({len(done)} voted before)', file=sys.stderr)
         started, finished = time.time(), 0
         votes = __import__('collections').Counter()
-        fields = list(rows[0].keys()) if rows else []
+        fields = (list(rows[0].keys()) if rows else []) + ['c', 'c_definition']
         new_file = not os.path.exists(out_path)
-        with open(out_path, 'a', encoding='utf-8') as out, concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
+        three_path = path.removesuffix('.tsv') + '.voted.three.txt'
+        with open(out_path, 'a', encoding='utf-8') as out, open(three_path, 'a', encoding='utf-8') as three, \
+                concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
             if new_file:
                 out.write('\t'.join(fields) + '\n')
             futures = {pool.submit(ask, args.model, key[0], entries[key][0], entries[key][1],
@@ -613,15 +615,21 @@ def run_vote(args):
                     except Exception as error:
                         print(f"\n  error {group[0]['title']}: {error}", file=sys.stderr)
                         continue
+                    texts = dict(entries[(group[0]['title'], group[0]['language'], group[0]['path'])][1])
                     for k, r in enumerate(group):
                         third = answer.get(k, (None, 0.0))[0] or 'none'
+                        # Two votes of three win (none is a vote too); three different: choice
+                        # empty, c tells the third, for a decision later (<review>.voted.three.txt)
                         choice = 'a' if third == r['a'] else 'b' if third == r['b'] else ''
                         votes[choice or 'third other'] += 1
-                        r = dict(r, choice=choice if choice else '')
+                        r = dict(r, choice=choice, c=third, c_definition=texts.get(third, ''))
                         out.write('\t'.join((r.get(f) or '').replace('\t', ' ') for f in fields) + '\n')
+                        if not choice:
+                            three.write(f"{r['title']}  «{r['gloss']}»\n  a {r['a']}: {r['a_definition'][:120]}\n"
+                                        f"  b {r['b']}: {r['b_definition'][:120]}\n  c {third}: {texts.get(third, '')[:120]}\n")
                     finished += 1
                     if finished % 10 == 0 or finished == len(futures):
-                        out.flush()
+                        out.flush(), three.flush()
                         rate = finished / (time.time() - started)
                         left = (len(futures) - finished) / rate if rate else 0
                         print(f'\r  {finished}/{len(futures)} entries, {rate:.2f}/s, {int(left // 60)}:{int(left % 60):02d} left, '
@@ -630,8 +638,8 @@ def run_vote(args):
             except (OutOfCredit, KeyboardInterrupt) as e:
                 print(f'\n  stopped: {str(e) or "interrupted"}', file=sys.stderr)
                 pool.shutdown(wait=False, cancel_futures=True)
-        print(f"\n{path}: votes a {votes['a']}, b {votes['b']}, neither {votes['third other']}; "
-              f'next: --from-review {out_path}', file=sys.stderr)
+        print(f"\n{path}: votes a {votes['a']}, b {votes['b']}, three different {votes['third other']} "
+              f'({three_path}); next: --from-review {out_path}', file=sys.stderr)
 
 
 def run_from_review(args):

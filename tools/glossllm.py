@@ -6,7 +6,8 @@ One request per entry: its numbered definitions and the glosses to link; the ans
 cloud ones such as glm-4.7:cloud by the same API).
 
   glossllm.py --eval  --gold ../res/defglos/gold-en.json --model qwen3:14b [-j 4]
-      accuracy on the reviewed links (a subsense or its parent counts), none included
+      accuracy on the reviewed links (a subsense or its parent counts), none included;
+      --fallback MODEL: the answers below --confidence again by a second model (which may say null)
   glossllm.py --apply [-i jsonl_senses] [--wiki en] --model qwen3:14b [-o glossllm-en.tsv]
       the glosses without a link, and those of best and embedding: a TSV like glossembed.py
       (accepted from the confidence), for wiktglos --extra
@@ -51,18 +52,43 @@ def prompt(title, pos, defs, glosses):
     return '\n'.join(lines)
 
 
-def ask(model, title, pos, defs, glosses, url='http://localhost:11434'):
-    """{gloss index: (definition id or None, confidence)}"""
+SYSTEM_FALLBACK = SYSTEM.replace('Nearly every gloss has its definition: null only when it surely has none.',
+                                 'Answer null when no definition is the sense of the gloss.')
+
+
+def ask_anthropic(model, system, user, glosses):
+    """The answer text of an Anthropic model (anthropic:claude-haiku-5-5), ANTHROPIC_API_KEY"""
+    body = {'model': model, 'max_tokens': 100 + 60 * len(glosses), 'temperature': 0.2, 'system': system,
+            'messages': [{'role': 'user', 'content': user}]}
+    request = urllib.request.Request('https://api.anthropic.com/v1/messages', json.dumps(body).encode(),
+                                     {'Content-Type': 'application/json', 'anthropic-version': '2023-06-01',
+                                      'x-api-key': os.environ['ANTHROPIC_API_KEY']})
+    with urllib.request.urlopen(request, timeout=120) as r:
+        text = json.load(r)['content'][0]['text']
+    return text[text.find('{'):text.rfind('}') + 1]
+
+
+def ask(model, title, pos, defs, glosses, url='http://localhost:11434', fallback=False):
+    """{gloss index: (definition id or None, confidence)}; fallback: a second model, which may
+    answer null"""
+    system = SYSTEM_FALLBACK if fallback else SYSTEM
+    if model.startswith('anthropic:'):
+        content = ask_anthropic(model.removeprefix('anthropic:'), system, prompt(title, pos, defs, glosses), glosses)
+        return parse(content, defs, glosses)
     body = {'model': model, 'stream': False, 'format': schema(defs, glosses),
             # (a limit: JSON by a schema may run on without an end, spaces or repeated items)
             'options': {'temperature': 0.2, 'num_ctx': 4096, 'num_predict': 60 + 40 * len(glosses)},
-            'messages': [{'role': 'system', 'content': SYSTEM},
+            'messages': [{'role': 'system', 'content': system},
                          {'role': 'user', 'content': prompt(title, pos, defs, glosses)}]}
     if model.startswith(('qwen3', 'gpt-oss', 'deepseek-r1')):
         body['think'] = 'low' if model.startswith('gpt-oss') else False
     request = urllib.request.Request(url + '/api/chat', json.dumps(body).encode(), {'Content-Type': 'application/json'})
     with urllib.request.urlopen(request, timeout=300) as r:
         content = json.load(r)['message']['content']
+    return parse(content, defs, glosses)
+
+
+def parse(content, defs, glosses):
     ids = {i for i, _ in defs}
     result = {}
     try:
@@ -75,6 +101,21 @@ def ask(model, title, pos, defs, glosses, url='http://localhost:11434'):
     except (json.JSONDecodeError, AttributeError, TypeError, ValueError):
         pass
     return result
+
+
+def ask_cascade(args, title, pos, defs, glosses):
+    """The main model; the glosses it is unsure of (below --confidence) to --fallback"""
+    answer = ask(args.model, title, pos, defs, glosses)
+    if not args.fallback:
+        return answer
+    unsure = [k for k in range(len(glosses)) if answer.get(k, (None, 0.0))[1] < args.confidence or answer.get(k, (None,))[0] is None]
+    if unsure:
+        second = ask(args.fallback, title, pos, defs, [glosses[k] for k in unsure], fallback=True)
+        for j, k in enumerate(unsure):
+            if j in second:
+                got, confidence = second[j]
+                answer[k] = (got, max(confidence, args.confidence) if got is not None else confidence)
+    return answer
 
 
 def run_eval(args):
@@ -91,7 +132,7 @@ def run_eval(args):
     started = time.time()
     results = []
     with concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
-        futures = {pool.submit(ask, args.model, t, p, e['defs'], e['glosses']): e for (t, p), e in entries.items()}
+        futures = {pool.submit(ask_cascade, args, t, p, e['defs'], e['glosses']): e for (t, p), e in entries.items()}
         for done, future in enumerate(concurrent.futures.as_completed(futures), 1):
             print(f'\r  {done}/{len(futures)} entries', end='', file=sys.stderr, flush=True)
             e = futures[future]
@@ -103,12 +144,13 @@ def run_eval(args):
             for k, expected in enumerate(e['gold']):
                 got, confidence = answer.get(k, (None, 0.0))
                 right = (got is None and not expected) or (got is not None and any(ge.related(got, x) for x in expected))
-                results.append((confidence, right, got is None))
+                results.append((confidence, right, got is None, not expected))
     print(file=sys.stderr)
     seconds = time.time() - started
     n = len(results)
     print(f'{args.model}: {n} glosses of {len(entries)} entries in {seconds:.0f} s ({seconds / len(entries):.1f} s/entry); '
-          f'accuracy {sum(r[1] for r in results) / n:.3f}, none answered {sum(r[2] for r in results)}')
+          f'accuracy {sum(r[1] for r in results) / n:.3f}, none answered {sum(r[2] for r in results)}, '
+          f'none expected {sum(r[3] for r in results)} of them right {sum(r[1] and r[3] for r in results)}')
     for threshold in (0.5, 0.7, 0.8, 0.9):
         kept = [r for r in results if r[0] >= threshold and not r[2]]
         if kept:
@@ -128,7 +170,7 @@ def run_apply(args):
     started, done = time.time(), 0
     with open(args.output, 'w', encoding='utf-8') as out, concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
         out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
-        futures = {pool.submit(ask, args.model, title, pos, defs, todo): (title, code, where, todo, before)
+        futures = {pool.submit(ask_cascade, args, title, pos, defs, todo): (title, code, where, todo, before)
                    for title, code, where, pos, defs, todo, before in cases}
         for future in concurrent.futures.as_completed(futures):
             title, code, where, todo, before = futures[future]
@@ -160,6 +202,8 @@ def main():
     parser.add_argument('-o', '--output')
     parser.add_argument('--wiki', default='en')
     parser.add_argument('--model', default='qwen3:14b')
+    parser.add_argument('--fallback', help='a second model for the unsure answers: glm-4.7:cloud, qwen2.5:32b, '
+                                           'anthropic:claude-haiku-5-5 (ANTHROPIC_API_KEY)')
     parser.add_argument('--confidence', type=float, default=0.8, help='accepted from this confidence')
     parser.add_argument('-j', '--jobs', type=int, default=4, help='requests at a time (OLLAMA_NUM_PARALLEL)')
     parser.add_argument('--limit', type=int, help='--eval: the first entries only')

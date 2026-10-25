@@ -1,0 +1,1579 @@
+[
+ {
+  "key": "h0",
+  "title": "Borki",
+  "pos": "Proper noun",
+  "gloss": "''Polish toponym''",
+  "defs": [
+   [
+    "1",
+    "The name of numerous settlements in Poland."
+   ],
+   [
+    "2",
+    "historical: free settlement/administrative centre volost:suf/Borchanskaya uyezd:Suf/Zmiev governorate:Suf/Kharkov the Russian Empire site of the Borki train disaster of 1888; now the village of Birky in Zmiiv urban hromada, Chuhuiv Raion, Kharkiv Oblast, Ukraine ."
+   ],
+   [
+    "3",
+    "The name of numerous settlements in Russia, including:"
+   ],
+   [
+    "3.1",
+    "village/administrative centre selsoviet:suf/Borkovsky Sudzhansky Kursk federal district/Central Federal District Russia ."
+   ]
+  ],
+  "glosses": [
+   "''Polish toponym''",
+   "free settlement in Borchanskaya, Zmiev, Kharkov, Russian Empire",
+   "village in Borkovsky, Sudzhansky, Kursk, Central Russia"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h1",
+  "title": "camerlingate",
+  "pos": "Noun",
+  "gloss": "chamberlain",
+  "defs": [
+   [
+    "1",
+    "Roman Catholicism: The dignity of the camerlengo cardinal who presides over the Apostolic Chamber in pontifical interregnum ."
+   ],
+   [
+    "2",
+    "Roman Catholicism: period, between the death of a pontiff and the election of his successor, in which a camerlengo is in charge of governing the Church in the administrative field."
+   ]
+  ],
+  "glosses": [
+   "chamberlain"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h2",
+  "title": "masculism",
+  "pos": "Noun",
+  "gloss": "a social theory or political movement",
+  "defs": [
+   [
+    "1",
+    "Advocacy of men's rights."
+   ],
+   [
+    "2",
+    "Support for patriarchy / male domination of women; opposition to equality for women; anti-feminism."
+   ],
+   [
+    "3",
+    "Sexism in favor of men."
+   ]
+  ],
+  "glosses": [
+   "a social theory or political movement"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h3",
+  "title": "artisanal",
+  "pos": "Adjective",
+  "gloss": "involving skilled work that is not very mechanised",
+  "defs": [
+   [
+    "1",
+    "Of or pertaining to artisans or the work of artisans."
+   ],
+   [
+    "2",
+    "Involving skilled work, with comparatively little reliance on machinery."
+   ],
+   [
+    "3",
+    "of an item, especially a foodstuff: Made by an artisan (skilled worker)."
+   ]
+  ],
+  "glosses": [
+   "of or pertaining to artisans",
+   "involving skilled work that is not very mechanised",
+   "(of an item) made by artisans"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h4",
+  "title": "scientific socialism",
+  "pos": "Noun",
+  "gloss": "type of socialism",
+  "defs": [
+   [
+    "1",
+    "socialism obsolete: Society governed by science."
+   ],
+   [
+    "2",
+    "socialism: Socialism that starts from the analysis of capitalism, revealing its inner workings and contradictions, in order to develop a plan to move from capitalism to socialism."
+   ]
+  ],
+  "glosses": [
+   "type of socialism"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h5",
+  "title": "mess",
+  "pos": "Verb",
+  "gloss": "screw around",
+  "defs": [
+   [
+    "1",
+    "transitive often with \"up\": To make untidy or dirty."
+   ],
+   [
+    "1.1",
+    "To make soiled by defecating."
+   ],
+   [
+    "1.2",
+    "To make soiled by ejaculating."
+   ],
+   [
+    "2",
+    "transitive often with \"up\": To throw into disorder or to ruin."
+   ],
+   [
+    "3",
+    "intransitive: To interfere."
+   ]
+  ],
+  "glosses": [
+   "screw around"
+  ],
+  "gold": []
+ },
+ {
+  "key": "h6",
+  "title": "anatine",
+  "pos": "Adjective",
+  "gloss": "relating to the Anatidae",
+  "defs": [
+   [
+    "1",
+    "zoology: Being of the family Anatinae ."
+   ],
+   [
+    "2",
+    "Pertaining to or resembling a duck; ducklike."
+   ]
+  ],
+  "glosses": [
+   "relating to the Anatidae"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h7",
+  "title": "valedictorian",
+  "pos": "Noun",
+  "gloss": "no 1 student",
+  "defs": [
+   [
+    "1",
+    "US Canada properly: The individual in a graduating class who delivers the farewell or valedictory address, often the person who graduates with the highest grades."
+   ],
+   [
+    "2",
+    "US Canada colloquial: The individual in a graduating class who graduates with the highest grades."
+   ]
+  ],
+  "glosses": [
+   "farewell speech giver",
+   "no 1 student"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h8",
+  "title": "grammar",
+  "pos": "Noun",
+  "gloss": "rules for speaking and writing a language",
+  "defs": [
+   [
+    "1",
+    "countable uncountable linguistics: A system of rules and principles for the structure of a language, or of languages in general."
+   ],
+   [
+    "1.1",
+    "uncountable linguistics: The study of such a system."
+   ],
+   [
+    "2",
+    "uncountable: Actual or presumed prescriptive notions about the correct use of a language."
+   ],
+   [
+    "3",
+    "countable: A book describing the grammar ( or ) of a language."
+   ],
+   [
+    "4",
+    "countable computing theory: A formal system specifying the syntax of a language."
+   ],
+   [
+    "5",
+    "countable computing theory: A formal system defining a formal language."
+   ],
+   [
+    "6",
+    "countable metaphorical: The basic rules or principles of a field of knowledge or a particular skill."
+   ],
+   [
+    "7",
+    "countable British archaic: A book describing these rules or principles; a textbook."
+   ],
+   [
+    "8",
+    "countable uncountable chiefly British informal: ellipsis of grammar school ."
+   ],
+   [
+    "9",
+    "countable cellular automata: A set of component patterns, along with the rules for connecting them, which can be combined to form more complex patterns such as large still lifes, oscillators, and spaceships."
+   ]
+  ],
+  "glosses": [
+   "rules for speaking and writing a language",
+   "study of internal structure and use of words",
+   "book describing grammar",
+   "in computing: formal system specifying the syntax of a language"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h9",
+  "title": "shear",
+  "pos": "Noun",
+  "gloss": "a force that produces a shearing strain",
+  "defs": [
+   [
+    "1",
+    "A cutting tool similar to scissors, but often larger."
+   ],
+   [
+    "2",
+    "metalworking: A large machine use for cutting sheet metal."
+   ],
+   [
+    "3",
+    "The act of shearing, or something removed by shearing."
+   ],
+   [
+    "4",
+    "physics: Forces that push in opposite directions."
+   ],
+   [
+    "5",
+    "aviation meteorology uncountable: The phenomenon of wind shear."
+   ],
+   [
+    "6",
+    "aviation meteorology countable: A specific instance of wind shear."
+   ],
+   [
+    "7",
+    "mathematics: A transformation that displaces every point in a direction parallel to some given line by a distance proportional to the point's distance from the line."
+   ],
+   [
+    "8",
+    "geology: The response of a rock to deformation usually by compressive stress, resulting in particular textures."
+   ]
+  ],
+  "glosses": [
+   "a cutting tool similar to scissors",
+   "the act of shearing, or something removed by shearing",
+   "a force that produces a shearing strain",
+   "a shear transformation"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "h10",
+  "title": "sweet fermented rice",
+  "pos": "Noun",
+  "gloss": "Vietnamese food",
+  "defs": [
+   [
+    "1",
+    "A traditional food of China, used as a dish itself, or components of other dishes, and is also a folk remedy."
+   ],
+   [
+    "2",
+    "A traditional desert of Thailand, composed of a lightly fermented glutinous rice ."
+   ],
+   [
+    "3",
+    "A traditional pudding of Vietnam, composed of a lightly fermented glutinous rice"
+   ]
+  ],
+  "glosses": [
+   "Chinese food",
+   "Thai food",
+   "Vietnamese food"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "h11",
+  "title": "moxie",
+  "pos": "Noun",
+  "gloss": "vigor, energy",
+  "defs": [
+   [
+    "1",
+    "Nerve, spunk, strength of character."
+   ],
+   [
+    "2",
+    "Verve."
+   ],
+   [
+    "3",
+    "Wit, smarts, skill."
+   ]
+  ],
+  "glosses": [
+   "spirit, courage, force of character",
+   "vigor, energy",
+   "wit, skill, know-how"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h12",
+  "title": "gastro-",
+  "pos": "Prefix",
+  "gloss": "meaning food",
+  "defs": [
+   [
+    "1",
+    "Of or relating to the stomach."
+   ],
+   [
+    "2",
+    "Of or relating to cooking."
+   ]
+  ],
+  "glosses": [
+   "meaning stomach",
+   "meaning food"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h13",
+  "title": "homegrown",
+  "pos": "Adjective",
+  "gloss": "Created or constructed in an informal or amateur manner; done without formal assistance, as from a business, organization, or professional",
+  "defs": [
+   [
+    "1",
+    "of produce: Raised or cultivated at home, on one's own land, or in one's own country; domestic; indigenous."
+   ],
+   [
+    "2",
+    "by extension: Produced or coming from one's own country or a particular place; local; native; self-produced."
+   ]
+  ],
+  "glosses": [
+   "Grown at home",
+   "Created or constructed in an informal or amateur manner; done without formal assistance, as from a business, organization, or professional"
+  ],
+  "gold": []
+ },
+ {
+  "key": "h14",
+  "title": "dirt",
+  "pos": "Noun",
+  "gloss": "unclean matter",
+  "defs": [
+   [
+    "1",
+    "chiefly US: Soil or earth."
+   ],
+   [
+    "2",
+    "A stain or spot (on clothes etc); any foreign substance that worsens appearance."
+   ],
+   [
+    "3",
+    "Previously unknown facts or rumors about a person."
+   ],
+   [
+    "4",
+    "figurative: Meanness; sordidness."
+   ],
+   [
+    "5",
+    "mining: In placer mining, earth, gravel, etc., before washing."
+   ],
+   [
+    "6",
+    "Freckles."
+   ],
+   [
+    "7",
+    "archaic: Excrement; dung."
+   ]
+  ],
+  "glosses": [
+   "unclean matter",
+   "soil or earth",
+   "stain or spot (on clothes etc)",
+   "previously unknown negative information, kompromat"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h15",
+  "title": "unlast",
+  "pos": "Verb",
+  "gloss": "tool",
+  "defs": [
+   [
+    "1",
+    "intransitive: To fail to last."
+   ],
+   [
+    "2",
+    "transitive: To remove (a shoe) from a last."
+   ]
+  ],
+  "glosses": [
+   "tool"
+  ],
+  "gold": []
+ },
+ {
+  "key": "h16",
+  "title": "inflow",
+  "pos": "Noun",
+  "gloss": "a flow in",
+  "defs": [
+   [
+    "1",
+    "The act or process of flowing in or into."
+   ],
+   [
+    "2",
+    "Anything which flows in or into."
+   ],
+   [
+    "3",
+    "figurative: from outside."
+   ]
+  ],
+  "glosses": [
+   "a flow in"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h17",
+  "title": "trunks",
+  "pos": "Noun",
+  "gloss": "swimwear",
+  "defs": [
+   [
+    "1",
+    "Shorts or briefs used especially for sports."
+   ],
+   [
+    "2",
+    "Swimming trunks."
+   ],
+   [
+    "3",
+    "Trunkhose."
+   ],
+   [
+    "4",
+    "."
+   ],
+   [
+    "5",
+    "UK: Men’s or boys’ boxer shorts or boxer briefs."
+   ]
+  ],
+  "glosses": [
+   "swimwear"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h18",
+  "title": "art",
+  "pos": "Noun",
+  "gloss": "nonscientific branch of learning",
+  "defs": [
+   [
+    "1",
+    "uncountable: The conscious production or arrangement of sounds, colours, forms, movements, or other elements in a manner that affects the senses and emotions, usually specifically the production of the beautiful in a graphic or plastic medium."
+   ],
+   [
+    "2",
+    "uncountable: The creative and emotional expression of mental imagery, such as visual, auditory, social, etc."
+   ],
+   [
+    "3",
+    "countable: Skillful creative activity, usually with an aesthetic focus."
+   ],
+   [
+    "4",
+    "uncountable: The study and the product of these processes."
+   ],
+   [
+    "5",
+    "uncountable: Aesthetic value."
+   ],
+   [
+    "6",
+    "uncountable: Artwork."
+   ],
+   [
+    "7",
+    "countable: A field or category of art, such as painting, sculpture, music, ballet, or literature."
+   ],
+   [
+    "8",
+    "countable: often in dichotomy with science: A subject understood best through intuition rather than methodology."
+   ],
+   [
+    "9",
+    "countable: Skill that is attained by study, practice, or observation."
+   ],
+   [
+    "10",
+    "uncountable dated: Contrivance, scheming, manipulation."
+   ]
+  ],
+  "glosses": [
+   "human effort",
+   "conscious production or arrangement",
+   "skillful creative activity",
+   "study",
+   "aesthetic value",
+   "artwork",
+   "field or category of art",
+   "nonscientific branch of learning",
+   "skill"
+  ],
+  "gold": [
+   "8"
+  ]
+ },
+ {
+  "key": "h19",
+  "title": "manic",
+  "pos": "Adjective",
+  "gloss": "of or pertaining to someone who exhibits mania or craziness",
+  "defs": [
+   [
+    "1",
+    "Characterized by mania or craziness; wicked."
+   ],
+   [
+    "2",
+    "psychiatry: Suffering from mania (the state of an abnormally elevated or irritable mood, arousal, and/or energy levels)."
+   ]
+  ],
+  "glosses": [
+   "of or pertaining to someone who exhibits mania or craziness",
+   "suffering from mania"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h20",
+  "title": "Zhang",
+  "pos": "Proper noun",
+  "gloss": "rivers",
+  "defs": [
+   [
+    "1",
+    "river Shanxi Henan and Hebei China ."
+   ],
+   [
+    "2",
+    "river Fujian China ."
+   ]
+  ],
+  "glosses": [
+   "rivers"
+  ],
+  "gold": [
+   "1",
+   "2"
+  ]
+ },
+ {
+  "key": "h21",
+  "title": "Melete",
+  "pos": "Proper noun",
+  "gloss": "Goddess",
+  "defs": [
+   [
+    "1",
+    "Greek god: The Muse of meditation, one of the three original Boeotian muses."
+   ],
+   [
+    "2",
+    "astronomy: 56 Melete , a main belt asteroid."
+   ]
+  ],
+  "glosses": [
+   "Goddess",
+   "Asteroid"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h23",
+  "title": "focus",
+  "pos": "Noun",
+  "gloss": "in mathematics",
+  "defs": [
+   [
+    "1",
+    "countable optics: A point at which reflected or refracted rays of light converge."
+   ],
+   [
+    "2",
+    "countable geometry: A point of a conic at which rays reflected from a curve or surface converge."
+   ],
+   [
+    "3",
+    "uncountable photography cinematography: The fact of the convergence of light on the photographic medium."
+   ],
+   [
+    "4",
+    "uncountable photography cinematography: The quality of the convergence of light on the photographic medium."
+   ],
+   [
+    "5",
+    "uncountable: Concentration of attention."
+   ],
+   [
+    "6",
+    "countable: Something to which activity, attention or interest is primarily directed."
+   ],
+   [
+    "7",
+    "countable seismology: The exact point of where an earthquake occurs, in three dimensions (underneath the epicentre)."
+   ],
+   [
+    "8",
+    "GUI: The status of being the currently active element in a user interface, often indicated by a visual highlight."
+   ],
+   [
+    "9",
+    "linguistics: The most important word or phrase in a sentence or passage, or the one that imparts information."
+   ],
+   [
+    "10",
+    "An object used in casting a magic spell."
+   ],
+   [
+    "11",
+    "ichthyology: The centre of an older fish's scale, which is the point where a younger fish's scale starts to grow from."
+   ]
+  ],
+  "glosses": [
+   "in optics",
+   "in mathematics",
+   "fact of the convergence of light on the photographic medium",
+   "quality of the convergence of light on the photographic medium",
+   "concentration of attention"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h24",
+  "title": "text editor",
+  "pos": "Noun",
+  "gloss": "something used to edit text in computers",
+  "defs": [
+   [
+    "1",
+    "computing: A program which allows a user to edit the contents of a text file, usually in an interactive way with immediate visual feedback."
+   ],
+   [
+    "2",
+    ""
+   ]
+  ],
+  "glosses": [
+   "something used to edit text in computers"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h25",
+  "title": "alimony",
+  "pos": "Noun",
+  "gloss": "the means to support life",
+  "defs": [
+   [
+    "1",
+    "law sometimes pejorative: A court-mandated allowance made to a former spouse by a divorced or legally separated person."
+   ],
+   [
+    "2",
+    "obsolete: Nourishment, sustenance, especially for one's spirit."
+   ]
+  ],
+  "glosses": [
+   "a court-enforced allowance",
+   "the means to support life"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h26",
+  "title": "grand duchess",
+  "pos": "Noun",
+  "gloss": "grand duke’s consort",
+  "defs": [
+   [
+    "1",
+    "The wife or widow of a grand duke."
+   ],
+   [
+    "2",
+    "Female ruler or monarch of a grand duchy."
+   ],
+   [
+    "3",
+    "proscribed: The wife of a grand prince."
+   ],
+   [
+    "4",
+    "A daughter or granddaughter of a sovereign (czar or later emperor) of the Russian Empire or a pretender to the throne thereof."
+   ]
+  ],
+  "glosses": [
+   "grand duke’s consort",
+   "(grand)daughter of a Russian czar or emperor"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h27",
+  "title": "-osis",
+  "pos": "Suffix",
+  "gloss": "suffix for functional disorders",
+  "defs": [
+   [
+    "1",
+    "pathology: functional disease or condition such as hepatosis"
+   ],
+   [
+    "2",
+    "process, action such as phagocytosis"
+   ],
+   [
+    "3",
+    "formation, increase such as leukocytosis"
+   ]
+  ],
+  "glosses": [
+   "suffix for functional disorders"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h28",
+  "title": "North Dakota",
+  "pos": "Proper noun",
+  "gloss": "state of the United States of America",
+  "defs": [
+   [
+    "1",
+    "state in the Upper Midwest region of the USA ."
+   ],
+   [
+    "2",
+    "University of North Dakota ."
+   ]
+  ],
+  "glosses": [
+   "state of the United States of America"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h29",
+  "title": "function",
+  "pos": "Noun",
+  "gloss": "mathematics: a relation between a set of inputs and a set of permissible outputs",
+  "defs": [
+   [
+    "1",
+    "What something does or is used for."
+   ],
+   [
+    "2",
+    "A professional or official position."
+   ],
+   [
+    "3",
+    "An official or social occasion."
+   ],
+   [
+    "3.1",
+    "slang: A party."
+   ],
+   [
+    "4",
+    "Something which is dependent on or stems from another thing; a result or concomitant."
+   ],
+   [
+    "5",
+    "A relation where one thing is dependent on another for its existence, value, or significance."
+   ],
+   [
+    "6",
+    "mathematics: A relation in which each element of the domain is associated with exactly one element of the codomain."
+   ],
+   [
+    "7",
+    "computing: A routine that receives zero or more arguments and may return a result."
+   ],
+   [
+    "8",
+    "biology: The physiological activity of an organ or body part."
+   ],
+   [
+    "9",
+    "chemistry: The characteristic behavior of a chemical compound."
+   ],
+   [
+    "10",
+    "anthropology: The role of a social practice in the continued existence of the group."
+   ]
+  ],
+  "glosses": [
+   "what something does or is used for",
+   "professional or official position",
+   "official or social occasion",
+   "relation where one thing is dependent on another",
+   "mathematics: a relation between a set of inputs and a set of permissible outputs",
+   "computing: routine that returns a result",
+   "biology: physiological activity of an organ or body part",
+   "chemistry: characteristic behavior of a chemical compound"
+  ],
+  "gold": [
+   "6"
+  ]
+ },
+ {
+  "key": "h30",
+  "title": "into",
+  "pos": "Preposition",
+  "gloss": "taking distinct arguments to distinct values",
+  "defs": [
+   [
+    "1",
+    "To or towards the inside of."
+   ],
+   [
+    "2",
+    "To or towards the region of."
+   ],
+   [
+    "3",
+    "To the condition or state."
+   ],
+   [
+    "4",
+    ", especially with force or violence."
+   ],
+   [
+    "5",
+    "Indicates transition into another form or substance ."
+   ],
+   [
+    "6",
+    "Indicates division or the creation of subgroups or sections ."
+   ],
+   [
+    "7",
+    "After the start of."
+   ],
+   [
+    "8",
+    "colloquial: in or attracted to."
+   ],
+   [
+    "9",
+    "mathematics:"
+   ],
+   [
+    "10",
+    "British archaic India mathematics: <ref> </ref>"
+   ],
+   [
+    "11",
+    "Investigating the subject (of)."
+   ],
+   [
+    "12",
+    "colloquial: Attacking or fighting a person."
+   ]
+  ],
+  "glosses": [
+   "going inside",
+   "going to a geographic region",
+   "against, with force",
+   "producing, becoming",
+   "after the start of",
+   "colloquial: intensely interested in",
+   "taking distinct arguments to distinct values",
+   "expressing the operation of division",
+   "investigating the subject"
+  ],
+  "gold": [
+   "9"
+  ]
+ },
+ {
+  "key": "h31",
+  "title": "Meghna",
+  "pos": "Proper noun",
+  "gloss": "the river",
+  "defs": [
+   [
+    "1",
+    "One of the three major <<river>>s of <<c/Bangladesh>> which forms the Ganges delta, along with the Ganges (Padma) and Brahmaputra (যমুনা Jamuna) ."
+   ],
+   [
+    "2",
+    "given name female ."
+   ]
+  ],
+  "glosses": [
+   "the river"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h32",
+  "title": "works",
+  "pos": "Noun",
+  "gloss": "plural form of work (in its countable senses)",
+  "defs": [
+   [
+    "1",
+    "A mechanism or machinery; the means by which something happens."
+   ],
+   [
+    "2",
+    "with \"the\": Everything or everything that is available or possible; especially, all available toppings on food."
+   ],
+   [
+    "3",
+    "with \"the\": Drastic treatment; abuse; the axe dismissal ."
+   ],
+   [
+    "4",
+    "slang: A heroin or other drug addict's equipment: syringes, needles, etc."
+   ]
+  ],
+  "glosses": [
+   "plural form of work (in its countable senses)",
+   "a mechanism or machine; the means by which something happens",
+   "a factory",
+   "everything or everything that is available or possible; especially, all available toppings on food",
+   "an act associated with moral or religious standing"
+  ],
+  "gold": []
+ },
+ {
+  "key": "h33",
+  "title": "tread",
+  "pos": "Noun",
+  "gloss": "horizontal part of a step",
+  "defs": [
+   [
+    "1",
+    "A step taken with the foot."
+   ],
+   [
+    "2",
+    "A manner of stepping."
+   ],
+   [
+    "3",
+    "The sound made when someone or something is walking."
+   ],
+   [
+    "4",
+    "obsolete: A way; a track or path."
+   ],
+   [
+    "5",
+    "construction: A walking surface in a stairway on which the foot is placed."
+   ],
+   [
+    "6",
+    "The grooves carved into the face of a tire, used to give the tire traction."
+   ],
+   [
+    "7",
+    "The grooves on the bottom of a shoe or other footwear, used to give grip or traction."
+   ],
+   [
+    "8",
+    "biology: The chalaza of a bird's egg; the treadle."
+   ],
+   [
+    "9",
+    "The act of avian copulation in which the male bird mounts the female by standing on her back."
+   ],
+   [
+    "10",
+    "fortification: The top of the banquette, on which soldiers stand to fire over the parapet."
+   ],
+   [
+    "11",
+    "A bruise or abrasion produced on the foot or ankle of a horse that interferes, or strikes its feet together."
+   ]
+  ],
+  "glosses": [
+   "step",
+   "manner of stepping",
+   "sound made when someone or something is walking",
+   "way, track, path",
+   "horizontal part of a step",
+   "grooves in tire",
+   "grooves in a sole"
+  ],
+  "gold": [
+   "5"
+  ]
+ },
+ {
+  "key": "h34",
+  "title": "identification friend or foe",
+  "pos": "Noun",
+  "gloss": "identification friend or foe (IFF)",
+  "defs": [
+   [
+    "1",
+    "An identification system designed for command and control. It enables military and national (civilian air traffic control) interrogation systems to identify aircraft, vehicles or forces as friendly and to determine their bearing and their range from the interrogator."
+   ],
+   [
+    "1.1",
+    "In a civilian aircraft: a transponder that responds by sending a code identifying itself."
+   ],
+   [
+    "1.2",
+    "In a military aircraft: a transponder that responds by sending a similarly coded signal, only when detecting a code indicating the radar is part of the friendly forces' network."
+   ]
+  ],
+  "glosses": [
+   "identification friend or foe (IFF)"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h35",
+  "title": "rake",
+  "pos": "Noun",
+  "gloss": "puffer that emits a stream of spaceships",
+  "defs": [
+   [
+    "1",
+    "Northern England climbing also figurative: A course, a path, especially a narrow and steep path or route up a hillside."
+   ],
+   [
+    "2",
+    "mining: A fissure or mineral vein of ore traversing the strata vertically, or nearly so."
+   ],
+   [
+    "3",
+    "Britain originally Northern England Scotland: A series, a succession; specifically rail transport: a set of coupled rail vehicles, normally coaches or wagons."
+   ],
+   [
+    "4",
+    "Midlands Northern England: alternative spelling of raik graze]]; a journey#Noun journey to transport#Verb transport something between two place#Noun places; a run#Noun run; also, the quantity of items so transported ."
+   ]
+  ],
+  "glosses": [
+   "narrow and steep path or route up a hillside",
+   "set of coupled rail vehicles",
+   "puffer that emits a stream of spaceships"
+  ],
+  "gold": []
+ },
+ {
+  "key": "h36",
+  "title": "Eleazar",
+  "pos": "Proper noun",
+  "gloss": "biblical characters",
+  "defs": [
+   [
+    "1",
+    "biblical: Any of a number of men in the Old Testament, including a son of Aaron."
+   ],
+   [
+    "2",
+    "given name male of biblical origin."
+   ]
+  ],
+  "glosses": [
+   "biblical characters",
+   "male given name"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h37",
+  "title": "direct",
+  "pos": "Verb",
+  "gloss": "to be in charge of the direction of a play",
+  "defs": [
+   [
+    "1",
+    "To manage, control, steer."
+   ],
+   [
+    "2",
+    "To aim (something) at (something else)."
+   ],
+   [
+    "3",
+    "To point out to or show (somebody) the right course or way; to guide, as by pointing out the way; to refer."
+   ],
+   [
+    "4",
+    "To point out to with authority; to instruct as a superior; to order."
+   ],
+   [
+    "5",
+    "dated: To address (a letter) to a particular person or place."
+   ]
+  ],
+  "glosses": [
+   "to manage, control, steer",
+   "to be in charge of the direction of a film",
+   "to be in charge of the direction of a play",
+   "to aim at",
+   "to order"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h38",
+  "title": "octile",
+  "pos": "Noun",
+  "gloss": "value",
+  "defs": [
+   [
+    "1",
+    "statistics: Any of the quantiles that divide an ordered sample population into eight equally numerous subsets."
+   ],
+   [
+    "2",
+    "statistics by extension: A subset thus obtained."
+   ],
+   [
+    "3",
+    "astronomy: An octant."
+   ]
+  ],
+  "glosses": [
+   "value",
+   "subset"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h39",
+  "title": "benzoin",
+  "pos": "Noun",
+  "gloss": "white crystalline substance",
+  "defs": [
+   [
+    "1",
+    "A resinous substance, dry and brittle, obtained from Styrax benzoin , a tree of Sumatra, Java, etc., having a fragrant odor, and slightly aromatic taste. It is used in the preparation of benzoic acid, in medicine, and as a perfume."
+   ],
+   [
+    "2",
+    "organic compound: An aromatic hydroxy ketone, 2-hydroxy-1,2-di(phenyl)ethanone, synthesized from benzaldehyde; any derivative of this compound."
+   ],
+   [
+    "3",
+    "The spicebush, Lindera benzoin ."
+   ]
+  ],
+  "glosses": [
+   "resinous substance from tree",
+   "white crystalline substance"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h40",
+  "title": "let",
+  "pos": "Verb",
+  "gloss": "introducing an imperative",
+  "defs": [
+   [
+    "1",
+    "transitive: To allow to, not to prevent + infinitive, but usually without to ."
+   ],
+   [
+    "2",
+    "transitive: To allow to be or do without interference; to not disturb or meddle with; to leave alone."
+   ],
+   [
+    "3",
+    "transitive: To allow the release of (a fluid)."
+   ],
+   [
+    "4",
+    "transitive chiefly British: To allow possession of (a property etc.) in exchange for rent."
+   ],
+   [
+    "5",
+    "transitive: To give, grant, or assign, as a work, privilege, or contract; often with out."
+   ],
+   [
+    "6",
+    "auxiliary transitive:"
+   ],
+   [
+    "7",
+    "transitive obsolete except with know or be: To cause + bare infinitive ."
+   ]
+  ],
+  "glosses": [
+   "allow",
+   "leave",
+   "allow the release of (a fluid)",
+   "put up for rent",
+   "introducing an imperative"
+  ],
+  "gold": [
+   "6"
+  ]
+ },
+ {
+  "key": "h41",
+  "title": "complaisant",
+  "pos": "Adjective",
+  "gloss": "compliant",
+  "defs": [
+   [
+    "1",
+    "."
+   ],
+   [
+    "2",
+    "to do what pleases others; obliging; agreeable ."
+   ],
+   [
+    "3",
+    "archaic: ; showing respect."
+   ]
+  ],
+  "glosses": [
+   "compliant",
+   "willing to do what pleases others",
+   "polite"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "h42",
+  "title": "trophy",
+  "pos": "Noun",
+  "gloss": "object rewarding success",
+  "defs": [
+   [
+    "1",
+    "An object, usually in the form of a statuette, cup, or shield, awarded for success in a competition or to mark a special achievement."
+   ],
+   [
+    "2",
+    "An object taken as a prize by a hunter, or a conqueror or belligerent, especially one that is displayed."
+   ],
+   [
+    "3",
+    "Any emblem of success; a status symbol."
+   ],
+   [
+    "4",
+    "criminology by extension: An object taken by a serial killer or rapist as a memento of the crime."
+   ],
+   [
+    "5",
+    "historical Ancient Rome: A tropæum."
+   ],
+   [
+    "6",
+    "art architecture: A display of weaponry and other militaria, often captured from a defeated enemy, as an ornament designed for the purpose of triumphalist display by a victor or as a show of military prowess by a monarch."
+   ],
+   [
+    "7",
+    "An artifact or artwork that has been stolen by a criminal and traded on the black market."
+   ],
+   [
+    "8",
+    "An animal killed by a trophy hunter that usually has its parts sold on the black market."
+   ]
+  ],
+  "glosses": [
+   "object rewarding success",
+   "object taken by a hunter or conqueror of their success"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h43",
+  "title": "garden cress",
+  "pos": "Noun",
+  "gloss": "the leafy plant",
+  "defs": [
+   [
+    "1",
+    "uncountable countable: A plant, Lepidium sativum ."
+   ],
+   [
+    "2",
+    "uncountable: The pungent leaves of the plant, used in salads."
+   ]
+  ],
+  "glosses": [
+   "the leafy plant",
+   "the leaves, used in salads"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h44",
+  "title": "prudential",
+  "pos": "Adjective",
+  "gloss": "prudent",
+  "defs": [
+   [
+    "1",
+    "Characterised by the use of prudence; arising from careful thought or deliberation."
+   ],
+   [
+    "2",
+    "Of a person: exercising prudence; cautious."
+   ],
+   [
+    "3",
+    "Advisory; superintending or executive."
+   ]
+  ],
+  "glosses": [
+   "prudent"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h45",
+  "title": "naturism",
+  "pos": "Noun",
+  "gloss": "the belief or doctrine that attributes everything to nature as a sanative agent",
+  "defs": [
+   [
+    "1",
+    "The belief in or practice of going nude in social settings, often in mixed-gender groups, specifically either in cultures where this is not the norm or for health reasons."
+   ],
+   [
+    "2",
+    "The worship of the powers of nature."
+   ]
+  ],
+  "glosses": [
+   "the belief in or practice of going nude or unclad",
+   "the belief or doctrine that attributes everything to nature as a sanative agent"
+  ],
+  "gold": []
+ },
+ {
+  "key": "h46",
+  "title": "Guelma",
+  "pos": "Proper noun",
+  "gloss": "city in Algeria",
+  "defs": [
+   [
+    "1",
+    "capital Guelma and Guelma north-east Algeria ."
+   ],
+   [
+    "2",
+    "district Guelma Algeria ."
+   ],
+   [
+    "3",
+    "province Algeria ."
+   ]
+  ],
+  "glosses": [
+   "city in Algeria"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h47",
+  "title": "extravagance",
+  "pos": "Noun",
+  "gloss": "prodigality",
+  "defs": [
+   [
+    "1",
+    "or superfluous expenditure of money."
+   ],
+   [
+    "2",
+    ", as of anger, love, expression, imagination, or demands."
+   ],
+   [
+    "3",
+    "Something extravagant; something done out of extravagance."
+   ]
+  ],
+  "glosses": [
+   "excessive expenditure",
+   "prodigality",
+   "something extravagant"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h48",
+  "title": "weasel",
+  "pos": "Verb",
+  "gloss": "to weasel something out of somebody",
+  "defs": [
+   [
+    "1",
+    "transitive: To achieve by clever or devious means."
+   ],
+   [
+    "2",
+    "transitive reflexive: To gain something for oneself by clever or devious means."
+   ],
+   [
+    "3",
+    "intransitive: To engage in clever or devious behavior."
+   ]
+  ],
+  "glosses": [
+   "to weasel out of doing something",
+   "to weasel something out of somebody"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "h49",
+  "title": "Proto-Sinaitic",
+  "pos": "Adjective",
+  "gloss": "related to the Proto-Sinaitic script",
+  "defs": [
+   [
+    "1",
+    "Describing the script or scripts known as"
+   ],
+   [
+    "1.1",
+    "(specific term) describing only the form of this script found in the Sinai Peninsula."
+   ],
+   [
+    "1.2",
+    "(collective term) describing all extant forms and variants of this early script found throughout Egypt (Sinai and Nilotic Egypt) and the Levant (Canaan)"
+   ]
+  ],
+  "glosses": [
+   "related to the Proto-Sinaitic script"
+  ],
+  "gold": [
+   "1"
+  ]
+ }
+]

@@ -15,7 +15,9 @@
 //
 // wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--high 300] [--high-pool 3000] [--medium 300]
 //               [--medium-min 10] [--medium-max 40] [--min 200] [--no-en-foreign] [--no-foreign]
-//               [--seed 1] [-j 16]
+//               [--words water,rock,…] [--seed 1] [-j 16]
+// --words: en entries always in the sample (default water rock dog band drop bat park bank saw
+// trunk bark row: ambiguous ones, reason "required")
 #include <algorithm>
 #include <atomic>
 #include <filesystem>
@@ -128,6 +130,8 @@ int main(int argc, char *argv[]) {
         fs::path input = "jsonl_senses", output = "jsonl_wordnet";
         size_t high = 300, highPool = 3000, medium = 300, mediumMin = 10, mediumMax = 40, minimum = 200, threads = 16;
         bool enForeign = true, foreign = true;
+        // en entries always in the sample: ambiguous ones of HANDOFF-4 and the samples' concepts
+        std::string words = "water,rock,dog,band,drop,bat,park,bank,saw,trunk,bark,row";
         unsigned seed = 1;
         for (int i = 1; i < argc; ++i) {
             const std::string arg = argv[i];
@@ -152,6 +156,8 @@ int main(int argc, char *argv[]) {
                 seed = static_cast<unsigned>(number());
             else if (arg == "-j" && i + 1 < argc)
                 threads = number();
+            else if (arg == "--words" && i + 1 < argc)
+                words = argv[++i];
             else if (arg == "--no-en-foreign")
                 enForeign = false;
             else if (arg == "--no-foreign")
@@ -159,7 +165,7 @@ int main(int argc, char *argv[]) {
             else {
                 std::cout << "usage: wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--high 300] [--high-pool 3000]\n"
                              "       [--medium 300] [--medium-min 10] [--medium-max 40] [--min 200] [--no-en-foreign]\n"
-                             "       [--no-foreign] [--seed 1] [-j 16]\n";
+                             "       [--no-foreign] [--words water,rock,…] [--seed 1] [-j 16]\n";
                 return arg == "-h" || arg == "--help" ? 0 : 1;
             }
         }
@@ -193,7 +199,15 @@ int main(int argc, char *argv[]) {
         std::vector<std::string> top;
         for (size_t i = 0; i < counts.size() && i < highPool; ++i)
             top.push_back(counts[i].second);
-        std::map<std::string, std::string> chosen; // en title -> high, medium
+        std::map<std::string, std::string> chosen; // en title -> required, high, medium
+        for (size_t from = 0; from <= words.size();) {
+            const size_t comma = std::min(words.find(',', from), words.size());
+            if (comma > from)
+                chosen[words.substr(from, comma - from)] = "required";
+            from = comma + 1;
+        }
+        // (the required ones are not drawn again)
+        std::erase_if(top, [&](const std::string &t) { return chosen.contains(t); });
         for (const auto &t : sample(top, high, rng))
             chosen[t] = "high";
         std::vector<std::string> middle;

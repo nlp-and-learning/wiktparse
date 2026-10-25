@@ -109,7 +109,9 @@ dump_dir = ~/dump
   for the browser (needs `zstandard`). `/translations` subpages are already
   merged into their pages, so they are not found on their own.
 - `wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--high 300] [--medium 300] [--min 200] [-j 16]` –
-  a sample for the wordnet, closed over translations: native en entries of
+  a sample for the wordnet, closed over translations: the en entries of
+  `--words` (default water, rock, dog, band, drop, bat, park, bank, saw, trunk,
+  bark, row: ambiguous ones), native en entries of
   many and of a medium number of translations, the pages their translations
   point to (`home`; `page` in en.wikt, as many as the en ones), native entries
   of every wiki translating into one of them, own entries of many translations

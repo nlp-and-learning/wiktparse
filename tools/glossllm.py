@@ -260,7 +260,12 @@ def run_eval(args):
     answers = []
     with concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
         futures = {pool.submit(run, group): group for group in groups}
-        for done, future in enumerate(concurrent.futures.as_completed(futures), 1):
+        try:
+            completed = list(enumerate(concurrent.futures.as_completed(futures), 1))
+        except KeyboardInterrupt:
+            pool.shutdown(wait=False, cancel_futures=True)
+            sys.exit('interrupted')
+        for done, future in completed:
             print(f'\r  {done}/{len(futures)} requests', end='', file=sys.stderr, flush=True)
             group = futures[future]
             try:
@@ -355,10 +360,12 @@ def run_apply(args):
                 (title, code, where, pos, defs, todo, notes), answer = next(stream)
             except StopIteration:
                 break
-            except OutOfCredit as e:
-                stopped = str(e)
-                for f in futures:
-                    f.cancel()
+            except (OutOfCredit, KeyboardInterrupt) as e:
+                # Ctrl+C or no money: the queued requests cancelled, the running ones (-j) ended
+                stopped = str(e) or 'interrupted'
+                print(f'\n  stopping: the {args.jobs} requests running end, the rest is left for the next run',
+                      file=sys.stderr)
+                pool.shutdown(wait=False, cancel_futures=True)
                 break
             # For review before wiktglos --extra: the entry, each gloss with its definition
             texts = dict(defs)

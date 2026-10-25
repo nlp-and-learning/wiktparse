@@ -9,8 +9,9 @@ cloud ones such as glm-4.7:cloud by the same API).
       accuracy on the reviewed links (a subsense or its parent counts), none included;
       --fallback MODEL: the answers below --confidence again by a second model (which may say null)
   glossllm.py --apply [-i jsonl_senses] [--wiki en] --model qwen3:14b [-o glossllm-en.tsv]
-      the glosses without a link, and those of best and embedding: a TSV like glossembed.py
-      (accepted from the confidence), for wiktglos --extra
+      the glosses without a link (--recheck: also those of best and embedding): a TSV like
+      glossembed.py (accepted from the confidence), for wiktglos --extra. The local models make
+      some 10% errors on them (gold-en-hard.json): meant for a stronger model.
 """
 import argparse
 import concurrent.futures
@@ -165,7 +166,8 @@ def run_apply(args):
     for page in ge.pages(args.input, args.wiki):
         for code, path, node, tables in ge.entries(page):
             defs, glosses = ge.entry_data(node, tables)
-            todo = [g for g, (ids, method, score) in glosses.items() if not ids or method in ('best', 'embedding')]
+            todo = [g for g, (ids, method, score) in glosses.items()
+                    if not ids or (args.recheck and method in ('best', 'embedding'))]
             # The definitions the easy methods left: not those surely of other glosses (a shorter
             # request, fewer to confuse); all of them when none is left
             taken = {i for g, (ids, method, score) in glosses.items() if g not in todo and method in SURE for i in ids or []}
@@ -216,6 +218,8 @@ def main():
     parser.add_argument('--confidence', type=float, default=0.8, help='accepted from this confidence')
     parser.add_argument('-j', '--jobs', type=int, default=4, help='requests at a time (OLLAMA_NUM_PARALLEL)')
     parser.add_argument('--limit', type=int, help='--eval: the first entries only')
+    parser.add_argument('--recheck', action='store_true',
+                        help='--apply: also the glosses linked by best and embedding (some 10%% of them wrong)')
     parser.add_argument('--all-definitions', dest='free', action='store_false',
                         help='--apply: every definition of an entry, also those surely of other glosses')
     args = parser.parse_args()

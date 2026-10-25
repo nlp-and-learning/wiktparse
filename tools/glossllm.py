@@ -97,6 +97,10 @@ def load_env(path='.env'):
                 os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
+TOKENS = {'in': 0, 'out': 0}  # of the provider's answers, for the cost
+TOKENS_LOCK = __import__('threading').Lock()
+
+
 class OutOfCredit(Exception):
     """The provider refuses for money or limits: the run stops, its results kept"""
 
@@ -116,7 +120,11 @@ def ask_openai(provider, model, system, user, glosses):
     for attempt in range(8):
         try:
             with urllib.request.urlopen(request, timeout=120) as r:
-                text = json.load(r)['choices'][0]['message']['content'] or ''
+                answer = json.load(r)
+            text = answer['choices'][0]['message']['content'] or ''
+            with TOKENS_LOCK:
+                TOKENS['in'] += answer.get('usage', {}).get('prompt_tokens', 0)
+                TOKENS['out'] += answer.get('usage', {}).get('completion_tokens', 0)
             return text[text.find('{'):text.rfind('}') + 1]
         except urllib.error.HTTPError as e:
             detail = e.read().decode(errors='replace')[:300]
@@ -291,10 +299,13 @@ def run_apply(args):
                     links += 1
             done_file.write(f'{title}\t{code}\t{where}\n')
             finished += 1
-            if finished % 50 == 0:
-                out.flush(), done_file.flush()
-                print(f'\r  {finished}/{len(cases)} entries, {finished / (time.time() - started):.1f}/s', end='',
-                      file=sys.stderr, flush=True)
+            if finished % 10 == 0 or finished == len(cases):
+                out.flush(), done_file.flush(), review.flush()
+                rate = finished / (time.time() - started)
+                left = (len(cases) - finished) / rate if rate else 0
+                print(f'\r  {finished}/{len(cases)} entries ({100 * finished / len(cases):.0f}%), {rate:.2f}/s, '
+                      f'{int(left // 3600)}:{int(left % 3600 // 60):02d}:{int(left % 60):02d} left, '
+                      f'tokens in {TOKENS["in"]} out {TOKENS["out"]}   ', end='', file=sys.stderr, flush=True)
     print(f'\n{finished} entries done, {links} links appended to {args.output} (to review: {review_path}); '
           f'{total - len(done) - finished} entries left', file=sys.stderr)
     if stopped:

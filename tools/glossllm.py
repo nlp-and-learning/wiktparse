@@ -7,7 +7,11 @@ as JSON from cometapi:glm-4.7 (COMETAPI_KEY), zai:glm-4.7 (ZAI_API_KEY), anthrop
 
   glossllm.py --eval  --gold ../res/defglos/gold-en.json --model qwen3:14b [-j 4]
       accuracy on the reviewed links (a subsense or its parent counts), none included;
-      --fallback MODEL: the answers below --confidence again by a second model (which may say null)
+      --fallback MODEL: the answers below --confidence again by a second model (which may say null);
+      --verify MODEL: each answer checked by a second model, only confirmed ones kept
+  glossllm.py --check glossllm-en.tsv --verify zai:glm-4.7 [--wiki en]
+      the accepted links of a TSV confirmed: glossllm-en.checked.tsv (accepted only the confirmed),
+      glossllm-en.checked.txt (the other answers), in parts like --apply
   glossllm.py --apply [-i jsonl_senses] [--wiki en] --model qwen3:14b [-o glossllm-en.tsv]
       the glosses without a link (--recheck: also those of best and embedding): a TSV like
       glossembed.py (accepted from the confidence), for wiktglos --extra. The local models make
@@ -15,6 +19,7 @@ as JSON from cometapi:glm-4.7 (COMETAPI_KEY), zai:glm-4.7 (ZAI_API_KEY), anthrop
 """
 import argparse
 import concurrent.futures
+import csv
 import json
 import os
 import sys
@@ -177,6 +182,33 @@ def parse(content, defs, glosses):
     return result
 
 
+SYSTEM_VERIFY = ('You check links of translation-table glosses of a Wiktionary entry to its definitions, made '
+                 'by another model. For each gloss you see the definition it was linked to. Answer the id of '
+                 'the definition the gloss really names: the same id when the link is right, another id when '
+                 'another definition is the sense, null when no definition is. Answer only the JSON, as '
+                 '{"checks": [{"gloss": 0, "definition": "<id>"}]}')
+
+
+def verify(model, title, pos, defs, glosses, proposed):
+    """A second model checks links: for each gloss index, the definition it gives (the
+    proposed one: confirmed; another: a different answer; None: no definition)"""
+    texts = dict(defs)
+    lines = [prompt(title, pos, defs, [], None).replace('Glosses to link:', 'Links to check:')]
+    lines += [f'  [{k}] «{ge.plain(g)}» linked to {p}: {texts.get(p, "")[:200]}' for k, (g, p) in enumerate(zip(glosses, proposed))]
+    provider, name = model.split(':', 1)
+    content = ask_openai(provider, name, SYSTEM_VERIFY, '\n'.join(lines), glosses)
+    ids, result = {i for i, _ in defs}, {}
+    try:
+        for check in json.loads(content).get('checks', []):
+            k, d = check.get('gloss'), check.get('definition')
+            if isinstance(k, int) and 0 <= k < len(glosses):
+                d = None if d is None else str(d).strip().removeprefix('id:').strip().rstrip('.')
+                result[k] = d if d in ids else None
+    except (json.JSONDecodeError, AttributeError, TypeError, ValueError):
+        pass
+    return result
+
+
 SYSTEM_BATCH = SYSTEM.replace(
     'Answer only the JSON, as {"links": [{"gloss": 0, "definition": "<id>", "confidence": 0.9}]}',
     'Each entry (E0, E1, …) is separate: link its glosses to its own definitions only. Answer only the JSON, '
@@ -273,12 +305,35 @@ def run_eval(args):
             except Exception as error:  # a failed request: all its glosses unanswered
                 print(f'  error: {error}', file=sys.stderr)
                 got = [{} for _ in group]
-            answers += [(g[5], a) for g, a in zip(group, got)]
-    for e, answer in answers:
+            answers += [(g[5], a, g) for g, a in zip(group, got)]
+    # --verify: a second model confirms each answer (kept), gives another (not kept), or none
+    verdicts = {}
+    if args.verify:
+        def check(item):
+            e, answer, g = item
+            ks = [k for k in range(len(e['gold'])) if answer.get(k, (None,))[0] is not None]
+            if not ks:
+                return id(e), {}
+            v = verify(args.verify, g[0], g[1], g[2], [g[3][k] for k in ks], [answer[k][0] for k in ks])
+            return id(e), {k: v.get(j) for j, k in enumerate(ks)}
+        with concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
+            for key, v in pool.map(check, answers):
+                verdicts[key] = v
+    other_right = other = 0
+    for e, answer, g in answers:
         for k, expected in enumerate(e['gold']):
             got, confidence = answer.get(k, (None, 0.0))
+            if args.verify and got is not None:
+                second = verdicts.get(id(e), {}).get(k)
+                if second != got:  # not confirmed: no link (another answer counted apart)
+                    if second is not None:
+                        other += 1
+                        other_right += any(ge.related(second, x) for x in expected)
+                    got, confidence = None, 0.0
             right = (got is None and not expected) or (got is not None and any(ge.related(got, x) for x in expected))
             results.append((confidence, right, got is None, not expected))
+    if args.verify:
+        print(f'  verify {args.verify}: another definition given {other} times, right {other_right}', file=sys.stderr)
     print(file=sys.stderr)
     seconds = time.time() - started
     n = len(results)
@@ -393,11 +448,78 @@ def run_apply(args):
         sys.exit(f'stopped: {stopped}')
 
 
+def run_check(args):
+    """The links of --check <glossllm-<wiki>.tsv> confirmed by --verify: <name>.checked.tsv (accepted
+    only the confirmed), <name>.checked.txt (the other answers, to review); in parts like --apply"""
+    base = args.check.removesuffix('.tsv')
+    out_path, review_path, done_path = base + '.checked.tsv', base + '.checked.txt', base + '.checked.done'
+    done = set(open(done_path, encoding='utf-8').read().splitlines()) if os.path.exists(done_path) else set()
+    links = {}
+    for row in csv.DictReader(open(args.check, encoding='utf-8'), delimiter='\t'):
+        if row['accepted'] == '1':
+            links.setdefault((row['title'], row['language'], row['path']), []).append(row)
+    cases = []
+    for page in ge.pages(args.input, args.wiki):
+        for code, path, node, tables in ge.entries(page):
+            key = (page['title'], code, '/'.join(f'{k}:{i}' for k, i in path))
+            if key in links and '\t'.join(key) not in done:
+                defs, glosses = ge.entry_data(node, tables)
+                cases.append((key, node.get('section'), defs, links[key]))
+    if args.limit:
+        cases = cases[:args.limit]
+    print(f'{len(cases)} entries to check ({len(done)} done before)', file=sys.stderr)
+    new_file = not os.path.exists(out_path)
+    started, finished, kept, other = time.time(), 0, 0, 0
+    with open(out_path, 'a', encoding='utf-8') as out, open(review_path, 'a', encoding='utf-8') as review, \
+            open(done_path, 'a', encoding='utf-8') as done_file, concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
+        if new_file:
+            out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
+        futures = {pool.submit(verify, args.verify, key[0], pos, defs, [r['gloss'] for r in rows],
+                               [r['sense_id'] for r in rows]): (key, defs, rows) for key, pos, defs, rows in cases}
+        try:
+            for future in concurrent.futures.as_completed(futures):
+                key, defs, rows = futures[future]
+                try:
+                    v = future.result()
+                except OutOfCredit:
+                    raise
+                except Exception as error:
+                    print(f'\n  error {key[0]}: {error}', file=sys.stderr)
+                    continue
+                texts = dict(defs)
+                for k, r in enumerate(rows):
+                    second = v.get(k)
+                    same = second == r['sense_id']
+                    kept += same
+                    out.write('\t'.join([r['wiki'], r['title'], r['language'], r['path'], r['gloss'], r['sense_id'],
+                                         r['score'], '', '1' if same else '0']) + '\n')
+                    if not same:
+                        other += 1
+                        review.write(f"{r['title']}  «{r['gloss']}»  first {r['sense_id']}: "
+                                     f"{texts.get(r['sense_id'], '')[:100]}  |  check {second or 'none'}: "
+                                     f"{texts.get(second, '')[:100]}\n")
+                done_file.write('\t'.join(key) + '\n')
+                finished += 1
+                if finished % 10 == 0 or finished == len(cases):
+                    out.flush(), review.flush(), done_file.flush()
+                    rate = finished / (time.time() - started)
+                    left = (len(cases) - finished) / rate if rate else 0
+                    print(f'\r  {finished}/{len(cases)} entries, {rate:.2f}/s, {int(left // 60)}:{int(left % 60):02d} left, '
+                          f'confirmed {kept}, other {other}, tokens in {TOKENS["in"]} out {TOKENS["out"]}   ', end='',
+                          file=sys.stderr, flush=True)
+        except (OutOfCredit, KeyboardInterrupt) as e:
+            print(f'\n  stopped: {str(e) or "interrupted"}', file=sys.stderr)
+            pool.shutdown(wait=False, cancel_futures=True)
+    print(f'\n{finished} entries checked: {kept} links confirmed, {other} not (to review: {review_path}); '
+          f'for wiktglos --extra {out_path}', file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--eval', action='store_true')
     mode.add_argument('--apply', action='store_true')
+    mode.add_argument('--check', metavar='TSV', help='the links of a glossllm TSV confirmed by --verify')
     parser.add_argument('--gold', default='../res/defglos/gold-en.json')
     parser.add_argument('-i', '--input', default='jsonl_senses')
     parser.add_argument('-o', '--output')
@@ -408,6 +530,7 @@ def main():
                                            'or an Ollama model')
     parser.add_argument('--confidence', type=float, default=0.8, help='accepted from this confidence')
     parser.add_argument('-j', '--jobs', type=int, default=4, help='requests at a time (OLLAMA_NUM_PARALLEL)')
+    parser.add_argument('--verify', help='a second model to confirm each answer (cometapi:, zai:): only confirmed kept')
     parser.add_argument('--batch', type=int, default=1, help='entries in a request of an API provider; z.ai limits requests at a time, not per minute: 8 to a request were slower (187 s against 126 s on gold-en-hard)')
     parser.add_argument('--limit', type=int, help='the first entries only (--apply: of those not done yet)')
     parser.add_argument('--recheck', action='store_true',
@@ -419,12 +542,14 @@ def main():
     args = parser.parse_args()
     args.output = args.output or f'glossllm-{args.wiki}.tsv'
     load_env()
-    for model in filter(None, (args.model, args.fallback)):  # a missing key: now, not per request
+    for model in filter(None, (args.model, args.fallback, args.verify)):  # a missing key: now, not per request
         prefix = model.split(':', 1)[0]
         key = PROVIDERS[prefix][1] if prefix in PROVIDERS else 'ANTHROPIC_API_KEY' if prefix == 'anthropic' else None
         if key and not os.environ.get(key):
             sys.exit(f'{model}: {key} is not set')
-    (run_eval if args.eval else run_apply)(args)
+    if args.check and not args.verify:
+        sys.exit('--check needs --verify MODEL')
+    (run_check if args.check else run_eval if args.eval else run_apply)(args)
 
 
 if __name__ == '__main__':

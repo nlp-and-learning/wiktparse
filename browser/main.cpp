@@ -29,6 +29,7 @@
 #include <QListWidget>
 #include <QMainWindow>
 #include <QMenuBar>
+#include <QRegularExpression>
 #include <QSettings>
 #include <QXmlStreamReader>
 #include <QSpinBox>
@@ -319,6 +320,18 @@ public:
         treeLayout->addWidget(tree_);
         tabs_->addTab(json_.page, "JSON");
         tabs_->addTab(treePage_, "Tree");
+        // WikiTree: the Original wikitext as a tree by the depth of its headings
+        wikiTree_ = new QTreeView;
+        wikiModel_ = new QStandardItemModel(this);
+        wikiTree_->setModel(wikiModel_);
+        wikiTree_->setHeaderHidden(true);
+        wikiTreePage_ = new QWidget;
+        auto *wikiTreeLayout = new QVBoxLayout(wikiTreePage_);
+        wikiTreeLayout->setContentsMargins(0, 0, 0, 0);
+        wikiTreeLayout->setSpacing(0);
+        wikiTreeFind_ = new TreeFindBar(wikiTreePage_, wikiTree_);
+        wikiTreeLayout->addWidget(wikiTreeFind_);
+        wikiTreeLayout->addWidget(wikiTree_);
         // A node of the tree from another page of the dump (a merged subpage): Original shows that page
         connect(tree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex &index) {
             std::optional<std::pair<qint64, qint64>> source;
@@ -387,18 +400,24 @@ public:
                 view->find->showSearch();
             else if (tabs_->currentWidget() == treePage_)
                 treeFind_->showSearch();
+            else if (tabs_->currentWidget() == wikiTreePage_)
+                wikiTreeFind_->showSearch();
         });
         search->addAction("Find &Next", QKeySequence(Qt::Key_F3), this, [this] {
             if (auto *view = currentView())
                 view->find->findNext();
             else if (tabs_->currentWidget() == treePage_)
                 treeFind_->findNext();
+            else if (tabs_->currentWidget() == wikiTreePage_)
+                wikiTreeFind_->findNext();
         });
         search->addAction("Find &Previous", QKeySequence(Qt::SHIFT | Qt::Key_F3), this, [this] {
             if (auto *view = currentView())
                 view->find->findNext(true);
             else if (tabs_->currentWidget() == treePage_)
                 treeFind_->findNext(true);
+            else if (tabs_->currentWidget() == wikiTreePage_)
+                wikiTreeFind_->findNext(true);
         });
         auto *setup = menuBar()->addMenu("&Settings");
         setup->addAction("&Dump directory...", this, [this] {
@@ -461,10 +480,13 @@ private:
 
     void showOriginalTab(bool on) {
         const int at = tabs_->indexOf(wiki_.page);
-        if (on && at < 0)
+        if (on && at < 0) {
             tabs_->addTab(wiki_.page, "Original");
-        else if (!on && at >= 0)
-            tabs_->removeTab(at);
+            tabs_->addTab(wikiTreePage_, "WikiTree");
+        } else if (!on && at >= 0) {
+            tabs_->removeTab(tabs_->indexOf(wikiTreePage_));
+            tabs_->removeTab(tabs_->indexOf(wiki_.page));
+        }
         if (on)
             showOriginal();
     }
@@ -664,6 +686,48 @@ private:
                 text = "(" + error + ")";
         }
         wiki_.doc->setText(text);
+        fillWikiTree(text);
+    }
+
+    // The wikitext as a tree: a heading (= … = to ====== … ======) under the last heading of a
+    // smaller level, the other non-empty lines under their heading
+    void fillWikiTree(const QString &text) {
+        wikiModel_->clear();
+        static const QRegularExpression heading(R"(^(={1,6})\s*(.*?)\s*\1\s*$)");
+        std::vector<std::pair<int, QStandardItem *>> stack{{0, wikiModel_->invisibleRootItem()}};
+        for (const QString &line : text.split('\n')) {
+            if (line.trimmed().isEmpty())
+                continue;
+            auto *item = new QStandardItem;
+            item->setEditable(false);
+            if (const auto m = heading.match(line); m.hasMatch()) {
+                const int level = static_cast<int>(m.captured(1).size());
+                while (stack.size() > 1 && stack.back().first >= level)
+                    stack.pop_back();
+                item->setText(m.captured(2));
+                QFont bold = item->font();
+                bold.setBold(true);
+                item->setFont(bold);
+                stack.back().second->appendRow(item);
+                stack.emplace_back(level, item);
+            } else {
+                item->setText(line.left(500));
+                if (line.size() > 500)
+                    item->setToolTip(line.left(4000));
+                stack.back().second->appendRow(item);
+            }
+        }
+        // Headings open, their lines closed
+        std::function<void(const QModelIndex &)> expand = [&](const QModelIndex &parent) {
+            for (int r = 0; r < wikiModel_->rowCount(parent); ++r) {
+                const QModelIndex index = wikiModel_->index(r, 0, parent);
+                if (wikiModel_->itemFromIndex(index)->font().bold()) {
+                    wikiTree_->setExpanded(index, true);
+                    expand(index);
+                }
+            }
+        };
+        expand(QModelIndex());
     }
 
     QAction *originalAction_ = nullptr;
@@ -694,6 +758,10 @@ private:
     QWidget *treePage_ = nullptr; // find bar and tree
     TreeFindBar *treeFind_ = nullptr;
     QStandardItemModel *model_;
+    QTreeView *wikiTree_ = nullptr; // WikiTree: the Original by headings
+    QWidget *wikiTreePage_ = nullptr;
+    TreeFindBar *wikiTreeFind_ = nullptr;
+    QStandardItemModel *wikiModel_ = nullptr;
 
     // Read-only qcodeedit with Kate's JSON syntax (downloaded Kate data) and folding
     void setupEditor(CodeView &view, const QString &syntaxFile) {

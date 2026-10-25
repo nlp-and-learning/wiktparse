@@ -103,6 +103,9 @@ dump_dir = ~/dump
   Dump directory) at its `source`; when the page there has another title (a
   dump of another date), or with Settings > Find pages by title, the page is
   looked up by its title in the dump's `-index.txt.bz2` (read once per dump).
+  WikiTree, with Original, shows that wikitext as a tree by the depth of its
+  headings (`==English==` > `===Noun===` > `====Translations====`), the other
+  lines under their heading.
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

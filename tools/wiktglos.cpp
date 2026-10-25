@@ -6,7 +6,8 @@
 // linked gloss gets "sense_ids" (["1", "1.2"]), "sense_method" (positional, best; number for a
 // gloss that is a sense number, ja "語義1"; single for the one definition of an entry) and
 // "sense_score"; --extra: links by embeddings (glossembed.py --apply) for the glosses left
-// ("embedding"; "llm" of glossllm-*.tsv). Input: wiktlink output (deterministic again: the TSV is of its entries).
+// ("embedding"; "llm" of glossllm-*.tsv; "minority" of *.minority.tsv: the one model of three
+// that gave a definition, so that a gloss with translations is not left unlinked). Input: wiktlink output (deterministic again: the TSV is of its entries).
 //
 // wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [wiki...]
 #include <algorithm>
@@ -194,7 +195,8 @@ Extras readExtras(const std::vector<fs::path> &files) {
             if (f.size() >= 9 && f[8] == "1")
                 extras[extraKey(f[1], f[2], f[3], f[4])] = {
                         f[5], std::stod(f[6]),
-                        file.filename().string().ends_with(".voted.chosen.tsv") ? "vote"
+                        file.filename().string().ends_with(".minority.tsv")     ? "minority"
+                        : file.filename().string().ends_with(".voted.chosen.tsv") ? "vote"
                         : file.filename().string().ends_with(".chosen.tsv")     ? "manual"
                         : file.filename().string().starts_with("glossllm") ? "llm"
                                                                             : "embedding"};
@@ -274,7 +276,17 @@ void linkNode(json &node, const std::string &title, Count &count, const std::str
                 for (const auto &[gloss, index] : glossIndex)
                     if (index == g)
                         if (auto it = extras->find(extraKey(title, language, path, gloss)); it != extras->end())
-                            results[g] = {{it->second.id}, it->second.method, it->second.score};
+                        {
+                            // "2,3": a gloss of several definitions (en tourmaline "both senses")
+                            std::vector<std::string> ids;
+                            for (size_t from = 0; from <= it->second.id.size();) {
+                                const size_t comma = std::min(it->second.id.find(',', from), it->second.id.size());
+                                if (comma > from)
+                                    ids.push_back(it->second.id.substr(from, comma - from));
+                                from = comma + 1;
+                            }
+                            results[g] = {ids, it->second.method, it->second.score};
+                        }
     // One definition only: every gloss is of it (en Panama: "country")
     if (entry.defs.size() == 1)
         for (auto &r : results)

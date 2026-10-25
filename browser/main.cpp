@@ -7,7 +7,8 @@
 // labels of sections and senses. F4 opens the line, indented, in Kate.
 // View > Original: the page's wikitext (the <text> of its <page>, entities
 // decoded) with Kate mediawiki highlighting, read from the dump at its "source"
-// ([bz2 block, number in it]); the dump directory is set in Settings and kept
+// ([bz2 block, number in it]), or of the selected node of the tree when it has its own
+// (a translation subpage merged by wiktlink); the dump directory is set in Settings and kept
 // in wiktbrowse.ini next to the binary. Search > Find (Ctrl+F, F3, Shift+F3)
 // in the JSON and Original tabs, and in the tree (expanding to the match).
 //
@@ -51,6 +52,7 @@
 #include <qce/margins/LineNumberGutter.h>
 
 #include <memory>
+#include <optional>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::ordered_json;
@@ -247,6 +249,9 @@ QString label(const json &v, size_t i) {
     return text;
 }
 
+// Item data: [offset, index] in the dump of a node that is from another page
+constexpr int sourceRole = Qt::UserRole + 1;
+
 void addItems(QStandardItem *parent, const json &v, const QString &name) {
     auto *keyItem = new QStandardItem(name);
     auto *valueItem = new QStandardItem(v.is_structured() ? QString() : scalar(v).left(500));
@@ -255,6 +260,11 @@ void addItems(QStandardItem *parent, const json &v, const QString &name) {
     if (!v.is_structured())
         valueItem->setToolTip(scalar(v).left(4000));
     parent->appendRow({keyItem, valueItem});
+    // A node from another page of the dump (wiktlink: a merged translation subpage): its own place
+    if (v.is_object() && v.contains("source") && v["source"].is_array() && v["source"].size() == 2 && parent->parent())
+        keyItem->setData(QVariantList{QVariant::fromValue(v["source"][0].get<qint64>()),
+                                      QVariant::fromValue(v["source"][1].get<qint64>())},
+                         sourceRole);
     if (v.is_object())
         for (const auto &[k, child] : v.items())
             addItems(keyItem, child, QString::fromStdString(k));
@@ -300,6 +310,19 @@ public:
         treeLayout->addWidget(tree_);
         tabs_->addTab(json_.page, "JSON");
         tabs_->addTab(treePage_, "Tree");
+        // A node of the tree from another page of the dump (a merged subpage): Original shows that page
+        connect(tree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex &index) {
+            std::optional<std::pair<qint64, qint64>> source;
+            for (QModelIndex at = index.siblingAtColumn(0); at.isValid(); at = at.parent())
+                if (const auto data = at.data(sourceRole).toList(); data.size() == 2) {
+                    source = std::pair{data[0].toLongLong(), data[1].toLongLong()};
+                    break;
+                }
+            if (source != nodeSource_) {
+                nodeSource_ = source;
+                showOriginal();
+            }
+        });
 
         central->addWidget(left);
         central->addWidget(tabs_);
@@ -495,6 +518,8 @@ private:
             QString error;
             if (path.isEmpty())
                 error = "no dump of " + wiki + " in " + dumpDir();
+            else if (nodeSource_)
+                text = pageText(path, nodeSource_->first, nodeSource_->second, error);
             else
                 text = pageText(path, current_["source"][0].get<qint64>(), current_["source"][1].get<qint64>(), error);
             if (!error.isEmpty())
@@ -505,6 +530,7 @@ private:
 
     QAction *originalAction_ = nullptr;
     json current_;
+    std::optional<std::pair<qint64, qint64>> nodeSource_; // of the selected node, when not the page's
     std::unique_ptr<Lines> lines_;
     QString path_;
     QLineEdit *filter_;
@@ -636,6 +662,7 @@ private:
         tree_->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
         treeFind_->reset();
         current_ = value.is_discarded() ? json() : std::move(value);
+        nodeSource_.reset();
         showOriginal();
     }
 };

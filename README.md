@@ -115,13 +115,13 @@ dump_dir = ~/dump
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,
   for the browser (needs `zstandard`). `/translations` subpages are already
   merged into their pages, so they are not found on their own.
-- `wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--high 300] [--medium 300] [--min 200] [-j 16]` –
-  a sample for the wordnet, closed over translations: the en entries of
-  `--words` (default water, rock, dog, band, drop, bat, park, bank, saw, trunk,
-  bark, row: ambiguous ones), native en entries of
-  many and of a medium number of translations, the pages their translations
-  point to (`home`; `page` in en.wikt, as many as the en ones), native entries
-  of every wiki translating into one of them, own entries of many translations
+- `wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--homonyms res/wordnet/homonyms.json] [--high 300] [--medium 300] [--other-high 100] [--other-medium 100] [--min 200] [-j 16]` –
+  a sample for the wordnet, closed over translations: in the seed languages
+  (en and those of `--homonyms`: pl, fr) their homonyms and native entries of
+  many and of a medium number of translations (`--high`/`--medium` in en,
+  `--other-*` in the others), the pages their translations point to (`home`;
+  `page` in the seed wiki, as many as its chosen ones), native entries of every
+  wiki translating into one of them, own entries of many translations
   for a wiki with fewer than `--min` pages, and non-native entries of the chosen
   ones in other wikis (pl.wikt `chien` beside fr.wikt `chien`) as many as the
   native ones of a wiki. Plain `<wiki>.jsonl` and `selection.tsv` (the reason

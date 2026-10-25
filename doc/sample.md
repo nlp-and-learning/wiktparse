@@ -27,14 +27,18 @@ multilingual wordnet (synsets linked across languages), not the wordnet itself.
 
 ## How the sample was chosen
 
-1. en.wikt: the ambiguous entries water, rock, dog, band, drop, bat, park,
-   bank, saw, trunk, bark, row (reason `required`), and native English entries, 300 of many translations (at random of the
-   3000 with most) and 300 of 10–40 translations (reason `high`, `medium`).
+1. Seed languages en, pl, fr: in the Wiktionary of each, its homonyms of
+   `res/wordnet/homonyms.json` of the repository (en rock, bank, bat…; pl
+   zamek, rola, bez…; fr avocat, livre, voler…: reason `homonym`), then native
+   entries of many translations (at random of the 3000 with most) and of
+   10–40 translations (`high`, `medium`): 300 and 300 in en, 100 and 100 in
+   pl and fr.
 2. The pages their translations point to: the term's page in the Wiktionary of
-   its language (`translation of en water` for pl `woda`), and as many en.wikt
-   pages of the terms (Polish `pies` in en.wikt: `pl translation of en dog`).
+   its language (`translation of en water` for pl `woda`), and as many pages of
+   a seed Wiktionary of the terms (Polish `pies` in en.wikt: `pl translation of
+   en dog`).
 3. Native entries of every Wiktionary with a translation into one of the chosen
-   en entries (`translates into a chosen en entry`).
+   entries of a seed language (`translates into en dog`, `translates into pl zamek`).
 4. A Wiktionary with fewer than 200 pages: its own native entries of many
    translations (`filling: N terms`).
 5. Non-native entries of the chosen ones in other Wiktionaries, as many as the

@@ -1,23 +1,24 @@
 // wordnetsample: a sample of jsonl_senses for the wordnet (HANDOFF-4), closed over translations
-// (not at random beyond English):
-//   1. en: native English entries, some of many translations (at random of the top --high-pool),
-//      some of a medium number (--medium-min..--medium-max);
+// (at random only within the seed languages):
+//   1. seed languages (en and the languages of --homonyms): in the wiki of each its homonyms
+//      (res/wordnet/homonyms.json, reason "homonym"), then native entries of many translations
+//      (at random of the top --high-pool) and of a medium number (--medium-min..--medium-max):
+//      --high/--medium in en, --other-high/--other-medium in the other seed languages;
 //   2. the pages their translations point to: "home" (the term's page in the wiki of its
-//      language, "page_title" when another title), and with --en-foreign "page" (the en.wikt
-//      page of the term: Polish "pies" for dog, an entry of another language in en.wikt);
-//   3. mutual translation: native entries of every wiki with a translation into English that is
-//      one of the chosen en entries;
+//      language, "page_title" when another title), and with --seed-foreign "page" (the seed
+//      wiki's page of the term: Polish "pies" in en.wikt, as many as the chosen entries);
+//   3. mutual translation: native entries of every wiki with a translation into one of the
+//      chosen entries of a seed language (into en dog, into pl zamek…);
 //   4. a wiki with fewer than --min pages gets its own native entries of many translations;
 //   5. --foreign: non-native entries of the chosen native ones in other wikis (pl.wikt "chien",
 //      its French section, beside fr.wikt "chien"), up to as many as the native ones of a wiki.
 // Pages of known titles are read through the index (only their blocks); steps 1 and 3 read
 // every block. Output: plain <out>/<wiki>.jsonl (wiktbrowse) and <out>/selection.tsv.
 //
-// wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--high 300] [--high-pool 3000] [--medium 300]
-//               [--medium-min 10] [--medium-max 40] [--min 200] [--no-en-foreign] [--no-foreign]
-//               [--words water,rock,…] [--seed 1] [-j 16]
-// --words: en entries always in the sample (default water rock dog band drop bat park bank saw
-// trunk bark row: ambiguous ones, reason "required")
+// wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--homonyms res/wordnet/homonyms.json]
+//               [--high 300] [--medium 300] [--other-high 100] [--other-medium 100]
+//               [--high-pool 3000] [--medium-min 10] [--medium-max 40] [--min 200]
+//               [--no-seed-foreign] [--no-foreign] [--seed 1] [-j 16]
 #include <algorithm>
 #include <atomic>
 #include <filesystem>
@@ -128,10 +129,10 @@ template <typename T> std::vector<T> sample(std::vector<T> from, size_t n, std::
 int main(int argc, char *argv[]) {
     try {
         fs::path input = "jsonl_senses", output = "jsonl_wordnet";
-        size_t high = 300, highPool = 3000, medium = 300, mediumMin = 10, mediumMax = 40, minimum = 200, threads = 16;
-        bool enForeign = true, foreign = true;
-        // en entries always in the sample: ambiguous ones of HANDOFF-4 and the samples' concepts
-        std::string words = "water,rock,dog,band,drop,bat,park,bank,saw,trunk,bark,row";
+        fs::path homonymsFile = WIKTPARSE_RES_DIR "/wordnet/homonyms.json";
+        size_t high = 300, medium = 300, otherHigh = 100, otherMedium = 100, highPool = 3000, mediumMin = 10,
+               mediumMax = 40, minimum = 200, threads = 16;
+        bool seedForeign = true, foreign = true;
         unsigned seed = 1;
         for (int i = 1; i < argc; ++i) {
             const std::string arg = argv[i];
@@ -140,12 +141,18 @@ int main(int argc, char *argv[]) {
                 input = argv[++i];
             else if (arg == "-o" && i + 1 < argc)
                 output = argv[++i];
+            else if (arg == "--homonyms" && i + 1 < argc)
+                homonymsFile = argv[++i];
             else if (arg == "--high" && i + 1 < argc)
                 high = number();
-            else if (arg == "--high-pool" && i + 1 < argc)
-                highPool = number();
             else if (arg == "--medium" && i + 1 < argc)
                 medium = number();
+            else if (arg == "--other-high" && i + 1 < argc)
+                otherHigh = number();
+            else if (arg == "--other-medium" && i + 1 < argc)
+                otherMedium = number();
+            else if (arg == "--high-pool" && i + 1 < argc)
+                highPool = number();
             else if (arg == "--medium-min" && i + 1 < argc)
                 mediumMin = number();
             else if (arg == "--medium-max" && i + 1 < argc)
@@ -156,16 +163,15 @@ int main(int argc, char *argv[]) {
                 seed = static_cast<unsigned>(number());
             else if (arg == "-j" && i + 1 < argc)
                 threads = number();
-            else if (arg == "--words" && i + 1 < argc)
-                words = argv[++i];
-            else if (arg == "--no-en-foreign")
-                enForeign = false;
+            else if (arg == "--no-seed-foreign")
+                seedForeign = false;
             else if (arg == "--no-foreign")
                 foreign = false;
             else {
-                std::cout << "usage: wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--high 300] [--high-pool 3000]\n"
-                             "       [--medium 300] [--medium-min 10] [--medium-max 40] [--min 200] [--no-en-foreign]\n"
-                             "       [--no-foreign] [--words water,rock,…] [--seed 1] [-j 16]\n";
+                std::cout << "usage: wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--homonyms homonyms.json]\n"
+                             "       [--high 300] [--medium 300] [--other-high 100] [--other-medium 100]\n"
+                             "       [--high-pool 3000] [--medium-min 10] [--medium-max 40] [--min 200]\n"
+                             "       [--no-seed-foreign] [--no-foreign] [--seed 1] [-j 16]\n";
                 return arg == "-h" || arg == "--help" ? 0 : 1;
             }
         }
@@ -177,90 +183,102 @@ int main(int argc, char *argv[]) {
         std::ranges::sort(wikis);
         fs::create_directories(output);
         auto pathOf = [&](const std::string &wiki) { return input / (wiki + ".jsonl.zst"); };
-
-        // 1. en entries by their number of translations
-        const BlockReader en(pathOf("en"));
-        const auto enTitles = en.titles();
-        std::vector<std::pair<size_t, std::string>> counts;
+        auto exists = [&](const std::string &wiki) { return std::ranges::binary_search(wikis, wiki); };
         std::mutex mutex;
-        forBlocks(en.size(), nullptr, threads, [&](size_t b) {
-            std::vector<std::pair<size_t, std::string>> part;
-            const auto lines = en.lines(b);
-            for (size_t k = 0; k < lines.size() && k < enTitles[b].size(); ++k)
-                if (lines[k].find("\"native\":true") != std::string::npos &&
-                    lines[k].find("\"translations\":") != std::string::npos)
-                    if (const size_t n = nativeTranslations(json::parse(lines[k])).size())
-                        part.emplace_back(n, enTitles[b][k]);
-            std::lock_guard lock(mutex);
-            counts.insert(counts.end(), part.begin(), part.end());
-        });
-        std::ranges::sort(counts, std::greater{});
-        std::cerr << "en: " << counts.size() << " native entries with translations" << std::endl;
-        std::vector<std::string> top;
-        for (size_t i = 0; i < counts.size() && i < highPool; ++i)
-            top.push_back(counts[i].second);
-        std::map<std::string, std::string> chosen; // en title -> required, high, medium
-        for (size_t from = 0; from <= words.size();) {
-            const size_t comma = std::min(words.find(',', from), words.size());
-            if (comma > from)
-                chosen[words.substr(from, comma - from)] = "required";
-            from = comma + 1;
-        }
-        // (the required ones are not drawn again)
-        std::erase_if(top, [&](const std::string &t) { return chosen.contains(t); });
-        for (const auto &t : sample(top, high, rng))
-            chosen[t] = "high";
-        std::vector<std::string> middle;
-        for (const auto &[n, t] : counts)
-            if (n >= mediumMin && n <= mediumMax && !chosen.contains(t))
-                middle.push_back(t);
-        for (const auto &t : sample(middle, medium, rng))
-            chosen[t] = "medium";
 
-        // 2. the chosen en entries (their blocks only) and the pages of their translations
-        Titles chosenSet;
-        for (const auto &[t, _] : chosen)
-            chosenSet.insert(t);
-        std::unordered_map<std::string, std::string> enLines;
-        const auto enBlocks = blocksOf(enTitles, chosenSet);
-        forBlocks(0, &enBlocks, threads, [&](size_t b) {
-            const auto lines = en.lines(b);
-            for (size_t k = 0; k < lines.size() && k < enTitles[b].size(); ++k)
-                if (chosenSet.contains(enTitles[b][k])) {
-                    std::lock_guard lock(mutex);
-                    enLines.emplace(enTitles[b][k], lines[k]);
-                }
-        });
+        // 1. seed languages: en and those of the homonyms; their homonyms, then entries by translations
+        std::map<std::string, std::map<std::string, std::string>> chosen; // seed wiki -> title -> reason
+        chosen["en"];
+        if (std::ifstream in(homonymsFile); in) {
+            const json homonyms = json::parse(in);
+            for (const auto &[lang, words] : homonyms.value("languages", json::object()).items())
+                if (exists(lang))
+                    for (const auto &word : words)
+                        chosen[lang][word.value("word", std::string())] = "homonym";
+        } else
+            std::cerr << "wordnetsample: no " << homonymsFile.string() << ", seeds en only" << std::endl;
+        std::map<std::string, std::unordered_map<std::string, std::string>> seedLines; // seed wiki -> title -> line
+        for (auto &[wiki, picks] : chosen) {
+            const BlockReader reader(pathOf(wiki));
+            const auto titles = reader.titles();
+            std::vector<std::pair<size_t, std::string>> counts;
+            forBlocks(reader.size(), nullptr, threads, [&](size_t b) {
+                std::vector<std::pair<size_t, std::string>> part;
+                const auto lines = reader.lines(b);
+                for (size_t k = 0; k < lines.size() && k < titles[b].size(); ++k)
+                    if (lines[k].find("\"native\":true") != std::string::npos &&
+                        lines[k].find("\"translations\":") != std::string::npos)
+                        if (const size_t n = nativeTranslations(json::parse(lines[k])).size())
+                            part.emplace_back(n, titles[b][k]);
+                std::lock_guard lock(mutex);
+                counts.insert(counts.end(), part.begin(), part.end());
+            });
+            std::ranges::sort(counts, std::greater{});
+            std::vector<std::string> top;
+            for (size_t i = 0; i < counts.size() && top.size() < highPool; ++i)
+                if (!picks.contains(counts[i].second)) // (the homonyms are not drawn again)
+                    top.push_back(counts[i].second);
+            for (const auto &t : sample(top, wiki == "en" ? high : otherHigh, rng))
+                picks[t] = "high";
+            std::vector<std::string> middle;
+            for (const auto &[n, t] : counts)
+                if (n >= mediumMin && n <= mediumMax && !picks.contains(t))
+                    middle.push_back(t);
+            for (const auto &t : sample(middle, wiki == "en" ? medium : otherMedium, rng))
+                picks[t] = "medium";
+            // their pages (their blocks only)
+            Titles wantedHere;
+            for (const auto &[t, _] : picks)
+                wantedHere.insert(t);
+            auto &found = seedLines[wiki];
+            const auto blocks = blocksOf(titles, wantedHere);
+            forBlocks(0, &blocks, threads, [&](size_t b) {
+                const auto lines = reader.lines(b);
+                for (size_t k = 0; k < lines.size() && k < titles[b].size(); ++k)
+                    if (wantedHere.contains(titles[b][k])) {
+                        std::lock_guard lock(mutex);
+                        found.emplace(titles[b][k], lines[k]);
+                    }
+            });
+            std::erase_if(picks, [&](const auto &p) { return !found.contains(p.first); }); // (no such page)
+            std::cerr << wiki << ": " << counts.size() << " native entries with translations, " << picks.size()
+                      << " chosen" << std::endl;
+        }
+        std::map<std::string, Titles> chosenTitles; // seed language -> its chosen titles (for mutual ones)
+        for (const auto &[wiki, picks] : chosen)
+            for (const auto &[t, _] : picks)
+                chosenTitles[wiki].insert(t);
+
+        // 2. the pages of their translations
         std::map<std::string, Titles> wanted;
         std::map<std::pair<std::string, std::string>, std::string> reason;
-        std::map<std::string, std::string> enForeignCandidates; // en.wikt pages of the translations
-        for (const auto &[title, _] : chosen) {
-            auto it = enLines.find(title);
-            if (it == enLines.end())
-                continue;
-            const json page = json::parse(it->second);
-            for (const json *t : nativeTranslations(page)) {
-                const std::string lang = t->value("lang", json()).is_string() ? (*t)["lang"].get<std::string>() : "";
-                std::string term = t->contains("page_title") ? (*t)["page_title"].get<std::string>()
-                                                             : t->value("term", std::string());
-                if (lang.empty() || term.empty())
-                    continue;
-                if (t->value("home", false)) {
-                    const auto wiki = wikiOf(lang);
-                    wanted[wiki].insert(term);
-                    reason.emplace(std::pair{wiki, term}, "translation of en " + title);
+        std::map<std::string, std::map<std::string, std::string>> seedForeignCandidates; // seed wiki -> term -> why
+        for (const auto &[seedWiki, picks] : chosen)
+            for (const auto &[title, _] : picks) {
+                const json page = json::parse(seedLines[seedWiki][title]);
+                for (const json *t : nativeTranslations(page)) {
+                    const std::string lang = t->value("lang", json()).is_string() ? (*t)["lang"].get<std::string>() : "";
+                    const std::string term = t->contains("page_title") ? (*t)["page_title"].get<std::string>()
+                                                                       : t->value("term", std::string());
+                    if (lang.empty() || term.empty())
+                        continue;
+                    if (t->value("home", false)) {
+                        const auto wiki = wikiOf(lang);
+                        wanted[wiki].insert(term);
+                        reason.emplace(std::pair{wiki, term}, "translation of " + seedWiki + " " + title);
+                    }
+                    if (seedForeign && t->value("page", false) && !chosenTitles[seedWiki].contains(term))
+                        seedForeignCandidates[seedWiki].emplace(term, lang + " translation of " + seedWiki + " " + title);
                 }
-                if (enForeign && t->value("page", false) && !chosenSet.contains(term))
-                    enForeignCandidates.emplace(term, lang + " translation of en " + title);
             }
-        }
-
-        // (non-native ones of en.wikt: as many as the chosen native ones at most, like step 5)
-        {
-            std::vector<std::pair<std::string, std::string>> all(enForeignCandidates.begin(), enForeignCandidates.end());
-            for (auto &[term, why] : sample(std::move(all), chosen.size(), rng)) {
-                wanted["en"].insert(term);
-                reason.emplace(std::pair{std::string("en"), term}, why);
+        // (non-native pages of a seed wiki: as many as its chosen entries at most, like step 5)
+        std::map<std::string, Titles> seedForeignTitles;
+        for (auto &[seedWiki, candidates] : seedForeignCandidates) {
+            std::vector<std::pair<std::string, std::string>> all(candidates.begin(), candidates.end());
+            for (auto &[term, why] : sample(std::move(all), chosen[seedWiki].size(), rng)) {
+                wanted[seedWiki].insert(term);
+                seedForeignTitles[seedWiki].insert(term);
+                reason.emplace(std::pair{seedWiki, term}, why);
             }
         }
 
@@ -271,31 +289,43 @@ int main(int argc, char *argv[]) {
             const BlockReader reader(pathOf(wiki));
             const auto titles = reader.titles();
             const Titles &want = wanted[wiki];
+            const Titles noTitles;
+            const Titles &ownChosen = chosenTitles.contains(wiki) ? chosenTitles[wiki] : noTitles;
             std::map<std::string, std::string> picked, mutual;
+            std::map<std::string, std::string> mutualWhy;
             std::vector<std::tuple<size_t, std::string, std::string>> candidates;
             forBlocks(reader.size(), nullptr, threads, [&](size_t b) {
-                std::map<std::string, std::string> p, m;
+                std::map<std::string, std::string> p, m, w;
                 std::vector<std::tuple<size_t, std::string, std::string>> c;
                 const auto lines = reader.lines(b);
                 for (size_t k = 0; k < lines.size() && k < titles[b].size(); ++k) {
                     const auto &title = titles[b][k];
                     const auto &line = lines[k];
+                    if (ownChosen.contains(title))
+                        continue;
                     if (want.contains(title)) {
                         p.emplace(title, line);
                         continue;
                     }
-                    if (wiki == "en" || line.find("\"native\":true") == std::string::npos ||
+                    if (line.find("\"native\":true") == std::string::npos ||
                         line.find("\"translations\":") == std::string::npos)
                         continue;
-                    if (line.find("\"lang\":\"en\"") != std::string::npos) {
-                        bool into = false;
-                        for (const json *t : nativeTranslations(json::parse(line)))
-                            if (t->value("lang", json()) == "en" && chosenSet.contains(t->value("term", std::string())))
-                                into = true;
-                        if (into) {
-                            m.emplace(title, line);
+                    // a translation into a chosen entry of a seed language (of another wiki)
+                    std::string into;
+                    for (const json *t : nativeTranslations(json::parse(line))) {
+                        const std::string lang = t->value("lang", json()).is_string() ? (*t)["lang"].get<std::string>() : "";
+                        if (lang == wiki)
                             continue;
+                        if (auto it = chosenTitles.find(wikiOf(lang));
+                            it != chosenTitles.end() && it->second.contains(t->value("term", std::string()))) {
+                            into = wikiOf(lang) + " " + t->value("term", std::string());
+                            break;
                         }
+                    }
+                    if (!into.empty()) {
+                        m.emplace(title, line);
+                        w.emplace(title, "translates into " + into);
+                        continue;
                     }
                     c.emplace_back(occurrences(line, "\"term\":"), title, line);
                 }
@@ -306,17 +336,17 @@ int main(int argc, char *argv[]) {
                 std::lock_guard lock(mutex);
                 picked.merge(p);
                 mutual.merge(m);
+                mutualWhy.merge(w);
                 candidates.insert(candidates.end(), std::make_move_iterator(c.begin()), std::make_move_iterator(c.end()));
             });
             auto &own = rows[wiki];
-            if (wiki == "en")
-                for (const auto &[t, kind] : chosen)
-                    if (enLines.contains(t))
-                        own.push_back({t, enLines[t], kind});
+            if (auto it = chosen.find(wiki); it != chosen.end())
+                for (const auto &[t, kind] : it->second)
+                    own.push_back({t, seedLines[wiki][t], kind});
             for (auto &[t, line] : picked)
                 own.push_back({t, std::move(line), reason[{wiki, t}]});
             for (auto &[t, line] : mutual)
-                own.push_back({t, std::move(line), "translates into a chosen en entry"});
+                own.push_back({t, std::move(line), mutualWhy[t]});
             if (own.size() < minimum) {
                 std::ranges::sort(candidates, std::greater{});
                 if (candidates.size() > minimum * 3)
@@ -324,9 +354,9 @@ int main(int argc, char *argv[]) {
                 for (auto &[n, t, line] : sample(std::move(candidates), minimum - own.size(), rng))
                     own.push_back({t, std::move(line), "filling: " + std::to_string(n) + " terms"});
             }
-            // (en: the pages of translations are of other languages)
+            // (the non-native pages of a seed wiki are not its native entries)
             for (const auto &r : own)
-                if (wiki != "en" || chosen.contains(r.title))
+                if (!seedForeignTitles[wiki].contains(r.title))
                     native[wiki].insert(r.title);
             std::cerr << wiki << ": " << picked.size() << " translations, " << mutual.size() << " mutual, " << own.size()
                       << " pages" << std::endl;

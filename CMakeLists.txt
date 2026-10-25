@@ -97,6 +97,7 @@ target_link_libraries(wiktglos defglos BZip2::BZip2 PkgConfig::ZSTD)
 # A sample of jsonl_senses for the wordnet, closed over translations (HANDOFF-4)
 add_executable(wordnetsample tools/wordnetsample.cpp)
 target_link_libraries(wordnetsample nlohmann_json::nlohmann_json BZip2::BZip2 PkgConfig::ZSTD)
+target_compile_definitions(wordnetsample PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
 
 add_executable(${PROJECT_NAME} src/main.cpp
         src/headers/headers.cpp

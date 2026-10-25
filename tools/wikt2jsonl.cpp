@@ -846,9 +846,27 @@ std::vector<std::pair<std::string, std::vector<std::string>>> linkPieces(const s
         else
             pieces.back() += c;
     }
+    // Words of a phrase linked one by one: zh "[[посадишь]] [[сливы]] [[—]] [[сливы]]", en
+    // "[[kissa]] [[i]] [[kors]]": links with only spaces and dashes between them are one term,
+    // the text they show
+    static const std::regex link(R"(\[\[([^\]|]+)(?:\|([^\]]*))?\]\])");
     for (const auto &piece : pieces) {
         const auto genders = lineGenders(piece);
-        for (const auto &term : links(piece))
+        auto terms = links(piece);
+        if (terms.size() >= 2 && piece.size() < maxRegexLine) {
+            std::string shown, between;
+            size_t last = 0;
+            for (std::sregex_iterator it(piece.begin(), piece.end(), link), end; it != end; ++it) {
+                if (last)
+                    between += piece.substr(last, static_cast<size_t>(it->position()) - last);
+                shown += (shown.empty() ? "" : piece.substr(last, static_cast<size_t>(it->position()) - last)) +
+                         ((*it)[2].matched ? (*it)[2].str() : (*it)[1].str());
+                last = static_cast<size_t>(it->position() + it->length());
+            }
+            if (between.find_first_not_of(" -\xE2\x80\x94") == std::string::npos) // spaces, -, — (E2 80 94)
+                terms = {trim(shown)};
+        }
+        for (const auto &term : terms)
             result.emplace_back(term, genders);
     }
     return result;

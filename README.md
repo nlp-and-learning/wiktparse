@@ -105,7 +105,9 @@ dump_dir = ~/dump
   looked up by its title in the dump's `-index.txt.bz2` (read once per dump).
   WikiTree, with Original, shows that wikitext as a tree by the depth of its
   headings (`==English==` > `===Noun===` > `====Translations====`), the other
-  lines under their heading.
+  lines under their heading. The status line shows where the cursor is: the
+  JSON path in JSON (`$.sections[0].sections[3].translations[5]`), the headings
+  in Original, the nodes from the root in Tree and WikiTree.
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

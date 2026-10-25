@@ -31,6 +31,7 @@
 #include <QMenuBar>
 #include <QRegularExpression>
 #include <QSettings>
+#include <QStatusBar>
 #include <QXmlStreamReader>
 #include <QSpinBox>
 #include <QSplitter>
@@ -332,6 +333,16 @@ public:
         wikiTreeFind_ = new TreeFindBar(wikiTreePage_, wikiTree_);
         wikiTreeLayout->addWidget(wikiTreeFind_);
         wikiTreeLayout->addWidget(wikiTree_);
+
+        // Status line: where the cursor (or the selected node) is, from the root
+        pathLabel_ = new QLabel;
+        pathLabel_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        statusBar()->addWidget(pathLabel_, 1);
+        connect(json_.edit->area(), &qce::CodeEditArea::cursorPositionChanged, this, [this] { updatePath(); });
+        connect(wiki_.edit->area(), &qce::CodeEditArea::cursorPositionChanged, this, [this] { updatePath(); });
+        connect(tree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this] { updatePath(); });
+        connect(wikiTree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this] { updatePath(); });
+        connect(tabs_, &QTabWidget::currentChanged, this, [this] { updatePath(); });
         // A node of the tree from another page of the dump (a merged subpage): Original shows that page
         connect(tree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex &index) {
             std::optional<std::pair<qint64, qint64>> source;
@@ -720,6 +731,91 @@ private:
         wikiTree_->collapseAll(); // (opened by hand or by a search match)
     }
 
+    // The status line of the current tab
+    void updatePath() {
+        QString path;
+        QWidget *tab = tabs_->currentWidget();
+        if (tab == json_.page)
+            path = jsonPath(json_.doc->toPlainText(), json_.edit->area()->cursorPosition());
+        else if (tab == wiki_.page)
+            path = headingPath(wiki_.doc->toPlainText(), wiki_.edit->area()->cursorPosition().line);
+        else if (tab == treePage_ || tab == wikiTreePage_) {
+            QTreeView *view = tab == treePage_ ? tree_ : wikiTree_;
+            QStringList parts;
+            for (QModelIndex at = view->currentIndex().siblingAtColumn(0); at.isValid(); at = at.parent())
+                parts.prepend(at.data().toString().left(80));
+            path = parts.join(" › ");
+        }
+        pathLabel_->setText(path);
+    }
+
+    // The path of the JSON value at a cursor in indented JSON: keys and array indexes from the
+    // root, read from the text before the cursor (strings with escapes, brackets, commas, colons)
+    static QString jsonPath(const QString &text, qce::TextCursor cursor) {
+        qsizetype end = 0;
+        for (int line = 0; line < cursor.line && end >= 0; ++line)
+            end = text.indexOf('\n', end) + 1;
+        if (end < 0)
+            return {};
+        end = std::min(text.size(), end + cursor.column);
+        struct Frame {
+            bool array;
+            QString key; // the member key (object) or the index (array)
+            int index = 0;
+        };
+        std::vector<Frame> stack;
+        QString lastString;
+        for (qsizetype i = 0; i < end; ++i) {
+            const QChar c = text[i];
+            if (c == '"') {
+                QString s;
+                for (++i; i < text.size() && text[i] != '"'; ++i) {
+                    if (text[i] == '\\' && i + 1 < text.size())
+                        ++i;
+                    s += text[i];
+                }
+                lastString = s;
+            } else if (c == ':' && !stack.empty() && !stack.back().array) {
+                stack.back().key = lastString;
+            } else if (c == '{' || c == '[') {
+                stack.push_back({c == '[', c == '[' ? QStringLiteral("0") : QString()});
+            } else if (c == '}' || c == ']') {
+                if (!stack.empty())
+                    stack.pop_back();
+            } else if (c == ',' && !stack.empty()) {
+                if (stack.back().array)
+                    stack.back().key = QString::number(++stack.back().index);
+                else
+                    stack.back().key.clear();
+            }
+        }
+        QString path = "$";
+        for (const auto &f : stack) {
+            if (f.key.isEmpty())
+                break;
+            path += f.array ? "[" + f.key + "]" : "." + f.key;
+        }
+        return path;
+    }
+
+    // The headings of wikitext down to a line: "English › Etymology 1 › Noun"
+    static QString headingPath(const QString &text, int lastLine) {
+        static const QRegularExpression heading(R"(^(={1,6})\s*(.*?)\s*\1\s*$)");
+        std::vector<std::pair<int, QString>> stack;
+        const QStringList lines = text.split('\n');
+        for (int i = 0; i <= lastLine && i < lines.size(); ++i)
+            if (const auto m = heading.match(lines[i]); m.hasMatch()) {
+                const int level = static_cast<int>(m.captured(1).size());
+                while (!stack.empty() && stack.back().first >= level)
+                    stack.pop_back();
+                stack.emplace_back(level, m.captured(2));
+            }
+        QStringList parts;
+        for (const auto &[level, name] : stack)
+            parts << name;
+        return parts.join(" › ");
+    }
+
     QAction *originalAction_ = nullptr;
     json current_;
     std::optional<std::pair<qint64, qint64>> nodeSource_; // of the selected node, when not the page's
@@ -748,6 +844,7 @@ private:
     QWidget *treePage_ = nullptr; // find bar and tree
     TreeFindBar *treeFind_ = nullptr;
     QStandardItemModel *model_;
+    QLabel *pathLabel_ = nullptr;   // status line: the path to the cursor or the selected node
     QTreeView *wikiTree_ = nullptr; // WikiTree: the Original by headings
     QWidget *wikiTreePage_ = nullptr;
     TreeFindBar *wikiTreeFind_ = nullptr;

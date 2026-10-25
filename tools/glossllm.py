@@ -177,6 +177,45 @@ def parse(content, defs, glosses):
     return result
 
 
+SYSTEM_BATCH = SYSTEM.replace(
+    'Answer only the JSON, as {"links": [{"gloss": 0, "definition": "<id>", "confidence": 0.9}]}',
+    'Each entry (E0, E1, …) is separate: link its glosses to its own definitions only. Answer only the JSON, '
+    'one item per gloss, as {"links": [{"entry": 0, "gloss": 0, "definition": "<id>", "confidence": 0.9}]}')
+
+
+def ask_batch(model, items):
+    """Several entries in one request (a provider's limit is of requests, not tokens):
+    items (title, pos, defs, glosses, notes); for each, {gloss index: (id or None, confidence)}"""
+    parts = []
+    for n, (title, pos, defs, glosses, notes) in enumerate(items):
+        text = prompt(title, pos, defs, glosses, notes).replace('Entry: ', f'E{n}. Entry: ', 1)
+        parts.append(text.replace('Glosses to link:', f'Glosses of E{n} to link:'))
+    user = '\n\n'.join(parts)
+    count = sum(len(item[3]) for item in items)
+    if model.startswith('anthropic:'):
+        content = ask_anthropic(model.removeprefix('anthropic:'), SYSTEM_BATCH, user, [None] * count)
+    else:
+        provider, name = model.split(':', 1)
+        content = ask_openai(provider, name, SYSTEM_BATCH, user, [None] * count)
+    results = [{} for _ in items]
+    try:
+        for link in json.loads(content).get('links', []):
+            n = link.get('entry')
+            if isinstance(n, int) and 0 <= n < len(items):
+                title, pos, defs, glosses, notes = items[n]
+                one = parse(json.dumps({'links': [{k: v for k, v in link.items() if k != 'entry'}]}), defs, glosses)
+                results[n].update(one)
+    except (json.JSONDecodeError, AttributeError, TypeError, ValueError):
+        pass
+    return results
+
+
+def batched(args):
+    """Whether entries go several to a request: API providers with --batch above 1"""
+    prefix = args.model.split(':', 1)[0]
+    return args.batch > 1 and (prefix in PROVIDERS or prefix == 'anthropic')
+
+
 def ask_cascade(args, title, pos, defs, glosses, notes=None):
     """The main model; the glosses it is unsure of (below --confidence) to --fallback"""
     answer = ask(args.model, title, pos, defs, glosses, notes=notes)
@@ -208,20 +247,32 @@ def run_eval(args):
         entries = dict(list(entries.items())[:args.limit])
     started = time.time()
     results = []
+    items = [(t, p, e['defs'], e['glosses'], None, e) for (t, p), e in entries.items()]
+    groups = [items[i:i + args.batch] for i in range(0, len(items), args.batch)] if batched(args) else [[x] for x in items]
+
+    def run(group):
+        if len(group) > 1 or batched(args):
+            return ask_batch(args.model, [g[:5] for g in group])
+        t, p, defs, glosses, notes, e = group[0]
+        return [ask_cascade(args, t, p, defs, glosses)]
+
+    answers = []
     with concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
-        futures = {pool.submit(ask_cascade, args, t, p, e['defs'], e['glosses']): e for (t, p), e in entries.items()}
+        futures = {pool.submit(run, group): group for group in groups}
         for done, future in enumerate(concurrent.futures.as_completed(futures), 1):
-            print(f'\r  {done}/{len(futures)} entries', end='', file=sys.stderr, flush=True)
-            e = futures[future]
+            print(f'\r  {done}/{len(futures)} requests', end='', file=sys.stderr, flush=True)
+            group = futures[future]
             try:
-                answer = future.result()
+                got = future.result()
             except Exception as error:  # a failed request: all its glosses unanswered
                 print(f'  error: {error}', file=sys.stderr)
-                answer = {}
-            for k, expected in enumerate(e['gold']):
-                got, confidence = answer.get(k, (None, 0.0))
-                right = (got is None and not expected) or (got is not None and any(ge.related(got, x) for x in expected))
-                results.append((confidence, right, got is None, not expected))
+                got = [{} for _ in group]
+            answers += [(g[5], a) for g, a in zip(group, got)]
+    for e, answer in answers:
+        for k, expected in enumerate(e['gold']):
+            got, confidence = answer.get(k, (None, 0.0))
+            right = (got is None and not expected) or (got is not None and any(ge.related(got, x) for x in expected))
+            results.append((confidence, right, got is None, not expected))
     print(file=sys.stderr)
     seconds = time.time() - started
     n = len(results)
@@ -272,20 +323,42 @@ def run_apply(args):
             open(review_path, 'a', encoding='utf-8') as review, concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
         if new_file:
             out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
-        futures = {pool.submit(ask_cascade, args, title, pos, defs, todo, notes): (title, code, where, pos, defs, todo)
-                   for title, code, where, pos, defs, todo, notes in cases}
-        for future in concurrent.futures.as_completed(futures):
-            title, code, where, pos, defs, todo = futures[future]
+        # Several entries to a request (--batch) for API providers, one by one for Ollama
+        size = args.batch if batched(args) else 1
+        groups = [cases[i:i + size] for i in range(0, len(cases), size)]
+
+        def run(group):
+            if size > 1:
+                return ask_batch(args.model, [(t, p, d, todo, n) for t, c, w, p, d, todo, n in group])
+            t, c, w, p, d, todo, n = group[0]
+            return [ask_cascade(args, t, p, d, todo, n)]
+
+        futures = {pool.submit(run, group): group for group in groups}
+
+        def results():
+            for future in concurrent.futures.as_completed(futures):
+                group = futures[future]
+                try:
+                    got = future.result()
+                except OutOfCredit:
+                    raise
+                except Exception as error:  # these entries again in the next run
+                    print(f'\n  error {group[0][0]}: {error}', file=sys.stderr)
+                    continue
+                for case, answer in zip(group, got):
+                    yield case, answer
+
+        stream = results()
+        while True:
             try:
-                answer = future.result()
+                (title, code, where, pos, defs, todo, notes), answer = next(stream)
+            except StopIteration:
+                break
             except OutOfCredit as e:
-                stopped = stopped or str(e)
+                stopped = str(e)
                 for f in futures:
                     f.cancel()
-                continue
-            except Exception as error:  # this entry again in the next run
-                print(f'\n  error {title}: {error}', file=sys.stderr)
-                continue
+                break
             # For review before wiktglos --extra: the entry, each gloss with its definition
             texts = dict(defs)
             review.write(f'== {title} ({pos}) [{code} {where}]\n')
@@ -327,6 +400,7 @@ def main():
                                            'or an Ollama model')
     parser.add_argument('--confidence', type=float, default=0.8, help='accepted from this confidence')
     parser.add_argument('-j', '--jobs', type=int, default=4, help='requests at a time (OLLAMA_NUM_PARALLEL)')
+    parser.add_argument('--batch', type=int, default=1, help='entries in a request of an API provider; z.ai limits requests at a time, not per minute: 8 to a request were slower (187 s against 126 s on gold-en-hard)')
     parser.add_argument('--limit', type=int, help='the first entries only (--apply: of those not done yet)')
     parser.add_argument('--recheck', action='store_true',
                         help='--apply: also the glosses linked by best and embedding (some 10%% of them wrong)')

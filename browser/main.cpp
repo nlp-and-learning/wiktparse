@@ -1055,14 +1055,36 @@ private:
         if (!lines_)
             return;
         const QString text = filter_->text();
-        for (size_t i = 0; i < lines_->count(); ++i) {
-            if (!text.isEmpty() && !lines_->title(i).contains(text, Qt::CaseInsensitive))
-                continue;
+        constexpr size_t limit = 200000;
+        std::vector<size_t> shown;
+        if (text.isEmpty()) {
+            for (size_t i = 0; i < lines_->count() && i < limit; ++i)
+                shown.push_back(i);
+        } else {
+            // the title itself first, then the titles starting with the filter, then the ones containing
+            // it; each group sorted by title ("bal", "bal maskowy", "balet"… then "kabała"…)
+            std::vector<std::pair<int, size_t>> found; // group, line
+            for (size_t i = 0; i < lines_->count() && found.size() < limit; ++i) {
+                const QString title = lines_->title(i);
+                if (title.compare(text, Qt::CaseInsensitive) == 0)
+                    found.emplace_back(0, i);
+                else if (title.startsWith(text, Qt::CaseInsensitive))
+                    found.emplace_back(1, i);
+                else if (title.contains(text, Qt::CaseInsensitive))
+                    found.emplace_back(2, i);
+            }
+            std::ranges::stable_sort(found, [&](const auto &a, const auto &b) {
+                if (a.first != b.first)
+                    return a.first < b.first;
+                return QString::localeAwareCompare(lines_->title(a.second), lines_->title(b.second)) < 0;
+            });
+            for (const auto &[group, i] : found)
+                shown.push_back(i);
+        }
+        for (size_t i : shown) {
             auto *item = new QListWidgetItem(QString("%1  %2").arg(i + 1).arg(lines_->title(i)));
             item->setData(Qt::UserRole, static_cast<int>(i));
             list_->addItem(item);
-            if (list_->count() >= 200000)
-                break;
         }
         status_->setText(QString("%1 lines, %2 shown").arg(lines_->count()).arg(list_->count()));
     }

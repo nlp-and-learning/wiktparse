@@ -11,7 +11,7 @@ definition when it is ahead of the second by a margin.
       accuracy by margin: for choosing the model and the thresholds
   glossembed.py --apply [-i jsonl_senses] [--wiki en] [--model ...] [-o glossembed-en.tsv]
       the glosses without a link: wiki, title, language, path of the node, gloss, sense id,
-      score, margin; for wiktglos --extra
+      score, margin, accepted (margin from the model's threshold); for wiktglos --extra
 
 Embeddings by sentence-transformers on the GPU (--backend st; the venv with torch and
 sentence-transformers: ~/.venvs/embed/bin/python glossembed.py ...), else by Ollama
@@ -90,6 +90,16 @@ def entry_data(node, tables):
             if 'gloss' in tr and 'sense' not in tr:
                 glosses.setdefault(tr['gloss'], (tr.get('sense_ids'), tr.get('sense_method'), tr.get('sense_score', 0)))
     return defs, glosses
+
+
+# The model of a wiki: English definitions by nomic-embed-text (fastest, as good on en),
+# other languages by the multilingual embeddinggemma; the margin over the second definition
+# from which a link is accepted (--eval on en: accuracy about 0.993)
+def default_model(wiki):
+    return 'nomic-embed-text' if wiki in ('en', 'simple') else 'embeddinggemma'
+
+
+MARGINS = {'nomic-embed-text': 0.05, 'embeddinggemma': 0.08, 'qwen3-embedding:4b': 0.05}
 
 
 # Ollama model names and their sentence-transformers (Hugging Face) models
@@ -225,10 +235,12 @@ def run_apply(args, embedder):
     print(f'{len(cases)} entries, {sum(len(c[4]) for c in cases)} glosses without a link', file=sys.stderr)
     predicted = predict_all(embedder, [(title, defs, glosses) for title, _, _, defs, glosses in cases])
     with open(args.output, 'w', encoding='utf-8') as out:
-        out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\n')
+        margin_needed = args.margin if args.margin is not None else MARGINS.get(embedder.model, 0.08)
+        out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
         for (title, code, where, defs, glosses), rows in zip(cases, predicted):
             for gloss, (best, score, margin) in zip(glosses, rows):
-                out.write(f"{args.wiki}\t{title}\t{code}\t{where}\t{gloss}\t{defs[best][0]}\t{score:.3f}\t{margin:.3f}\n")
+                out.write(f"{args.wiki}\t{title}\t{code}\t{where}\t{gloss}\t{defs[best][0]}\t{score:.3f}\t{margin:.3f}"
+                          f"\t{int(margin >= margin_needed)}\n")
     print(f'written to {args.output}', file=sys.stderr)
 
 
@@ -240,11 +252,13 @@ def main():
     parser.add_argument('-i', '--input', default='jsonl_senses')
     parser.add_argument('-o', '--output')
     parser.add_argument('--wiki', default='en')
-    parser.add_argument('--model', default='qwen3-embedding:4b')
+    parser.add_argument('--model', help='default: nomic-embed-text for en, embeddinggemma for others')
+    parser.add_argument('--margin', type=float, help='accepted from this margin (default by the model)')
     parser.add_argument('--entries', type=int, default=3000)
     parser.add_argument('--backend', choices=('auto', 'st', 'ollama'), default='auto')
     args = parser.parse_args()
     args.output = args.output or f'glossembed-{args.wiki}.tsv'
+    args.model = args.model or default_model(args.wiki)
     embedder = Embedder(args.model, args.backend)
     (run_eval if args.eval else run_apply)(args, embedder)
 

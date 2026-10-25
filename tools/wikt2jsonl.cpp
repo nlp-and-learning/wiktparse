@@ -23,6 +23,7 @@
 #include <format>
 #include <fstream>
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -1706,7 +1707,7 @@ int main(int argc, char *argv[]) {
         // For wiktlangs.sqlite (table wikt_marker): how each wiki writes languages
         std::ofstream markersFile(output / "markers.tsv");
         markersFile << "wiki\tform\tmarker\tcode\tsections\texample\n";
-        std::string header = "wiki\tprofile\tpages\twith_sections\tsections\twith_code\tsenses\ttranslations\tnative_sections\tnative_senses\tnative_translations";
+        std::string header = "wiki\tprofile\tpages\twith_sections\tsections\twith_code\tsenses\ttranslations\tnative_sections\tnative_senses\tnative_translations\tseconds";
         statsFile << header << '\n';
         std::cout << header << '\n';
         for (const auto &wiki : wikis) {
@@ -1731,6 +1732,7 @@ int main(int argc, char *argv[]) {
             if (config.value("skip", false))
                 continue;
             const SectionNames sectionNames("wiktsections.sqlite", wiki);
+            const auto wikiStarted = std::chrono::steady_clock::now();
             Stats stats;
             const size_t workers =
                     fromDumps ? wikilib::dump::parallel_worker_count(
@@ -1786,9 +1788,12 @@ int main(int argc, char *argv[]) {
                 if (out && !line["sections"].empty()) // pages without a recognized language are left out
                     out->add(0, line.dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
             }
-            auto row = std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", wiki, config.value("profile", ""), stats.pages,
-                                   stats.pagesWithSections, stats.sections, stats.sectionsWithCode, stats.senses,
-                                   stats.translations, stats.nativeSections, stats.nativeSenses, stats.nativeTranslations);
+            if (out)
+                out->close(); // (its last blocks: in the time of the wiki)
+            auto row = std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.1f}", wiki, config.value("profile", ""),
+                                   stats.pages, stats.pagesWithSections, stats.sections, stats.sectionsWithCode, stats.senses,
+                                   stats.translations, stats.nativeSections, stats.nativeSenses, stats.nativeTranslations,
+                                   std::chrono::duration<double>(std::chrono::steady_clock::now() - wikiStarted).count());
             statsFile << row << '\n';
             for (const auto &[marker, value] : stats.markers)
                 if (!value.first.empty() || value.second >= 3) // one-off unresolved headings are words or sections

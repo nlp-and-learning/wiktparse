@@ -225,6 +225,10 @@ size_t mergeSubpage(json &page, json subpage) {
                     return nullptr;
                 };
                 translations["subpage"] = true;
+                // Where it is in the dump: the subpage's own place, not the page's
+                if (subpage.contains("source"))
+                    translations["source"] = subpage["source"];
+                translations["source_title"] = subpage.value("title", "");
                 if (json *to = target(language))
                     (*to)["children"].push_back(std::move(translations));
                 else // no such part of speech: under the language, not lost

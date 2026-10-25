@@ -165,6 +165,17 @@
         "subpage": {
           "type": "boolean",
           "description": "wiktlink: Translations of the translation subpage (en water/translations) merged here"
+        },
+        "source": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 0},
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "wiktlink: where a merged subpage is in the dump, as the page's source"
+        },
+        "source_title": {
+          "type": "string",
+          "description": "wiktlink: the title of the merged subpage (water/translations)"
         }
       },
       "description": "A section; empty sections and empty or default fields are left out; template lines have no level; the kind (part of speech, relation) follows from the English name (wiktsections.sqlite)"

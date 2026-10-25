@@ -1099,7 +1099,8 @@ const std::set<std::string> partsOfSpeech = {
         "contraction", "abbreviation", "initialism", "acronym", "classifier", "counter", "root", "han character",
         "kanji", "hanja", "syllable", "punctuation mark", "diacritical mark", "number", "adnominal", "verbal noun",
         "inflected form", "noun form", "verb form", "adjective form", "adverb form", "pronoun form", "participle form",
-        "romanization", "part of speech" /* kk ===Сөз табы===: the part of speech as a line, the senses */};
+        "romanization", "part of speech" /* kk ===Сөз табы===: the part of speech as a line, the senses */,
+        "expression", "determinative" /* en ===Phrase===, ===Determiner=== by their Wikidata labels */};
 const std::set<std::string> relations = {
         "synonyms", "antonyms", "hypernyms", "hyponyms", "meronyms", "holonyms", "troponyms", "coordinate terms",
         "derived terms", "related terms", "compounds", "descendants", "anagrams", "idioms", "proverbs",

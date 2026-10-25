@@ -3,7 +3,9 @@
 // have a table gloss and no sense number (en {{trans-top|domestic species}}; not pl, de, fr
 // with numbers), the definitions (senses, wikitext reduced to words) and the distinct glosses
 // go to defglos::match (positional alignment, then the best of the rest); a translation of a
-// linked gloss gets "sense_ids" (["1", "1.2"]), "sense_method" and "sense_score".
+// linked gloss gets "sense_ids" (["1", "1.2"]), "sense_method" (positional, best; number for a
+// gloss that is a sense number, ja "語義1"; single for the one definition of an entry) and
+// "sense_score".
 //
 // wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [wiki...]
 #include <algorithm>
@@ -16,6 +18,7 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <regex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -159,31 +162,47 @@ void linkNode(json &node, const std::string &title, Count &count) {
         return;
     ++count.entries;
     count.glosses += entry.glosses.size();
+    // Per gloss: the definitions, how, how sure
+    struct Result {
+        std::vector<std::string> ids;
+        std::string method;
+        double score = 0;
+    };
+    std::vector<Result> results(entry.glosses.size());
+    // A gloss that is a sense number: ja "語義1", "1.", "sense 2"
+    static const std::regex number(R"(^\s*(?:語義|sense|meaning|znaczenie)?\s*(\d+(?:\.\d+)*)\.?\s*$)", std::regex::icase);
+    for (size_t g = 0; g < entry.glosses.size(); ++g)
+        if (std::smatch m; std::regex_match(entry.glosses[g].text, m, number))
+            if (std::ranges::any_of(entry.defs, [&](const auto &d) { return d.id == m[1].str(); }))
+                results[g] = {{m[1].str()}, "number", 1.0};
+    // The definitions and glosses by their words (defglos)
     const defglos::Similarity similarity(entry);
-    std::vector<std::vector<const defglos::Link *>> byGloss(entry.glosses.size());
-    const auto links = defglos::match(entry, similarity);
-    for (const auto &link : links)
-        byGloss[link.gloss].push_back(&link);
-    for (const auto &g : byGloss)
-        count.linked += !g.empty();
+    for (const auto &link : defglos::match(entry, similarity))
+        if (auto &r = results[link.gloss]; r.method.empty() || r.method != "number") {
+            if (r.method.empty())
+                r.method = std::string(defglos::methodName(link.method));
+            r.ids.push_back(entry.defs[link.def].id);
+            r.score = std::max(r.score, link.score);
+        }
+    // One definition only: every gloss is of it (en Panama: "country")
+    if (entry.defs.size() == 1)
+        for (auto &r : results)
+            if (r.ids.empty())
+                r = {{entry.defs[0].id}, "single", 1.0};
+    for (const auto &r : results)
+        count.linked += !r.ids.empty();
     for (json *table : tables)
         for (auto &t : (*table)["translations"]) {
             if (!t.contains("gloss") || t.contains("sense"))
                 continue;
             ++count.translations;
-            const auto &found = byGloss[glossIndex[t["gloss"].get<std::string>()]];
-            if (found.empty())
+            const auto &r = results[glossIndex[t["gloss"].get<std::string>()]];
+            if (r.ids.empty())
                 continue;
             ++count.withSense;
-            json ids = json::array();
-            double score = 0;
-            for (const auto *link : found) {
-                ids.push_back(entry.defs[link->def].id);
-                score = std::max(score, link->score);
-            }
-            t["sense_ids"] = ids;
-            t["sense_method"] = std::string(defglos::methodName(found.front()->method));
-            t["sense_score"] = std::round(score * 1000) / 1000;
+            t["sense_ids"] = r.ids;
+            t["sense_method"] = r.method;
+            t["sense_score"] = std::round(r.score * 1000) / 1000;
         }
 }
 

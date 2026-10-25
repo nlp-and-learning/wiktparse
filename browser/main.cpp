@@ -51,8 +51,13 @@
 #include <qce/margins/FoldingGutter.h>
 #include <qce/margins/LineNumberGutter.h>
 
+#include <algorithm>
+#include <functional>
+#include <map>
 #include <memory>
 #include <optional>
+#include <string_view>
+#include <vector>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::ordered_json;
@@ -261,9 +266,13 @@ void addItems(QStandardItem *parent, const json &v, const QString &name) {
         valueItem->setToolTip(scalar(v).left(4000));
     parent->appendRow({keyItem, valueItem});
     // A node from another page of the dump (wiktlink: a merged translation subpage): its own place
+    // (with its title, "source_title", for a dump of another date)
     if (v.is_object() && v.contains("source") && v["source"].is_array() && v["source"].size() == 2 && parent->parent())
         keyItem->setData(QVariantList{QVariant::fromValue(v["source"][0].get<qint64>()),
-                                      QVariant::fromValue(v["source"][1].get<qint64>())},
+                                      QVariant::fromValue(v["source"][1].get<qint64>()),
+                                      v.contains("source_title") && v["source_title"].is_string()
+                                              ? QString::fromStdString(v["source_title"].get<std::string>())
+                                              : QString()},
                          sourceRole);
     if (v.is_object())
         for (const auto &[k, child] : v.items())
@@ -313,13 +322,16 @@ public:
         // A node of the tree from another page of the dump (a merged subpage): Original shows that page
         connect(tree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex &index) {
             std::optional<std::pair<qint64, qint64>> source;
+            QString title;
             for (QModelIndex at = index.siblingAtColumn(0); at.isValid(); at = at.parent())
-                if (const auto data = at.data(sourceRole).toList(); data.size() == 2) {
+                if (const auto data = at.data(sourceRole).toList(); data.size() == 3) {
                     source = std::pair{data[0].toLongLong(), data[1].toLongLong()};
+                    title = data[2].toString();
                     break;
                 }
             if (source != nodeSource_) {
                 nodeSource_ = source;
+                nodeTitle_ = title;
                 showOriginal();
             }
         });
@@ -397,6 +409,15 @@ public:
                 showOriginal();
             }
         });
+        // "source" (stream offset, page number in the stream) holds for the dump the file was made of;
+        // with a dump of another date the page is looked up by its title in the dump's index
+        auto *byTitle = setup->addAction("Find pages by &title (a dump of another date)");
+        byTitle->setCheckable(true);
+        byTitle->setChecked(settings().value("dumps/byTitle", false).toBool());
+        connect(byTitle, &QAction::toggled, this, [this](bool on) {
+            settings().setValue("dumps/byTitle", on);
+            showOriginal();
+        });
     }
 
     // A JSONL file chosen in the dialog, empty when cancelled
@@ -455,9 +476,112 @@ private:
         return files.isEmpty() ? QString() : dir.filePath(files.last());
     }
 
-    // The wikitext of page number index of the bz2 stream at offset: a multistream
-    // dump ends each stream (of about 100 pages), so it is read to the stream end
-    static QString pageText(const QString &path, qint64 offset, qint64 index, QString &error) {
+    // The page of a dump: at "source" (stream offset, page number), unless byTitle; when the page
+    // there has another title (a dump of another date) or byTitle, by the title in the dump's index
+    static QString pageText(const QString &path, qint64 offset, qint64 index, const QString &title, bool byTitle,
+                            QString &error) {
+        if (!byTitle || title.isEmpty()) {
+            QString found;
+            if (auto text = streamPage(path, offset, index, QString(), error, &found);
+                error.isEmpty() && (title.isEmpty() || found == title))
+                return text;
+            if (title.isEmpty())
+                return {};
+        }
+        error.clear();
+        const auto offsets = titleOffsets(path, title);
+        if (offsets.empty()) {
+            error = "no page " + title + " in the index of " + path;
+            return {};
+        }
+        for (qint64 at : offsets) // (several: a hash shared by titles)
+            if (auto text = streamPage(path, at, -1, title, error); error.isEmpty())
+                return text;
+        return {};
+    }
+
+    // Pages of the multistream index (<dump>-index.txt.bz2, "offset:id:title" lines) by a hash of the
+    // title, read once per dump (en: some 10 million pages, 16 bytes each)
+    static std::vector<qint64> titleOffsets(const QString &dump, const QString &title) {
+        static std::map<QString, std::vector<std::pair<size_t, qint64>>> indexes;
+        auto it = indexes.find(dump);
+        if (it == indexes.end()) {
+            QString indexPath = dump;
+            indexPath.replace(".xml.bz2", "-index.txt.bz2");
+            std::vector<std::pair<size_t, qint64>> entries;
+            QApplication::setOverrideCursor(Qt::WaitCursor);
+            QByteArray rest;
+            bz2Chunks(indexPath, [&](const char *data, size_t size) {
+                rest.append(data, static_cast<qsizetype>(size));
+                qsizetype from = 0;
+                for (qsizetype end; (end = rest.indexOf('\n', from)) >= 0; from = end + 1) {
+                    const auto line = QByteArrayView(rest).sliced(from, end - from);
+                    const auto first = line.indexOf(':'), second = line.indexOf(':', first + 1);
+                    if (first > 0 && second > first)
+                        entries.emplace_back(std::hash<std::string_view>{}(std::string_view(
+                                                     line.data() + second + 1, static_cast<size_t>(line.size() - second - 1))),
+                                             line.first(first).toLongLong());
+                }
+                rest.remove(0, from);
+            });
+            QApplication::restoreOverrideCursor();
+            std::ranges::sort(entries);
+            it = indexes.emplace(dump, std::move(entries)).first;
+        }
+        const QByteArray key = title.toUtf8();
+        const size_t hash = std::hash<std::string_view>{}(std::string_view(key.constData(), static_cast<size_t>(key.size())));
+        std::vector<qint64> result;
+        for (auto at = std::ranges::lower_bound(it->second, std::pair{hash, qint64(0)});
+             at != it->second.end() && at->first == hash; ++at)
+            if (std::ranges::find(result, at->second) == result.end())
+                result.push_back(at->second);
+        return result;
+    }
+
+    // All of a bz2 file of concatenated streams (a multistream index), in pieces
+    static void bz2Chunks(const QString &path, const std::function<void(const char *, size_t)> &take) {
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly))
+            return;
+        QByteArray in, out(1 << 20, '\0');
+        bool more = true;
+        while (more) {
+            bz_stream stream{};
+            if (BZ2_bzDecompressInit(&stream, 0, 0) != BZ_OK)
+                return;
+            int status = BZ_OK;
+            while (status == BZ_OK) {
+                if (stream.avail_in == 0) {
+                    in = file.read(1 << 16);
+                    if (in.isEmpty()) {
+                        more = false;
+                        break;
+                    }
+                    stream.next_in = in.data();
+                    stream.avail_in = static_cast<unsigned>(in.size());
+                }
+                stream.next_out = out.data();
+                stream.avail_out = static_cast<unsigned>(out.size());
+                status = BZ2_bzDecompress(&stream);
+                take(out.constData(), out.size() - stream.avail_out);
+            }
+            // The next stream starts in the unread rest of the input
+            if (status == BZ_STREAM_END && stream.avail_in > 0) {
+                in = in.right(stream.avail_in);
+                file.seek(file.pos() - in.size());
+            } else if (status != BZ_STREAM_END)
+                more = false;
+            BZ2_bzDecompressEnd(&stream);
+            if (more && file.atEnd())
+                more = false;
+        }
+    }
+
+    // The wikitext of page number index of the bz2 stream at offset (or, index -1, of the page
+    // titled title): a multistream dump ends each stream (of about 100 pages), so it is read to
+    // the stream end; found: the title of the page taken
+    static QString streamPage(const QString &path, qint64 offset, qint64 index, const QString &title, QString &error,
+                              QString *found = nullptr) {
         QFile file(path);
         if (!file.open(QIODevice::ReadOnly) || !file.seek(offset)) {
             error = "cannot read " + path;
@@ -491,15 +615,22 @@ private:
         xml += "</pages>";
         QXmlStreamReader reader(xml);
         qint64 page = -1;
+        QString pageTitle;
         while (!reader.atEnd()) {
             if (reader.readNext() != QXmlStreamReader::StartElement)
                 continue;
             if (reader.name() == u"page")
                 ++page;
-            else if (reader.name() == u"text" && page == index)
+            else if (reader.name() == u"title")
+                pageTitle = reader.readElementText();
+            else if (reader.name() == u"text" && (index >= 0 ? page == index : pageTitle == title)) {
+                if (found)
+                    *found = pageTitle;
                 return reader.readElementText();
+            }
         }
-        error = QString("no page %1 in the stream at %2").arg(index).arg(offset);
+        error = index >= 0 ? QString("no page %1 in the stream at %2").arg(index).arg(offset)
+                           : QString("no page %1 in the stream at %2").arg(title).arg(offset);
         return {};
     }
 
@@ -518,10 +649,17 @@ private:
             QString error;
             if (path.isEmpty())
                 error = "no dump of " + wiki + " in " + dumpDir();
-            else if (nodeSource_)
-                text = pageText(path, nodeSource_->first, nodeSource_->second, error);
-            else
-                text = pageText(path, current_["source"][0].get<qint64>(), current_["source"][1].get<qint64>(), error);
+            else {
+                const bool byTitle = settings().value("dumps/byTitle", false).toBool();
+                const QString title = current_.contains("title") && current_["title"].is_string()
+                                              ? QString::fromStdString(current_["title"].get<std::string>())
+                                              : QString();
+                if (nodeSource_)
+                    text = pageText(path, nodeSource_->first, nodeSource_->second, nodeTitle_, byTitle, error);
+                else
+                    text = pageText(path, current_["source"][0].get<qint64>(), current_["source"][1].get<qint64>(),
+                                    title, byTitle, error);
+            }
             if (!error.isEmpty())
                 text = "(" + error + ")";
         }
@@ -531,6 +669,7 @@ private:
     QAction *originalAction_ = nullptr;
     json current_;
     std::optional<std::pair<qint64, qint64>> nodeSource_; // of the selected node, when not the page's
+    QString nodeTitle_;                                    // its page title ("source_title")
     std::unique_ptr<Lines> lines_;
     QString path_;
     QLineEdit *filter_;

@@ -99,6 +99,10 @@ dump_dir = ~/dump
   folding, and as a tree. `.jsonl.bz2` files of `wikt2jsonl --bz2` are read
   through their `.jsonl.idx`, decompressing only the block shown. F4 opens
   the line, indented, in Kate (a read-only file in the temporary directory).
+  View > Original shows the wikitext of the page from the dump (Settings >
+  Dump directory) at its `source`; when the page there has another title (a
+  dump of another date), or with Settings > Find pages by title, the page is
+  looked up by its title in the dump's `-index.txt.bz2` (read once per dump).
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

@@ -717,17 +717,7 @@ private:
                 stack.back().second->appendRow(item);
             }
         }
-        // Headings open, their lines closed
-        std::function<void(const QModelIndex &)> expand = [&](const QModelIndex &parent) {
-            for (int r = 0; r < wikiModel_->rowCount(parent); ++r) {
-                const QModelIndex index = wikiModel_->index(r, 0, parent);
-                if (wikiModel_->itemFromIndex(index)->font().bold()) {
-                    wikiTree_->setExpanded(index, true);
-                    expand(index);
-                }
-            }
-        };
-        expand(QModelIndex());
+        wikiTree_->collapseAll(); // (opened by hand or by a search match)
     }
 
     QAction *originalAction_ = nullptr;
@@ -865,7 +855,7 @@ private:
         if (!value.is_discarded())
             for (const auto &[k, child] : value.items())
                 addItems(model_->invisibleRootItem(), child, QString::fromStdString(k));
-        tree_->expandToDepth(2);
+        tree_->collapseAll(); // (opened by hand or by a search match)
         tree_->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
         treeFind_->reset();
         current_ = value.is_discarded() ? json() : std::move(value);

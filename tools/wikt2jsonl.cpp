@@ -1074,11 +1074,26 @@ std::vector<Translation> translations(const json &config, const std::string &tex
                 if (auto bar = lang.find('|'); bar != std::string::npos)
                     lang = lang.substr(bar + 1);
             }
-            for (const auto &[term, genders] : linkPieces(m[4].str())) {
-                Translation item{lang, term, m[3].matched && m[3].length() ? m[3].str() : lineSense, lineGloss};
-                item.gender = genders;
-                result.push_back(std::move(item));
-            }
+            // pl "(1.1) [[амэрыканка]] {{ż}}; (1.2) [[амэрыканка]] {{ż}}": a number further on the line
+            // is the sense of the terms after it
+            static const std::regex senseMark(R"(\(([0-9]{1,2}(?:\.[0-9]{1,2})*(?:\s*[,-]\s*[0-9]{1,2}(?:\.[0-9]{1,2})*)*)\))");
+            const std::string rest = m[4].str();
+            std::string sense = m[3].matched && m[3].length() ? m[3].str() : lineSense;
+            size_t from = 0;
+            auto take = [&](const std::string &piece) {
+                for (const auto &[term, genders] : linkPieces(piece)) {
+                    Translation item{lang, term, sense, lineGloss};
+                    item.gender = genders;
+                    result.push_back(std::move(item));
+                }
+            };
+            if (m[3].matched && m[3].length() && rest.size() < maxRegexLine)
+                for (std::sregex_iterator it(rest.begin(), rest.end(), senseMark), end; it != end; ++it) {
+                    take(rest.substr(from, static_cast<size_t>(it->position(0)) - from));
+                    sense = (*it)[1].str();
+                    from = static_cast<size_t>(it->position(0) + it->length(0));
+                }
+            take(rest.substr(from));
         }
     }
     // A translation section the configuration finds nothing in: any template of a code and a term

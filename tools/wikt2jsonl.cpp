@@ -1296,8 +1296,14 @@ public:
             (str(config_, "/sections/form") != "heading" || t->parameters.empty() ||
              (t->name.size() > 2 && t->name.starts_with('-') && t->name.ends_with('-'))) &&
             names_.find(sectionKey(trim(line)).first, dashTemplate(line))) {
-            open(trim(line), headingLevel() + 1, true); // {{synonimy}}, {{-sin-}}
-            return;
+            // A headword template under its part of speech (en ===Verb=== {{en-verb}}) is a line of
+            // it, not a part of speech of its own (shn {{shn-noun}} without a heading is one)
+            const bool headword = dashTemplate(line) == 2 && !names_.find(sectionKey(trim(line)).first) &&
+                                  current()["kind"] == "pos";
+            if (!headword) {
+                open(trim(line), headingLevel() + 1, true); // {{synonimy}}, {{-sin-}}
+                return;
+            }
         }
         // pl: part of speech as an italic line in {{znaczenia}}: ''rzeczownik, rodzaj żeński''
         if (str(config_, "/pos/form") == "italic-line" && line.starts_with("''") &&

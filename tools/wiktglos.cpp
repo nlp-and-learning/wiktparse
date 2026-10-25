@@ -117,9 +117,12 @@ void collectSenses(const json &node, std::vector<defglos::Item> &defs) {
     if (auto it = node.find("senses"); it != node.end())
         for (const auto &s : *it)
             defs.push_back({s.value("id", ""), plainText(s.value("text", ""))});
+    // (and of a part of speech of the same name below it: en {{en-verb}} under ===Verb=== of
+    // wikt2jsonl before 2026-10-25)
     if (auto it = node.find("children"); it != node.end())
         for (const auto &c : *it)
-            if (c.value("section", "") == "Definitions")
+            if (c.value("section", "") == "Definitions" ||
+                (c.value("section", "") == node.value("section", "") && c.contains("senses")))
                 collectSenses(c, defs);
 }
 
@@ -226,6 +229,33 @@ int main(int argc, char *argv[]) {
                 continue;
             const auto wikiStarted = std::chrono::steady_clock::now();
             BlockReader reader(path);
+            // A wiki without table glosses is linked as it is (no decoding, encoding)
+            std::atomic<bool> glosses{false};
+            forBlocks(reader, threads, [&](size_t, size_t block) {
+                if (glosses)
+                    return;
+                for (const auto &line : reader.lines(block))
+                    if (line.find("\"gloss\":") != std::string::npos) {
+                        glosses = true;
+                        return;
+                    }
+            });
+            if (!glosses) {
+                const std::string base = path.string().substr(0, path.string().size() - 4); // <dir>/<wiki>.jsonl
+                for (const char *ext : {".zst", ".idx", ".dict"}) {
+                    const fs::path from = base + ext, to = output / (wiki + ".jsonl" + ext);
+                    if (!fs::exists(from))
+                        continue;
+                    fs::remove(to);
+                    std::error_code error;
+                    fs::create_hard_link(from, to, error);
+                    if (error)
+                        fs::copy_file(from, to, fs::copy_options::overwrite_existing);
+                }
+                stats << std::format("{}\t0\t0\t0\t0\t0\n", wiki);
+                std::cout << std::format("{}: no glosses, linked as it is ({:.0f} s)", wiki, seconds(wikiStarted)) << std::endl;
+                continue;
+            }
             JsonlWriter out(output / wiki, Compression::zstd, 9, threads, fs::file_size(path));
             std::vector<Count> counts(threads);
             forBlocks(reader, threads, [&](size_t worker, size_t block) {
@@ -243,11 +273,10 @@ int main(int argc, char *argv[]) {
                 total.add(c);
             stats << std::format("{}\t{}\t{}\t{}\t{}\t{}\n", wiki, total.entries, total.glosses, total.linked,
                                  total.translations, total.withSense);
-            if (total.glosses)
-                std::cout << std::format("{}: {} parts of speech, glosses {} linked {} ({:.0f}%), translations {} with a "
+            std::cout << std::format("{}: {} parts of speech, glosses {} linked {} ({:.0f}%), translations {} with a "
                                          "sense {} ({:.0f}%) ({:.0f} s)",
                                          wiki, total.entries, total.glosses, total.linked,
-                                         100.0 * double(total.linked) / double(total.glosses), total.translations,
+                                         100.0 * double(total.linked) / double(std::max<size_t>(1, total.glosses)), total.translations,
                                          total.withSense, 100.0 * double(total.withSense) / double(std::max<size_t>(1, total.translations)),
                                          seconds(wikiStarted))
                           << std::endl;

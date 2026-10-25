@@ -1,0 +1,7534 @@
+[
+ {
+  "key": "b0",
+  "title": "translation",
+  "pos": "Noun",
+  "gloss": "result of translating between languages",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "countable uncountable: The act of translating, in its various senses:"
+   ],
+   [
+    "1.1",
+    "The conversion of text from one language to another."
+   ],
+   [
+    "1.2",
+    "translation studies: The discipline or study of translating written language (as opposed to interpretation, which concerns itself with spoken language)."
+   ],
+   [
+    "1.3",
+    "The conversion of something from one form or medium to another."
+   ],
+   [
+    "1.4",
+    "physics mathematics: A motion or compulsion to motion in a straight line without rotation or other deformation."
+   ],
+   [
+    "1.5",
+    "mathematics: A relation between two mathematical figures such as a straight line where the coordinates of each point in one figure is a constant added to the coordinates of a corresponding point in the other figure."
+   ],
+   [
+    "1.6",
+    "genetics: The process whereby a strand of mRNA directs assembly of amino acids into proteins within a ribosome."
+   ],
+   [
+    "1.7",
+    "physics: A transfer of motion occurring within a gearbox."
+   ],
+   [
+    "1.8",
+    "The automatic retransmission of a telegraph message."
+   ],
+   [
+    "1.9",
+    "The conveyance of something from one place to another, especially:"
+   ],
+   [
+    "1.9.1",
+    "Christianity: An ascension to Heaven without death."
+   ],
+   [
+    "1.9.2",
+    "Christianity: A transfer of a bishop from one diocese to another."
+   ],
+   [
+    "1.9.3",
+    "Christianity: A transfer of a holy relic from one shrine to another."
+   ],
+   [
+    "1.9.4",
+    "medicine: A transfer of a disease from one body part to another."
+   ],
+   [
+    "2",
+    "countable: The product or end result of an act of translating, in its various senses."
+   ]
+  ],
+  "glosses": [
+   "act of translating between languages",
+   "conversion of something from one form to another",
+   "result of translating between languages",
+   "of forces in a gearbox",
+   "math, physics: motion without deformation or rotation",
+   "genetics: process for producing proteins"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "b1",
+  "title": "thaumaturgy",
+  "pos": "Noun",
+  "gloss": "witchcraft, wizardry",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "The working of miracles, wonderworking; magic, witchcraft, wizardry."
+   ]
+  ],
+  "glosses": [
+   "the working of miracles",
+   "witchcraft, wizardry"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "b2",
+  "title": "Zuni",
+  "pos": "Noun",
+  "gloss": "Native American tribe (plural)",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A member of a Native American Pueblo people, native to the Zuni River valley."
+   ]
+  ],
+  "glosses": [
+   "A member of the Zuni tribe",
+   "Native American tribe (plural)"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "b3",
+  "title": "riot",
+  "pos": "Noun",
+  "gloss": "wanton or unrestrained behavior",
+  "chosen": [
+   "4"
+  ],
+  "defs": [
+   [
+    "1",
+    "A tumultuous disturbance of the public peace by a large group of people, often involving violence or damage to property."
+   ],
+   [
+    "2",
+    "figurative: A wide and unconstrained variety."
+   ],
+   [
+    "3",
+    "colloquial uncountable: A humorous or entertaining event or person."
+   ],
+   [
+    "4",
+    "Wanton or unrestrained behavior or emotion."
+   ],
+   [
+    "5",
+    "obsolete: Excessive and expensive feasting; wild and loose festivity; revelry."
+   ]
+  ],
+  "glosses": [
+   "wanton or unrestrained behavior",
+   "tumultuous disturbance of public peace",
+   "excessive and expensive feasting"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "b4",
+  "title": "catch",
+  "pos": "Verb",
+  "gloss": "to engage, stick, or grasp",
+  "chosen": [
+   "2.5"
+  ],
+  "defs": [
+   [
+    "1",
+    "heading: To capture, overtake."
+   ],
+   [
+    "1.1",
+    "transitive: To capture or snare (someone or something which would rather escape)."
+   ],
+   [
+    "1.2",
+    "transitive: To entrap or trip up a person; to deceive."
+   ],
+   [
+    "1.3",
+    "transitive figuratively dated: To marry or enter into a similar relationship with."
+   ],
+   [
+    "1.4",
+    "transitive: To reach (someone) with a strike, blow, weapon etc."
+   ],
+   [
+    "1.5",
+    "transitive: To overtake or catch up to; to be in time for."
+   ],
+   [
+    "1.6",
+    "transitive: To discover and observe (someone or something while it takes some action or exists) sometimes, but not always, with implications of 'unpleasantly' or 'unexpectedly' ."
+   ],
+   [
+    "1.7",
+    "transitive: To record, for example on film or tape."
+   ],
+   [
+    "1.8",
+    "transitive: To travel by means of."
+   ],
+   [
+    "1.9",
+    "transitive rare: To become pregnant. (Only in past tense or as participle.)"
+   ],
+   [
+    "2",
+    "heading: To seize hold of."
+   ],
+   [
+    "2.1",
+    "transitive dated: To grab, seize, take hold of."
+   ],
+   [
+    "2.2",
+    "transitive: To take or replenish something necessary, such as breath or sleep."
+   ],
+   [
+    "2.3",
+    "transitive: To grip or entangle."
+   ],
+   [
+    "2.4",
+    "intransitive: To be held back or impeded."
+   ],
+   [
+    "2.5",
+    "intransitive: To engage with some mechanism; to stick, to succeed in interacting with something or initiating some process."
+   ],
+   [
+    "2.6",
+    "transitive: To have something be held back or impeded."
+   ],
+   [
+    "2.7",
+    "intransitive: To make a grasping or snatching motion (at)."
+   ],
+   [
+    "2.8",
+    "transitive of fire: To spread or be conveyed to."
+   ],
+   [
+    "2.9",
+    "transitive rowing: To grip (the water) with one's oars at the beginning of the stroke."
+   ],
+   [
+    "2.10",
+    "intransitive agriculture: To germinate and set down roots."
+   ],
+   [
+    "2.11",
+    "transitive surfing: To contact a wave in such a way that one can ride it back to shore."
+   ],
+   [
+    "2.12",
+    "transitive computing: To handle an exception."
+   ],
+   [
+    "3",
+    "heading: To intercept."
+   ],
+   [
+    "3.1",
+    "transitive: To seize or intercept an object moving through the air (or, sometimes, some other medium)."
+   ],
+   [
+    "3.2",
+    "transitive now rare: To seize (an opportunity) when it occurs."
+   ],
+   [
+    "3.3",
+    "transitive cricket: To end a player's innings by catching a hit ball before the first bounce."
+   ],
+   [
+    "3.4",
+    "transitive intransitive baseball: To play (a specific period of time) as the catcher."
+   ],
+   [
+    "4",
+    "heading: To receive (by being in the way)."
+   ],
+   [
+    "4.1",
+    "transitive: To be the victim of (something unpleasant, painful etc.)."
+   ],
+   [
+    "4.2",
+    "transitive: To be touched or affected by (something) through exposure."
+   ],
+   [
+    "4.3",
+    "transitive informal: To become infected by (an illness).&nbsp;"
+   ],
+   [
+    "4.4",
+    "intransitive: To spread by infection or similar means."
+   ],
+   [
+    "4.5",
+    "transitive intransitive: To receive or be affected by (wind, water, fire etc.)."
+   ],
+   [
+    "4.6",
+    "transitive: To acquire, as though by infection; to take on through sympathy or influence."
+   ],
+   [
+    "4.7",
+    "transitive: To be hit by something."
+   ],
+   [
+    "4.8",
+    "intransitive: To serve well or poorly for catching, especially for catching fish."
+   ],
+   [
+    "4.9",
+    "intransitive : To get pregnant."
+   ],
+   [
+    "5",
+    "heading: To take in with one's senses or intellect."
+   ],
+   [
+    "5.1",
+    "transitive: To grasp mentally: perceive and understand."
+   ],
+   [
+    "5.2",
+    "transitive: To notice, to detect."
+   ],
+   [
+    "5.3",
+    "transitive informal: To take in; to watch or listen to (an entertainment)."
+   ],
+   [
+    "5.4",
+    "transitive: To reproduce or echo a spirit or idea faithfully."
+   ],
+   [
+    "6",
+    "heading: To seize attention, interest."
+   ],
+   [
+    "6.1",
+    "transitive: To charm or entrance."
+   ],
+   [
+    "6.2",
+    "transitive: To attract and hold (a faculty or organ of sense)."
+   ]
+  ],
+  "glosses": [
+   "to capture or snare",
+   "to intercept an object in the air etc.",
+   "to contract a disease or illness",
+   "to perceive and understand",
+   "to seize an opportunity",
+   "to reach in time to leave",
+   "to engage, stick, or grasp",
+   "to handle a computer error, especially an exception",
+   "(transitive) to discover, to observe (someone doing something)",
+   "could be any sense"
+  ],
+  "gold": [
+   "2.5"
+  ]
+ },
+ {
+  "key": "b5",
+  "title": "catch",
+  "pos": "Verb",
+  "gloss": "to handle a computer error, especially an exception",
+  "chosen": [
+   "2.12"
+  ],
+  "defs": [
+   [
+    "1",
+    "heading: To capture, overtake."
+   ],
+   [
+    "1.1",
+    "transitive: To capture or snare (someone or something which would rather escape)."
+   ],
+   [
+    "1.2",
+    "transitive: To entrap or trip up a person; to deceive."
+   ],
+   [
+    "1.3",
+    "transitive figuratively dated: To marry or enter into a similar relationship with."
+   ],
+   [
+    "1.4",
+    "transitive: To reach (someone) with a strike, blow, weapon etc."
+   ],
+   [
+    "1.5",
+    "transitive: To overtake or catch up to; to be in time for."
+   ],
+   [
+    "1.6",
+    "transitive: To discover and observe (someone or something while it takes some action or exists) sometimes, but not always, with implications of 'unpleasantly' or 'unexpectedly' ."
+   ],
+   [
+    "1.7",
+    "transitive: To record, for example on film or tape."
+   ],
+   [
+    "1.8",
+    "transitive: To travel by means of."
+   ],
+   [
+    "1.9",
+    "transitive rare: To become pregnant. (Only in past tense or as participle.)"
+   ],
+   [
+    "2",
+    "heading: To seize hold of."
+   ],
+   [
+    "2.1",
+    "transitive dated: To grab, seize, take hold of."
+   ],
+   [
+    "2.2",
+    "transitive: To take or replenish something necessary, such as breath or sleep."
+   ],
+   [
+    "2.3",
+    "transitive: To grip or entangle."
+   ],
+   [
+    "2.4",
+    "intransitive: To be held back or impeded."
+   ],
+   [
+    "2.5",
+    "intransitive: To engage with some mechanism; to stick, to succeed in interacting with something or initiating some process."
+   ],
+   [
+    "2.6",
+    "transitive: To have something be held back or impeded."
+   ],
+   [
+    "2.7",
+    "intransitive: To make a grasping or snatching motion (at)."
+   ],
+   [
+    "2.8",
+    "transitive of fire: To spread or be conveyed to."
+   ],
+   [
+    "2.9",
+    "transitive rowing: To grip (the water) with one's oars at the beginning of the stroke."
+   ],
+   [
+    "2.10",
+    "intransitive agriculture: To germinate and set down roots."
+   ],
+   [
+    "2.11",
+    "transitive surfing: To contact a wave in such a way that one can ride it back to shore."
+   ],
+   [
+    "2.12",
+    "transitive computing: To handle an exception."
+   ],
+   [
+    "3",
+    "heading: To intercept."
+   ],
+   [
+    "3.1",
+    "transitive: To seize or intercept an object moving through the air (or, sometimes, some other medium)."
+   ],
+   [
+    "3.2",
+    "transitive now rare: To seize (an opportunity) when it occurs."
+   ],
+   [
+    "3.3",
+    "transitive cricket: To end a player's innings by catching a hit ball before the first bounce."
+   ],
+   [
+    "3.4",
+    "transitive intransitive baseball: To play (a specific period of time) as the catcher."
+   ],
+   [
+    "4",
+    "heading: To receive (by being in the way)."
+   ],
+   [
+    "4.1",
+    "transitive: To be the victim of (something unpleasant, painful etc.)."
+   ],
+   [
+    "4.2",
+    "transitive: To be touched or affected by (something) through exposure."
+   ],
+   [
+    "4.3",
+    "transitive informal: To become infected by (an illness).&nbsp;"
+   ],
+   [
+    "4.4",
+    "intransitive: To spread by infection or similar means."
+   ],
+   [
+    "4.5",
+    "transitive intransitive: To receive or be affected by (wind, water, fire etc.)."
+   ],
+   [
+    "4.6",
+    "transitive: To acquire, as though by infection; to take on through sympathy or influence."
+   ],
+   [
+    "4.7",
+    "transitive: To be hit by something."
+   ],
+   [
+    "4.8",
+    "intransitive: To serve well or poorly for catching, especially for catching fish."
+   ],
+   [
+    "4.9",
+    "intransitive : To get pregnant."
+   ],
+   [
+    "5",
+    "heading: To take in with one's senses or intellect."
+   ],
+   [
+    "5.1",
+    "transitive: To grasp mentally: perceive and understand."
+   ],
+   [
+    "5.2",
+    "transitive: To notice, to detect."
+   ],
+   [
+    "5.3",
+    "transitive informal: To take in; to watch or listen to (an entertainment)."
+   ],
+   [
+    "5.4",
+    "transitive: To reproduce or echo a spirit or idea faithfully."
+   ],
+   [
+    "6",
+    "heading: To seize attention, interest."
+   ],
+   [
+    "6.1",
+    "transitive: To charm or entrance."
+   ],
+   [
+    "6.2",
+    "transitive: To attract and hold (a faculty or organ of sense)."
+   ]
+  ],
+  "glosses": [
+   "to capture or snare",
+   "to intercept an object in the air etc.",
+   "to contract a disease or illness",
+   "to perceive and understand",
+   "to seize an opportunity",
+   "to reach in time to leave",
+   "to engage, stick, or grasp",
+   "to handle a computer error, especially an exception",
+   "(transitive) to discover, to observe (someone doing something)",
+   "could be any sense"
+  ],
+  "gold": [
+   "2.12"
+  ]
+ },
+ {
+  "key": "b6",
+  "title": "catch",
+  "pos": "Verb",
+  "gloss": "(transitive) to discover, to observe (someone doing something)",
+  "chosen": [
+   "1.6"
+  ],
+  "defs": [
+   [
+    "1",
+    "heading: To capture, overtake."
+   ],
+   [
+    "1.1",
+    "transitive: To capture or snare (someone or something which would rather escape)."
+   ],
+   [
+    "1.2",
+    "transitive: To entrap or trip up a person; to deceive."
+   ],
+   [
+    "1.3",
+    "transitive figuratively dated: To marry or enter into a similar relationship with."
+   ],
+   [
+    "1.4",
+    "transitive: To reach (someone) with a strike, blow, weapon etc."
+   ],
+   [
+    "1.5",
+    "transitive: To overtake or catch up to; to be in time for."
+   ],
+   [
+    "1.6",
+    "transitive: To discover and observe (someone or something while it takes some action or exists) sometimes, but not always, with implications of 'unpleasantly' or 'unexpectedly' ."
+   ],
+   [
+    "1.7",
+    "transitive: To record, for example on film or tape."
+   ],
+   [
+    "1.8",
+    "transitive: To travel by means of."
+   ],
+   [
+    "1.9",
+    "transitive rare: To become pregnant. (Only in past tense or as participle.)"
+   ],
+   [
+    "2",
+    "heading: To seize hold of."
+   ],
+   [
+    "2.1",
+    "transitive dated: To grab, seize, take hold of."
+   ],
+   [
+    "2.2",
+    "transitive: To take or replenish something necessary, such as breath or sleep."
+   ],
+   [
+    "2.3",
+    "transitive: To grip or entangle."
+   ],
+   [
+    "2.4",
+    "intransitive: To be held back or impeded."
+   ],
+   [
+    "2.5",
+    "intransitive: To engage with some mechanism; to stick, to succeed in interacting with something or initiating some process."
+   ],
+   [
+    "2.6",
+    "transitive: To have something be held back or impeded."
+   ],
+   [
+    "2.7",
+    "intransitive: To make a grasping or snatching motion (at)."
+   ],
+   [
+    "2.8",
+    "transitive of fire: To spread or be conveyed to."
+   ],
+   [
+    "2.9",
+    "transitive rowing: To grip (the water) with one's oars at the beginning of the stroke."
+   ],
+   [
+    "2.10",
+    "intransitive agriculture: To germinate and set down roots."
+   ],
+   [
+    "2.11",
+    "transitive surfing: To contact a wave in such a way that one can ride it back to shore."
+   ],
+   [
+    "2.12",
+    "transitive computing: To handle an exception."
+   ],
+   [
+    "3",
+    "heading: To intercept."
+   ],
+   [
+    "3.1",
+    "transitive: To seize or intercept an object moving through the air (or, sometimes, some other medium)."
+   ],
+   [
+    "3.2",
+    "transitive now rare: To seize (an opportunity) when it occurs."
+   ],
+   [
+    "3.3",
+    "transitive cricket: To end a player's innings by catching a hit ball before the first bounce."
+   ],
+   [
+    "3.4",
+    "transitive intransitive baseball: To play (a specific period of time) as the catcher."
+   ],
+   [
+    "4",
+    "heading: To receive (by being in the way)."
+   ],
+   [
+    "4.1",
+    "transitive: To be the victim of (something unpleasant, painful etc.)."
+   ],
+   [
+    "4.2",
+    "transitive: To be touched or affected by (something) through exposure."
+   ],
+   [
+    "4.3",
+    "transitive informal: To become infected by (an illness).&nbsp;"
+   ],
+   [
+    "4.4",
+    "intransitive: To spread by infection or similar means."
+   ],
+   [
+    "4.5",
+    "transitive intransitive: To receive or be affected by (wind, water, fire etc.)."
+   ],
+   [
+    "4.6",
+    "transitive: To acquire, as though by infection; to take on through sympathy or influence."
+   ],
+   [
+    "4.7",
+    "transitive: To be hit by something."
+   ],
+   [
+    "4.8",
+    "intransitive: To serve well or poorly for catching, especially for catching fish."
+   ],
+   [
+    "4.9",
+    "intransitive : To get pregnant."
+   ],
+   [
+    "5",
+    "heading: To take in with one's senses or intellect."
+   ],
+   [
+    "5.1",
+    "transitive: To grasp mentally: perceive and understand."
+   ],
+   [
+    "5.2",
+    "transitive: To notice, to detect."
+   ],
+   [
+    "5.3",
+    "transitive informal: To take in; to watch or listen to (an entertainment)."
+   ],
+   [
+    "5.4",
+    "transitive: To reproduce or echo a spirit or idea faithfully."
+   ],
+   [
+    "6",
+    "heading: To seize attention, interest."
+   ],
+   [
+    "6.1",
+    "transitive: To charm or entrance."
+   ],
+   [
+    "6.2",
+    "transitive: To attract and hold (a faculty or organ of sense)."
+   ]
+  ],
+  "glosses": [
+   "to capture or snare",
+   "to intercept an object in the air etc.",
+   "to contract a disease or illness",
+   "to perceive and understand",
+   "to seize an opportunity",
+   "to reach in time to leave",
+   "to engage, stick, or grasp",
+   "to handle a computer error, especially an exception",
+   "(transitive) to discover, to observe (someone doing something)",
+   "could be any sense"
+  ],
+  "gold": [
+   "1.6"
+  ]
+ },
+ {
+  "key": "b7",
+  "title": "Luxembourg",
+  "pos": "Proper noun",
+  "gloss": "canton in Luxembourg",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "small country Western Europe ."
+   ],
+   [
+    "2",
+    "province Wallonia Belgium ."
+   ],
+   [
+    "3",
+    "capital city Luxembourg ."
+   ],
+   [
+    "4",
+    "One of the twelve <<canton>>s of the <<c:pref/Luxembourg>>, which includes its capital city ."
+   ]
+  ],
+  "glosses": [
+   "country",
+   "province in Belgium",
+   "capital city",
+   "canton in Luxembourg"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "b8",
+  "title": "would",
+  "pos": "Verb",
+  "gloss": "indicating an action in the past that happened repeatedly or commonly",
+  "chosen": [
+   "1.2"
+  ],
+  "defs": [
+   [
+    "1",
+    "Past tense of will ; usually followed by a bare infinitive."
+   ],
+   [
+    "1.1",
+    "Used to form the \"anterior future\", or \"future in the past\", indicating a futurity relative to a past time."
+   ],
+   [
+    "1.2",
+    "Used to, did repeatedly, habitually; indicates an action that happened several times in the past (cannot describe continuous states, as in I used to live in London)"
+   ],
+   [
+    "1.3",
+    "Was or were determined to; indicating someone's insistence upon doing something ."
+   ],
+   [
+    "1.4",
+    "archaic: Wanted to."
+   ],
+   [
+    "1.5",
+    "archaic: Used with ellipsis of the infinitive verb, or postponement to a relative clause, in various senses ."
+   ],
+   [
+    "1.6",
+    "obsolete: Wished, desired (something)."
+   ],
+   [
+    "2",
+    "A modal verb, the subjunctive of will; usually followed by a bare infinitive."
+   ],
+   [
+    "2.1",
+    "Used as the auxiliary of the simple conditional modality, indicating a state or action that is conditional on another ."
+   ],
+   [
+    "2.2",
+    "Without explicit condition, or with loose or vague implied condition, indicating a hypothetical or imagined state or action."
+   ],
+   [
+    "2.3",
+    "Suggesting conditionality or potentiality in order to express a sense of politeness, tentativeness, indirectness, hesitancy, uncertainty, etc."
+   ],
+   [
+    "2.4",
+    "Used to express what the speaker would do in another person's situation, as a means of giving a suggestion or recommendation."
+   ],
+   [
+    "2.5",
+    "Used to express the speaker's belief or assumption."
+   ],
+   [
+    "2.6",
+    "Could naturally be expected to (given the situation, the tendencies of someone's character etc.)."
+   ],
+   [
+    "2.7",
+    "Used interrogatively to express a polite request ; are (you) willing to&nbsp;…?"
+   ],
+   [
+    "2.8",
+    "chiefly archaic: Might wish (+ verb in past subjunctive); often used in the first person (with or without that ) in the sense of \"if only\" ."
+   ],
+   [
+    "2.9",
+    "chiefly archaic transitive control verb: Might desire; wish (something)."
+   ]
+  ],
+  "glosses": [
+   "indicating an action or state that is conditional on another",
+   "indicating a possible (but not definite) future action or state",
+   "indicating an action in the past that was planned or intended",
+   "indicating an action in the past that happened repeatedly or commonly",
+   "used to express a polite request"
+  ],
+  "gold": [
+   "1.2"
+  ]
+ },
+ {
+  "key": "b9",
+  "title": "fretful",
+  "pos": "Adjective",
+  "gloss": "irritable",
+  "chosen": [
+   "1.2"
+  ],
+  "defs": [
+   [
+    "1",
+    "Given to fretting."
+   ],
+   [
+    "1.1",
+    "Unable to relax: fidgety; restless; worried; anxious."
+   ],
+   [
+    "1.2",
+    "Irritable; bad-tempered; grumpy; peevish."
+   ]
+  ],
+  "glosses": [
+   "irritable",
+   "restless"
+  ],
+  "gold": [
+   "1.2"
+  ]
+ },
+ {
+  "key": "b11",
+  "title": "get",
+  "pos": "Verb",
+  "gloss": "to adopt, assume (a position)",
+  "chosen": [
+   "9"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive ditransitive: To obtain; to acquire."
+   ],
+   [
+    "2",
+    "transitive: To receive."
+   ],
+   [
+    "3",
+    "transitive in a perfect construction, with present-tense meaning: To have. See usage notes."
+   ],
+   [
+    "4",
+    "transitive: To fetch, bring, take."
+   ],
+   [
+    "5",
+    "copulative rather informal followed by an adjective: To become , or cause oneself to become often with temporary states, past participle adjectives and comparatives ."
+   ],
+   [
+    "6",
+    "transitive: To cause to become; to bring about."
+   ],
+   [
+    "7",
+    "transitive: To cause to do."
+   ],
+   [
+    "8",
+    "transitive: To cause to come or go or move."
+   ],
+   [
+    "9",
+    "intransitive with various prepositions, such as into, over, or behind; for specific idiomatic senses see individual entries get into, get over, etc.: To adopt, assume, arrive at, or progress towards (a certain position, location, state)."
+   ],
+   [
+    "10",
+    "transitive: To cover (a certain distance) while travelling."
+   ],
+   [
+    "11",
+    "intransitive catenative: (with full infinitive or gerund-participle) To begin (doing something or to do something)."
+   ],
+   [
+    "12",
+    "transitive: To take or catch (a scheduled transportation service)."
+   ],
+   [
+    "13",
+    "transitive: To respond to (a telephone call, a doorbell, etc)."
+   ],
+   [
+    "14",
+    "intransitive catenative: (with full infinitive) To be able, be permitted, or have the opportunity (to do something desirable or ironically implied to be desirable)."
+   ],
+   [
+    "15",
+    "transitive informal: To understand. compare get it"
+   ],
+   [
+    "16",
+    "transitive informal: To be told; be the recipient of (a question, comparison, opinion, etc.)."
+   ],
+   [
+    "17",
+    "auxiliary informal:"
+   ],
+   [
+    "18",
+    "impersonal informal:"
+   ],
+   [
+    "19",
+    "transitive: To become ill with or catch (a disease)."
+   ],
+   [
+    "20",
+    "transitive informal: To catch out, trick successfully."
+   ],
+   [
+    "21",
+    "transitive informal: To perplex, stump."
+   ],
+   [
+    "22",
+    "transitive: To find as an answer."
+   ],
+   [
+    "23",
+    "transitive informal: To bring to reckoning; to catch (usually as a criminal); to effect retribution."
+   ],
+   [
+    "24",
+    "transitive: To hear completely; catch."
+   ],
+   [
+    "25",
+    "transitive: To getter."
+   ],
+   [
+    "26",
+    "now rare: To beget (of a father)."
+   ],
+   [
+    "27",
+    "archaic: To learn; to commit to memory; to memorize; sometimes with out."
+   ],
+   [
+    "28",
+    "imperative informal:"
+   ],
+   [
+    "29",
+    "intransitive informal mostly imperative: To go, to leave; to scram."
+   ],
+   [
+    "30",
+    "euphemism: To kill."
+   ],
+   [
+    "31",
+    "intransitive obsolete: To make acquisitions; to gain; to profit."
+   ],
+   [
+    "32",
+    "transitive: To measure."
+   ],
+   [
+    "33",
+    "transitive: To cause someone to laugh."
+   ]
+  ],
+  "glosses": [
+   "to obtain",
+   "to receive",
+   "to become",
+   "to cause to become",
+   "to fetch",
+   "to don",
+   "to doff",
+   "to cause to do",
+   "to betake",
+   "to arrive at",
+   "to adopt, assume (a position)",
+   "to begin",
+   "to take, catch (transportation)",
+   "to respond to (a telephone call, a doorbell, etc)",
+   "to be able to, be permitted, have opportunity",
+   "colloquial: to understand",
+   "colloquial: to be",
+   "to become ill with",
+   "to catch out",
+   "to perplex",
+   "to find as an answer",
+   "to bring to reckoning",
+   "to physically assault",
+   "to hear completely",
+   "to be told; be the recipient of"
+  ],
+  "gold": [
+   "9"
+  ]
+ },
+ {
+  "key": "b12",
+  "title": "mod",
+  "pos": "Noun",
+  "gloss": "video games: an end user-created package containing modifications for a video game",
+  "chosen": [
+   "4"
+  ],
+  "defs": [
+   [
+    "1",
+    "uncountable: An unconventionally modern style of fashionable dress originating in England in the 1960s, characterized by ankle-length black trenchcoats and sunglasses."
+   ],
+   [
+    "2",
+    "UK: A 1960s British person who dressed in such a style and was interested in modernism and the modern music of the time; the opposite of a rocker."
+   ],
+   [
+    "3",
+    "informal: clipping of modification ."
+   ],
+   [
+    "4",
+    "video games: An end user-created package containing modifications to the look or behaviour of a video game."
+   ],
+   [
+    "5",
+    "Internet: A moderator, for example on a discussion forum."
+   ],
+   [
+    "5.1",
+    "internet slang originally Twitch-speak humorous in the plural: Used to express a wish of removal or, often hyperbolic, harm (as opposed to a literal request to moderators)."
+   ],
+   [
+    "6",
+    "computing informal: A module (file containing a tracker music sequence)."
+   ],
+   [
+    "7",
+    "rock climbing: A moderately difficult route."
+   ],
+   [
+    "8",
+    "in the plural Oxford University informal: Moderations: university examinations generally taken in the first year."
+   ],
+   [
+    "9",
+    "mathematics programming: abbreviation of modulus ."
+   ],
+   [
+    "10",
+    "statistics: abbreviation of mode ."
+   ],
+   [
+    "11",
+    "politics: abbreviation of moderate ."
+   ]
+  ],
+  "glosses": [
+   "video games: an end user-created package containing modifications for a video game",
+   "a 1960s British person who dressed in such a style and was interested in modernism and the modern music of the time; the opposite of a rocker"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "b13",
+  "title": "sunset",
+  "pos": "Noun",
+  "gloss": "attributively: of or relating to the final period of life",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "The moment each evening when the sun disappears below the western horizon."
+   ],
+   [
+    "2",
+    "The changes in color of the sky before and after sunset."
+   ],
+   [
+    "3",
+    "figuratively: The final period of the life of a person or thing."
+   ],
+   [
+    "4",
+    "attributively: A set termination date."
+   ],
+   [
+    "5",
+    "The region where the sun sets; the west."
+   ]
+  ],
+  "glosses": [
+   "time of day",
+   "changes in color of sky at sunset",
+   "final period of life",
+   "attributively: of or relating to the final period of life"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "b14",
+  "title": "Darwin",
+  "pos": "Proper noun",
+  "gloss": "city in Australia",
+  "chosen": [
+   "6.3"
+  ],
+  "defs": [
+   [
+    "1",
+    "surname , especially referring to Charles Darwin (1809–1882), British naturalist and founder of the theory of evolution by natural selection."
+   ],
+   [
+    "2",
+    "municipality Río Negro Argentina ."
+   ],
+   [
+    "3",
+    "capital city Northern Territory Australia ."
+   ],
+   [
+    "4",
+    "ghost town Tasmania Australia ."
+   ],
+   [
+    "5",
+    "settlement on the pen:pref/Lafonia isl:suf/East Falkland Falkland Islands ."
+   ],
+   [
+    "6",
+    "number of places USA :"
+   ],
+   [
+    "6.1",
+    "unincorporated community/and/CDP Inyo County California ."
+   ],
+   [
+    "6.2",
+    "ghost town Fresno County California ."
+   ],
+   [
+    "6.3",
+    "and/unincorporated community therein, in Clark County Illinois ."
+   ],
+   [
+    "6.4",
+    "and/minor city Meeker County Minnesota ."
+   ],
+   [
+    "6.5",
+    "small unincorporated community twp:Suf/Bedford Meigs County Ohio ."
+   ],
+   [
+    "6.6",
+    "unincorporated community Pushmataha County Oklahoma ."
+   ],
+   [
+    "6.7",
+    "ghost town Webb County Texas ."
+   ],
+   [
+    "6.8",
+    "unincorporated community Dickenson County Virginia ."
+   ],
+   [
+    "7",
+    "given name male , deriving from the Old English name Dēorwine and revived through the surname."
+   ],
+   [
+    "8",
+    "Cantab informal: ellipsis of w:Darwin College, Cambridge ."
+   ],
+   [
+    "9",
+    "computing: An open-source Unix operating system first released by Apple."
+   ]
+  ],
+  "glosses": [
+   "surname",
+   "city in Australia"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "b15",
+  "title": "splutter",
+  "pos": "Verb",
+  "gloss": "to spray droplets of saliva from the mouth while eating or speaking",
+  "chosen": [
+   "2.1.1"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive:"
+   ],
+   [
+    "1.1",
+    "To forcefully emit (something), especially in small drops or particles; to sputter."
+   ],
+   [
+    "1.2",
+    "To soil or sprinkle (someone or something) with a substance, often a liquid; to bespatter, to spatter."
+   ],
+   [
+    "1.3",
+    "figuratively:"
+   ],
+   [
+    "1.3.1",
+    "To direct angry words, criticism, insults, etc., at (someone or something)."
+   ],
+   [
+    "1.3.2",
+    "Sometimes followed by out: to speak (words) hurriedly, and confusedly or unclearly."
+   ],
+   [
+    "2",
+    "intransitive:"
+   ],
+   [
+    "2.1",
+    "Of a thing: to forcefully emit something, especially in small drops or particles."
+   ],
+   [
+    "2.1.1",
+    "To spray droplets of saliva from the mouth while eating or speaking."
+   ],
+   [
+    "2.2",
+    "Of a substance: to be emitted forcefully in small drops or particles."
+   ],
+   [
+    "2.3",
+    "To make a sound or sounds of something forcefully emitting a substance in small drops or particles."
+   ],
+   [
+    "2.4",
+    "Followed by out: to go out (as a flame) or stop functioning (as an engine or machine) with a spluttering action or sound (senses 2.1 or 2.3)."
+   ],
+   [
+    "2.5",
+    "figuratively:"
+   ],
+   [
+    "2.5.1",
+    "To speak hurriedly, and confusedly or unclearly."
+   ],
+   [
+    "2.5.2",
+    "To perform in an inconsistent manner to a substandard level."
+   ]
+  ],
+  "glosses": [
+   "to forcefully emit (something), especially in small drops or particles",
+   "to spray droplets of saliva from the mouth while eating or speaking",
+   "to direct angry words, criticism, insults, etc., at (someone or something)",
+   "to speak (words) hurriedly, and confusedly or unclearly",
+   "of a thing: to forcefully emit something, especially in small drops or particles",
+   "of a substance: to be emitted forcefully in small drops or particles",
+   "to make a sound or sounds of something forcefully emitting a substance in small drops or other particles",
+   "to go out (as a flame) or stop functioning (as an engine or machine) with a spluttering action or sound",
+   "to speak hurriedly, and confusedly or unclearly",
+   "to perform in an inconsistent manner to a substandard level"
+  ],
+  "gold": [
+   "2.1.1"
+  ]
+ },
+ {
+  "key": "b16",
+  "title": "cool down",
+  "pos": "Verb",
+  "gloss": "to make something cooler",
+  "chosen": [
+   "2.1"
+  ],
+  "defs": [
+   [
+    "1",
+    "intransitive:"
+   ],
+   [
+    "1.1",
+    "To become cooler; to be reduced in temperature."
+   ],
+   [
+    "1.2",
+    "To become less agitated or excited."
+   ],
+   [
+    "1.3",
+    "To decrease in degree or intensity."
+   ],
+   [
+    "2",
+    "transitive:"
+   ],
+   [
+    "2.1",
+    "To cause (something) to become cooler; to reduce the temperature of."
+   ],
+   [
+    "2.2",
+    "To cause (someone) to become less agitated or excited."
+   ]
+  ],
+  "glosses": [
+   "to become cooler (temperature)",
+   "to make something cooler",
+   "to become less agitated",
+   "to make less agitated"
+  ],
+  "gold": [
+   "2.1"
+  ]
+ },
+ {
+  "key": "b17",
+  "title": "dancer",
+  "pos": "Noun",
+  "gloss": "female person who dances",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "dance: A person who dances, usually as a hobby, an occupation, or a profession."
+   ],
+   [
+    "2",
+    "euphemistic: A stripper."
+   ],
+   [
+    "3",
+    "obsolete slang: syn of garreter a thief who used housetops to enter by garret windows ."
+   ]
+  ],
+  "glosses": [
+   "person who dances",
+   "female person who dances",
+   "euphemism for stripper"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "b18",
+  "title": "rot",
+  "pos": "Verb",
+  "gloss": "''(transitive)'' to make putrid",
+  "chosen": [
+   "4"
+  ],
+  "defs": [
+   [
+    "1",
+    "intransitive: To suffer decomposition due to biological action, especially by fungi or bacteria."
+   ],
+   [
+    "2",
+    "intransitive: To decline in function or utility."
+   ],
+   [
+    "3",
+    "ambitransitive: To (cause to) deteriorate in any way, as in morals; to corrupt."
+   ],
+   [
+    "4",
+    "transitive: To make putrid; to cause to be wholly or partially decomposed by natural processes."
+   ],
+   [
+    "5",
+    "intransitive figurative: To spend a long period of time (in an unpleasant place or state)."
+   ],
+   [
+    "6",
+    "transitive: To expose, as flax, to a process of maceration, etc., for the purpose of separating the fiber; to ret."
+   ],
+   [
+    "7",
+    "dated slang: To talk nonsense."
+   ],
+   [
+    "8",
+    "transitive slang imperative: ; blast."
+   ]
+  ],
+  "glosses": [
+   "''(intransitive)'' to suffer decomposition",
+   "''(transitive)'' to make putrid",
+   "''(transitive)'' to cause to deteriorate in any way, as in morals",
+   "moved over from [[decay]]:rot"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "b19",
+  "title": "rot",
+  "pos": "Noun",
+  "gloss": "disease in which breakdown of tissue occurs",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "The process of becoming rotten; putrefaction."
+   ],
+   [
+    "2",
+    "Decaying matter."
+   ],
+   [
+    "3",
+    "chiefly in compounds: Any of several diseases in which breakdown of tissue occurs."
+   ],
+   [
+    "4",
+    "uncountable: Verbal nonsense."
+   ]
+  ],
+  "glosses": [
+   "process of becoming rotten",
+   "verbal nonsense",
+   "disease in which breakdown of tissue occurs"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "b20",
+  "title": "number one",
+  "pos": "Noun",
+  "gloss": "the most important person or thing",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "The most important person, the one who is in charge."
+   ],
+   [
+    "2",
+    "Someone who is top of a ranking, who is ranked first."
+   ],
+   [
+    "3",
+    "Oneself, being considered foremost, as by an egoist."
+   ],
+   [
+    "4",
+    "childish euphemistic: Urine; urination."
+   ],
+   [
+    "5",
+    "music: The single that has sold the most in a given period."
+   ],
+   [
+    "6",
+    "soccer: The main goalkeeper of a team, so-called because they wear the number 1 on the back of their kit."
+   ],
+   [
+    "7",
+    "cricket: The batsman who opens the batting."
+   ],
+   [
+    "8",
+    "A first lieutenant."
+   ],
+   [
+    "9",
+    "theater: A large town where theatrical performances may expect to achieve success."
+   ],
+   [
+    "10",
+    ""
+   ]
+  ],
+  "glosses": [
+   "someone who is in charge",
+   "top-ranking person",
+   "urine or urination euphemism",
+   "the most important person or thing"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "b21",
+  "title": "standard",
+  "pos": "Noun",
+  "gloss": "a flag or ensign",
+  "chosen": [
+   "2.2"
+  ],
+  "defs": [
+   [
+    "1",
+    "A principle or example or measure used for comparison."
+   ],
+   [
+    "1.1",
+    "A level of quality or attainment."
+   ],
+   [
+    "1.2",
+    "Something used as a measure for comparative evaluations; a model."
+   ],
+   [
+    "1.3",
+    "A musical work of established popularity."
+   ],
+   [
+    "1.4",
+    "A rule or set of rules or requirements which are widely agreed upon or imposed by government."
+   ],
+   [
+    "1.5",
+    "The proportion of weights of fine metal and alloy established for coinage."
+   ],
+   [
+    "1.6",
+    "sociolinguistics: standard idiom, a prestigious or standardized language variety; standard language.<ref> </ref>"
+   ],
+   [
+    "1.7",
+    "A bottle of wine containing 0.750 liters of fluid."
+   ],
+   [
+    "1.8",
+    "India: Grade level in primary or secondary education."
+   ],
+   [
+    "2",
+    "A vertical pole with something at its apex."
+   ],
+   [
+    "2.1",
+    "An object supported in an upright position, such as a lamp standard."
+   ],
+   [
+    "2.2",
+    "The flag or ensign carried by a military unit."
+   ],
+   [
+    "2.3",
+    "One of the upright members that supports the horizontal axis of a transit or theodolite."
+   ],
+   [
+    "2.4",
+    "Any upright support, such as one of the poles of a scaffold."
+   ],
+   [
+    "2.5",
+    "A sturdy, woody plant whose upright stem is used to graft a less hardy ornamental flowering plant on, rather then actually planting it."
+   ],
+   [
+    "2.6",
+    "A tree of natural size supported by its own stem, and not dwarfed by grafting on the stock of a smaller species nor trained upon a wall or trellis."
+   ],
+   [
+    "2.7",
+    "The sheth of a plough."
+   ],
+   [
+    "3",
+    "in place names mainly Northern England Scotland: A cairn or tumulus."
+   ],
+   [
+    "3.1",
+    "A hill with a cairn or tumulus at its summit."
+   ],
+   [
+    "4",
+    "A manual transmission vehicle."
+   ],
+   [
+    "5",
+    "botany: The upper petal or banner of a papilionaceous corolla."
+   ],
+   [
+    "6",
+    "shipbuilding: An inverted knee timber placed upon the deck instead of beneath it, with its vertical branch turned upward from that which lies horizontally."
+   ],
+   [
+    "7",
+    "A large drinking cup."
+   ],
+   [
+    "8",
+    "historical: A collar of mail protecting the neck."
+   ],
+   [
+    "9",
+    "ellipsis of standard poodle ."
+   ],
+   [
+    "10",
+    "A measure for timber. <ref> </ref>"
+   ]
+  ],
+  "glosses": [
+   "level of quality",
+   "something used as a measure",
+   "a flag or ensign",
+   "standard idiom"
+  ],
+  "gold": [
+   "2.2"
+  ]
+ },
+ {
+  "key": "b22",
+  "title": "lexicon",
+  "pos": "Noun",
+  "gloss": "subject-specific vocabulary",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "The vocabulary of a language."
+   ],
+   [
+    "2",
+    "lexicography linguistics: A dictionary that includes or focuses on lexemes."
+   ],
+   [
+    "3",
+    "A dictionary of Classical Greek, Hebrew, Latin, or Aramaic."
+   ],
+   [
+    "4",
+    "programming: The lexicology of a programming language. (Usually called lexical structure.)"
+   ],
+   [
+    "5",
+    "rare: Any dictionary."
+   ],
+   [
+    "6",
+    "The vocabulary used by or known to an individual. (Also called lexical knowledge.)"
+   ],
+   [
+    "7",
+    "A set of vocabulary specific to a certain subject."
+   ],
+   [
+    "7.1",
+    "A list thereof."
+   ]
+  ],
+  "glosses": [
+   "vocabulary of a language",
+   "dictionary of lexemes",
+   "dictionary of Classical Greek, Hebrew, Latin, or Aramaic",
+   "lexicology of a programming language",
+   "(rare) any dictionary",
+   "vocabulary used by an individual",
+   "subject-specific vocabulary"
+  ],
+  "gold": [
+   "7"
+  ]
+ },
+ {
+  "key": "b23",
+  "title": "milkshake",
+  "pos": "Noun",
+  "gloss": "beverage consisting of fruit juice, water and sometimes milk",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "A thick beverage consisting of milk and ice cream mixed together, often with fruit, chocolate, or other flavoring."
+   ],
+   [
+    "2",
+    "New England Australia New Zealand: A thin beverage, similar to the above, but with no ice cream or significantly less of it."
+   ],
+   [
+    "3",
+    "A beverage consisting of fruit juice, water, and some milk, as served in Southeast Asia."
+   ],
+   [
+    "4",
+    "mechanics informal: Accidental emulsion of oil and water in an engine."
+   ],
+   [
+    "5",
+    "slang horse racing: An alkaline supplement administered to a horse to improve its racing performance."
+   ]
+  ],
+  "glosses": [
+   "milk and ice cream beverage",
+   "emulsion of oil and water in an engine",
+   "beverage consisting of fruit juice, water and sometimes milk"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "b24",
+  "title": "lout",
+  "pos": "Noun",
+  "gloss": "a rude violent man",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A troublemaker, often violent; a rude violent person; a yob."
+   ],
+   [
+    "2",
+    "A clownish, awkward fellow; a bumpkin."
+   ]
+  ],
+  "glosses": [
+   "troublemaker",
+   "bumpkin",
+   "a rude violent man"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "b25",
+  "title": "phrase",
+  "pos": "Verb",
+  "gloss": "music: perform a passage with the correct phrasing",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive: To express (an action, thought or idea) by means of particular words."
+   ],
+   [
+    "2",
+    "transitive intransitive music: To perform (a passage) with a particular phrasing."
+   ],
+   [
+    "3",
+    "transitive music: To divide into melodic phrases."
+   ]
+  ],
+  "glosses": [
+   "music: perform a passage with the correct phrasing",
+   "express by means of words",
+   "music: divide into melodic phrases"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "b26",
+  "title": "be born yesterday",
+  "pos": "Verb",
+  "gloss": "naive",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "informal stative chiefly in the negative: To be new, naive, innocent, inexperienced or easily deceived."
+   ]
+  ],
+  "glosses": [
+   "to be inexperienced",
+   "naive"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "b27",
+  "title": "chirrup",
+  "pos": "Verb",
+  "gloss": "to make a series of chirps, clicks or clucks (birds)",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "intransitive: To make a series of chirps, clicks or clucks."
+   ],
+   [
+    "2",
+    "transitive: To express by chirping."
+   ],
+   [
+    "3",
+    "transitive: To quicken or animate by chirping."
+   ]
+  ],
+  "glosses": [
+   "to make a series of chirps, clicks or clucks (of technical or other origin)",
+   "to make a series of chirps, clicks or clucks (birds)",
+   "to make a series of chirps, clicks or clucks (insects, esp. crickets)"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "b28",
+  "title": "tie",
+  "pos": "Verb",
+  "gloss": "to secure something by tying a string or the like",
+  "chosen": [
+   "4"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive: To twist (a string, rope, or the like) around itself securely."
+   ],
+   [
+    "2",
+    "transitive: To form (a knot or the like) in a string or the like."
+   ],
+   [
+    "3",
+    "transitive: To attach or fasten (one thing to another) by string or the like."
+   ],
+   [
+    "4",
+    "transitive sometimes figurative: To secure (something) by string or the like."
+   ],
+   [
+    "5",
+    "ambitransitive: To have the same score or position as another in a competition or ordering."
+   ],
+   [
+    "6",
+    "US transitive: To have the same score or position as (another) in a competition or ordering."
+   ],
+   [
+    "7",
+    "music: To unite (musical notes) with a line or slur in the notation."
+   ],
+   [
+    "8",
+    "US dated colloquial: To believe; to credit."
+   ],
+   [
+    "9",
+    "programming transitive: In the Perl programming language, to extend (a variable) so that standard operations performed upon it invoke custom functionality instead."
+   ]
+  ],
+  "glosses": [
+   "to attach or fasten with string",
+   "to secure something by tying a string or the like",
+   "to form a knot or the like in a string or the like"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "b29",
+  "title": "Lucifer",
+  "pos": "Proper noun",
+  "gloss": "figure mentioned in Isaiah 14:12",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "literary: The planet Venus as the daystar (the morning star)."
+   ],
+   [
+    "2",
+    "biblical: The King of Babylon who was compared to the planet Venus in first the Wycliffe's Bible then the King James Version of Isaiah 14:12; it is unclear whether this verse refers to a specific king or to a representation of the entire line of kings of Babylon."
+   ],
+   [
+    "3",
+    "Satan, the Devil."
+   ]
+  ],
+  "glosses": [
+   "figure mentioned in Isaiah 14:12",
+   "Venus, the morning star"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "b30",
+  "title": "fork",
+  "pos": "Noun",
+  "gloss": "point where a waterway splits",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "Any of several types of prong ( tine ) tool (physical tools), as follows:"
+   ],
+   [
+    "1.1",
+    "A utensil with spikes used to put solid food into the mouth, or to hold food down while cutting, or for serving food."
+   ],
+   [
+    "1.2",
+    "Any of several types of pronged tools for use on farms, in fields, or in the garden or lawn, such as a smaller hand fork for weeding or a larger one for turning over the soil."
+   ],
+   [
+    "1.2.1",
+    "Such a pronged tool having a long straight handle, generally for two-handed use, as used for digging, lifting, mucking, pitching, etc."
+   ],
+   [
+    "1.3",
+    "A tuning fork."
+   ],
+   [
+    "2",
+    "by abstraction, from the tool shape: A fork in the road, as follows:"
+   ],
+   [
+    "2.1",
+    "physical: An intersection in a road or path where one road is split into two."
+   ],
+   [
+    "2.2",
+    "figurative: A fork ."
+   ],
+   [
+    "3",
+    "by abstraction from the tool shape: A point where a waterway, such as a river or other stream, splits and flows into two (or more) different directions."
+   ],
+   [
+    "4",
+    "metonymic analogous to any prong of a pronged tool: One of the parts into which anything is furcated or divided; a prong; a branch of a stream, a road, etc.; a barbed point, as of an arrow."
+   ],
+   [
+    "5",
+    "figuratively decision-making: A point in time where one has to make a decision between two life paths."
+   ],
+   [
+    "5.1",
+    "metonymically: Either of the (figurative) paths thus taken."
+   ],
+   [
+    "6",
+    "figuratively by abstraction, from a physical fork: software development, content management, data management: A departure from having a single source of truth (SSOT), sometimes intentionally but usually unintentionally."
+   ],
+   [
+    "6.1",
+    "metonymically: Any of the pieces/versions (of software, content, or data sets) thus created."
+   ],
+   [
+    "6.2",
+    "software: The launch of one or more separate software development efforts based upon a modified copy of an existing project, especially in free and open-source software."
+   ],
+   [
+    "6.2.1",
+    "software: Any of the software projects resulting from the launch of such separate software development efforts based upon a copy of the original project."
+   ],
+   [
+    "6.3",
+    "content management system content management: The splitting of the coverage of a topic (within a corpus of content) into two or more pieces."
+   ],
+   [
+    "6.3.1",
+    "content management system content management: Any of the pieces/versions of content thus created."
+   ],
+   [
+    "6.4",
+    "cryptocurrency: A split in a blockchain resulting from protocol disagreements, or a branch of the blockchain resulting from such a split."
+   ],
+   [
+    "7",
+    "chess: The simultaneous attack of two adversary pieces with one single attacking piece (especially a knight)."
+   ],
+   [
+    "8",
+    "British vulgar: The crotch."
+   ],
+   [
+    "9",
+    "colloquial: A forklift."
+   ],
+   [
+    "10",
+    "Either of the blades of a forklift (or, in plural, the set of blades), on which the goods to be raised are loaded."
+   ],
+   [
+    "11",
+    "cycling motorcycles by abstraction from a pronged tool's shape: In a bicycle or motorcycle, the portion of the frameset holding the front wheel, allowing the rider to steer and balance, also called front fork."
+   ],
+   [
+    "12",
+    "The upper front brow of a saddle bow, connected in the tree by the two saddle bars to the cantle on the other end."
+   ],
+   [
+    "13",
+    "computing file system file systems: A set of data associated with an individual file in some file systems."
+   ],
+   [
+    "14",
+    "obsolete: A gallows."
+   ]
+  ],
+  "glosses": [
+   "pronged tool",
+   "eating utensil",
+   "intersection",
+   "one of the parts into which anything is furcated",
+   "point where a waterway splits",
+   "name of some river tributaries",
+   "figurative: point in time of making a decision",
+   "chess: simultaneous attack",
+   "computer science: splitting of a process",
+   "computer science: copying and separately developing a project",
+   "computer science: a separately developed project based upon a copy of an existing project",
+   "blades of a forklift",
+   "bicycle or motorcycle fork"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "b31",
+  "title": "noble",
+  "pos": "Adjective",
+  "gloss": "grand, magnificent, splendid",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "Having honorable qualities; having moral eminence and freedom from anything petty, mean or dubious in conduct and character."
+   ],
+   [
+    "2",
+    "; stately; magnificent; splendid."
+   ],
+   [
+    "3",
+    "Of exalted rank; of or relating to the nobility; distinguished from the masses by birth, station, or title; highborn."
+   ],
+   [
+    "4",
+    "chemistry: Of an element, unreactive."
+   ],
+   [
+    "5",
+    "winemaking: Belonging to a class of grape cultivars traditionally considered most favorable for winemaking, usually encompassing the six: Merlot, Pinot Noir, Cabernet Sauvignon, Sauvignon blanc, Chardonnay, and Riesling."
+   ],
+   [
+    "6",
+    "geometry of a polyhedron: Both isohedral and isogonal."
+   ]
+  ],
+  "glosses": [
+   "having honorable qualities",
+   "of or relating to the nobility; distinguished from the masses by birth",
+   "grand, magnificent, splendid",
+   "chemistry: not reactive",
+   "winemaking: one of six cultivars"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "b32",
+  "title": "turntable",
+  "pos": "Noun",
+  "gloss": "record player",
+  "chosen": [
+   "1.1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A circular rotating platform."
+   ],
+   [
+    "1.1",
+    "music: The circular rotating platform of a record player or a disk jockey's console on which the record rests during play; by extension: , a record player."
+   ],
+   [
+    "1.2",
+    "rail transport road transport: A rotating platform placed in a circular pit, used for turning locomotives, cars, or trucks."
+   ],
+   [
+    "1.3",
+    "gaming: A circular platform allowing a board game to be rotated to face each player."
+   ]
+  ],
+  "glosses": [
+   "circular rotating platform",
+   "circular rotating platform of a record player or a disk jockey's console",
+   "record player",
+   "rotating platform for turning locomotives",
+   "rotating platform for turning cars and trucks"
+  ],
+  "gold": [
+   "1.1"
+  ]
+ },
+ {
+  "key": "b33",
+  "title": "priestess",
+  "pos": "Noun",
+  "gloss": "priest’s wife",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "A woman with religious duties and responsibilities in certain religions."
+   ],
+   [
+    "2",
+    "religious slur uncommon: A female Christian priest or minister, typically in a Protestant, Old Catholic, or independent Catholic denomination."
+   ],
+   [
+    "3",
+    "colloquial obsolete: A priest’s wife."
+   ]
+  ],
+  "glosses": [
+   "priest’s wife",
+   "woman with religious duties"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "b34",
+  "title": "bail out",
+  "pos": "Verb",
+  "gloss": "To rescue, especially financially",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive: To secure the release of an arrested person by providing bail money."
+   ],
+   [
+    "2",
+    "transitive nautical: To remove water from a boat by scooping it out."
+   ],
+   [
+    "3",
+    "transitive idiomatic: To rescue, especially financially."
+   ],
+   [
+    "4",
+    "intransitive usually with of: To exit an aircraft while in flight."
+   ],
+   [
+    "5",
+    "intransitive idiomatic slang: To leave (or not attend at all) a place or a situation, especially quickly or when the situation has become undesirable; to abandon (something)."
+   ],
+   [
+    "6",
+    "intransitive idiomatic slang with on: To abandon (someone) when that person faces difficulties."
+   ],
+   [
+    "7",
+    "intransitive idiomatic colloquial with of: To sell all or part of one's holdings in stocks, real estate, a business, etc."
+   ],
+   [
+    "8",
+    "intransitive with of: To make an unscheduled voluntary termination of an underwater dive, usually implying the use of an Alternative air source ."
+   ],
+   [
+    "9",
+    "transitive idiomatic skateboarding: To fail badly; to fall off a skateboard."
+   ],
+   [
+    "10",
+    "intransitive idiomatic surfing: To abandon one's surfboard when faced with a large or perilous wave."
+   ]
+  ],
+  "glosses": [
+   "To secure the release of an arrested person",
+   "To remove water from a boat by scooping it out",
+   "To exit an aircraft while in flight",
+   "To rescue, especially financially",
+   "To leave or not attend",
+   "To abandon someone"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "b35",
+  "title": "lumber",
+  "pos": "Verb",
+  "gloss": "To load down with things, to fill.",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "intransitive: To move clumsily and heavily; to move slowly."
+   ],
+   [
+    "2",
+    "transitive with with: To load down with things, to fill, to encumber, to impose an unwanted burden on."
+   ],
+   [
+    "3",
+    "To heap together in disorder."
+   ],
+   [
+    "4",
+    "To fill or encumber with lumber."
+   ],
+   [
+    "5",
+    "transitive slang obsolete: To pawn (goods)."
+   ]
+  ],
+  "glosses": [
+   "To move clumsily and heavily.",
+   "To load down with things, to fill.",
+   "To encumber, to impose an unwanted burden on."
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "b36",
+  "title": "cup",
+  "pos": "Noun",
+  "gloss": "dice cup",
+  "chosen": [
+   "8"
+  ],
+  "defs": [
+   [
+    "1",
+    "A concave vessel for drinking, usually made of opaque material (as opposed to a glass) and with a handle."
+   ],
+   [
+    "2",
+    "The contents of said vessel."
+   ],
+   [
+    "3",
+    "A customary unit of measure"
+   ],
+   [
+    "3.1",
+    "US: A US unit of liquid measure equal to 8 fluid ounces ( of a US gallon; 236.5882365 mL) or 240 mL."
+   ],
+   [
+    "3.2",
+    "Canada: A Canadian unit of measure equal to 8 imperial ounces ( imperial gallon; 227.3 mL) or 250 mL."
+   ],
+   [
+    "3.3",
+    "UK dated: A British unit of measure equal to imperial pint (10 imperial ounces; 284 mL) or 300 mL."
+   ],
+   [
+    "3.4",
+    "AU NZ: A metric unit of measure equal to 250 mL."
+   ],
+   [
+    "4",
+    "A trophy in the shape of an oversized cup."
+   ],
+   [
+    "5",
+    "A contest for which a cup is awarded."
+   ],
+   [
+    "6",
+    "association football: The main knockout tournament in a country, organised alongside the league."
+   ],
+   [
+    "7",
+    "golf: A cup-shaped object placed in the target hole."
+   ],
+   [
+    "8",
+    "A container in which dice are held and shaken before being thrown."
+   ],
+   [
+    "9",
+    "usually in combination: Any of various sweetened alcoholic drinks."
+   ],
+   [
+    "10",
+    "US Canada: A rigid concave protective covering for the male genitalia."
+   ],
+   [
+    "11",
+    "One of the two parts of a brassiere which each cover a breast."
+   ],
+   [
+    "11.1",
+    "Prefixed with a letter, used as a measurement of bra or breast size."
+   ],
+   [
+    "12",
+    "mathematics: The symbol <math>\\cup</math> denoting union and similar operations."
+   ],
+   [
+    "13",
+    "tarot: A suit of the minor arcana in tarot, or one of the cards from the suit."
+   ],
+   [
+    "14",
+    "ultimate frisbee: A defensive style characterized by a three player near defense cupping the thrower; or those three players."
+   ],
+   [
+    "15",
+    "A flexible concave membrane used to temporarily attach a handle or hook to a flat surface by means of suction."
+   ],
+   [
+    "16",
+    "Anything shaped like a cup."
+   ],
+   [
+    "17",
+    "medicine historical: A cupping glass or other vessel or instrument used to produce the vacuum in cupping."
+   ],
+   [
+    "18",
+    "figurative: That which is to be received or indured; that which is allotted to one; a portion of blessings and afflictions."
+   ]
+  ],
+  "glosses": [
+   "drinking vessel",
+   "unit of measure",
+   "trophy",
+   "contest",
+   "golf: cup-shaped object placed in the target hole",
+   "protective covering for the male genitalia",
+   "part of bra",
+   "math: symbol denoting union",
+   "tarot suit",
+   "ultimate frisbee: a defensive style",
+   "anything shaped like a cup",
+   "medicine: cupping glass or similar vessel",
+   "that which is to be received or indured",
+   "dice cup"
+  ],
+  "gold": [
+   "8"
+  ]
+ },
+ {
+  "key": "b37",
+  "title": "loon",
+  "pos": "Noun",
+  "gloss": "a crazy person",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "slang: A crazy or deranged person; a lunatic."
+   ],
+   [
+    "2",
+    "obsolete: An idler, a lout."
+   ],
+   [
+    "3",
+    "chiefly Scotland Ulster: A boy, a lad."
+   ],
+   [
+    "4",
+    "chiefly Scotland: A harlot; mistress."
+   ],
+   [
+    "5",
+    "chiefly Scotland: A simpleton."
+   ],
+   [
+    "6",
+    "Ireland historical: An English soldier of an expeditionary army in Ireland."
+   ],
+   [
+    "7",
+    "traffic engineering: A round area of pavement that protrudes from one side of a road to accommodate turning vehicles with a wide turning circle."
+   ],
+   [
+    "8",
+    "Clipping of balloon."
+   ]
+  ],
+  "glosses": [
+   "idler",
+   "a crazy person"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "b38",
+  "title": "nun",
+  "pos": "Noun",
+  "gloss": "member of a non-Christian religious community of women",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A member of a Christian religious community of women who live by certain vows and usually wear a habit, Roman Catholicism specifically: those living together in a cloister."
+   ],
+   [
+    "2",
+    "by extension: A member of a similar female community in other confessions."
+   ],
+   [
+    "3",
+    "archaic British slang: A prostitute.<ref> </ref>"
+   ],
+   [
+    "4",
+    "A kind of pigeon with the feathers on its head like the hood of a nun."
+   ]
+  ],
+  "glosses": [
+   "member of a Christian religious community of women",
+   "member of a non-Christian religious community of women"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "b39",
+  "title": "romance",
+  "pos": "Noun",
+  "gloss": "story relating to chivalry",
+  "chosen": [
+   "5"
+  ],
+  "defs": [
+   [
+    "1",
+    "An intimate relationship between two people; a love affair."
+   ],
+   [
+    "2",
+    "A strong obsession or attachment for something or someone."
+   ],
+   [
+    "3",
+    "Idealized love which is pure or beautiful."
+   ],
+   [
+    "4",
+    "A story, novel, film, etc., centred around an idealized love relationship."
+   ],
+   [
+    "5",
+    "A story relating to chivalry; a story involving knights, heroes, adventures, quests, etc."
+   ],
+   [
+    "6",
+    "A tale of high adventure."
+   ],
+   [
+    "7",
+    "A mysterious, exciting, or fascinating quality."
+   ],
+   [
+    "8",
+    "A literary or filmic genre about idealized love."
+   ],
+   [
+    "9",
+    "An embellished account of something; an idealized lie."
+   ],
+   [
+    "10",
+    "An adventure, or series of extraordinary events, resembling those narrated in romances."
+   ],
+   [
+    "11",
+    "A dreamy, imaginative habit of mind; a disposition to ignore what is real."
+   ],
+   [
+    "12",
+    "music: A sentimental piece of music; a romanza."
+   ]
+  ],
+  "glosses": [
+   "intimate relationship, love affair",
+   "strong obsession or attachment",
+   "idealized love",
+   "mysterious, fascinating quality",
+   "story or novel dealing with idealized love",
+   "embellished account",
+   "story relating to chivalry",
+   "series of extraordinary events, resembling those narrated in romances",
+   "dreamy, imaginative habit of mind",
+   "music: sentimental piece of music"
+  ],
+  "gold": [
+   "5"
+  ]
+ },
+ {
+  "key": "b40",
+  "title": "canton",
+  "pos": "Noun",
+  "gloss": "subdivision of Luxembourg",
+  "chosen": [
+   "1.3"
+  ],
+  "defs": [
+   [
+    "1",
+    "A division of a political unit."
+   ],
+   [
+    "1.1",
+    "One of the states comprising the Swiss Confederation."
+   ],
+   [
+    "1.2",
+    "An administrative division within a department in France, often being a subdivision of an arrondissement."
+   ],
+   [
+    "1.3",
+    "A division of Luxembourg, Federation of Bosnia and Herzegovina, etc."
+   ],
+   [
+    "1.4",
+    "obsolete: A subdivision of a county, of Quebec, Canada; equivalent to a township."
+   ],
+   [
+    "2",
+    "A small community or clan."
+   ],
+   [
+    "3",
+    "A subdivision of a flag, the rectangular inset on the upper hoist (i.e., flagpole) side, the upper-left quadrant of a flag, (the stars of the US national flag are in a canton)."
+   ],
+   [
+    "4",
+    "heraldiccharge: A division of a shield occupying one third of the chief, usually on the dexter side, formed by a perpendicular line from the top meeting a horizontal line from the side."
+   ]
+  ],
+  "glosses": [
+   "state of Switzerland",
+   "subdivision of an ''arrondissement''",
+   "subdivision of Luxembourg",
+   "subdivision of Serbia",
+   "subdivision of Bosnia and Herzegovina",
+   "subdivision of flag",
+   "heraldry; one of the ordinaries"
+  ],
+  "gold": [
+   "1.3"
+  ]
+ },
+ {
+  "key": "b41",
+  "title": "bum",
+  "pos": "Noun",
+  "gloss": "informal: butt(ocks) specifically",
+  "chosen": [
+   "1.2"
+  ],
+  "defs": [
+   [
+    "1",
+    "informal childish chiefly Commonwealth:"
+   ],
+   [
+    "1.1",
+    "The buttocks."
+   ],
+   [
+    "1.2",
+    "specifically: The anus."
+   ],
+   [
+    "2",
+    "East Midlands slang vulgar: An act of anal sex."
+   ]
+  ],
+  "glosses": [
+   "informal: buttocks or anus",
+   "informal: butt(ocks) specifically",
+   "anus specifically"
+  ],
+  "gold": [
+   "1.1"
+  ]
+ },
+ {
+  "key": "b42",
+  "title": "chart",
+  "pos": "Noun",
+  "gloss": "ranked listing of competitors, as of recorded music",
+  "chosen": [
+   "2.5"
+  ],
+  "defs": [
+   [
+    "1",
+    "A map."
+   ],
+   [
+    "1.1",
+    "A map illustrating the geography of a specific phenomenon."
+   ],
+   [
+    "1.2",
+    "A navigator's map."
+   ],
+   [
+    "2",
+    "A systematic non-narrative presentation of data."
+   ],
+   [
+    "2.1",
+    "A tabular presentation of data; a table."
+   ],
+   [
+    "2.2",
+    "A diagram."
+   ],
+   [
+    "2.3",
+    "A graph."
+   ],
+   [
+    "2.4",
+    "A record of a patient's diagnosis, care instructions, and recent history."
+   ],
+   [
+    "2.5",
+    "A ranked listing of competitors, as of recorded music."
+   ],
+   [
+    "3",
+    "A written deed; a charter."
+   ],
+   [
+    "4",
+    "differential geometry topology: synonym of coordinate chart ."
+   ],
+   [
+    "5",
+    "rhythm games: A predefined sequence of notes (i.e. inputs), typically timed to a song or excerpt thereof."
+   ]
+  ],
+  "glosses": [
+   "navigator's map",
+   "non-narrative presentation of data",
+   "ranked listing of competitors, as of recorded music",
+   "table",
+   "diagram",
+   "graph",
+   "sequence of notes in a rhythm game"
+  ],
+  "gold": [
+   "2.5"
+  ]
+ },
+ {
+  "key": "b43",
+  "title": "chopper",
+  "pos": "Noun",
+  "gloss": "type of motorcycle",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "Something that chops"
+   ],
+   [
+    "1.1",
+    "A tool for chopping wood; an axe/ax."
+   ],
+   [
+    "1.2",
+    "A knife for chopping food, especially one with a large oblong blade."
+   ],
+   [
+    "1.3",
+    "A kitchen appliance used for chopping various foods, akin to a small food processor."
+   ],
+   [
+    "1.4",
+    "archaeology: A crude tool with an irregular cutting edge formed by removing flakes from one side of a stone."
+   ],
+   [
+    "2",
+    "A thick mitten, usually with yellow leather on the outside."
+   ],
+   [
+    "3",
+    "informal motorcycle: A type of road motorcycle, especially as used by biker or bikie gangs."
+   ],
+   [
+    "4",
+    "electronics: Any of various electronic switches used to interrupt one signal under the control of another."
+   ],
+   [
+    "5",
+    "baseball: A high-bouncing batted ball."
+   ],
+   [
+    "6",
+    "slang: The penis."
+   ],
+   [
+    "7",
+    "slang: An assault rifle or carbine, especially a fully-automatic one (e.g. an AK-47)."
+   ],
+   [
+    "8",
+    "North America: The bluefish ( Pomatomus saltatrix )."
+   ],
+   [
+    "9",
+    "A rapper who raps in a fast-paced rhyming style."
+   ]
+  ],
+  "glosses": [
+   "knife for chopping food",
+   "archaeology: crude tool with an irregular cutting edge",
+   "slang: penis",
+   "type of motorcycle",
+   "slang: assault rifle, especially a fully-automatic one",
+   "electronics: type of electronic switch",
+   "kitchen appliance similar to a food processor"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "b44",
+  "title": "get off",
+  "pos": "Verb",
+  "gloss": "1.1. (''transitive'') to move (something) from being on (something else)",
+  "chosen": [
+   "1.1"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive intransitive: To move away from a position of being physically on (something) or covering (something)."
+   ],
+   [
+    "1.1",
+    "transitive: To move (something) from being on top of (something else) to not being on top of it."
+   ],
+   [
+    "1.2",
+    "intransitive: To move from being on top of (something) to not being on top of it."
+   ],
+   [
+    "1.3",
+    "intransitive transitive: To stop touching or physically interfering with something or someone."
+   ],
+   [
+    "1.4",
+    "transitive ditransitive: To cause (something) to stop touching or interfering with something else."
+   ],
+   [
+    "1.5",
+    "transitive: To dismount or climb down from (something)."
+   ],
+   [
+    "1.6",
+    "ditransitive: To remove (something that is touching or covering)."
+   ],
+   [
+    "2",
+    "To depart from a location, route or conveyance."
+   ],
+   [
+    "2.1",
+    "transitive intransitive: To disembark, especially from mass transportation such as a bus, ship or train."
+   ],
+   [
+    "2.2",
+    "transitive: To depart from (a path, highway, etc)."
+   ],
+   [
+    "2.3",
+    "transitive: To leave an island."
+   ],
+   [
+    "2.4",
+    "transitive: To make or help someone be ready to leave a place (especially to go to another place)."
+   ],
+   [
+    "2.5",
+    "possibly dated: To leave (somewhere) and start (a trip)."
+   ],
+   [
+    "3",
+    "To leave from a job or stop an experience."
+   ],
+   [
+    "3.1",
+    "transitive intransitive: To leave one's job, school or another commitment, as scheduled or with permission."
+   ],
+   [
+    "3.2",
+    "intransitive: To leave work consistently at a designated time."
+   ],
+   [
+    "3.3",
+    "transitive: To reserve or have a period of time as a vacation from work."
+   ],
+   [
+    "3.4",
+    "transitive: To leave a project or assignment."
+   ],
+   [
+    "3.5",
+    "transitive: To stop following, harassing or nitpicking (someone)."
+   ],
+   [
+    "3.6",
+    "transitive: To stop using a piece of equipment, such as a telephone or computer."
+   ],
+   [
+    "3.7",
+    "transitive slang: To stop partaking or participating (in a course of action, habit or activity)."
+   ],
+   [
+    "3.8",
+    "transitive slang: To quit using a drug."
+   ],
+   [
+    "4",
+    "To avoid consequences or assist in the avoidance of consequences."
+   ],
+   [
+    "4.1",
+    "intransitive: To escape serious or severe consequences; to receive only mild or no punishment (or injuries, etc) for something one has done or been accused of."
+   ],
+   [
+    "4.2",
+    "transitive: To help someone to escape serious or severe consequences and receive only mild or no punishment."
+   ],
+   [
+    "4.3",
+    "dated slang US intransitive ditransitive: To steal (something) successfully."
+   ],
+   [
+    "5",
+    "To transmit or receive (something)."
+   ],
+   [
+    "5.1",
+    "ditransitive: To acquire (something) from (someone or something)."
+   ],
+   [
+    "5.2",
+    "transitive: To send (something); to discharge (a communication)."
+   ],
+   [
+    "5.3",
+    "ditransitive: To receive data, a message, etc."
+   ],
+   [
+    "6",
+    "To cause or act as to cause an emotion, sensation or state of mind."
+   ],
+   [
+    "6.1",
+    "transitive UK: To make (someone) fall asleep."
+   ],
+   [
+    "6.2",
+    "intransitive UK: To fall asleep."
+   ],
+   [
+    "6.3",
+    "transitive slang: To excite or arouse, especially in a sexual manner, as to cause to experience orgasm."
+   ],
+   [
+    "6.4",
+    "intransitive slang: To experience great pleasure, especially sexual pleasure; in particular, to experience an orgasm; to get off on (something)."
+   ],
+   [
+    "6.5",
+    "transitive slang: To masturbate; to achieve sexual satisfaction through masturbation."
+   ],
+   [
+    "6.6",
+    "intransitive slang UK: To kiss; to flirt successfully; to hook up or make out with a desired person."
+   ],
+   [
+    "6.7",
+    "intransitive transitive slang: To get high (on a drug); to get (someone) high on a drug."
+   ],
+   [
+    "6.8",
+    "transitive especially in an interrogative sentence: To find enjoyment (in behaving in a presumptuous, rude, or intrusive manner)."
+   ],
+   [
+    "7",
+    "To succeed in an act; to perform an action."
+   ],
+   [
+    "7.1",
+    "dated transitive: To achieve (a goal); to successfully perform."
+   ],
+   [
+    "7.2",
+    "dated slang US intransitive: To perform a musical solo; to play music well."
+   ],
+   [
+    "7.3",
+    "transitive: To fart, burp, etc."
+   ],
+   [
+    "7.4",
+    "transitive dated: To utter."
+   ],
+   [
+    "8",
+    ""
+   ]
+  ],
+  "glosses": [
+   "1. (''ambitransitive'') to move from being on top of (something)",
+   "1.1. (''transitive'') to move (something) from being on (something else)",
+   "1.3. (''ambitransitive'') to stop touching or interfering with something or someone",
+   "2.1. (''ambitransitive'') to disembark from",
+   "3.6. (''transitive'') to stop using a piece of equipment",
+   "4.1. (''intransitive'') to incur only mild consequences",
+   "6.2. (''intransitive'') to fall asleep",
+   "6.3. (''transitive'') to excite, arouse",
+   "6.4. (''intransitive'') to experience sexual pleasure"
+  ],
+  "gold": [
+   "1.1"
+  ]
+ },
+ {
+  "key": "b45",
+  "title": "press",
+  "pos": "Noun",
+  "gloss": "printing machine",
+  "chosen": [
+   "4"
+  ],
+  "defs": [
+   [
+    "1",
+    "An instance of applying pressure; an instance of pressing."
+   ],
+   [
+    "2",
+    "countable: A device used to apply pressure to an item."
+   ],
+   [
+    "3",
+    "uncountable: A crowd."
+   ],
+   [
+    "4",
+    "countable: A printing machine."
+   ],
+   [
+    "5",
+    "uncountable collective: The print-based media (both the people and the newspapers)."
+   ],
+   [
+    "6",
+    "countable: A publisher."
+   ],
+   [
+    "7",
+    "countable especially in Ireland Scotland: An enclosed storage space (e.g. closet, cupboard)."
+   ],
+   [
+    "8",
+    "countable weightlifting: An exercise in which weight is forced away from the body by extension of the arms or legs."
+   ],
+   [
+    "9",
+    "countable golf gambling: An additional bet in a golf match that duplicates an existing (usually losing) wager in value, but begins even at the time of the bet."
+   ],
+   [
+    "10",
+    "countable: Pure, unfermented grape juice."
+   ],
+   [
+    "11",
+    "A commission to force men into public service, particularly into the navy."
+   ],
+   [
+    "12",
+    "psychology: In personology, any environmental factor that arouses a need in the individual."
+   ]
+  ],
+  "glosses": [
+   "device used to apply pressure",
+   "printed media",
+   "enclosed storage space",
+   "printing machine",
+   "weightlifting exercise"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "b46",
+  "title": "sign",
+  "pos": "Noun",
+  "gloss": "omen",
+  "chosen": [
+   "1.1"
+  ],
+  "defs": [
+   [
+    "1",
+    "countable uncountable: A visible fact that shows that something exists or may happen."
+   ],
+   [
+    "1.1",
+    "An omen."
+   ],
+   [
+    "1.2",
+    "medicine: A property of the body that indicates a disease and, unlike a symptom, can be detected objectively by someone other than the patient."
+   ],
+   [
+    "2",
+    "A mark or another symbol used to represent something."
+   ],
+   [
+    "3",
+    "North America AU uncountable: Physical evidence left by an animal."
+   ],
+   [
+    "4",
+    "A clearly visible object, generally flat, bearing a short message in words or pictures."
+   ],
+   [
+    "5",
+    "A wonder; miracle; prodigy."
+   ],
+   [
+    "6",
+    "astrology: An astrological sign."
+   ],
+   [
+    "7",
+    "mathematics: Positive or negative polarity, as denoted by the + or - sign."
+   ],
+   [
+    "8",
+    "A specific gesture or motion used to communicate by those with speaking or hearing difficulties; now specifically, a linguistic unit in sign language equivalent to word in spoken languages."
+   ],
+   [
+    "9",
+    "uncountable: Sign language in general."
+   ],
+   [
+    "10",
+    "A semantic unit, something that conveys meaning or information (e.g. a word of written language); linguistics semiotics: a unit consisting of a signifier and a signified concept. See [[w:sign (semiotics)"
+   ],
+   [
+    "11",
+    "A military emblem carried on a banner or standard."
+   ]
+  ],
+  "glosses": [
+   "a fact that shows that something exists or may happen",
+   "a mark or another symbol used to represent something",
+   "physical evidence left by an animal",
+   "flat object bearing a message",
+   "astrological sign",
+   "math: positive or negative polarity",
+   "linguistic unit in sign language",
+   "sign language in general",
+   "omen",
+   "medicine: property of the body that indicates a disease",
+   "military emblem",
+   "meaningful gesture",
+   "any of several specialized non-alphabetic symbols"
+  ],
+  "gold": [
+   "1.1"
+  ]
+ },
+ {
+  "key": "b47",
+  "title": "sign",
+  "pos": "Noun",
+  "gloss": "medicine: property of the body that indicates a disease",
+  "chosen": [
+   "1.2"
+  ],
+  "defs": [
+   [
+    "1",
+    "countable uncountable: A visible fact that shows that something exists or may happen."
+   ],
+   [
+    "1.1",
+    "An omen."
+   ],
+   [
+    "1.2",
+    "medicine: A property of the body that indicates a disease and, unlike a symptom, can be detected objectively by someone other than the patient."
+   ],
+   [
+    "2",
+    "A mark or another symbol used to represent something."
+   ],
+   [
+    "3",
+    "North America AU uncountable: Physical evidence left by an animal."
+   ],
+   [
+    "4",
+    "A clearly visible object, generally flat, bearing a short message in words or pictures."
+   ],
+   [
+    "5",
+    "A wonder; miracle; prodigy."
+   ],
+   [
+    "6",
+    "astrology: An astrological sign."
+   ],
+   [
+    "7",
+    "mathematics: Positive or negative polarity, as denoted by the + or - sign."
+   ],
+   [
+    "8",
+    "A specific gesture or motion used to communicate by those with speaking or hearing difficulties; now specifically, a linguistic unit in sign language equivalent to word in spoken languages."
+   ],
+   [
+    "9",
+    "uncountable: Sign language in general."
+   ],
+   [
+    "10",
+    "A semantic unit, something that conveys meaning or information (e.g. a word of written language); linguistics semiotics: a unit consisting of a signifier and a signified concept. See [[w:sign (semiotics)"
+   ],
+   [
+    "11",
+    "A military emblem carried on a banner or standard."
+   ]
+  ],
+  "glosses": [
+   "a fact that shows that something exists or may happen",
+   "a mark or another symbol used to represent something",
+   "physical evidence left by an animal",
+   "flat object bearing a message",
+   "astrological sign",
+   "math: positive or negative polarity",
+   "linguistic unit in sign language",
+   "sign language in general",
+   "omen",
+   "medicine: property of the body that indicates a disease",
+   "military emblem",
+   "meaningful gesture",
+   "any of several specialized non-alphabetic symbols"
+  ],
+  "gold": [
+   "1.2"
+  ]
+ },
+ {
+  "key": "b48",
+  "title": "chirrup",
+  "pos": "Verb",
+  "gloss": "to make a series of chirps, clicks or clucks (insects, esp. crickets)",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "intransitive: To make a series of chirps, clicks or clucks."
+   ],
+   [
+    "2",
+    "transitive: To express by chirping."
+   ],
+   [
+    "3",
+    "transitive: To quicken or animate by chirping."
+   ]
+  ],
+  "glosses": [
+   "to make a series of chirps, clicks or clucks (of technical or other origin)",
+   "to make a series of chirps, clicks or clucks (birds)",
+   "to make a series of chirps, clicks or clucks (insects, esp. crickets)"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "b49",
+  "title": "warp",
+  "pos": "Verb",
+  "gloss": "to move a vessel",
+  "chosen": [
+   "6"
+  ],
+  "defs": [
+   [
+    "1",
+    "To twist or become twisted, physically or mentally."
+   ],
+   [
+    "1.1",
+    "transitive: To twist or turn (something) out of shape; to deform."
+   ],
+   [
+    "1.2",
+    "intransitive: To become twisted out of shape; to deform."
+   ],
+   [
+    "1.3",
+    "transitive: To deflect or turn (something) away from a true, proper or moral course; to pervert; to bias."
+   ],
+   [
+    "1.4",
+    "intransitive: To go astray or be deflected from a true, proper or moral course; to deviate."
+   ],
+   [
+    "2",
+    "ambitransitive obsolete ropemaking: To run (yarn) off the reel into hauls to be tarred."
+   ],
+   [
+    "3",
+    "transitive weaving: To arrange strands of thread lengthwise on a loom."
+   ],
+   [
+    "4",
+    "ambitransitive rare obsolete figurative: To plot; to fabricate or weave (a plot or scheme)."
+   ],
+   [
+    "5",
+    "transitive rare obsolete poetic: To change or fix (make fixed, for example by freezing)."
+   ],
+   [
+    "6",
+    "To move:"
+   ],
+   [
+    "6.1",
+    "transitive nautical: To move a vessel by hauling on a line or cable that is fastened to an anchor or pier; especially: to move a sailing ship through a restricted place such as a harbour."
+   ],
+   [
+    "6.2",
+    "intransitive nautical of a ship: To move or be moved by this method."
+   ],
+   [
+    "6.3",
+    "intransitive rare dated: To fly with a bending or waving motion, like a flock of birds or insects."
+   ],
+   [
+    "6.4",
+    "ambitransitive science fiction video games: To travel or transport across a medium without passing through it normally, as by using a teleporter or time warp."
+   ],
+   [
+    "7",
+    "ambitransitive obsolete outside dialects of an animal: To bring forth (young) prematurely."
+   ],
+   [
+    "8",
+    "ambitransitive agriculture: To fertilize (low-lying land) by letting the tide, a river, or other water in upon it to deposit silt and alluvial matter."
+   ],
+   [
+    "9",
+    "transitive very rare obsolete: To throw."
+   ]
+  ],
+  "glosses": [
+   "to twist or turn something out of shape",
+   "to move a vessel",
+   "to become twisted out of shape",
+   "(science fiction and videos games) to travel without passing through a medium"
+  ],
+  "gold": [
+   "6"
+  ]
+ },
+ {
+  "key": "s0",
+  "title": "Asian lion",
+  "pos": "Noun",
+  "gloss": "species of lion that inhabited Asia",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Any of subspecies Panthera leo persica of lions, now limited to Gujarat in India."
+   ]
+  ],
+  "glosses": [
+   "species of lion that inhabited Asia"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s1",
+  "title": "contravariant",
+  "pos": "Noun",
+  "gloss": "translation",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "algebra: A bihomogeneous polynomial in dual variables of x, y, ... and the coefficients of some homogeneous form in x, y, ... that is invariant under some group of linear transformations."
+   ]
+  ],
+  "glosses": [
+   "translation"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s2",
+  "title": "as they come",
+  "pos": "Adverb",
+  "gloss": "as they come",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "idiom: As it is possible to be."
+   ]
+  ],
+  "glosses": [
+   "as they come"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s3",
+  "title": "conical surface",
+  "pos": "Noun",
+  "gloss": "type of surface",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "geometry: synonym of cone ."
+   ]
+  ],
+  "glosses": [
+   "type of surface"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s4",
+  "title": "Kokshetau",
+  "pos": "Proper noun",
+  "gloss": "city",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "regional capital region/Akmola Region country/Kazakhstan ."
+   ]
+  ],
+  "glosses": [
+   "city"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s5",
+  "title": "economic crisis",
+  "pos": "Noun",
+  "gloss": "period of economic slowdown",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A crisis caused by the general demand for goods within an economy falling below their supply, either temporarily or on a protracted basis, typically resulting in widespread bankruptcies of unproductive businesses and falling prices."
+   ]
+  ],
+  "glosses": [
+   "period of economic slowdown"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s6",
+  "title": "petiolar",
+  "pos": "Adjective",
+  "gloss": "related to petioles",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Of or pertaining to a petiole."
+   ]
+  ],
+  "glosses": [
+   "related to petioles"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s7",
+  "title": "widening",
+  "pos": "Noun",
+  "gloss": "act of widening",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "The action of the verb widen."
+   ]
+  ],
+  "glosses": [
+   "act of widening"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s8",
+  "title": "photodynamic therapy",
+  "pos": "Noun",
+  "gloss": "treatment",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "syn of photochemotherapy<id:Q1428072> ."
+   ]
+  ],
+  "glosses": [
+   "treatment"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s9",
+  "title": "Zimbabwe",
+  "pos": "Proper noun",
+  "gloss": "Republic of Zimbabwe",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "country Southern Africa . Formerly called Southern Rhodesia or Rhodesia."
+   ]
+  ],
+  "glosses": [
+   "Republic of Zimbabwe"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s10",
+  "title": "older brother",
+  "pos": "Noun",
+  "gloss": "single-word translations",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    ""
+   ]
+  ],
+  "glosses": [
+   "single-word translations",
+   "multi-word, compound-word or otherwise sum-of-parts translations"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s11",
+  "title": "Kamianets-Podilskyi",
+  "pos": "Proper noun",
+  "gloss": "city",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "and/raion Khmelnytskyi in western Ukraine ."
+   ]
+  ],
+  "glosses": [
+   "city"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s12",
+  "title": "Koreanic",
+  "pos": "Adjective",
+  "gloss": "of or pertaining to the Koreanic language family",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Belonging to or dealing with the languages originally spoken in the Korean Peninsula."
+   ]
+  ],
+  "glosses": [
+   "of or pertaining to the Koreanic language family"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s13",
+  "title": "Power",
+  "pos": "Proper noun",
+  "gloss": "surname",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "surname ."
+   ]
+  ],
+  "glosses": [
+   "surname"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s14",
+  "title": "house centipede",
+  "pos": "Noun",
+  "gloss": "insect",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A centipede, Scutigera coleoptrata , native to the Mediterranean region but common in houses worldwide."
+   ]
+  ],
+  "glosses": [
+   "insect"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s15",
+  "title": "Corcyraean",
+  "pos": "Noun",
+  "gloss": "native or inhabitant of Corcyra",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "."
+   ]
+  ],
+  "glosses": [
+   "native or inhabitant of Corcyra"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s16",
+  "title": "eugenist",
+  "pos": "Noun",
+  "gloss": "eugenicist",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "An advocate or supporter of eugenics."
+   ]
+  ],
+  "glosses": [
+   "eugenicist"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s17",
+  "title": "s*x",
+  "pos": "Noun",
+  "gloss": "censored spelling of \"sex\"",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "."
+   ]
+  ],
+  "glosses": [
+   "censored spelling of \"sex\""
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s18",
+  "title": "hair cell",
+  "pos": "Noun",
+  "gloss": "type of sensory receptor",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Any of the sensory receptors of both the auditory system and the vestibular system in all vertebrates."
+   ]
+  ],
+  "glosses": [
+   "type of sensory receptor"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s19",
+  "title": "IUCN",
+  "pos": "Proper noun",
+  "gloss": "International Union for Conservation of Nature",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "initialism of w:International Union for Conservation of Nature ."
+   ]
+  ],
+  "glosses": [
+   "International Union for Conservation of Nature"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s20",
+  "title": "Muzaffarnagar",
+  "pos": "Proper noun",
+  "gloss": "city in India",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "large city/and/district div:suf/Saharanpur Uttar Pradesh India ."
+   ]
+  ],
+  "glosses": [
+   "city in India"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s21",
+  "title": "Yongxing",
+  "pos": "Proper noun",
+  "gloss": "island",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "synonym of Woody Island ."
+   ]
+  ],
+  "glosses": [
+   "island"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s22",
+  "title": "chiffonnier",
+  "pos": "Noun",
+  "gloss": "chiffonier",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "alternative form of chiffonier ."
+   ]
+  ],
+  "glosses": [
+   "chiffonier"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s23",
+  "title": "CDF",
+  "pos": "Noun",
+  "gloss": "initialism of cumulative distribution function",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "initialism of cumulative distribution function ."
+   ]
+  ],
+  "glosses": [
+   "initialism of cumulative distribution function"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s24",
+  "title": "salutariness",
+  "pos": "Noun",
+  "gloss": "quality of effecting or designed to effect an improvement; remedial: salutary advice",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "The state of being salutary."
+   ]
+  ],
+  "glosses": [
+   "quality of effecting or designed to effect an improvement; remedial: salutary advice",
+   "quality of promoting good health and physical well-being"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s25",
+  "title": "sedum",
+  "pos": "Noun",
+  "gloss": "''Sedum''-genus plant",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Any of various succulent plants, of the genus Sedum , native to temperate zones; the stonecrop."
+   ]
+  ],
+  "glosses": [
+   "''Sedum''-genus plant"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s26",
+  "title": "germplasm",
+  "pos": "Noun",
+  "gloss": "seeds or tissue preserved for any of several purposes",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Seeds or tissues maintained for the purpose of animal or plant breeding, preservation or other research uses."
+   ]
+  ],
+  "glosses": [
+   "seeds or tissue preserved for any of several purposes"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s27",
+  "title": "happy Independence Day",
+  "pos": "Expression",
+  "gloss": "good wishes at a country's independence day",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A greeting used during Independence Day to recognize its celebration."
+   ]
+  ],
+  "glosses": [
+   "good wishes at a country's independence day"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s28",
+  "title": "Alwin",
+  "pos": "Proper noun",
+  "gloss": "male given name meaning \"noble friend\"",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "given name male ; always rather rare in English."
+   ]
+  ],
+  "glosses": [
+   "male given name meaning \"noble friend\""
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s29",
+  "title": "gulose",
+  "pos": "Noun",
+  "gloss": "aldohexose",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "carbohydrate: A sugar C<sub>6</sub>H<sub>12</sub>O<sub>6</sub> stereoisomeric with glucose and obtainable by synthesis from xylose."
+   ]
+  ],
+  "glosses": [
+   "aldohexose"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s30",
+  "title": "Occitanie",
+  "pos": "Proper noun",
+  "gloss": "region of France",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Occitania: ."
+   ]
+  ],
+  "glosses": [
+   "region of France"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s31",
+  "title": "who are you and what have you done with someone",
+  "pos": "Expression",
+  "gloss": "Expression to drastic change of a person",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "colloquial humorous rhetorical question: ."
+   ]
+  ],
+  "glosses": [
+   "Expression to drastic change of a person"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s32",
+  "title": "San Fran",
+  "pos": "Proper noun",
+  "gloss": "clipping of San Francisco",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "slang: clipped compound of San Francisco ."
+   ]
+  ],
+  "glosses": [
+   "clipping of San Francisco"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s33",
+  "title": "Faliscan",
+  "pos": "Noun",
+  "gloss": "person",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A member of an ancient Italic people who lived in southern Etruria"
+   ]
+  ],
+  "glosses": [
+   "person"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s34",
+  "title": "least auklet",
+  "pos": "Noun",
+  "gloss": "bird",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Aethia pusilla , a small auk."
+   ]
+  ],
+  "glosses": [
+   "bird"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s35",
+  "title": "anxio-",
+  "pos": "Prefix",
+  "gloss": "combining form of anxiety",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "form of combining form anxiety"
+   ]
+  ],
+  "glosses": [
+   "combining form of anxiety"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s36",
+  "title": "glamourous",
+  "pos": "Adjective",
+  "gloss": "glamorous",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "uncommon form of glamorous ."
+   ]
+  ],
+  "glosses": [
+   "glamorous"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s37",
+  "title": "serratus",
+  "pos": "Noun",
+  "gloss": "muscle",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "anatomy: Any of several muscles of the vertebral or costal region that produce a serrated border."
+   ]
+  ],
+  "glosses": [
+   "muscle"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s38",
+  "title": "thereinafter",
+  "pos": "Adverb",
+  "gloss": "within this content or context",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "in the following part (of a document or speech)"
+   ]
+  ],
+  "glosses": [
+   "within this content or context"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s39",
+  "title": "VCS",
+  "pos": "Noun",
+  "gloss": "version control system",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "software: initialism of w:version control version control system ."
+   ]
+  ],
+  "glosses": [
+   "version control system"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s40",
+  "title": "mastoid cell",
+  "pos": "Noun",
+  "gloss": "anatomic air space",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "anatomy: One of the small cavities in the mastoid process of the temporal bone that develop after birth and are filled with air."
+   ]
+  ],
+  "glosses": [
+   "anatomic air space"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s41",
+  "title": "Republic of Artsakh",
+  "pos": "Proper noun",
+  "gloss": "Nagorno-Karabakh Republic",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "synonym of Nagorno-Karabakh Republic ."
+   ]
+  ],
+  "glosses": [
+   "Nagorno-Karabakh Republic"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s42",
+  "title": "magniloquent",
+  "pos": "Adjective",
+  "gloss": "speaking pompously; using swelling discourse; bombastic",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Using pompous speech; speaking with deliberately long or esoteric words."
+   ]
+  ],
+  "glosses": [
+   "speaking pompously; using swelling discourse; bombastic"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s43",
+  "title": "Lübeckian",
+  "pos": "Adjective",
+  "gloss": "of or pertaining to Lübeck",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "."
+   ]
+  ],
+  "glosses": [
+   "of or pertaining to Lübeck"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s44",
+  "title": "Tymoshenko",
+  "pos": "Proper noun",
+  "gloss": "Ukrainian surname",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "."
+   ]
+  ],
+  "glosses": [
+   "Ukrainian surname"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s45",
+  "title": "vipassana",
+  "pos": "Noun",
+  "gloss": "vipassana",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Buddhism: into the true nature of reality, namely as the three marks of existence: impermanence, suffering or unsatisfactoriness, and the realisation of nonself."
+   ]
+  ],
+  "glosses": [
+   "vipassana"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s46",
+  "title": "effectuate",
+  "pos": "Verb",
+  "gloss": "reflexive",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive: To cause, bring about (an event); to accomplish, to carry out (a wish, plan etc.)."
+   ]
+  ],
+  "glosses": [
+   "to be the cause of",
+   "reflexive"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s47",
+  "title": "reported speech",
+  "pos": "Noun",
+  "gloss": "a form of speech used to express what another has said",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "grammar narratology: A grammatical construction used to represent another person's words, thoughts, or statements indirectly rather than by quoting them verbatim, often involving a change in tense."
+   ]
+  ],
+  "glosses": [
+   "a form of speech used to express what another has said"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s48",
+  "title": "bile duct",
+  "pos": "Noun",
+  "gloss": "structure carrying bile",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "anatomy: Any of a number of long tube-like structures that carry bile."
+   ]
+  ],
+  "glosses": [
+   "structure carrying bile"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "s49",
+  "title": "hypocycloid",
+  "pos": "Noun",
+  "gloss": "locus",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "geometry: syn of epicycloid ."
+   ]
+  ],
+  "glosses": [
+   "locus"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e0",
+  "title": "lance",
+  "pos": "Noun",
+  "gloss": "spear or harpoon used by whalers",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "A weapon of war, consisting of a long shaft or handle and a steel blade or head; a spear carried by horsemen."
+   ],
+   [
+    "2",
+    "A wooden spear, sometimes hollow, used in jousting or tilting, designed to shatter on impact with the opposing knight’s armour."
+   ],
+   [
+    "3",
+    "A whaling implement consisting of a long wooden shaft with a projecting iron shank tipped with a broad, leaf-shaped cutting blade, used to kill harpooned whales by repeated thrusts."
+   ],
+   [
+    "4",
+    "military: A soldier armed with a lance; a lancer."
+   ],
+   [
+    "5",
+    "military: An instrument which conveys the charge of a piece of ordnance and forces it home."
+   ],
+   [
+    "6",
+    "metallurgy: A small iron rod which suspends the core of the mold in casting a shell."
+   ],
+   [
+    "7",
+    "pyrotechnics: One of the small paper cases filled with combustible composition, which mark the outlines of a figure."
+   ],
+   [
+    "8",
+    "medicine: A lancet."
+   ],
+   [
+    "9",
+    "A piece in the game of shogi that can move directly forward any number of squares."
+   ]
+  ],
+  "glosses": [
+   "weapon of war",
+   "wooden weapon used in jousting or tilting",
+   "spear or harpoon used by whalers",
+   "(''military'') soldier armed with a lance",
+   "(''military'') instrument which conveys the charge of a piece of ordinance"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "e1",
+  "title": "Edith",
+  "pos": "Proper noun",
+  "gloss": "female given name",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "given name female ."
+   ],
+   [
+    "2",
+    "locality in the Oberon eastern New South Wales Australia ."
+   ]
+  ],
+  "glosses": [
+   "female given name"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e2",
+  "title": "shear",
+  "pos": "Verb",
+  "gloss": "to deform in a fixed direction due to mechanical forces",
+  "chosen": [
+   "4"
+  ],
+  "defs": [
+   [
+    "1",
+    "intransitive transitive: To remove the fleece from (a sheep, llama, etc.) by clipping."
+   ],
+   [
+    "2",
+    "To cut the hair of (a person)."
+   ],
+   [
+    "3",
+    "To cut, originally with a sword or other bladed weapon, now usually with shears, or as if using shears."
+   ],
+   [
+    "4",
+    "physics: To deform because of forces pushing in opposite directions."
+   ],
+   [
+    "5",
+    "aviation meteorology intransitive of wind: To change in direction or speed."
+   ],
+   [
+    "6",
+    "mathematics: To transform by displacing every point in a direction parallel to some given line by a distance proportional to the point’s distance from the line."
+   ],
+   [
+    "7",
+    "mining intransitive: To make a vertical cut in coal."
+   ],
+   [
+    "8",
+    "engineering: (also 'shear off') To break or suddenly separate because of excessive force, eg. a bolt."
+   ],
+   [
+    "9",
+    "Scotland: To reap, as grain."
+   ],
+   [
+    "10",
+    "figurative: To deprive of property; to fleece."
+   ]
+  ],
+  "glosses": [
+   "to remove the fleece from a sheep",
+   "to cut the hair of a person",
+   "to cut",
+   "to deform in a fixed direction due to mechanical forces",
+   "to apply a shear transformation"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "e3",
+  "title": "Huelva",
+  "pos": "Proper noun",
+  "gloss": "city and province in Andalusia, Spain",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "A <<province>> in the <<southwest>> of <<autonomous community/Andalusia>>, <<c/Spain>> ."
+   ],
+   [
+    "2",
+    "city province/Huelva country/Spain ."
+   ]
+  ],
+  "glosses": [
+   "city and province in Andalusia, Spain"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e4",
+  "title": "Leningrad",
+  "pos": "Proper noun",
+  "gloss": "Leningrad oblast",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "historical: @former name of:Saint Petersburg major city Russia from the time of Lenin's death in 1924 until 1991 ."
+   ],
+   [
+    "2",
+    "oblast/and/federal subject Russia which surrounds, but no longer contains, Saint Petersburg, its former administrative centre."
+   ],
+   [
+    "3",
+    "figurative metonymic: The Soviet government, authorities, or secret service."
+   ]
+  ],
+  "glosses": [
+   "name of Saint Petersburg, 1924-1991",
+   "Leningrad oblast"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e5",
+  "title": "snow crab",
+  "pos": "Noun",
+  "gloss": "''Chionoectes opilo''",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Any crab of the species Chionoecetes opilio"
+   ],
+   [
+    "2",
+    "by extension: Any crab of the genus Chionoecetes of spider crabs."
+   ]
+  ],
+  "glosses": [
+   "''Chionoectes opilo''"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e6",
+  "title": "doozy",
+  "pos": "Adjective",
+  "gloss": "extraordinary: often troublesome, difficult or problematic, but sometimes extraordinary in a positive sense",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "US slang dated: Of high quality; remarkable; excellent."
+   ],
+   [
+    "2",
+    "US slang dated: Sporty, ostentatious, flashy."
+   ]
+  ],
+  "glosses": [
+   "extraordinary: often troublesome, difficult or problematic, but sometimes extraordinary in a positive sense"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e7",
+  "title": "clipboard",
+  "pos": "Noun",
+  "gloss": "in computing: buffer for temporary storage",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "A flat piece of rigid material, such as card or plastic, with a clip at one end under which papers can be held."
+   ],
+   [
+    "2",
+    "computing: A buffer in memory where the user can store data temporarily while transferring it from one place within an application to another or between applications."
+   ]
+  ],
+  "glosses": [
+   "physical object",
+   "in computing: buffer for temporary storage"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e8",
+  "title": "cooee",
+  "pos": "Noun",
+  "gloss": "a call as a signal",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Australia informal onomatopoeia: A long, loud call used to attract attention when at a distance, mainly done in the Australian bush."
+   ],
+   [
+    "2",
+    "Australia informal with \"within\" also figuratively: A short distance; hailing distance."
+   ]
+  ],
+  "glosses": [
+   "a call as a signal"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e9",
+  "title": "necrocracy",
+  "pos": "Noun",
+  "gloss": "government that still operates under the rule of a former, dead leader",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "political science: A form of government imposed by those who have since died."
+   ],
+   [
+    "2",
+    "A form of government where a dead person is recognised as its head; usually a deceased former leader."
+   ],
+   [
+    "3",
+    "fantasy science fiction: A government ruled by the undead."
+   ]
+  ],
+  "glosses": [
+   "government that still operates under the rule of a former, dead leader"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e10",
+  "title": "quack",
+  "pos": "Noun",
+  "gloss": "fraudulent or incompetent doctor of medicine",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "pejorative: A fraudulent healer, especially a bombastic peddler in worthless treatments, a doctor who makes false diagnoses for monetary benefit, or an untrained or poorly trained doctor who uses fraudulent credentials to attract patients"
+   ],
+   [
+    "2",
+    "figuratively pejorative: Any similar charlatan or incompetent professional."
+   ],
+   [
+    "3",
+    "jocular slang mildly pejorative: Any doctor."
+   ]
+  ],
+  "glosses": [
+   "fraudulent or incompetent doctor of medicine",
+   "charlatan",
+   "doctor"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e11",
+  "title": "Zhuxi",
+  "pos": "Proper noun",
+  "gloss": "county in central China; town in western China",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "county prefecture-level city/Shiyan Hubei China ."
+   ],
+   [
+    "2",
+    "town district/Kaizhou direct-administered municipality/Chongqing China ."
+   ]
+  ],
+  "glosses": [
+   "county in central China; town in western China"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e13",
+  "title": "birch",
+  "pos": "Noun",
+  "gloss": "punishment device",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "Any of various trees of the genus Betula , native to countries in the Northern Hemisphere."
+   ],
+   [
+    "2",
+    "A hard wood taken from the birch tree, typically used to make furniture."
+   ],
+   [
+    "3",
+    "A stick, rod or bundle of twigs made from birch wood, used for punishment."
+   ],
+   [
+    "4",
+    "A birch-bark canoe."
+   ]
+  ],
+  "glosses": [
+   "tree",
+   "wood",
+   "punishment device",
+   "birch-bark canoe"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "e14",
+  "title": "yours",
+  "pos": "Pronoun",
+  "gloss": "sincerely",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "That or those belonging to you; the possessive second-person singular pronoun used without a following noun ."
+   ],
+   [
+    "2",
+    "informal: Your house or home."
+   ],
+   [
+    "3",
+    ""
+   ]
+  ],
+  "glosses": [
+   "possessive pronoun, singular",
+   "possessive pronoun, plural",
+   "sincerely"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "e15",
+  "title": "full name",
+  "pos": "Noun",
+  "gloss": "full name of a company",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "The complete name of a person, including first name, any middle names, and surname."
+   ],
+   [
+    "2",
+    ""
+   ]
+  ],
+  "glosses": [
+   "full name of a person",
+   "full name of a company"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e16",
+  "title": "circumcision",
+  "pos": "Noun",
+  "gloss": "removal of foreskin from penis",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "The surgical excision of the foreskin and usually all or most of the penile frenulum."
+   ],
+   [
+    "1.1",
+    "modern Judaism usually specifically: Pharisaic circumcision."
+   ],
+   [
+    "1.2",
+    "mostly historical Philippines: Other surgeries involving the incision or partial excision of the foreskin or penile frenulum without total posthetomy."
+   ],
+   [
+    "2",
+    "The surgical excision of the clitoral hood of the clitoris; female circumcision."
+   ],
+   [
+    "3",
+    "often proscribed: The surgical excision of the clitoris; clitoridectomy."
+   ]
+  ],
+  "glosses": [
+   "removal of foreskin from penis"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e17",
+  "title": "Wizard of Oz",
+  "pos": "Noun",
+  "gloss": "the eponymous character",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A person, believed to have magical powers because of awe-inspiring displays, but, as ultimately revealed, ordinary."
+   ],
+   [
+    "2",
+    "engineering social science usually attributive: A person simulating the operation of a supposed intelligent device, usually in an experiment."
+   ]
+  ],
+  "glosses": [
+   "the eponymous character"
+  ],
+  "gold": []
+ },
+ {
+  "key": "e18",
+  "title": "Ernest",
+  "pos": "Proper noun",
+  "gloss": "given name",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "given name male ; popular in the 19th century."
+   ],
+   [
+    "2",
+    "surname ."
+   ]
+  ],
+  "glosses": [
+   "given name"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e19",
+  "title": "ephor",
+  "pos": "Noun",
+  "gloss": "Spartan leader",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "historical: One of the five annually-elected senior magistrates in various Dorian states, especially in ancient Sparta, where they oversaw the actions of Spartan kings."
+   ],
+   [
+    "2",
+    "in modern Greece: A superintendent or curator."
+   ]
+  ],
+  "glosses": [
+   "superintendent",
+   "Spartan leader"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e20",
+  "title": "Sherman",
+  "pos": "Noun",
+  "gloss": "army tank",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "historical: A Sherman tank , main Allied battle tank in World War II; . ."
+   ],
+   [
+    "2",
+    "informal: An official refusal to serve in public office or similar; a Shermanesque statement. , who famously refused."
+   ]
+  ],
+  "glosses": [
+   "army tank"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e21",
+  "title": "artlessness",
+  "pos": "Noun",
+  "gloss": "innocence",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "the state or quality of being artless"
+   ],
+   [
+    "2",
+    "the state or quality of being innocent; naïveté"
+   ]
+  ],
+  "glosses": [
+   "the state of being artless",
+   "innocence"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e22",
+  "title": "arbiter",
+  "pos": "Noun",
+  "gloss": "judge without control",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "A person appointed, or chosen, by parties to determine a controversy between them; an arbitrator."
+   ],
+   [
+    "2",
+    "with of: A person or object having the power of judging, determining, or ordaining; one whose power of deciding and governing is not limited."
+   ],
+   [
+    "3",
+    "electronics: A component in circuitry that allocates scarce resources."
+   ],
+   [
+    "4",
+    "chess: The person who oversees a chess match and ensures the rules are followed."
+   ]
+  ],
+  "glosses": [
+   "a person appointed, or chosen, by parties to determine a controversy between them",
+   "judge without control"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e23",
+  "title": "living",
+  "pos": "Adjective",
+  "gloss": "used as an intensifier",
+  "chosen": [
+   "6"
+  ],
+  "defs": [
+   [
+    "1",
+    "Having life; alive."
+   ],
+   [
+    "2",
+    "In use or existing."
+   ],
+   [
+    "3",
+    "True to life."
+   ],
+   [
+    "4",
+    "Of rock or stone, existing in its original state and place."
+   ],
+   [
+    "5",
+    "Continually updated; not static"
+   ],
+   [
+    "6",
+    ""
+   ]
+  ],
+  "glosses": [
+   "having life",
+   "in use or existing",
+   "of everyday life",
+   "true to life",
+   "used as an intensifier"
+  ],
+  "gold": [
+   "6"
+  ]
+ },
+ {
+  "key": "e24",
+  "title": "fleur-de-lis",
+  "pos": "Noun",
+  "gloss": "heraldic charge",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "heraldiccharge: A design representing a flower whose three petals are joined together at the bottom (⚜, ⚜️), often used in heraldry, where it is particularly associated with the French monarchy."
+   ],
+   [
+    "2",
+    "Scouting: The main element in the logo of most Scouting organizations, representing a major theme in Scouting: the outdoors and wilderness."
+   ]
+  ],
+  "glosses": [
+   "heraldic charge",
+   "in Scouting"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e25",
+  "title": "out of touch",
+  "pos": "Adjective",
+  "gloss": "out of touch with reality",
+  "chosen": [
+   "4"
+  ],
+  "defs": [
+   [
+    "1",
+    "idiomatic: No longer maintaining contact or communications."
+   ],
+   [
+    "2",
+    "idiomatic derogatory: Disconnected or insulated from the everyday experiences and concerns of ordinary people."
+   ],
+   [
+    "3",
+    "idiomatic: , no longer aware of popular culture."
+   ],
+   [
+    "4",
+    "idiomatic: No longer conversant with crucial basics such as facts, reality, the real world, and sanity; not aware or realistic."
+   ]
+  ],
+  "glosses": [
+   "no longer maintaining contact",
+   "no longer conversant with sth",
+   "out of touch with reality"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "e26",
+  "title": "slag",
+  "pos": "Noun",
+  "gloss": "a woman (sometimes a man) who has loose morals relating to sex",
+  "chosen": [
+   "6"
+  ],
+  "defs": [
+   [
+    "1",
+    "Waste material from a mine."
+   ],
+   [
+    "2",
+    "Scum that forms on the surface of molten metal."
+   ],
+   [
+    "3",
+    "Impurities formed and separated out when a metal is smelted from ore; vitrified cinders."
+   ],
+   [
+    "4",
+    "Hard aggregate remaining as a residue from blast furnaces, sometimes used as a surfacing material."
+   ],
+   [
+    "5",
+    "Scoria associated with a volcano."
+   ],
+   [
+    "6",
+    "UK Irish Australian slang derogatory: A prostitute or promiscuous woman; a slut."
+   ],
+   [
+    "7",
+    "UK Irish pejorative dated: A coward."
+   ],
+   [
+    "8",
+    "UK Irish chiefly Cockney pejorative: A contemptible person, a scumbag."
+   ]
+  ],
+  "glosses": [
+   "waste material from a mine",
+   "the impurities which result and are separated out when melting a metal or refining it from its ore",
+   "the scoria of a volcano",
+   "a woman (sometimes a man) who has loose morals relating to sex"
+  ],
+  "gold": [
+   "6"
+  ]
+ },
+ {
+  "key": "e27",
+  "title": "quarter",
+  "pos": "Noun",
+  "gloss": "period of three months",
+  "chosen": [
+   "1.6"
+  ],
+  "defs": [
+   [
+    "1",
+    "A fourth part of something."
+   ],
+   [
+    "1.1",
+    "in general sense: Each of four equal parts into which something can be divided; a fourth part."
+   ],
+   [
+    "1.2",
+    "now chiefly historical: A measure of capacity used chiefly for grain or coal, varying greatly in quantity by time and location."
+   ],
+   [
+    "1.3",
+    "A fourth part of a pound; approximately 113 grams."
+   ],
+   [
+    "1.4",
+    "historical: A measure of length; originally a fourth part of an ell, now chiefly a fourth part of a yard."
+   ],
+   [
+    "1.5",
+    "now historical: A fourth part of the night; one of the watches or divisions of the night."
+   ],
+   [
+    "1.6",
+    "now chiefly finance: A fourth part of the year; 3 months; a term or season."
+   ],
+   [
+    "1.7",
+    "time: A fourth part of an hour; a period of fifteen minutes, especially with reference to the quarter before or after the hour."
+   ],
+   [
+    "1.8",
+    "now chiefly historical: A fourth part of a hundredweight."
+   ],
+   [
+    "1.9",
+    "heraldiccharge: A fourth part of a coat of arms, or the charge on it, larger than a canton and normally on the upper dexter side, formed by a perpendicular line from the top meeting a horizontal line from the side."
+   ],
+   [
+    "1.10",
+    "North America: A quarter-dollar, divided into 25 cents; the coin of that value minted in the United States or Canada."
+   ],
+   [
+    "1.11",
+    "sport: One of four equal periods into which a game is divided."
+   ],
+   [
+    "1.12",
+    "Chester historical: A quarter of an acre or 40 roods.<ref name=\"Holland\"/>"
+   ],
+   [
+    "2",
+    "Place or position."
+   ],
+   [
+    "2.1",
+    "A region or place."
+   ],
+   [
+    "2.2",
+    "Each of four parts into which the earth or sky is divided, corresponding to the four cardinal points of the compass."
+   ],
+   [
+    "2.3",
+    "A division or section of a town or city, especially having a particular character of its own, or associated with a particular group etc."
+   ],
+   [
+    "2.4",
+    "One's residence or dwelling-place; in plural rooms, lodgings, especially as allocated to soldiers or domestic staff."
+   ],
+   [
+    "2.5",
+    "figurative archaic: A topic or area of endeavour."
+   ],
+   [
+    "2.6",
+    "nautical: The aftmost part of a vessel's side, roughly from the last mast to the stern."
+   ],
+   [
+    "2.7",
+    "farriery: The part on either side of a horse's hoof between the toe and heel, the side of its coffin."
+   ],
+   [
+    "3",
+    "The back and sides of the upper of a shoe, extending around the wearer's heel to meet the vamp."
+   ],
+   [
+    "4",
+    "often plural: A section (of a population), especially one having a particular set of values or interests."
+   ],
+   [
+    "5",
+    "obsolete: Relations between people."
+   ],
+   [
+    "6",
+    "Accommodation given to a defeated opponent; mercy; exemption from being killed."
+   ],
+   [
+    "7",
+    "Short forms."
+   ],
+   [
+    "7.1",
+    "now rare rugby American football: A quarterback."
+   ],
+   [
+    "7.2",
+    "military slang now rare: A quartermaster; a quartermaster sergeant."
+   ],
+   [
+    "7.3",
+    "A quarterfinal."
+   ]
+  ],
+  "glosses": [
+   "one of four equal parts",
+   "coin worth 25 cents",
+   "period of three months",
+   "basketball period",
+   "section of a town",
+   "part on either side of a horse's hoof between toe and heel",
+   "Aftmost part of a vessel's side"
+  ],
+  "gold": [
+   "1.6"
+  ]
+ },
+ {
+  "key": "e28",
+  "title": "stranger",
+  "pos": "Noun",
+  "gloss": "one who has not been seen for a long time",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A person whom one does not know; a person who is neither a friend nor an acquaintance."
+   ],
+   [
+    "2",
+    "An outsider or foreigner."
+   ],
+   [
+    "3",
+    "One not admitted to communion or fellowship."
+   ],
+   [
+    "4",
+    "A newcomer."
+   ],
+   [
+    "5",
+    "humorous: Used ironically to refer to a person who the speaker knows."
+   ],
+   [
+    "6",
+    "obsolete: One not belonging to the family or household; a guest; a visitor."
+   ],
+   [
+    "7",
+    "legal: One not privy or party to an act, contract, or title; a mere intruder or intermeddler; one who interferes without right."
+   ],
+   [
+    "8",
+    "obsolete: A superstitious premonition of the coming of a visitor by a bit of stalk in a cup of tea, the guttering of a candle, etc."
+   ],
+   [
+    "9",
+    "sometimes with \"the\": A moth, Lacanobia blenna"
+   ]
+  ],
+  "glosses": [
+   "person whom one does not know",
+   "outsider or foreigner",
+   "newcomer",
+   "one who has not been seen for a long time"
+  ],
+  "gold": [
+   "5"
+  ]
+ },
+ {
+  "key": "e30",
+  "title": "dating",
+  "pos": "Noun",
+  "gloss": "process of estimating the age of something",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "A form of romantic courtship typically between two individuals with the aim of assessing the other's suitability as a partner in an intimate relationship or as a spouse."
+   ],
+   [
+    "2",
+    "An estimation of the age of an artifact, biological vestige, linguistic usage, etc."
+   ],
+   [
+    "3",
+    "The setting of a date on which an event or transaction is to take place or take effect."
+   ]
+  ],
+  "glosses": [
+   "a form of romantic courtship",
+   "process of estimating the age of something",
+   "setting of a date"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e31",
+  "title": "Chittoor",
+  "pos": "Proper noun",
+  "gloss": "city in India",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "and/district Andhra Pradesh India ."
+   ],
+   [
+    "2",
+    "surname ."
+   ]
+  ],
+  "glosses": [
+   "city in India"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e32",
+  "title": "emcee",
+  "pos": "Noun",
+  "gloss": "master of ceremonies",
+  "chosen": [
+   "1.1"
+  ],
+  "defs": [
+   [
+    "1",
+    "in its senses as"
+   ],
+   [
+    "1.1",
+    "."
+   ],
+   [
+    "1.2",
+    "music: A rapper."
+   ]
+  ],
+  "glosses": [
+   "master of ceremonies"
+  ],
+  "gold": [
+   "1.1"
+  ]
+ },
+ {
+  "key": "e33",
+  "title": "alderwood",
+  "pos": "Noun",
+  "gloss": "wood populated by alders",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A wood largely populated with alder trees."
+   ],
+   [
+    "2",
+    "The wood from an alder tree."
+   ]
+  ],
+  "glosses": [
+   "wood populated by alders"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e34",
+  "title": "Gurkha",
+  "pos": "Noun",
+  "gloss": "military",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "A member of the dominant ethnic group in Nepal, with a Himalayan diaspora."
+   ],
+   [
+    "2",
+    "A member of this people recruited to serve in their own elite units in the British and Indian armies."
+   ]
+  ],
+  "glosses": [
+   "member of ethnic group",
+   "military"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e35",
+  "title": "undertone",
+  "pos": "Noun",
+  "gloss": "implied meaning",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "An auditory tone of low pitch or volume."
+   ],
+   [
+    "2",
+    "figurative: An implicit message perceived subtly alongside, but not detracting noticeably from, the explicit message conveyed in or by a book, film, speech or similar (contrast with overtone ); an undercurrent."
+   ],
+   [
+    "3",
+    "A pale colour, or one seen underneath another colour."
+   ],
+   [
+    "4",
+    "A low state of the physical faculties."
+   ]
+  ],
+  "glosses": [
+   "auditory tone",
+   "implied meaning",
+   "colour"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e36",
+  "title": "honesty",
+  "pos": "Noun",
+  "gloss": "ornamental plant",
+  "chosen": [
+   "4"
+  ],
+  "defs": [
+   [
+    "1",
+    "uncountable countable: The act, quality, or condition of being honest."
+   ],
+   [
+    "2",
+    "uncountable countable obsolete: Honor; decency, propriety."
+   ],
+   [
+    "3",
+    "uncountable countable obsolete: Chastity."
+   ],
+   [
+    "4",
+    "countable: Any of various crucifers in the genus Lunaria , several of which are grown as ornamentals, particularly annual honesty ( Lunaria annua )."
+   ]
+  ],
+  "glosses": [
+   "quality of being honest",
+   "ornamental plant"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "e37",
+  "title": "tide over",
+  "pos": "Verb",
+  "gloss": "to help out",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive idiomatic: To support or sustain (someone), especially financially, for a limited period."
+   ],
+   [
+    "2",
+    "transitive obsolete except in Indian English: To endure; weather."
+   ]
+  ],
+  "glosses": [
+   "to help out"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e38",
+  "title": "eleventy",
+  "pos": "Numeral",
+  "gloss": "one hundred and ten",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "informal: The number 110, 11 × 10."
+   ],
+   [
+    "2",
+    "colloquial: An indefinite large number."
+   ]
+  ],
+  "glosses": [
+   "one hundred and ten",
+   "indefinite large number"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e39",
+  "title": "tie",
+  "pos": "Noun",
+  "gloss": "rungs of a train track",
+  "chosen": [
+   "8"
+  ],
+  "defs": [
+   [
+    "1",
+    "A knot; a fastening."
+   ],
+   [
+    "2",
+    "A knot of hair, as at the back of a wig."
+   ],
+   [
+    "3",
+    "A necktie (item of clothing consisting of a strip of cloth tied around the neck). See also bow tie, black tie."
+   ],
+   [
+    "4",
+    "A lace-up shoe."
+   ],
+   [
+    "5",
+    "A twist tie, a piece of wire embedded in paper, strip of plastic with ratchets, or similar object which is wound around something and tightened."
+   ],
+   [
+    "6",
+    "A connection between people or groups of people, especially a strong connection."
+   ],
+   [
+    "7",
+    "construction: A structural member firmly holding two pieces together."
+   ],
+   [
+    "8",
+    "rail transport US: A horizontal wooden or concrete structural member that supports and ties together rails."
+   ],
+   [
+    "9",
+    "The situation in which two or more participants in a competition are placed equally."
+   ],
+   [
+    "10",
+    "cricket: The situation at the end of all innings of a match where both sides have the same total of runs (different from a draw)."
+   ],
+   [
+    "11",
+    "sports US: An equalizer, a run, goal, point, etc which causes participants in a competition to be placed equally or have the same score(s)."
+   ],
+   [
+    "12",
+    "sports British: A meeting between two players or teams in a competition."
+   ],
+   [
+    "13",
+    "music: A curved line connecting two notes of the same pitch denoting that they should be played as a single note with the combined length of both notes."
+   ],
+   [
+    "14",
+    "phonetic transcription: A curved line connecting two letters (⁀), used in the IPA to denote a coarticulation, as for example /d͡ʒ/."
+   ],
+   [
+    "15",
+    "statistics: One or more equal values or sets of equal values in the data set."
+   ],
+   [
+    "16",
+    "surveying: A bearing and distance between a lot corner or point and a benchmark or iron off site."
+   ],
+   [
+    "17",
+    "graph theory: A connection between two vertices."
+   ],
+   [
+    "18",
+    "A tiewig."
+   ]
+  ],
+  "glosses": [
+   "strong connection between people",
+   "sports: tie score",
+   "sports: a meeting between two players or teams in a competition",
+   "curved line connecting two notes of the same pitch, combining their lengths",
+   "rungs of a train track",
+   "curved line connecting two letters, used in the IPA"
+  ],
+  "gold": [
+   "8"
+  ]
+ },
+ {
+  "key": "e40",
+  "title": "LLC",
+  "pos": "Noun",
+  "gloss": "Limited Liability Company",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "business law US: init of limited liability company ."
+   ],
+   [
+    "2",
+    "computer networking: init of w:logical link control ."
+   ],
+   [
+    "3",
+    "US tax: init of w:Lifetime Learning Credit ."
+   ]
+  ],
+  "glosses": [
+   "Limited Liability Company"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e42",
+  "title": "appurtenance",
+  "pos": "Noun",
+  "gloss": "thing to which another pertains",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "That which appertains to something else; a belonging, accompaniment, adjunct, appendage, attribute, or accessory ; an addition."
+   ],
+   [
+    "2",
+    "in the plural: Equipment used for some specific task; gear."
+   ],
+   [
+    "3",
+    "law: A subordinate interest in land which benefits a principal estate, which cannot be detached from or held separately to that estate; an appurtenant interest."
+   ],
+   [
+    "4",
+    "grammar: A modifier that is appended or prepended to another word to coin a new word that expresses belonging."
+   ],
+   [
+    "5",
+    "The state or quality of being an appurtenance."
+   ]
+  ],
+  "glosses": [
+   "appendage added to something else",
+   "equipment for some specific task",
+   "thing to which another pertains",
+   "(law) minor property that passes with the main property",
+   "(language) modifier appended or prepended to another word to express belonging",
+   "state or quality of being an appurtenance"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e44",
+  "title": "spotter",
+  "pos": "Noun",
+  "gloss": "sports: exercise supervisor",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "A person who observes something."
+   ],
+   [
+    "2",
+    "A member of a sniper team who in addition to this function is responsible for providing additional information about targets from a different point of view."
+   ],
+   [
+    "3",
+    "weightlifting gymnastics climbing: One who supervises a person performing an activity, in order to help them should they be unable to complete it."
+   ],
+   [
+    "4",
+    "US: A person who gives directions for a crane or vehicle (that is challenging to navigate) from a different point of view to the moved load."
+   ],
+   [
+    "5",
+    "Dolphins of the genus Stenella , and specifically Stenella attenuata distinguished from the streaker ( Stenella coeruleoalba ) and the spinner ( Stenella longirostris )."
+   ],
+   [
+    "6",
+    "motor racing: A team member responsible for communication with the driver to keep them up-to-date about on-track events, such as other nearby cars."
+   ],
+   [
+    "7",
+    "broadcasting: A person employed to assist a sports presenter by identifying the players or events during a game."
+   ]
+  ],
+  "glosses": [
+   "person who observes",
+   "military: supporting sniper",
+   "sports: exercise supervisor",
+   "person who gives directions for a crane",
+   "dolphin of the genus ''Stenella''",
+   "motor racing: team member responsible for communication with the driver"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "e45",
+  "title": "high-frequency",
+  "pos": "Adjective",
+  "gloss": "of or pertaining to high frequency sound or other radiation",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "Very frequent."
+   ],
+   [
+    "2",
+    ""
+   ]
+  ],
+  "glosses": [
+   "of or pertaining to high frequency sound or other radiation"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "e46",
+  "title": "clipboard",
+  "pos": "Noun",
+  "gloss": "physical object",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A flat piece of rigid material, such as card or plastic, with a clip at one end under which papers can be held."
+   ],
+   [
+    "2",
+    "computing: A buffer in memory where the user can store data temporarily while transferring it from one place within an application to another or between applications."
+   ]
+  ],
+  "glosses": [
+   "physical object",
+   "in computing: buffer for temporary storage"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e47",
+  "title": "convenient",
+  "pos": "Adjective",
+  "gloss": "of or pertaining to convenience; simple; easy; expedient",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Serving to reduce a difficulty, or accessible with minimum difficulty; expedient."
+   ],
+   [
+    "2",
+    "Suspicious due to suiting someone's purposes very well."
+   ],
+   [
+    "3",
+    "obsolete: Fit; suitable; appropriate."
+   ]
+  ],
+  "glosses": [
+   "of or pertaining to convenience; simple; easy; expedient"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e48",
+  "title": "cynanthropy",
+  "pos": "Noun",
+  "gloss": "delusion where one believes they are a dog",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "medicine: A delusion in which a person believes he or she is transformed into a dog."
+   ],
+   [
+    "2",
+    "anthropology folklore: A shape-shifting ability between human and canine forms."
+   ]
+  ],
+  "glosses": [
+   "delusion where one believes they are a dog"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "e49",
+  "title": "amenities",
+  "pos": "Noun",
+  "gloss": "public facilities",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "syn of pleasantries#Noun_2 ."
+   ],
+   [
+    "2",
+    "Things or circumstances that are welcome and make life a little easier or more pleasant; a public facility."
+   ],
+   [
+    "3",
+    "US by extension euphemistic: A restroom or a public toilet (that is to say, one in a public facility)."
+   ]
+  ],
+  "glosses": [
+   "public facilities"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "p0",
+  "title": "dreamware",
+  "pos": "Noun",
+  "gloss": "speculative hardware or software products that may never be produced or released",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "Things dreamed of; fantasies, fictions."
+   ],
+   [
+    "2",
+    "computing: Speculative hardware or software products that may never be produced or released."
+   ]
+  ],
+  "glosses": [
+   "speculative hardware or software products that may never be produced or released"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "p1",
+  "title": "anatomize",
+  "pos": "Verb",
+  "gloss": "to cut up or dissect (a plant or one of its parts) to investigate its structure",
+  "chosen": [
+   "1.2"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive:"
+   ],
+   [
+    "1.1",
+    "To cut up or dissect (the body of a human being or an animal), specifically for the purpose of investigating its anatomy."
+   ],
+   [
+    "1.1.1",
+    "To punish (someone) by post mortem dissection following execution."
+   ],
+   [
+    "1.2",
+    "To cut up or dissect (a plant or one of its parts) to investigate its structure."
+   ],
+   [
+    "1.3",
+    "figurative:"
+   ],
+   [
+    "1.3.1",
+    "To scrutinize (something) down to the most minute detail."
+   ],
+   [
+    "1.3.2",
+    "obsolete: To chemically analyse (a substance)."
+   ],
+   [
+    "2",
+    "intransitive: To cut up or dissect the body of a human being or an animal."
+   ]
+  ],
+  "glosses": [
+   "(''transitive'') to cut up or dissect (the body of a human being or an animal); (''intransitive'') to cut up or dissect the body of a human being or an animal",
+   "to cut up or dissect (a plant or one of its parts) to investigate its structure",
+   "to scrutinize (something) down to the most minute detail"
+  ],
+  "gold": [
+   "1.2"
+  ]
+ },
+ {
+  "key": "p2",
+  "title": "pyrope",
+  "pos": "Noun",
+  "gloss": "mineral",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "mineral: A variety of garnet, of a poppy or blood-red color, frequently with a tinge of orange. It is used as a gemstone."
+   ]
+  ],
+  "glosses": [
+   "mineral"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p3",
+  "title": "dry valley",
+  "pos": "Noun",
+  "gloss": "valley formed by water erosion, but without a permanent surface watercourse, often found in areas of permeable rock such as chalk or limestone",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "geology: A valley formed by water erosion, but without a permanent surface watercourse, often found in areas of permeable rock such as chalk or limestone."
+   ]
+  ],
+  "glosses": [
+   "valley formed by water erosion, but without a permanent surface watercourse, often found in areas of permeable rock such as chalk or limestone"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p4",
+  "title": "digital-to-analog converter",
+  "pos": "Noun",
+  "gloss": "device that converts digital signal to analog signal",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "electronics: A device that converts a finite resolution digital signal to an infinite resolution analog signal."
+   ]
+  ],
+  "glosses": [
+   "device that converts digital signal to analog signal"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p5",
+  "title": "sheet",
+  "pos": "Noun",
+  "gloss": "rope to adjust a sail",
+  "chosen": [
+   "7"
+  ],
+  "defs": [
+   [
+    "1",
+    "; a thin bed cloth used as a covering for a mattress or as a layer over the sleeper."
+   ],
+   [
+    "2",
+    "A piece of paper, usually rectangular, that has been prepared for writing, artwork, drafting, wrapping, manufacture of packaging (boxes, envelopes, etc.), and for other uses. The word does not include scraps and irregular small pieces destined to be recycled, used for stuffing or cushioning or papier-mâché, etc. In modern books, each sheet of paper is typically folded in half, to produce two leaves and four pages. In the absence of folding, \"leaf\" and \"sheet\" are equivalent."
+   ],
+   [
+    "2.1",
+    "figurative: originally referring to a printed document A summary or record of key information, especially an official one; the information contained in such a document."
+   ],
+   [
+    "3",
+    "A flat metal pan, often without raised edge, used for baking."
+   ],
+   [
+    "4",
+    "A thin, flat piece or layer of solid material."
+   ],
+   [
+    "5",
+    "A broad, flat expanse or covering of a material on a surface."
+   ],
+   [
+    "6",
+    "figuratively : Usually used in the plural An expanse or intense wave of something fluid (such as fire or precipitation), conceptualized as hanging, suspended, falling, or moving in a particular direction."
+   ],
+   [
+    "7",
+    "nautical: A line (rope) used to adjust the trim of a sail."
+   ],
+   [
+    "8",
+    "nautical nonstandard: A sail."
+   ],
+   [
+    "9",
+    "curling: The area of ice on which the game of curling is played."
+   ],
+   [
+    "10",
+    "nonstandard: A layer of veneer."
+   ],
+   [
+    "11",
+    "geology: An extensive bed of an eruptive rock intruded between, or overlying, other strata."
+   ],
+   [
+    "12",
+    "nautical: The space in the forward or after part of a boat where there are no rowers."
+   ],
+   [
+    "13",
+    "video games dated: A distinct level or stage within a game."
+   ]
+  ],
+  "glosses": [
+   "sheet of paper",
+   "flat metal pan for baking",
+   "thin, flat layer of solid material",
+   "expanse of material on a surface",
+   "rope to adjust a sail",
+   "sail",
+   "area on ice for curling game",
+   "layer of veneer",
+   "heavy precipitation resembling a wall",
+   "geology: extensive bed of an eruptive rock intruded between, or overlying, other strata",
+   "nautical: space where there are no rowers"
+  ],
+  "gold": [
+   "7"
+  ]
+ },
+ {
+  "key": "p6",
+  "title": "credit score",
+  "pos": "Noun",
+  "gloss": "measure of credit risk usually for a consumer",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "finance: A measure of credit risk, usually for a consumer, calculated from credit information using a standardized formula."
+   ]
+  ],
+  "glosses": [
+   "measure of credit risk usually for a consumer"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p7",
+  "title": "chatelaine",
+  "pos": "Noun",
+  "gloss": "mistress of a castle or large household",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "dated: The mistress of a castle or large household."
+   ],
+   [
+    "2",
+    "historical: A chain or clasp worn at the waist by women with handkerchief, keys, etc., attached, supposed to resemble the chain of keys once worn by medieval chatelaines."
+   ],
+   [
+    "3",
+    "A similar thing in miniature attached to a watchchain."
+   ]
+  ],
+  "glosses": [
+   "mistress of a castle or large household",
+   "chain or clasp worn at the waist by women",
+   "similar thing in miniature attached to a watchchain"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p8",
+  "title": "Bahamian",
+  "pos": "Adjective",
+  "gloss": "pertaining to the Bahamas",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Of, from, or pertaining to the Bahamas, or the Bahamian people."
+   ]
+  ],
+  "glosses": [
+   "pertaining to the Bahamas"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p9",
+  "title": "arouser",
+  "pos": "Noun",
+  "gloss": "someone or something that arouses",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Someone or something that arouses."
+   ]
+  ],
+  "glosses": [
+   "someone or something that arouses"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p10",
+  "title": "separately",
+  "pos": "Adverb",
+  "gloss": "in a separate manner",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "In a separate manner; not together; apart."
+   ]
+  ],
+  "glosses": [
+   "in a separate manner"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p11",
+  "title": "Zantiot",
+  "pos": "Adjective",
+  "gloss": "Of, from or relating to Zakynthos",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Of or relating to Zakynthos or its inhabitants."
+   ]
+  ],
+  "glosses": [
+   "Of, from or relating to Zakynthos"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p12",
+  "title": "Mureș",
+  "pos": "Proper noun",
+  "gloss": "river in Romania and Hungary",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A <<river>> which runs through <<c/Romania>>, starting in the eastern Carpathians and joining the Tisza in <<c/Hungary>>, being about 761 km (473 mi) long ."
+   ],
+   [
+    "2",
+    "county region/Transylvania Romania with the administrative centre in Târgu Mureș ."
+   ]
+  ],
+  "glosses": [
+   "river in Romania and Hungary",
+   "county of Romania"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p13",
+  "title": "uncoordinated",
+  "pos": "Adjective",
+  "gloss": "of a body movement",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "of a group or body etc.: Having components that act independently of each other."
+   ],
+   [
+    "2",
+    "of a project etc.: Not coordinated or properly planned."
+   ],
+   [
+    "3",
+    "of body movement: Lacking coordination."
+   ]
+  ],
+  "glosses": [
+   "Each item acting independently of others",
+   "of a project etc",
+   "of a body movement"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "p14",
+  "title": "pop-up",
+  "pos": "Noun",
+  "gloss": "folded paper element",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "internet: A pop-up advertisement; an advertisement that is triggered to appear on a computer screen when the user accesses a particular web page."
+   ],
+   [
+    "2",
+    "baseball: A pop-up ball: a ball that has been hit to a considerable height above the infield or the shallow outfield; a pop fly."
+   ],
+   [
+    "3",
+    "A folded paper element which pops up from a book, greeting card, etc."
+   ],
+   [
+    "4",
+    "A business that opens for a brief temporary period only, such as a temporary restaurant."
+   ]
+  ],
+  "glosses": [
+   "advertisement that pops up when one accesses an Internet page",
+   "business that quickly pops up",
+   "folded paper element"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "p15",
+  "title": "frigate captain",
+  "pos": "Noun",
+  "gloss": "military rank",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "military: Intermediate senior officer rank used in the navies of some romance-speaking and European countries, usually equal in rank to the Anglophone rank of commander."
+   ]
+  ],
+  "glosses": [
+   "military rank"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p16",
+  "title": "Africanization",
+  "pos": "Noun",
+  "gloss": "the act or process of Africanizing",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "The act or process of Africanizing."
+   ]
+  ],
+  "glosses": [
+   "the act or process of Africanizing"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p17",
+  "title": "prenuptial agreement",
+  "pos": "Noun",
+  "gloss": "document stating legal claims upon a divorce",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A legal document, signed by both parties before marriage, stating the legal claims on each other's estate upon a subsequent divorce."
+   ]
+  ],
+  "glosses": [
+   "document stating legal claims upon a divorce"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p18",
+  "title": "multinational",
+  "pos": "Adjective",
+  "gloss": "operating, or having subsidiary companies in multiple countries",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "Of, or involving more than two nations (externally between countries or internally in a country)."
+   ],
+   [
+    "2",
+    "of a business organization: Operating, or having subsidiary companies in multiple countries (especially more than two)."
+   ]
+  ],
+  "glosses": [
+   "of, or involving more than two countries",
+   "operating, or having subsidiary companies in multiple countries"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "p19",
+  "title": "magnetomotive",
+  "pos": "Adjective",
+  "gloss": "capable of producing magnetic flux",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "physics: capable of producing magnetic flux"
+   ]
+  ],
+  "glosses": [
+   "capable of producing magnetic flux"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p20",
+  "title": "streaker",
+  "pos": "Noun",
+  "gloss": "one who runs naked through a public place",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "One who runs naked through a public place as a prank."
+   ],
+   [
+    "2",
+    "A dolphin of species Stenella coeruleoalba ."
+   ]
+  ],
+  "glosses": [
+   "one who runs naked through a public place"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p21",
+  "title": "dead donkey",
+  "pos": "Noun",
+  "gloss": "news item of no real significance",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "A rarity."
+   ],
+   [
+    "2",
+    "journalism: A news item of no real significance, usually of whimsical or sentimental nature, placed at the end of a news bulletin or in a newspaper as filler. A dead donkey can often be removed from the programme or publication if a more significant story needs extra time or space."
+   ],
+   [
+    "3",
+    "Something useless on which time or effort is wasted."
+   ]
+  ],
+  "glosses": [
+   "news item of no real significance"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "p22",
+  "title": "formerly",
+  "pos": "Adverb",
+  "gloss": "previously; once",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "At some time in the past."
+   ],
+   [
+    "2",
+    "Previously; once."
+   ]
+  ],
+  "glosses": [
+   "at some time in the past",
+   "previously; once"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "p23",
+  "title": "Mandāravā",
+  "pos": "Proper noun",
+  "gloss": "bodhisattva",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Buddhism: A bodhisattva in Mahayana and Vajrayana Buddhism."
+   ]
+  ],
+  "glosses": [
+   "bodhisattva"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p24",
+  "title": "Shetlandic",
+  "pos": "Adjective",
+  "gloss": "of or related to the Shetland Islands",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Of or related to the Shetland Islands, its people, or their culture."
+   ]
+  ],
+  "glosses": [
+   "of or related to the Shetland Islands"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p25",
+  "title": "leafless",
+  "pos": "Adjective",
+  "gloss": "without leaves",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Of plants or trees, without leaves."
+   ]
+  ],
+  "glosses": [
+   "without leaves"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p26",
+  "title": "typeset",
+  "pos": "Verb",
+  "gloss": "to set into type",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive: to set or compose written material into type"
+   ],
+   [
+    "2",
+    "intransitive: to be set or composed into type"
+   ]
+  ],
+  "glosses": [
+   "to set into type"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p27",
+  "title": "recrudescence",
+  "pos": "Noun",
+  "gloss": "acute recurrence of a disease, or its symptoms, after a period of improvement",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "The condition or state being recrudescent; the condition of something (often undesirable) breaking out again, or re-emerging after temporary abatement or suppression."
+   ],
+   [
+    "2",
+    "medicine by extension: The acute recurrence of a disease, or its symptoms, after a period of improvement."
+   ],
+   [
+    "3",
+    "botany: The production of a fresh shoot from a ripened spike."
+   ]
+  ],
+  "glosses": [
+   "condition or state of being recrudescent",
+   "acute recurrence of a disease, or its symptoms, after a period of improvement"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "p28",
+  "title": "scale back",
+  "pos": "Verb",
+  "gloss": "make a reduction",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "To make a reduction in the amount, extent, etc. of something."
+   ]
+  ],
+  "glosses": [
+   "make a reduction"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p29",
+  "title": "be about",
+  "pos": "Verb",
+  "gloss": "to have (something) as a primary focus",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive: To have (something) as a primary focus."
+   ]
+  ],
+  "glosses": [
+   "to have (something) as a primary focus"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p30",
+  "title": "walking frame",
+  "pos": "Noun",
+  "gloss": "framework device",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A framework device used to support either an infant learning to walk or a person with walking difficulties."
+   ]
+  ],
+  "glosses": [
+   "framework device"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p31",
+  "title": "Norman",
+  "pos": "Proper noun",
+  "gloss": "the Norman language",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "The langue d'oïl variant, closely related to the French of Île-de-France (i.e. Paris), spoken in Normandy and the Channel Islands, and was for several centuries the ruling language of England (see Anglo-Norman)."
+   ],
+   [
+    "2",
+    "surname , for someone from Normandy, or for a Viking (Northman)."
+   ],
+   [
+    "3",
+    "given name male used in the Middle Ages and revived in the 19th century."
+   ],
+   [
+    "4",
+    "number of places USA :"
+   ],
+   [
+    "4.1",
+    "town Montgomery County Arkansas ."
+   ],
+   [
+    "4.2",
+    "twp Grundy County Illinois ."
+   ],
+   [
+    "4.3",
+    "ucomm twp:Suf/Owen Jackson County Indiana ."
+   ],
+   [
+    "4.4",
+    "twp Manistee County Michigan ."
+   ],
+   [
+    "4.5",
+    "Two <<townships>> in <<s/Minnesota>>, in <<co/Pine County>> and <<co/Yellow Medicine County>> ."
+   ],
+   [
+    "4.6",
+    "inactive township Dent County Missouri ."
+   ],
+   [
+    "4.7",
+    "ghost town Phelps County Missouri ."
+   ],
+   [
+    "4.8",
+    "village Kearney County Nebraska ."
+   ],
+   [
+    "4.9",
+    "town Richmond County North Carolina ."
+   ],
+   [
+    "4.10",
+    "county seat Cleveland County Oklahoma ."
+   ],
+   [
+    "4.11",
+    "ucomm town:pref/Carlton Kewaunee County Wisconsin ."
+   ]
+  ],
+  "glosses": [
+   "the Norman language",
+   "male given name"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p32",
+  "title": "excursion",
+  "pos": "Noun",
+  "gloss": "wandering from the main subject",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "A brief recreational trip; a journey out of the usual way."
+   ],
+   [
+    "2",
+    "Australia: A field trip."
+   ],
+   [
+    "3",
+    "A wandering from the main subject: a digression."
+   ],
+   [
+    "4",
+    "aviation: An occurrence where an aircraft runs off the end or side of a runway or taxiway, usually during takeoff, landing, or taxi."
+   ],
+   [
+    "5",
+    "phonetics: A deviation in pitch, for example in the syllables of enthusiastic speech."
+   ],
+   [
+    "6",
+    "Temporary deviation from a regular course or pattern"
+   ]
+  ],
+  "glosses": [
+   "brief recreational trip",
+   "wandering from the main subject"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "p33",
+  "title": "irrigate",
+  "pos": "Verb",
+  "gloss": "to supply farmland with water",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive: To supply (farmland) with water, by building ditches, pipes, etc."
+   ],
+   [
+    "2",
+    "transitive: To clean (a wound) with a fluid."
+   ]
+  ],
+  "glosses": [
+   "to supply farmland with water",
+   "to clean a wound with a fluid"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p34",
+  "title": "clack",
+  "pos": "Noun",
+  "gloss": "[[chatter]]",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "An abrupt, sharp sound, especially one made by two hard objects colliding repetitively; a sound midway between a click and a clunk."
+   ],
+   [
+    "2",
+    "Anything that causes a clacking noise, such as the clapper of a mill, or a clack valve."
+   ],
+   [
+    "3",
+    "Chatter; prattle."
+   ],
+   [
+    "4",
+    "colloquial: The tongue."
+   ]
+  ],
+  "glosses": [
+   "an [[abrupt]], [[sharp]] [[sound]]",
+   "[[chatter]]"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "p35",
+  "title": "Yup'ik",
+  "pos": "Proper noun",
+  "gloss": "a language of the Eskimo-Aleut family",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "linguistics: A language of the Eskimo-Aleut family."
+   ],
+   [
+    "2",
+    "linguistics: A subbranch of the Eskimo-Aleut family of languages, hitherto the only language family known to straddle both North America and Asia."
+   ]
+  ],
+  "glosses": [
+   "a language of the Eskimo-Aleut family",
+   "subbranch of the Eskimo-Aleut family of languages"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p36",
+  "title": "coverage",
+  "pos": "Noun",
+  "gloss": "(''journalism'') the amount and type of attention given to an event or topic in news media",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "An amount by which something or someone is covered."
+   ],
+   [
+    "2",
+    "journalism: The amount and type of attention given to an event or topic in news media or other media."
+   ],
+   [
+    "3",
+    "genetics: The average number of reads representing a given nucleotide in the reconstructed sequence."
+   ],
+   [
+    "4",
+    "telecommunications: The area covered by a mobile phone (cellphone) or other radio network."
+   ],
+   [
+    "5",
+    "telecommunications: The signal strength, reception of a radio signal."
+   ],
+   [
+    "6",
+    "sports: Defense."
+   ]
+  ],
+  "glosses": [
+   "amount by which something or someone is covered",
+   "(''journalism'') the amount and type of attention given to an event or topic in news media",
+   "(''genetics'') average number of reads representing a given nucleotide",
+   "the area covered by a mobile phone (cellphone) or other radio network",
+   "(''sports'') defense"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "p37",
+  "title": "underpriced",
+  "pos": "Adjective",
+  "gloss": "having abnormally low price",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Having a relatively or abnormally low price."
+   ],
+   [
+    "2",
+    "Underestimated."
+   ]
+  ],
+  "glosses": [
+   "having abnormally low price"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p38",
+  "title": "probe",
+  "pos": "Verb",
+  "gloss": "to explore, investigate, or question",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "ambitransitive: To explore, investigate, question, test, or prove."
+   ],
+   [
+    "2",
+    "transitive: To insert a probe into."
+   ]
+  ],
+  "glosses": [
+   "to explore, investigate, or question",
+   "to insert a probe into"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p39",
+  "title": "musculature",
+  "pos": "Noun",
+  "gloss": "collection of muscles",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "The collection of all muscles in a single body or in a single organ."
+   ],
+   [
+    "2",
+    "The structural configuration of muscle in a body or organ."
+   ]
+  ],
+  "glosses": [
+   "collection of muscles"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p40",
+  "title": "vulture fund",
+  "pos": "Noun",
+  "gloss": "hedge fund",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "finance pejorative: A hedge fund or private equity fund that invests in debt considered to be very weak or in imminent default. Investors profit by buying debt at a discounted price on a secondary market and then suing the debtor for a larger amount than the purchasing price."
+   ]
+  ],
+  "glosses": [
+   "hedge fund"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p41",
+  "title": "occipitofrontal",
+  "pos": "Adjective",
+  "gloss": "of or pertaining to the occipitofrontalis muscle",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "anatomy: Of or pertaining to the occipital and frontal bones of the skull."
+   ],
+   [
+    "2",
+    "anatomy: Of or pertaining to the occipitofrontalis muscle."
+   ]
+  ],
+  "glosses": [
+   "of or pertaining to the occipitofrontalis muscle"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "p42",
+  "title": "ace",
+  "pos": "Verb",
+  "gloss": "to win a point by an ace",
+  "chosen": [
+   "3"
+  ],
+  "defs": [
+   [
+    "1",
+    "transitive US informal: To pass (a test, interviews etc.) perfectly."
+   ],
+   [
+    "2",
+    "ambitransitive US informal: To defeat (others) in a contest; to outdo (others) in a competition."
+   ],
+   [
+    "3",
+    "ambitransitive tennis: To win a point against (an opponent) by an ace."
+   ],
+   [
+    "4",
+    "golf: To make an ace (hole in one)."
+   ]
+  ],
+  "glosses": [
+   "to pass a test perfectly",
+   "to win a point by an ace"
+  ],
+  "gold": [
+   "3"
+  ]
+ },
+ {
+  "key": "p43",
+  "title": "shutter",
+  "pos": "Noun",
+  "gloss": "part of a camera",
+  "chosen": [
+   "4"
+  ],
+  "defs": [
+   [
+    "1",
+    "One who shuts or closes something."
+   ],
+   [
+    "2",
+    "usually in the plural: Each of a series of protective panels, usually wooden, placed over windows to block out the light."
+   ],
+   [
+    "3",
+    "A similar screen used as an improvised stretcher to carry someone wounded or sick."
+   ],
+   [
+    "4",
+    "photography: The part of a camera, normally closed, that opens for a controlled period of time to let light in when taking a picture."
+   ],
+   [
+    "5",
+    "Any other opening and closing device."
+   ],
+   [
+    "6",
+    "construction: A panel used to contain freshly poured concrete, which is usually removed when the concrete hardens."
+   ]
+  ],
+  "glosses": [
+   "one who shuts or closes",
+   "protective panels over windows",
+   "part of a camera"
+  ],
+  "gold": [
+   "4"
+  ]
+ },
+ {
+  "key": "p44",
+  "title": "typesetting",
+  "pos": "Noun",
+  "gloss": "setting or composition",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "typography: The setting of written material into type."
+   ]
+  ],
+  "glosses": [
+   "setting or composition"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p45",
+  "title": "phylogenic",
+  "pos": "Adjective",
+  "gloss": "of or pertaining to phylogeny",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "Of or pertaining to phylogeny"
+   ],
+   [
+    "2",
+    "phylogenetic"
+   ]
+  ],
+  "glosses": [
+   "of or pertaining to phylogeny",
+   "phylogenetic"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p46",
+  "title": "make a run for it",
+  "pos": "Verb",
+  "gloss": "to run so as to avoid being late",
+  "chosen": [
+   "2"
+  ],
+  "defs": [
+   [
+    "1",
+    "idiomatic: To attempt to escape; to flee; to run away."
+   ],
+   [
+    "2",
+    "idiomatic: To run so as to avoid being late."
+   ]
+  ],
+  "glosses": [
+   "to attempt to escape; to flee; to run away",
+   "to run so as to avoid being late"
+  ],
+  "gold": [
+   "2"
+  ]
+ },
+ {
+  "key": "p47",
+  "title": "spill the beans",
+  "pos": "Verb",
+  "gloss": "to reveal a secret; to disclose information",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "intransitive idiomatic: To reveal a secret; to disclose information."
+   ]
+  ],
+  "glosses": [
+   "to reveal a secret; to disclose information"
+  ],
+  "gold": [
+   "1"
+  ]
+ },
+ {
+  "key": "p48",
+  "title": "girl's name",
+  "pos": "Noun",
+  "gloss": "given name for a girl",
+  "chosen": [
+   "1"
+  ],
+  "defs": [
+   [
+    "1",
+    "A given name for a girl."
+   ]
+  ],
+  "glosses": [
+   "given name for a girl"
+  ],
+  "gold": [
+   "1"
+  ]
+ }
+]

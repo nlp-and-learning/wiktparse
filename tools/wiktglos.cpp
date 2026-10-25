@@ -273,7 +273,7 @@ int main(int argc, char *argv[]) {
                 total.add(c);
             stats << std::format("{}\t{}\t{}\t{}\t{}\t{}\n", wiki, total.entries, total.glosses, total.linked,
                                  total.translations, total.withSense);
-            std::cout << std::format("{}: {} parts of speech, glosses {} linked {} ({:.0f}%), translations {} with a "
+            std::cout << std::format("{}: {} entries (word, part of speech), glosses {} linked {} ({:.0f}%), translations {} with a "
                                          "sense {} ({:.0f}%) ({:.0f} s)",
                                          wiki, total.entries, total.glosses, total.linked,
                                          100.0 * double(total.linked) / double(std::max<size_t>(1, total.glosses)), total.translations,

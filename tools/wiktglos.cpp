@@ -193,7 +193,10 @@ Extras readExtras(const std::vector<fs::path> &files) {
             }
             if (f.size() >= 9 && f[8] == "1")
                 extras[extraKey(f[1], f[2], f[3], f[4])] = {
-                        f[5], std::stod(f[6]), file.filename().string().starts_with("glossllm") ? "llm" : "embedding"};
+                        f[5], std::stod(f[6]),
+                        file.filename().string().ends_with(".chosen.tsv") ? "manual"
+                        : file.filename().string().starts_with("glossllm") ? "llm"
+                                                                            : "embedding"};
         }
     }
     return extras;

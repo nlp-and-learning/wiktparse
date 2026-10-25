@@ -26,6 +26,7 @@ import concurrent.futures
 import csv
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -518,33 +519,71 @@ def run_check(args):
           f'for wiktglos --extra {out_path}', file=sys.stderr)
 
 
+def read_review(path):
+    """A review file of --apply (<output>.txt): (title, language, path, gloss) -> (id or None,
+    confidence, definition text)"""
+    out, head = {}, None
+    for line in open(path, encoding='utf-8'):
+        if m := re.match(r'^== (.*) \((.*?)\) \[(\S+) (\S*)\]', line):
+            head = (m[1], m[3], m[4])
+        elif (m := re.match(r'^  «(.*)» -> (\S+) \(([\d.]+)\)(?:  (.*))?$', line.rstrip('\n'))) and head:
+            out[head + (m[1],)] = (None if m[2] == 'none' else m[2], float(m[3]), m[4] or '')
+    return out
+
+
 def run_agree(args):
-    """Two TSVs of the same glosses by two models (--agree A.tsv B.tsv): a link accepted only where
-    both give the same definition, -o <A>.agreed.tsv; the others to <A>.agreed.txt to review"""
+    """Two --apply runs over the same glosses by two models (--agree A.tsv B.tsv, their review
+    files A.txt, B.txt beside them): a link accepted where both give the same definition (and
+    both with --confidence, unless --any-confidence), -o <A>.agreed.tsv; for review by hand
+    <A>.review.tsv: different definitions, and one model with none (both none: no link), with
+    an empty column choice (a, b, a definition id, none) for --from-review"""
     first, second = args.agree
-    rows = lambda path: {(r['title'], r['language'], r['path'], r['gloss']): r
-                         for r in csv.DictReader(open(path, encoding='utf-8'), delimiter='\t')}
-    a, b = rows(first), rows(second)
+    a, b = (read_review(path.removesuffix('.tsv') + '.txt') for path in (first, second))
+    wiki = os.path.basename(first).removeprefix('glossllm-').split('.')[0].split('-')[0]
     base = first.removesuffix('.tsv')
     out_path = args.output if args.output != f'glossllm-{args.wiki}.tsv' else base + '.agreed.tsv'
-    review_path = out_path.removesuffix('.tsv') + '.txt'
-    same = differ = only = 0
+    review_path = base + '.review.tsv'
+    count = __import__('collections').Counter()
     with open(out_path, 'w', encoding='utf-8') as out, open(review_path, 'w', encoding='utf-8') as review:
         out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
-        for key, r in a.items():
-            other = b.get(key)
-            if other is None:
-                only += 1
+        review.write('wiki\ttitle\tlanguage\tpath\tgloss\tcase\ta\ta_definition\tb\tb_definition\tchoice\n')
+        for key in sorted(a.keys() & b.keys()):
+            (x, cx, tx), (y, cy, ty) = a[key], b[key]
+            if x is None and y is None:
+                count['both none'] += 1
                 continue
-            agree = r['sense_id'] == other['sense_id'] and r['accepted'] == '1' and other['accepted'] == '1'
-            same += agree
-            differ += not agree
-            out.write('\t'.join([r['wiki'], r['title'], r['language'], r['path'], r['gloss'], r['sense_id'],
-                                 r['score'], '', '1' if agree else '0']) + '\n')
-            if not agree:
-                review.write(f"{r['title']}  «{r['gloss']}»  {first}: {r['sense_id']}  {second}: {other['sense_id']}\n")
-    print(f'{same} links agreed, {differ} not (to review: {review_path}), {only} of {first} only (not in '
-          f'{second}: left out); for wiktglos --extra {out_path}', file=sys.stderr)
+            if x is not None and x == y:
+                sure = args.any_confidence or (cx >= args.confidence and cy >= args.confidence)
+                count['agreed' if sure else 'same, unsure'] += 1
+                out.write('\t'.join([wiki, *key, x, f'{min(cx, cy):.2f}', '', '1' if sure else '0']) + '\n')
+                continue
+            case = 'differ' if x and y else 'a none' if x is None else 'b none'
+            count[case] += 1
+            clean = lambda t: t.replace('\t', ' ')
+            review.write('\t'.join([wiki, *key, case, x or 'none', clean(tx), y or 'none', clean(ty), '']) + '\n')
+    print(f"{count['agreed']} links agreed{' (any confidence)' if args.any_confidence else ''}, "
+          f"{count['same, unsure']} the same but unsure, {count['differ']} different, {count['a none']} none of "
+          f"{first} only, {count['b none']} none of {second} only, {count['both none']} none of both; "
+          f'for wiktglos --extra {out_path}; by hand: {review_path}', file=sys.stderr)
+
+
+def run_from_review(args):
+    """Review files with choice filled (a, b, a definition id, none): -o <review>.chosen.tsv for
+    wiktglos --extra (method manual)"""
+    for path in args.from_review:
+        out_path = path.removesuffix('.tsv') + '.chosen.tsv'
+        chosen = 0
+        with open(out_path, 'w', encoding='utf-8') as out:
+            out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
+            for r in csv.DictReader(open(path, encoding='utf-8'), delimiter='\t'):
+                choice = (r.get('choice') or '').strip()
+                sense = r['a'] if choice == 'a' else r['b'] if choice == 'b' else choice
+                if not sense or sense == 'none':
+                    continue
+                out.write('\t'.join([r['wiki'], r['title'], r['language'], r['path'], r['gloss'], sense, '1.00', '',
+                                     '1']) + '\n')
+                chosen += 1
+        print(f'{path}: {chosen} links chosen, for wiktglos --extra {out_path}', file=sys.stderr)
 
 
 def main():
@@ -555,6 +594,8 @@ def main():
     mode.add_argument('--check', metavar='TSV', help='the links of a glossllm TSV confirmed by --verify')
     mode.add_argument('--agree', nargs=2, metavar=('A.tsv', 'B.tsv'),
                       help='the links two models agree on (the same glosses by --apply -o of each)')
+    mode.add_argument('--from-review', nargs='+', metavar='REVIEW.tsv',
+                      help='review files of --agree with choice filled, to <review>.chosen.tsv')
     parser.add_argument('--gold', default='../res/defglos/gold-en.json')
     parser.add_argument('-i', '--input', default='jsonl_senses')
     parser.add_argument('-o', '--output')
@@ -566,6 +607,8 @@ def main():
     parser.add_argument('--confidence', type=float, default=0.8, help='accepted from this confidence')
     parser.add_argument('-j', '--jobs', type=int, default=4, help='requests at a time (OLLAMA_NUM_PARALLEL)')
     parser.add_argument('--verify', help='a second model to confirm each answer (cometapi:, zai:): only confirmed kept')
+    parser.add_argument('--any-confidence', action='store_true',
+                        help='--agree: the same definition of both models whatever their confidence')
     parser.add_argument('--batch', type=int, default=1, help='entries in a request of an API provider; z.ai limits requests at a time, not per minute: 8 to a request were slower (187 s against 126 s on gold-en-hard)')
     parser.add_argument('--limit', type=int, help='the first entries only (--apply: of those not done yet)')
     parser.add_argument('--recheck', action='store_true',
@@ -584,7 +627,8 @@ def main():
             sys.exit(f'{model}: {key} is not set')
     if args.check and not args.verify:
         sys.exit('--check needs --verify MODEL')
-    (run_agree if args.agree else run_check if args.check else run_eval if args.eval else run_apply)(args)
+    (run_from_review if args.from_review else run_agree if args.agree else run_check if args.check
+     else run_eval if args.eval else run_apply)(args)
 
 
 if __name__ == '__main__':

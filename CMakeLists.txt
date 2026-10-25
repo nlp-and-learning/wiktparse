@@ -94,6 +94,10 @@ target_link_libraries(defglos_eval defglos)
 add_executable(wiktglos tools/wiktglos.cpp)
 target_link_libraries(wiktglos defglos BZip2::BZip2 PkgConfig::ZSTD)
 
+# A sample of jsonl_senses for the wordnet, closed over translations (HANDOFF-4)
+add_executable(wordnetsample tools/wordnetsample.cpp)
+target_link_libraries(wordnetsample nlohmann_json::nlohmann_json BZip2::BZip2 PkgConfig::ZSTD)
+
 add_executable(${PROJECT_NAME} src/main.cpp
         src/headers/headers.cpp
         src/headers/headers.h

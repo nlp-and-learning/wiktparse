@@ -274,6 +274,22 @@ public:
         return result;
     }
 
+    // The titles of the pages of every block, from the index (the lines of block i are of titles[i])
+    [[nodiscard]] std::vector<std::vector<std::string>> titles() const {
+        const std::string name = path_.string();
+        std::ifstream index(name.substr(0, name.size() - 4) + ".idx");
+        std::vector<std::vector<std::string>> result;
+        for (std::string l; std::getline(index, l);) {
+            if (l.empty() || l[0] == '#' || l.starts_with("EOF="))
+                continue;
+            if (l[0] != ':')
+                result.emplace_back();
+            else if (const auto colon = l.find(':', 1); colon != std::string::npos && !result.empty())
+                result.back().push_back(l.substr(colon + 1));
+        }
+        return result;
+    }
+
 private:
     struct Block {
         uint64_t offset = 0, compressed = 0, uncompressed = 0;

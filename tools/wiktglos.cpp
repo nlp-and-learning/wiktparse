@@ -67,6 +67,14 @@ std::string plainText(const std::string &text) {
                     part = part.substr(slash + 1);
                 out += " " + part + " ";
             }
+        } else if (t.name.ends_with(" of") || t.name == "surname" || t.name == "given name" ||
+                   t.name == "historical given name" || t.name == "patronymic") {
+            // Definitions of form-of templates as their words: {{initialism of|en|cumulative
+            // distribution function}}, {{given name|en|male}} -> "given name male", {{surname|en}}
+            out += " " + t.name + " ";
+            for (size_t p = 2; auto v = t.get(p); ++p)
+                if (const std::string part(*v); !part.empty() && part.size() < 80)
+                    out += part + " ";
         } else if (t.name == "lb" || t.name == "lbl" || t.name == "label" || t.name == "tlb") {
             // Labels as words: glosses begin with them ("snooker: one of the 15 red balls")
             for (size_t p = 2; auto v = t.get(p); ++p)

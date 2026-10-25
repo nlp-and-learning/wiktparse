@@ -60,6 +60,9 @@ def plain(text):
                     break
                 words.append(a.split('/', 1)[1] if '/' in a[:6] else a)
             return ' ' + ' '.join(words) + ' '
+        if name.endswith(' of') or name in ('surname', 'given name', 'historical given name', 'patronymic'):
+            # {{initialism of|en|cumulative distribution function}}, {{given name|en|male}}
+            return ' ' + ' '.join([name] + [a for a in args[1:] if len(a) < 80]) + ' '
         if name in LABELS:
             return ' ' + ' '.join(a for a in args[1:] if a not in ('_', 'and', 'or', '&')) + ': '
         if name in WORDS and len(args) >= WORDS[name]:

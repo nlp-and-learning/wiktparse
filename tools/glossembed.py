@@ -53,6 +53,13 @@ def plain(text):
     def template(m):
         parts = [p.strip() for p in m.group(1).split('|')]
         name, args = parts[0], [p for p in parts[1:] if '=' not in p]
+        if name == 'place':  # {{place|en|capital city|c/Guyana|;|named for …}}: capital city Guyana
+            words = []
+            for a in args[1:]:
+                if a == ';' or a.startswith('named'):
+                    break
+                words.append(a.split('/', 1)[1] if '/' in a[:6] else a)
+            return ' ' + ' '.join(words) + ' '
         if name in LABELS:
             return ' ' + ' '.join(a for a in args[1:] if a not in ('_', 'and', 'or', '&')) + ': '
         if name in WORDS and len(args) >= WORDS[name]:

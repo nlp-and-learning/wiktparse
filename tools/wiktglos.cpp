@@ -56,6 +56,17 @@ std::string plainText(const std::string &text) {
         if (auto it = wordTemplates.find(t.name); it != wordTemplates.end()) {
             if (auto v = t.get(static_cast<size_t>(it->second)))
                 out += " " + std::string(*v) + " ";
+        } else if (t.name == "place") {
+            // en {{place|en|capital city|c/Guyana|;|named for …}}: "capital city Guyana" (the
+            // definition of most proper nouns of places)
+            for (size_t p = 2; auto v = t.get(p); ++p) {
+                std::string part(*v);
+                if (part == ";" || part.starts_with("named"))
+                    break;
+                if (auto slash = part.find('/'); slash != std::string::npos && slash < 6)
+                    part = part.substr(slash + 1);
+                out += " " + part + " ";
+            }
         } else if (t.name == "lb" || t.name == "lbl" || t.name == "label" || t.name == "tlb") {
             // Labels as words: glosses begin with them ("snooker: one of the 15 red balls")
             for (size_t p = 2; auto v = t.get(p); ++p)

@@ -268,6 +268,20 @@
         "page_title": {
           "type": "string",
           "description": "wiktlink: the title of the page found when it is not the term (without accents, optional parts)"
+        },
+        "sense_ids": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "wiktglos: ids of the definitions (senses[].id) of the entry the gloss of the translation table is linked to"
+        },
+        "sense_method": {
+          "type": "string",
+          "enum": ["positional", "best", "single", "number", "embedding", "llm", "vote", "manual", "minority"],
+          "description": "wiktglos: how the gloss was linked: rules (positional, best, single, number), embeddings, an LLM, two of three LLMs (vote), by hand (manual), the one LLM of three that gave a definition (minority)"
+        },
+        "sense_score": {
+          "type": "number",
+          "description": "wiktglos: the score of the link (similarity or confidence)"
         }
       }
     }

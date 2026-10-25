@@ -1,0 +1,267 @@
+{
+  "comment": "Homonyms for the wordnet (HANDOFF-4): test cases of splitting a word into synsets. kind: etymology (one part of speech, unrelated origins: always split), pos (the same form in different parts of speech), same (one part of speech and one origin, meanings drifted apart: split only by translations). Every sense: part of speech, an English gloss, its origin, and translations telling it from the other senses (rule 3: a split where some language translates differently). Origins are short notes, not full etymologies.",
+  "languages": {
+    "pl": [
+      {
+        "word": "rola", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "role, part (in a film, in society)", "origin": "French rôle", "translations": {"en": "role", "de": "Rolle", "fr": "rôle"}},
+          {"pos": "noun", "gloss": "arable land, a field", "origin": "Proto-Slavic *orlja (cf. orać 'to plough')", "translations": {"en": "field, arable land", "de": "Acker", "fr": "champ, terre labourable"}}
+        ]
+      },
+      {
+        "word": "tusz", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "ink; mascara", "origin": "German Tusche", "translations": {"en": "ink; mascara", "de": "Tusche; Wimperntusche", "fr": "encre de Chine; mascara"}},
+          {"pos": "noun", "gloss": "shower (a wash under a spray)", "origin": "French douche", "translations": {"en": "shower", "de": "Dusche", "fr": "douche"}},
+          {"pos": "noun", "gloss": "flourish, fanfare", "origin": "German Tusch", "translations": {"en": "fanfare, flourish", "de": "Tusch", "fr": "fanfare"}}
+        ]
+      },
+      {
+        "word": "bal", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "ball, a formal dance", "origin": "French bal", "translations": {"en": "ball", "de": "Ball", "fr": "bal"}},
+          {"pos": "noun", "gloss": "log, a thick beam or plank", "origin": "German (cf. Bohle, Balken)", "translations": {"en": "log, beam", "de": "Balken, Bohle", "fr": "poutre, madrier"}}
+        ]
+      },
+      {
+        "word": "lira", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "lyre (a musical instrument)", "origin": "Greek lýra", "translations": {"en": "lyre", "de": "Leier", "fr": "lyre"}},
+          {"pos": "noun", "gloss": "lira (a currency)", "origin": "Italian lira < Latin libra 'pound'", "translations": {"en": "lira", "de": "Lira", "fr": "lire"}}
+        ]
+      },
+      {
+        "word": "lama", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "llama (an animal)", "origin": "Quechua llama via Spanish", "translations": {"en": "llama", "de": "Lama", "fr": "lama"}},
+          {"pos": "noun", "gloss": "lamé (a fabric with metal threads)", "origin": "French lamé", "translations": {"en": "lamé", "de": "Lamé", "fr": "lamé"}},
+          {"pos": "noun", "gloss": "lama (a Tibetan Buddhist teacher)", "origin": "Tibetan bla-ma", "translations": {"en": "lama", "de": "Lama", "fr": "lama"}}
+        ]
+      },
+      {
+        "word": "muł", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "mule (an animal); a slow, stubborn person", "origin": "Latin mulus", "translations": {"en": "mule", "de": "Maultier", "fr": "mulet"}},
+          {"pos": "noun", "gloss": "silt, mud (a sediment)", "origin": "probably German (cf. Mull, Müll)", "translations": {"en": "silt, mud", "de": "Schlamm", "fr": "vase, limon"}}
+        ]
+      },
+      {
+        "word": "pas", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "belt; a strip, a lane", "origin": "Proto-Slavic *pojasъ", "translations": {"en": "belt; strip; lane", "de": "Gürtel; Streifen; Spur", "fr": "ceinture; bande; voie"}},
+          {"pos": "noun", "gloss": "pas (a ballet step); pass (in cards: no bid)", "origin": "French pas, passe", "translations": {"en": "pas; pass", "de": "Pas; Passe", "fr": "pas; passe"}}
+        ]
+      },
+      {
+        "word": "rakieta", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "rocket, a missile", "origin": "Italian rocchetta", "translations": {"en": "rocket", "de": "Rakete", "fr": "fusée"}},
+          {"pos": "noun", "gloss": "racket (in tennis)", "origin": "French raquette < Arabic", "translations": {"en": "racket", "de": "Schläger", "fr": "raquette"}}
+        ]
+      },
+      {
+        "word": "brać", "kind": "pos",
+        "senses": [
+          {"pos": "verb", "gloss": "to take", "origin": "Proto-Slavic *bьrati", "translations": {"en": "take", "de": "nehmen", "fr": "prendre"}},
+          {"pos": "noun", "gloss": "brethren, a fellowship (collective)", "origin": "Proto-Slavic *bratrьja (cf. brat 'brother')", "translations": {"en": "brethren, fraternity", "de": "Bruderschaft", "fr": "confrérie"}}
+        ]
+      },
+      {
+        "word": "bez", "kind": "pos",
+        "senses": [
+          {"pos": "preposition", "gloss": "without", "origin": "Proto-Slavic *bez", "translations": {"en": "without", "de": "ohne", "fr": "sans"}},
+          {"pos": "noun", "gloss": "lilac; elder (shrubs)", "origin": "Proto-Slavic *bъzъ 'elder'", "translations": {"en": "lilac; elder", "de": "Flieder; Holunder", "fr": "lilas; sureau"}}
+        ]
+      },
+      {
+        "word": "piec", "kind": "pos",
+        "senses": [
+          {"pos": "noun", "gloss": "stove, oven, furnace", "origin": "Proto-Slavic *pektь, from *pekti 'to bake'", "translations": {"en": "stove, oven", "de": "Ofen", "fr": "poêle, four"}},
+          {"pos": "verb", "gloss": "to bake, to roast", "origin": "Proto-Slavic *pekti", "translations": {"en": "bake, roast", "de": "backen, braten", "fr": "cuire"}}
+        ]
+      },
+      {
+        "word": "lata", "kind": "pos",
+        "senses": [
+          {"pos": "noun", "gloss": "years (plural of rok); summers (plural of lato)", "origin": "Proto-Slavic *lěto", "translations": {"en": "years; summers", "de": "Jahre; Sommer", "fr": "années; étés"}},
+          {"pos": "verb", "gloss": "flies, runs about (3rd person of latać)", "origin": "Proto-Slavic *letati", "translations": {"en": "flies", "de": "fliegt", "fr": "vole"}}
+        ]
+      },
+      {
+        "word": "zamek", "kind": "same",
+        "senses": [
+          {"pos": "noun", "gloss": "castle", "origin": "from zamykać 'to close'", "translations": {"en": "castle", "de": "Schloss, Burg", "fr": "château"}},
+          {"pos": "noun", "gloss": "lock (of a door)", "origin": "from zamykać 'to close'", "translations": {"en": "lock", "de": "Schloss", "fr": "serrure"}},
+          {"pos": "noun", "gloss": "zip, zipper", "origin": "from zamykać 'to close'", "translations": {"en": "zip, zipper", "de": "Reißverschluss", "fr": "fermeture éclair"}}
+        ]
+      },
+      {
+        "word": "pokój", "kind": "same",
+        "senses": [
+          {"pos": "noun", "gloss": "room", "origin": "Proto-Slavic *pokojь 'rest'", "translations": {"en": "room", "de": "Zimmer", "fr": "chambre, pièce"}},
+          {"pos": "noun", "gloss": "peace", "origin": "Proto-Slavic *pokojь 'rest'", "translations": {"en": "peace", "de": "Frieden", "fr": "paix"}}
+        ]
+      },
+      {
+        "word": "rak", "kind": "same",
+        "senses": [
+          {"pos": "noun", "gloss": "crayfish", "origin": "Proto-Slavic *rakъ", "translations": {"en": "crayfish", "de": "Flusskrebs", "fr": "écrevisse"}},
+          {"pos": "noun", "gloss": "cancer (a disease)", "origin": "a calque of Latin cancer 'crab'", "translations": {"en": "cancer", "de": "Krebs", "fr": "cancer"}}
+        ]
+      }
+    ],
+    "en": [
+      {
+        "word": "rock", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "stone, a mass of mineral matter", "origin": "Old French roque", "translations": {"pl": "skała, kamień", "de": "Fels, Gestein", "fr": "roche, rocher"}},
+          {"pos": "verb", "gloss": "to sway back and forth", "origin": "Old English roccian", "translations": {"pl": "kołysać", "de": "schaukeln, wiegen", "fr": "bercer, balancer"}},
+          {"pos": "noun", "gloss": "rock music", "origin": "from rock 'to sway' (rock and roll)", "translations": {"pl": "rock", "de": "Rock", "fr": "rock"}}
+        ]
+      },
+      {
+        "word": "band", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "a strip, a ring of material; a range of frequencies", "origin": "Old Norse band, Old French bande", "translations": {"pl": "taśma, opaska, pasmo", "de": "Band, Streifen", "fr": "bande, bandeau"}},
+          {"pos": "noun", "gloss": "a group of musicians; a group of people", "origin": "French bande 'troop' (Germanic)", "translations": {"pl": "zespół; banda", "de": "Band, Kapelle; Bande", "fr": "groupe; bande"}}
+        ]
+      },
+      {
+        "word": "bitch", "kind": "pos",
+        "senses": [
+          {"pos": "noun", "gloss": "a female dog; an offensive term for a woman", "origin": "Old English bicce", "translations": {"pl": "suka", "de": "Hündin; Schlampe", "fr": "chienne; salope"}},
+          {"pos": "verb", "gloss": "to complain", "origin": "from the noun", "translations": {"pl": "narzekać, marudzić", "de": "meckern", "fr": "râler"}}
+        ]
+      },
+      {
+        "word": "drop", "kind": "pos",
+        "senses": [
+          {"pos": "noun", "gloss": "a drop of liquid; a fall, a decrease", "origin": "Old English dropa", "translations": {"pl": "kropla; spadek", "de": "Tropfen; Rückgang", "fr": "goutte; baisse"}},
+          {"pos": "verb", "gloss": "to let fall; to fall", "origin": "Old English droppian", "translations": {"pl": "upuścić; spaść", "de": "fallen lassen; fallen", "fr": "laisser tomber; tomber"}}
+        ]
+      },
+      {
+        "word": "bat", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "a club for hitting a ball", "origin": "Old English batt 'cudgel'", "translations": {"pl": "kij, pałka", "de": "Schläger", "fr": "batte"}},
+          {"pos": "noun", "gloss": "a flying mammal", "origin": "Middle English bakke (Scandinavian)", "translations": {"pl": "nietoperz", "de": "Fledermaus", "fr": "chauve-souris"}},
+          {"pos": "verb", "gloss": "to blink (bat an eye)", "origin": "Old French batre, through bate 'to flutter'", "translations": {"pl": "mrugnąć", "de": "blinzeln", "fr": "cligner"}}
+        ]
+      },
+      {
+        "word": "park", "kind": "pos",
+        "senses": [
+          {"pos": "noun", "gloss": "a public garden", "origin": "Old French parc", "translations": {"pl": "park", "de": "Park", "fr": "parc"}},
+          {"pos": "verb", "gloss": "to leave a vehicle", "origin": "from the noun (a car park)", "translations": {"pl": "parkować", "de": "parken", "fr": "garer, stationner"}}
+        ]
+      },
+      {
+        "word": "bank", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "a financial institution", "origin": "Italian banca 'bench'", "translations": {"pl": "bank", "de": "Bank (pl. Banken)", "fr": "banque"}},
+          {"pos": "noun", "gloss": "the edge of a river; a slope", "origin": "Old Norse (cf. bakki)", "translations": {"pl": "brzeg; nasyp", "de": "Ufer; Böschung", "fr": "rive, berge; talus"}}
+        ]
+      },
+      {
+        "word": "saw", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "a cutting tool with teeth", "origin": "Old English sagu (tool)", "translations": {"pl": "piła", "de": "Säge", "fr": "scie"}},
+          {"pos": "noun", "gloss": "a saying, a proverb", "origin": "Old English sagu 'saying'", "translations": {"pl": "porzekadło", "de": "Spruch", "fr": "dicton"}},
+          {"pos": "verb", "gloss": "past tense of see", "origin": "Old English sāh, sēah", "translations": {"pl": "widział", "de": "sah", "fr": "vit, a vu"}}
+        ]
+      },
+      {
+        "word": "trunk", "kind": "same",
+        "senses": [
+          {"pos": "noun", "gloss": "the stem of a tree; the torso", "origin": "Latin truncus", "translations": {"pl": "pień; tułów", "de": "Stamm; Rumpf", "fr": "tronc"}},
+          {"pos": "noun", "gloss": "a large box for luggage; the boot of a car (US)", "origin": "Latin truncus", "translations": {"pl": "kufer, skrzynia; bagażnik", "de": "Truhe, Koffer; Kofferraum", "fr": "malle; coffre"}},
+          {"pos": "noun", "gloss": "the nose of an elephant", "origin": "Latin truncus, probably influenced by trump 'trumpet'", "translations": {"pl": "trąba", "de": "Rüssel", "fr": "trompe"}}
+        ]
+      },
+      {
+        "word": "bark", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "the sound of a dog", "origin": "Old English beorcan", "translations": {"pl": "szczekanie", "de": "Bellen", "fr": "aboiement"}},
+          {"pos": "noun", "gloss": "the outer covering of a tree", "origin": "Old Norse börkr", "translations": {"pl": "kora", "de": "Rinde", "fr": "écorce"}},
+          {"pos": "noun", "gloss": "a sailing ship (barque)", "origin": "Latin barca via French", "translations": {"pl": "bark", "de": "Bark", "fr": "barque, trois-mâts barque"}}
+        ]
+      },
+      {
+        "word": "row", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "a line of things (/rəʊ/)", "origin": "Old English rāw", "translations": {"pl": "rząd, szereg", "de": "Reihe", "fr": "rang, rangée"}},
+          {"pos": "verb", "gloss": "to propel a boat with oars (/rəʊ/)", "origin": "Old English rōwan", "translations": {"pl": "wiosłować", "de": "rudern", "fr": "ramer"}},
+          {"pos": "noun", "gloss": "a noisy quarrel (/raʊ/)", "origin": "unknown, 18th century", "translations": {"pl": "kłótnia, awantura", "de": "Krach, Streit", "fr": "dispute"}}
+        ]
+      }
+    ],
+    "fr": [
+      {
+        "word": "avocat", "kind": "etymology",
+        "senses": [
+          {"pos": "noun", "gloss": "lawyer", "origin": "Latin advocatus", "translations": {"en": "lawyer", "pl": "adwokat", "de": "Anwalt"}},
+          {"pos": "noun", "gloss": "avocado", "origin": "Nahuatl ahuacatl via Spanish aguacate", "translations": {"en": "avocado", "pl": "awokado", "de": "Avocado"}}
+        ]
+      },
+      {
+        "word": "louer", "kind": "etymology",
+        "senses": [
+          {"pos": "verb", "gloss": "to rent, to hire", "origin": "Latin locare", "translations": {"en": "rent, hire", "pl": "wynajmować", "de": "mieten, vermieten"}},
+          {"pos": "verb", "gloss": "to praise", "origin": "Latin laudare", "translations": {"en": "praise", "pl": "chwalić", "de": "loben"}}
+        ]
+      },
+      {
+        "word": "mousse", "kind": "etymology",
+        "senses": [
+          {"pos": "noun (f)", "gloss": "foam; moss; mousse (a dessert)", "origin": "Frankish *mosa 'moss'", "translations": {"en": "foam; moss; mousse", "pl": "piana; mech; mus", "de": "Schaum; Moos; Mousse"}},
+          {"pos": "noun (m)", "gloss": "ship's boy", "origin": "Spanish mozo, Italian mozzo", "translations": {"en": "cabin boy", "pl": "chłopiec okrętowy", "de": "Schiffsjunge"}}
+        ]
+      },
+      {
+        "word": "livre", "kind": "etymology",
+        "senses": [
+          {"pos": "noun (m)", "gloss": "book", "origin": "Latin liber", "translations": {"en": "book", "pl": "książka", "de": "Buch"}},
+          {"pos": "noun (f)", "gloss": "pound (a weight, a currency)", "origin": "Latin libra", "translations": {"en": "pound", "pl": "funt", "de": "Pfund"}}
+        ]
+      },
+      {
+        "word": "page", "kind": "etymology",
+        "senses": [
+          {"pos": "noun (f)", "gloss": "page of a book", "origin": "Latin pagina", "translations": {"en": "page", "pl": "strona, stronica", "de": "Seite"}},
+          {"pos": "noun (m)", "gloss": "page, a young servant", "origin": "Italian paggio", "translations": {"en": "page, pageboy", "pl": "paź", "de": "Page"}}
+        ]
+      },
+      {
+        "word": "son", "kind": "pos",
+        "senses": [
+          {"pos": "determiner", "gloss": "his, her, its", "origin": "Latin suum", "translations": {"en": "his, her, its", "pl": "jego, jej, swój", "de": "sein, ihr"}},
+          {"pos": "noun", "gloss": "sound", "origin": "Latin sonus", "translations": {"en": "sound", "pl": "dźwięk", "de": "Klang, Ton"}},
+          {"pos": "noun", "gloss": "bran", "origin": "uncertain (Old French son, saon)", "translations": {"en": "bran", "pl": "otręby", "de": "Kleie"}}
+        ]
+      },
+      {
+        "word": "vers", "kind": "pos",
+        "senses": [
+          {"pos": "preposition", "gloss": "towards; around (a time)", "origin": "Latin versus", "translations": {"en": "towards; around", "pl": "w kierunku; około", "de": "nach, gegen"}},
+          {"pos": "noun", "gloss": "verse, a line of poetry", "origin": "Latin versus", "translations": {"en": "verse, line", "pl": "wers, wiersz", "de": "Vers"}},
+          {"pos": "noun", "gloss": "worms (plural of ver)", "origin": "Latin vermis", "translations": {"en": "worms", "pl": "robaki", "de": "Würmer"}}
+        ]
+      },
+      {
+        "word": "voler", "kind": "same",
+        "senses": [
+          {"pos": "verb", "gloss": "to fly", "origin": "Latin volare", "translations": {"en": "fly", "pl": "latać", "de": "fliegen"}},
+          {"pos": "verb", "gloss": "to steal", "origin": "Latin volare, through falconry (the falcon 'flies after' its prey)", "translations": {"en": "steal", "pl": "kraść", "de": "stehlen"}}
+        ]
+      },
+      {
+        "word": "grève", "kind": "same",
+        "senses": [
+          {"pos": "noun", "gloss": "strike (a stoppage of work)", "origin": "from the Place de Grève in Paris, where the unemployed gathered", "translations": {"en": "strike", "pl": "strajk", "de": "Streik"}},
+          {"pos": "noun", "gloss": "a sandy or gravelly shore", "origin": "Vulgar Latin *grava 'gravel'", "translations": {"en": "strand, shore", "pl": "piaszczysty brzeg", "de": "Strand, Ufer"}}
+        ]
+      }
+    ]
+  }
+}

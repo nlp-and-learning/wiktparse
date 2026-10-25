@@ -9,6 +9,10 @@ as JSON from cometapi:glm-4.7 (COMETAPI_KEY), zai:glm-4.7 (ZAI_API_KEY), anthrop
       accuracy on the reviewed links (a subsense or its parent counts), none included;
       --fallback MODEL: the answers below --confidence again by a second model (which may say null);
       --verify MODEL: each answer checked by a second model, only confirmed ones kept
+  glossllm.py --agree glossllm-en.tsv glossllm-en-qwen.tsv
+      the links both models (--apply of each, -o glossllm-en-qwen.tsv for the second) agree on:
+      glossllm-en.agreed.tsv, the others in glossllm-en.agreed.txt (40 en links: air alone 4 wrong;
+      agreed with qwen3:14b 2 wrong, 3 right ones left out; checked by glm-4.7 2 wrong, 6 left out)
   glossllm.py --check glossllm-en.tsv --verify zai:glm-4.7 [--wiki en]
       the accepted links of a TSV confirmed: glossllm-en.checked.tsv (accepted only the confirmed),
       glossllm-en.checked.txt (the other answers), in parts like --apply
@@ -514,12 +518,43 @@ def run_check(args):
           f'for wiktglos --extra {out_path}', file=sys.stderr)
 
 
+def run_agree(args):
+    """Two TSVs of the same glosses by two models (--agree A.tsv B.tsv): a link accepted only where
+    both give the same definition, -o <A>.agreed.tsv; the others to <A>.agreed.txt to review"""
+    first, second = args.agree
+    rows = lambda path: {(r['title'], r['language'], r['path'], r['gloss']): r
+                         for r in csv.DictReader(open(path, encoding='utf-8'), delimiter='\t')}
+    a, b = rows(first), rows(second)
+    base = first.removesuffix('.tsv')
+    out_path = args.output if args.output != f'glossllm-{args.wiki}.tsv' else base + '.agreed.tsv'
+    review_path = out_path.removesuffix('.tsv') + '.txt'
+    same = differ = only = 0
+    with open(out_path, 'w', encoding='utf-8') as out, open(review_path, 'w', encoding='utf-8') as review:
+        out.write('wiki\ttitle\tlanguage\tpath\tgloss\tsense_id\tscore\tmargin\taccepted\n')
+        for key, r in a.items():
+            other = b.get(key)
+            if other is None:
+                only += 1
+                continue
+            agree = r['sense_id'] == other['sense_id'] and r['accepted'] == '1' and other['accepted'] == '1'
+            same += agree
+            differ += not agree
+            out.write('\t'.join([r['wiki'], r['title'], r['language'], r['path'], r['gloss'], r['sense_id'],
+                                 r['score'], '', '1' if agree else '0']) + '\n')
+            if not agree:
+                review.write(f"{r['title']}  «{r['gloss']}»  {first}: {r['sense_id']}  {second}: {other['sense_id']}\n")
+    print(f'{same} links agreed, {differ} not (to review: {review_path}), {only} of {first} only (not in '
+          f'{second}: left out); for wiktglos --extra {out_path}', file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--eval', action='store_true')
     mode.add_argument('--apply', action='store_true')
     mode.add_argument('--check', metavar='TSV', help='the links of a glossllm TSV confirmed by --verify')
+    mode.add_argument('--agree', nargs=2, metavar=('A.tsv', 'B.tsv'),
+                      help='the links two models agree on (the same glosses by --apply -o of each)')
     parser.add_argument('--gold', default='../res/defglos/gold-en.json')
     parser.add_argument('-i', '--input', default='jsonl_senses')
     parser.add_argument('-o', '--output')
@@ -549,7 +584,7 @@ def main():
             sys.exit(f'{model}: {key} is not set')
     if args.check and not args.verify:
         sys.exit('--check needs --verify MODEL')
-    (run_check if args.check else run_eval if args.eval else run_apply)(args)
+    (run_agree if args.agree else run_check if args.check else run_eval if args.eval else run_apply)(args)
 
 
 if __name__ == '__main__':

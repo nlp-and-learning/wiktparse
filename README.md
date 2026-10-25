@@ -107,7 +107,9 @@ dump_dir = ~/dump
   headings (`==English==` > `===Noun===` > `====Translations====`), the other
   lines under their heading. The status line shows where the cursor is: the
   JSON path in JSON (`$.sections[0].sections[3].translations[5]`), the headings
-  in Original, the nodes from the root in Tree and WikiTree.
+  in Original, the nodes from the root in Tree and WikiTree. Alt+1..Alt+4 switch
+  the tabs; between JSON and Tree, and between Original and WikiTree, the other
+  tab shows the same place (the tree expanded to it).
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

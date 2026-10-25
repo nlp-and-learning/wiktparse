@@ -258,9 +258,14 @@ QString label(const json &v, size_t i) {
 
 // Item data: [offset, index] in the dump of a node that is from another page
 constexpr int sourceRole = Qt::UserRole + 1;
+// Item data: the step of the JSON path to the node, a member key ("sections") or "[3]"
+constexpr int stepRole = Qt::UserRole + 2;
+// Item data of WikiTree: the line of the wikitext
+constexpr int lineRole = Qt::UserRole + 3;
 
-void addItems(QStandardItem *parent, const json &v, const QString &name) {
+void addItems(QStandardItem *parent, const json &v, const QString &name, const QString &step = {}) {
     auto *keyItem = new QStandardItem(name);
+    keyItem->setData(step.isEmpty() ? name : step, stepRole);
     auto *valueItem = new QStandardItem(v.is_structured() ? QString() : scalar(v).left(500));
     keyItem->setEditable(false);
     valueItem->setEditable(false);
@@ -282,7 +287,7 @@ void addItems(QStandardItem *parent, const json &v, const QString &name) {
     else if (v.is_array()) {
         valueItem->setText(QString("%1 items").arg(v.size()));
         for (size_t i = 0; i < v.size(); ++i)
-            addItems(keyItem, v[i], label(v[i], i));
+            addItems(keyItem, v[i], label(v[i], i), QString("[%1]").arg(i));
     }
 }
 
@@ -342,7 +347,20 @@ public:
         connect(wiki_.edit->area(), &qce::CodeEditArea::cursorPositionChanged, this, [this] { updatePath(); });
         connect(tree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this] { updatePath(); });
         connect(wikiTree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this] { updatePath(); });
-        connect(tabs_, &QTabWidget::currentChanged, this, [this] { updatePath(); });
+        connect(tabs_, &QTabWidget::currentChanged, this, [this] {
+            QWidget *now = tabs_->currentWidget();
+            if (lastTab_ && now)
+                followTab(lastTab_, now);
+            lastTab_ = now;
+            updatePath();
+        });
+        // Alt+1..Alt+4: the tabs
+        for (int n = 0; n < 4; ++n)
+            connect(new QShortcut(QKeySequence(Qt::ALT | (Qt::Key_1 + n)), this), &QShortcut::activated, this,
+                    [this, n] {
+                        if (n < tabs_->count())
+                            tabs_->setCurrentIndex(n);
+                    });
         // A node of the tree from another page of the dump (a merged subpage): Original shows that page
         connect(tree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex &index) {
             std::optional<std::pair<qint64, qint64>> source;
@@ -706,11 +724,14 @@ private:
         wikiModel_->clear();
         static const QRegularExpression heading(R"(^(={1,6})\s*(.*?)\s*\1\s*$)");
         std::vector<std::pair<int, QStandardItem *>> stack{{0, wikiModel_->invisibleRootItem()}};
-        for (const QString &line : text.split('\n')) {
+        const QStringList lines = text.split('\n');
+        for (int number = 0; number < lines.size(); ++number) {
+            const QString &line = lines[number];
             if (line.trimmed().isEmpty())
                 continue;
             auto *item = new QStandardItem;
             item->setEditable(false);
+            item->setData(number, lineRole);
             if (const auto m = heading.match(line); m.hasMatch()) {
                 const int level = static_cast<int>(m.captured(1).size());
                 while (stack.size() > 1 && stack.back().first >= level)
@@ -749,22 +770,62 @@ private:
         pathLabel_->setText(path);
     }
 
-    // The path of the JSON value at a cursor in indented JSON: keys and array indexes from the
-    // root, read from the text before the cursor (strings with escapes, brackets, commas, colons)
     static QString jsonPath(const QString &text, qce::TextCursor cursor) {
-        qsizetype end = 0;
-        for (int line = 0; line < cursor.line && end >= 0; ++line)
-            end = text.indexOf('\n', end) + 1;
-        if (end < 0)
-            return {};
-        end = std::min(text.size(), end + cursor.column);
+        QString path = "$";
+        for (const auto &step : jsonSteps(text, offsetOf(text, cursor)))
+            path += step.startsWith('[') ? step : "." + step;
+        return path;
+    }
+
+    static qsizetype offsetOf(const QString &text, qce::TextCursor cursor) {
+        qsizetype at = 0;
+        for (int line = 0; line < cursor.line; ++line)
+            if ((at = text.indexOf('\n', at) + 1) <= 0)
+                return text.size();
+        return std::min(text.size(), at + cursor.column);
+    }
+
+    static qce::TextCursor cursorOf(const QString &text, qsizetype offset) {
+        const auto before = QStringView(text).first(std::min(offset, text.size()));
+        const auto lastBreak = before.lastIndexOf('\n');
+        return {static_cast<int>(before.count('\n')), static_cast<int>(offset - lastBreak - 1)};
+    }
+
+    // The steps of the JSON path at an offset of indented JSON (member keys, "[3]" of arrays) from
+    // the root, read from the text before it (strings with escapes, brackets, commas, colons);
+    // with a target, the offset where the value of that path starts (-1: not found)
+    static QStringList jsonSteps(const QString &text, qsizetype end, const QStringList *target = nullptr,
+                                 qsizetype *found = nullptr) {
         struct Frame {
             bool array;
-            QString key; // the member key (object) or the index (array)
+            QString key; // the member key (object) or "[index]" (array)
             int index = 0;
         };
         std::vector<Frame> stack;
         QString lastString;
+        auto steps = [&] {
+            QStringList result;
+            for (const auto &f : stack) {
+                if (f.key.isEmpty())
+                    break;
+                result << f.key;
+            }
+            return result;
+        };
+        // (a value starts after ':' of a member, '[' or ',' of an array: the path is then complete)
+        auto valueStarts = [&](qsizetype i) {
+            if (!target || stack.empty() || stack.back().key.isEmpty() || steps() != *target)
+                return false;
+            qsizetype at = i + 1;
+            while (at < text.size() && text[at].isSpace())
+                ++at;
+            *found = at;
+            return true;
+        };
+        if (found)
+            *found = target && target->isEmpty() ? 0 : -1;
+        if (target && target->isEmpty())
+            return {};
         for (qsizetype i = 0; i < end; ++i) {
             const QChar c = text[i];
             if (c == '"') {
@@ -777,25 +838,99 @@ private:
                 lastString = s;
             } else if (c == ':' && !stack.empty() && !stack.back().array) {
                 stack.back().key = lastString;
+                if (valueStarts(i))
+                    return {};
             } else if (c == '{' || c == '[') {
-                stack.push_back({c == '[', c == '[' ? QStringLiteral("0") : QString()});
+                stack.push_back({c == '[', c == '[' ? QStringLiteral("[0]") : QString()});
+                // (an empty array has no element 0)
+                if (c == '[' && i + 1 < text.size() && QStringView(text).sliced(i + 1).trimmed().startsWith(']'))
+                    stack.back().key.clear();
+                else if (c == '[' && valueStarts(i))
+                    return {};
             } else if (c == '}' || c == ']') {
                 if (!stack.empty())
                     stack.pop_back();
             } else if (c == ',' && !stack.empty()) {
-                if (stack.back().array)
-                    stack.back().key = QString::number(++stack.back().index);
-                else
+                if (stack.back().array) {
+                    stack.back().key = QString("[%1]").arg(++stack.back().index);
+                    if (valueStarts(i))
+                        return {};
+                } else
                     stack.back().key.clear();
             }
         }
-        QString path = "$";
-        for (const auto &f : stack) {
-            if (f.key.isEmpty())
-                break;
-            path += f.array ? "[" + f.key + "]" : "." + f.key;
+        return steps();
+    }
+
+    // The offset in indented JSON where the value of a path starts, -1 when not found
+    static qsizetype jsonOffset(const QString &text, const QStringList &target) {
+        qsizetype found = -1;
+        jsonSteps(text, text.size(), &target, &found);
+        return found;
+    }
+
+    // Tabs switched: the same place in the other view (JSON <-> Tree, Original <-> WikiTree)
+    void followTab(QWidget *from, QWidget *to) {
+        if (from == json_.page && to == treePage_) {
+            const auto steps = jsonSteps(json_.doc->toPlainText(), offsetOf(json_.doc->toPlainText(),
+                                                                            json_.edit->area()->cursorPosition()));
+            QModelIndex at;
+            for (const QString &step : steps) {
+                QModelIndex next;
+                for (int r = 0; r < model_->rowCount(at); ++r)
+                    if (const QModelIndex child = model_->index(r, 0, at); child.data(stepRole).toString() == step) {
+                        next = child;
+                        break;
+                    }
+                if (!next.isValid())
+                    break;
+                at = next;
+            }
+            if (at.isValid())
+                selectInTree(tree_, at);
+        } else if (from == treePage_ && to == json_.page) {
+            QStringList steps;
+            for (QModelIndex at = tree_->currentIndex().siblingAtColumn(0); at.isValid(); at = at.parent())
+                steps.prepend(at.data(stepRole).toString());
+            if (steps.isEmpty())
+                return;
+            const QString text = json_.doc->toPlainText();
+            if (const qsizetype offset = jsonOffset(text, steps); offset >= 0)
+                moveCursor(json_.edit, cursorOf(text, offset));
+        } else if (from == wiki_.page && to == wikiTreePage_) {
+            // the item of the cursor's line, or of the nearest line above it
+            const int line = wiki_.edit->area()->cursorPosition().line;
+            QModelIndex best;
+            std::function<void(const QModelIndex &)> visit = [&](const QModelIndex &parent) {
+                for (int r = 0; r < wikiModel_->rowCount(parent); ++r) {
+                    const QModelIndex index = wikiModel_->index(r, 0, parent);
+                    if (index.data(lineRole).toInt() > line)
+                        return;
+                    best = index;
+                    visit(index);
+                }
+            };
+            visit(QModelIndex());
+            if (best.isValid())
+                selectInTree(wikiTree_, best);
+        } else if (from == wikiTreePage_ && to == wiki_.page) {
+            if (const QModelIndex at = wikiTree_->currentIndex(); at.isValid())
+                moveCursor(wiki_.edit, {at.siblingAtColumn(0).data(lineRole).toInt(), 0});
         }
-        return path;
+    }
+
+    static void selectInTree(QTreeView *view, const QModelIndex &index) {
+        for (QModelIndex up = index.parent(); up.isValid(); up = up.parent())
+            view->expand(up);
+        view->setCurrentIndex(index);
+        view->scrollTo(index, QAbstractItemView::PositionAtCenter);
+        view->setFocus();
+    }
+
+    static void moveCursor(qce::CodeEdit *edit, qce::TextCursor at) {
+        edit->area()->setCursorPosition(at);
+        edit->area()->ensureVisible(at, 5);
+        edit->area()->setFocus();
     }
 
     // The headings of wikitext down to a line: "English › Etymology 1 › Noun"
@@ -845,6 +980,7 @@ private:
     TreeFindBar *treeFind_ = nullptr;
     QStandardItemModel *model_;
     QLabel *pathLabel_ = nullptr;   // status line: the path to the cursor or the selected node
+    QWidget *lastTab_ = nullptr;    // the tab before a switch (followTab)
     QTreeView *wikiTree_ = nullptr; // WikiTree: the Original by headings
     QWidget *wikiTreePage_ = nullptr;
     TreeFindBar *wikiTreeFind_ = nullptr;

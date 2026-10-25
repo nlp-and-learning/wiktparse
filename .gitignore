@@ -2,6 +2,9 @@
 pages/
 out/
 HANDOFF*.md
+# API keys (ZAI_API_KEY, COMETAPI_KEY…), anywhere in the tree
+.env
+.env.*
 
 # Prerequisites
 *.d

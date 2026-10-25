@@ -246,9 +246,17 @@
           "type": "boolean",
           "description": "wiktlink: this wiki has a page of the term with a section of the language"
         },
+        "en": {
+          "type": "boolean",
+          "description": "wiktlink: en.wiktionary has a page of the term with a section of the language"
+        },
         "home": {
           "type": "boolean",
           "description": "wiktlink: the Wiktionary of the language has a page of the term with a section of the language"
+        },
+        "page_title": {
+          "type": "string",
+          "description": "wiktlink: the title of the page found when it is not the term (without accents, optional parts)"
         }
       }
     }

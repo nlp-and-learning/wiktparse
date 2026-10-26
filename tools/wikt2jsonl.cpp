@@ -2866,35 +2866,86 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     return {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"source", source}, {"sections", sections}};
 }
 
-// The text with its HTML entities decoded (ru "символ &#171;@&#187;" -> "символ «@»", &nbsp;), but those
-// of a character of wiki markup, which the writers put there not to make markup (&#124; |, &#61; =,
-// &lt; <, &#91; [ … stay)
-std::string withDecodedEntities(std::string text) {
+// Named HTML entities beyond those of wikilib (res/html_entities.tsv: &euml; ë, &larr; ←, &alpha; α)
+std::map<std::string, std::string> htmlEntities;
+
+// An HTML entity ("&#171;", "&euml;") as its character; nullopt when it is none
+std::optional<std::string> decodedEntity(std::string_view entity) {
+    if (entity.size() > 2)
+        if (auto it = htmlEntities.find(std::string(entity.substr(1, entity.size() - 2))); it != htmlEntities.end())
+            return it->second;
+    auto decoded = wikilib::text::decode_html_entities(entity);
+    return decoded != entity ? std::optional(decoded) : std::nullopt;
+}
+
+// The text with its HTML entities decoded; keep(character, place) says which to leave as they are
+std::string decodedEntities(const std::string &text, const std::function<bool(const std::string &, size_t)> &keep) {
     if (text.find('&') == std::string::npos)
         return text;
-    static const std::string_view markup = "<>&[]{}|=':*#;~\n\r";
-    // (arrows, which wikilib does not know)
-    static const std::map<std::string_view, std::string_view> more = {
-            {"&larr;", "←"}, {"&rarr;", "→"}, {"&uarr;", "↑"}, {"&darr;", "↓"}, {"&harr;", "↔"},
-            {"&lArr;", "⇐"}, {"&rArr;", "⇒"}, {"&hArr;", "⇔"}};
     std::string result;
     result.reserve(text.size());
     for (size_t i = 0; i < text.size();) {
         if (text[i] == '&')
-            if (const size_t end = text.find(';', i + 1); end != std::string::npos && end - i < 12) {
-                const auto entity = std::string_view(text).substr(i, end - i + 1);
-                const auto known = more.find(entity);
-                const auto decoded = known != more.end() ? std::string(known->second)
-                                                         : wikilib::text::decode_html_entities(entity);
-                if (decoded != entity && !(decoded.size() == 1 && markup.find(decoded[0]) != std::string_view::npos)) {
-                    result += decoded;
+            if (const size_t end = text.find(';', i + 1); end != std::string::npos && end - i < 12)
+                if (auto decoded = decodedEntity(std::string_view(text).substr(i, end - i + 1));
+                    decoded && !keep(*decoded, i)) {
+                    result += *decoded;
                     i = end + 1;
                     continue;
                 }
-            }
         result += text[i++];
     }
     return result;
+}
+
+// The page text for parsing with its HTML entities decoded (ru "символ &#171;@&#187;" -> "символ «@»",
+// &nbsp;), but those of a character of wiki markup, which the writers put there not to make markup
+// (&#124; |, &#61; =, &lt; <, &#91; [ … stay)
+std::string withDecodedEntities(std::string text) {
+    static const std::string_view markup = "<>&[]{}|=':*#;~\n\r";
+    return decodedEntities(text, [](const std::string &c, size_t) {
+        return c.size() == 1 && markup.find(c[0]) != std::string_view::npos;
+    });
+}
+
+// A string of the output with all its HTML entities decoded (etymology "A &gt; B", "&#91;1&#93;"), but,
+// inside a template or a link, those of its markup (&#124; | {{t|en|a&#124;b}}, &#61; =, brackets),
+// so that the wikitext of a field reads as before
+std::string outputText(const std::string &text) {
+    if (text.find('&') == std::string::npos)
+        return text;
+    // depth of {{ }} and [[ ]] at each place
+    std::vector<int> depth(text.size() + 1, 0);
+    int d = 0;
+    for (size_t i = 0; i < text.size(); ++i) {
+        depth[i] = d;
+        if (i + 1 < text.size() && (text.compare(i, 2, "{{") == 0 || text.compare(i, 2, "[[") == 0))
+            ++d;
+        else if (i + 1 < text.size() && (text.compare(i, 2, "}}") == 0 || text.compare(i, 2, "]]") == 0) && d > 0)
+            --d;
+    }
+    return decodedEntities(text, [&](const std::string &c, size_t at) {
+        return depth[at] > 0 && c.size() == 1 && std::string_view("|=[]{}").find(c[0]) != std::string_view::npos;
+    });
+}
+
+// The output page with outputText in all its strings and keys
+json withOutputText(const json &v) {
+    if (v.is_string())
+        return outputText(v.get<std::string>());
+    if (v.is_array()) {
+        json out = json::array();
+        for (const auto &x : v)
+            out.push_back(withOutputText(x));
+        return out;
+    }
+    if (v.is_object()) {
+        json out = json::object();
+        for (const auto &[k, x] : v.items())
+            out[outputText(k)] = withOutputText(x);
+        return out;
+    }
+    return v;
 }
 
 // The output: tools/jsonl_blocks.h
@@ -2968,6 +3019,9 @@ int main(int argc, char *argv[]) {
         std::ranges::sort(wikis);
 
         Configs configs(configDir);
+        for (const auto &line : readLines((configDir.parent_path() / "html_entities.tsv").string()))
+            if (auto f = split(line, '\t'); f.size() == 2 && f[0] != "name" && !f[0].starts_with("#"))
+                htmlEntities[f[0]] = f[1];
         for (const auto &line : readLines((configDir.parent_path() / "wiktionary_section_names.tsv").string())) {
             auto f = split(line, '\t');
             if (f.size() >= 2 && f[0] != "wiki" && !f[0].starts_with("#")) {
@@ -3007,7 +3061,9 @@ int main(int argc, char *argv[]) {
             if (config.value("skip", false))
                 continue;
             const SectionNames sectionNames("wiktsections.sqlite", wiki);
-            auto written = [&](const json &page) { return uniformTree ? uniform::page(page, config, sectionNames) : page; };
+            auto written = [&](const json &page) {
+                return withOutputText(uniformTree ? uniform::page(page, config, sectionNames) : page);
+            };
             const auto wikiStarted = std::chrono::steady_clock::now();
             Stats stats;
             const size_t workers =

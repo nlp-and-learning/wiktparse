@@ -87,9 +87,11 @@ dump_dir = ~/dump
   with canonical codes, each with the tree of its sections as the headings
   give it (template lines like pl `{{synonimy}}` one level below), every node
   under its English name with senses or translations where they stand (not
-  linked yet). HTML entities of the wikitext are decoded (`&#171;@&#187;` «@»,
-  `&nbsp;`), but those of a character of wiki markup (`&#124;` |, `&#61;` =,
-  `&lt;` <, `&#91;` [), which stand there not to make markup. Schema: `res/schema/page.schema.json`;
+  linked yet). HTML entities are decoded in the output (`&#171;@&#187;` «@»,
+  `&nbsp;`, `&gt;`, names of `res/html_entities.tsv` beyond those of
+  wikilib), but those of the markup of a template or a link inside it
+  (`{{t|en|a&#124;b}}`), so that its wikitext reads as before; the pages are
+  parsed with the entities of markup characters as written. Schema: `res/schema/page.schema.json`;
   `tools/validate_jsonl.py jsonl` checks the output. `--uniform` writes the
   pages in the uniform tree instead (`doc/uniform-tree.md`, schema
   `res/schema/uniform.schema.json`): languages, entries by part of speech

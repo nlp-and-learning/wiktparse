@@ -58,6 +58,8 @@ def main():
     langs = sqlite3.connect(os.path.join(args.d, 'wiktlangs.sqlite'))
     sections = sqlite3.connect(os.path.join(args.d, 'wiktsections.sqlite'))
     codes = {r[0].lower() for r in langs.execute('SELECT code FROM language')}
+    # and other codes of them (mg {{=zho=}}: ISO 639-3 zho -> zh), as the parser maps them
+    codes |= {r[0].lower() for r in langs.execute('SELECT code FROM code_map')}
     english = {r[0].lower() for r in langs.execute('SELECT name FROM language') if r[0]}
     english |= {r[0].lower() for r in sections.execute('SELECT section FROM section')}
     names = collections.defaultdict(set)  # language or wiki -> lowercase names

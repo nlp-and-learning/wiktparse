@@ -1312,7 +1312,7 @@ public:
                     {"num", "numeral"}, {"prep", "preposition"}, {"conj", "conjunction"}, {"interj", "interjection"},
                     {"suf", "suffix"}, {"pref", "prefix"}, {"propn", "proper noun"}, {"prop", "proper noun"},
                     {"noun.masc", "noun"}, {"noun.fem", "noun"}, {"noun.neut", "noun"}, {"phr", "phrase"},
-                    {"subst", "noun"}, {"sb", "noun"},
+                    {"subst", "noun"}, {"sb", "noun"}, {"vb", "verb"}, {"npr", "proper noun"},
                     // and of other sections: vec {{-etim-}}, scn {{-hyph-}}, da {{-decl-}}
                     {"etym", "etymology"}, {"etim", "etymology"}, {"ety", "etymology"}, {"etymo", "etymology"},
                     {"ref", "references"}, {"hyph", "hyphenation"}, {"trans", "translations"},
@@ -2550,6 +2550,13 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             !(config.contains(json::json_pointer("/language/aliases")) && config["language"]["aliases"].contains(*marker)) &&
             !names.isCode(*marker) && names.wikiCode(wiki, *marker).empty() && names.mappedCode(*marker).empty() &&
             markerCode(*marker).empty() && sectionNames.find(sectionKey(*marker).first))
+            marker.reset();
+        // In an open language section, a {{-…-}} marker that is a code and a section of the wiki
+        // (vec {{-syn-}} synonyms, not Senaya; {{-rel-}} related terms, not Rendille) is a section,
+        // unless the configuration names it a language
+        if (marker && current && !byName && !implicit && dashTemplate(line) == 1 &&
+            !(config.contains(json::json_pointer("/language/aliases")) && config["language"]["aliases"].contains(*marker)) &&
+            sectionNames.find(sectionKey(trim(line)).first, 1))
             marker.reset();
         if (marker) {
             finish(offset);

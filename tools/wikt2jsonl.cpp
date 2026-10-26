@@ -2309,10 +2309,15 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                 // one part: of the relation "single" (pl {{etymn|białor|хлопец}}: from хлопец)
                 if (parts.size() == 1 && s.contains("single"))
                     relation = s["single"].get<std::string>();
+                // "by_words": the words before it or a marker give its relation (pl "{{por}} {{etymn|niem|waschen}}")
+                if (parts.size() == 1 && s.value("by_words", false) && !relationOfWords.empty())
+                    relation = relationOfWords;
                 for (const auto &part : parts)
                     form += (form.empty() ? "" : " + ") + part;
             } else {
                 form = termValue(param("term"));
+                if (s.value("by_words", false) && !relationOfWords.empty() && !sameItem)
+                    relation = relationOfWords;
             }
             if (lang.empty() || noTerm(form))
                 continue;
@@ -3299,10 +3304,16 @@ int main(int argc, char *argv[]) {
                         std::smatch m;
                         if (line.size() > 500 || !std::regex_search(line, m, option))
                             continue;
-                        const auto key = trim(m[1].str()), name = trim(m[2].str());
-                        if (auto code = names.code(wiki, wikilib::unicode::to_lower(name), str(config, "/language/lookup"),
-                                                   config["language"].value("strip", std::vector<std::string>{}));
-                            !key.empty() && !code.empty()) {
+                        const auto key = trim(m[1].str()), name = wikilib::unicode::to_lower(trim(m[2].str()));
+                        auto codeOf = [&](const std::string &n) {
+                            return names.code(wiki, n, str(config, "/language/lookup"),
+                                              config["language"].value("strip", std::vector<std::string>{}));
+                        };
+                        // (the name, else its last words: "Język prazachodniogermański")
+                        std::string code = codeOf(name);
+                        if (auto space = name.find(' '); code.empty() && space != std::string::npos)
+                            code = codeOf(trim(name.substr(space + 1)));
+                        if (!key.empty() && !code.empty() && !config["etymology"]["language_names"].contains(key)) {
                             config["etymology"]["language_names"][key] = code;
                             ++added;
                         }

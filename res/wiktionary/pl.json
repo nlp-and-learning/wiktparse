@@ -132,11 +132,15 @@
   },
   "etymology": {
     "language_switch": "Szablon:etym/język",
+    "language_names": {
+      "praitalski": "itc-pro",
+      "praital": "itc-pro"
+    },
     "templates": {
-      "etym": {"relation": "compound", "single": "from", "lang": 1, "parts": 2},
-      "etymn": {"relation": "compound", "single": "from", "lang": 1, "parts": 2},
-      "etym2": {"relation": "from", "lang": 1, "term": 2},
-      "etym2n": {"relation": "from", "lang": 1, "term": 2},
+      "etym": {"relation": "compound", "single": "from", "by_words": true, "lang": 1, "parts": 2},
+      "etymn": {"relation": "compound", "single": "from", "by_words": true, "lang": 1, "parts": 2},
+      "etym2": {"relation": "from", "by_words": true, "lang": 1, "term": 2},
+      "etym2n": {"relation": "from", "by_words": true, "lang": 1, "term": 2},
       "zapożyczenie": {"relation": "borrowed", "lang": 1, "term": 2},
       "kalka": {"relation": "calque", "lang": 1, "term": 2},
       "pochodne": {"relation": "from", "lang": 1, "term": 2},

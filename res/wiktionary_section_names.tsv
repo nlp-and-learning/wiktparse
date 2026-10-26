@@ -1065,6 +1065,54 @@ zh	其他形式	Alternative forms	section
 zh	下位詞	Hyponyms	relation
 zh	同類詞彙	Coordinate terms	relation
 zh	派生語彙	Derived terms	relation
+zh	派生詞	Derived terms	relation
+zh	派生词	Derived terms	relation
+zh	派生语汇	Derived terms	relation
+zh	派生詞語	Derived terms	relation
+zh	衍生词汇	Derived terms	relation
+zh	衍生詞彙	Derived terms	relation
+zh	衍生字	Derived characters	relation
+zh	延伸阅读	Further reading	section
+zh	拓展閱讀	Further reading	section
+zh	拓展閲讀	Further reading	section
+zh	异序词	Anagrams	relation
+zh	使用說明	Usage notes	section
+zh	用法說明	Usage notes	section
+zh	用法说明	Usage notes	section
+zh	使用注意	Usage notes	section
+zh	相关词汇	Related terms	relation
+zh	相關詞	Related terms	relation
+zh	相關詞語	Related terms	relation
+zh	相关词组	Related terms	relation
+zh	相關詞條	Related terms	relation
+zh	關聯詞	Related terms	relation
+zh	編碼	Coding	section
+zh	其他寫法	Alternative forms	section
+zh	替代寫法	Alternative forms	section
+zh	替代形式	Alternative forms	section
+zh	写法	Alternative forms	section
+zh	参考资料	References	section
+zh	參考	References	section
+zh	反義詞	Antonyms	relation
+zh	参见	See also	section
+zh	另見	See also	section
+zh	另见	See also	section
+zh	成語	Idioms	relation
+zh	俗語	Proverbs	section
+zh	諺語	Proverbs	section
+zh	活用	Conjugation	section
+zh	活用形	Conjugation	section
+zh	讀法	Pronunciation	section
+zh	含义	Definitions	section
+zh	字義	Definitions	section
+zh	詞首音變	Mutation	section
+zh	上位詞	Hypernyms	relation
+zh	副词	Adverb	pos
+zh	数词	Numeral	pos
+zh	罗马字	Romanization	pos
+zh	音節	Syllable	pos
+zh	汉字词	Etymology	section
+zh	組成	Etymology	section
 uz	Etimologiyasi	Etymology	section
 uz	Morfologik va sintaktik xususiyatlari	Morphology	section
 uz	Maʼnoviy xususiyatlari	Semantics	section

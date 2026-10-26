@@ -25,7 +25,7 @@ everything else as attributes.
 ```
 page
 └─ languages[]              one per language section of the page
-   └─ entries[]             one per part of speech (and group, and form)
+   └─ entries[]             one per part of speech (and group)
       ├─ senses[]           the definitions, ids "1", "1.2" (nesting as ids, not levels)
       │  └─ examples[]      examples and quotations of the sense
       ├─ translations[]     of this entry, each to a sense id when the wiki says which
@@ -49,11 +49,11 @@ headings are not levels: what they say becomes attributes of an entry.
   with `group` 1, 1, 2, 2, 3, 3, 4, 5 and the text of their Etymology section
   as `etymology`.
 
-So an **entry** is a group of senses of one part of speech, of one group when
-the wiki tells it (an etymology, a homograph, a number of its own), of one
-form when the wiki tells it (pl *bić* and *bić się* are two entries, both
-verbs). One part of speech may come in several entries (de *Bank* the bench
-and *Bank* the bank: two nouns).
+So an **entry** is a group of senses of one part of speech and of one group
+when the wiki tells it (an etymology, a homograph, a number of its own). One
+part of speech may come in several entries (de *Bank* the bench and *Bank* the
+bank: two nouns; pl *bić* and its reflexive *bić się*, groups 1 and 2, the
+latter with `pos_written` "czasownik zwrotny…", as the wiki has them).
 
 ## Page
 
@@ -87,7 +87,6 @@ and *Bank* the bank: two nouns).
 | `pos_also` | further parts of speech of the same heading or line (de `{{Wortart|Substantiv|Deutsch}}, {{n}}, {{Wortart|Toponym|Deutsch}}`: `pos` `Noun`, `pos_also` `["Toponym"]`) |
 | `pos_written` | the part of speech as written (`''rzeczownik, rodzaj żeński''`, `{{S|nom|fr|num=2}}`, `{{-ana-|mg}}`) |
 | `group` | the wiki's own number of the entry or of its group of entries: en `Etymology 2`, es `Etimología 2`, fr `num=2`, ru `{{з|II}}` (the place of the homograph when the template has no number), pl `2` of `(2.1)` |
-| `form` | the form when the wiki makes one an entry of its own (pl `bić się` beside `bić`) |
 | `headword` | the headword line or inflection template as written (`{{en-noun}}`, `{{bn-বিশেষ্য|…}}`) |
 | `grammar` | gender, inflection class and the like as the wiki writes them (`rodzaj żeński`, de `{{f}}, ''Bänke''`) |
 | `etymology` | the etymology of this entry as text: its own section (de `{{Herkunft}}` under the part of speech), that of its group (en `Etymology 2`, a ru homograph), or the lines of the language's etymology marked for it (pl `(2.1)`, fr `{{laé|fr|nom|2}}`); none: that of the language |
@@ -184,7 +183,8 @@ language.
 1. `sections` of an entry as text, or parsed further (inflection tables) –
    text first, parsed per kind later.
 2. Thesaurus pages (en `Thesaurus:water`): entries of their own, or relations
-   of the main entry – entries of their own, `ns` 110.
+   of the main entry – merged into the main entry as its relations, as
+   translation subpages are merged (not done yet).
 3. Translations belonging to several entries (en `====Translations====`
    under `===Etymology N===` beside its parts of speech, rare): to one entry,
    or to each – to one, as in the table.

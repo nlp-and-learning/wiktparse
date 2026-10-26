@@ -25,7 +25,7 @@ wiki, a wszystko inne jako atrybuty.
 ```
 strona
 └─ languages[]              po jednym na sekcję językową strony
-   └─ entries[]             po jednym na część mowy (i grupę, i formę)
+   └─ entries[]             po jednym na część mowy (i grupę)
       ├─ senses[]           definicje, id "1", "1.2" (zagnieżdżenie jako id, nie poziomy)
       │  └─ examples[]      przykłady i cytaty znaczenia
       ├─ translations[]     tego wpisu, każde do id znaczenia, gdy wiki mówi, którego
@@ -49,10 +49,11 @@ nie są poziomami: to, co mówią, staje się atrybutami wpisu.
   czasownik 3, rzeczownik 4 i 5) z `group` 1, 1, 2, 2, 3, 3, 4, 5 i tekstem
   swojej sekcji Etymology jako `etymology`.
 
-**Wpis** to więc grupa znaczeń jednej części mowy, jednej grupy, gdy wiki ją
-podaje (etymologii, homografu, własnego numeru), i jednej formy, gdy wiki ją
-podaje (pl *bić* i *bić się* to dwa wpisy, oba czasowniki). Jedna część mowy
-może dać kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki).
+**Wpis** to więc grupa znaczeń jednej części mowy i jednej grupy, gdy wiki ją
+podaje (etymologii, homografu, własnego numeru). Jedna część mowy może dać
+kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki; pl *bić* i
+zwrotne *bić się*, grupy 1 i 2, druga z `pos_written` „czasownik zwrotny…”,
+tak jak w wiki).
 
 ## Strona
 
@@ -86,7 +87,6 @@ może dać kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki).
 | `pos_also` | dalsze części mowy tego samego nagłówka lub linii (de `{{Wortart|Substantiv|Deutsch}}, {{n}}, {{Wortart|Toponym|Deutsch}}`: `pos` `Noun`, `pos_also` `["Toponym"]`) |
 | `pos_written` | część mowy tak, jak zapisana (`''rzeczownik, rodzaj żeński''`, `{{S|nom|fr|num=2}}`, `{{-ana-|mg}}`) |
 | `group` | własny numer wpisu lub jego grupy wpisów w wiki: en `Etymology 2`, es `Etimología 2`, fr `num=2`, ru `{{з|II}}` (miejsce homografu, gdy szablon nie ma numeru), pl `2` z `(2.1)` |
-| `form` | forma, gdy wiki robi z niej osobny wpis (pl `bić się` obok `bić`) |
 | `headword` | linia hasła lub szablon odmiany tak, jak zapisane (`{{en-noun}}`, `{{bn-বিশেষ্য|…}}`) |
 | `grammar` | rodzaj, klasa odmiany i podobne tak, jak zapisuje je wiki (`rodzaj żeński`, de `{{f}}, ''Bänke''`) |
 | `etymology` | etymologia tego wpisu jako tekst: jego własna sekcja (de `{{Herkunft}}` pod częścią mowy), sekcja jego grupy (en `Etymology 2`, homograf ru) albo linie etymologii języka oznaczone dla niego (pl `(2.1)`, fr `{{laé|fr|nom|2}}`); brak: ta języka |
@@ -183,7 +183,8 @@ języka.
 1. `sections` wpisu jako tekst czy rozbierane dalej (tabele odmiany) –
    najpierw tekst, rozbiór według rodzaju później.
 2. Strony tezaurusa (en `Thesaurus:water`): osobne wpisy czy relacje hasła
-   głównego – osobne wpisy, `ns` 110.
+   głównego – dołączane do hasła głównego jako jego relacje, tak jak podstrony
+   tłumaczeń (jeszcze nie zrobione).
 3. Tłumaczenia należące do kilku wpisów (en `====Translations====` pod
    `===Etymology N===` obok jego części mowy, rzadkie): do jednego wpisu czy
    do każdego – do jednego, jak w tabeli.

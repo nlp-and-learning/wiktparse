@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Wiktionary page, uniform tree",
-  "description": "One page of a Wiktionary as one JSONL line in the uniform tree (doc/uniform-tree.md): languages, entries (one per part of speech, group and form), senses; translations and relations under their entry. Empty fields and empty or default values are left out.",
+  "description": "One page of a Wiktionary as one JSONL line in the uniform tree (doc/uniform-tree.md): languages, entries (one per part of speech and group), senses; translations and relations under their entry. Empty fields and empty or default values are left out.",
   "type": "object",
   "required": ["wiki", "title", "ns", "languages"],
   "additionalProperties": false,
@@ -102,10 +102,6 @@
         "group": {
           "type": "string",
           "description": "The wiki's own number of the entry or of its group of entries: en Etymology 2, es Etimología 2, fr num=2, ru {{з|II}} (the place of the homograph when the template has no number), pl 2 of (2.1)"
-        },
-        "form": {
-          "type": "string",
-          "description": "The form when the wiki makes one an entry of its own (pl bić się beside bić)"
         },
         "headword": {
           "type": "string",

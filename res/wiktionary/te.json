@@ -4,7 +4,8 @@
     "form": "implicit"
   },
   "senses": {
-    "marker": "*"
+    "marker": "line",
+    "line_stars": true
   },
-  "status": "no language markers: one Telugu section per page; definitions as * lines of ==అర్ధ వివరణ=="
+  "status": "no language markers: one Telugu section per page; definitions as lines (or * lines) of ==అర్ధ వివరణ=="
 }

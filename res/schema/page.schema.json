@@ -173,6 +173,15 @@
           "maxItems": 2,
           "description": "wiktlink: where a merged subpage is in the dump, as the page's source"
         },
+        "implicit": {
+          "type": "boolean",
+          "description": "A section the wiki does not write: Definitions of senses right under the language heading (ar \"== {{اللغة|عربية}} ==\" then \"# …\"); its heading is empty"
+        },
+        "lexeme": {
+          "type": "string",
+          "pattern": "^L[0-9]+$",
+          "description": "The Wikidata lexeme whose senses the wiki shows instead of its own (ar {{معجمية|L1480479|معاني}})"
+        },
         "source_title": {
           "type": "string",
           "description": "wiktlink: the title of the merged subpage (water/translations)"

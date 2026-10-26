@@ -682,8 +682,16 @@ std::optional<Sense> senseLine(const json &config, const std::string &line, std:
     // "line": every text line of the definitions (lo ===ຄວາມໝາຍ=== without marks)
     if (marker == "line") {
         auto text = trim(line);
-        if (text.empty() || text.starts_with("{{") || text.starts_with("[[Category:") || text.starts_with("*") ||
-            text.starts_with("<") || text.starts_with("|") || text.starts_with("}}"))
+        // (* lines: lists of other sections, unless "line_stars" (te: definitions as * lines too))
+        static const json::json_pointer lineStars("/senses/line_stars");
+        const bool stars = config.contains(lineStars) && config[lineStars].get<bool>();
+        if (text.empty() || text.starts_with("{{") || text.starts_with("[[Category:") ||
+            (text.starts_with("*") && !stars) || text.starts_with("<") || text.starts_with("|") ||
+            text.starts_with("}}"))
+            return std::nullopt;
+        // the headword alone in bold (te "'''ampela'''"): no definition
+        static const std::regex headword(R"(^'''[^']+'''$)");
+        if (text.size() < maxRegexLine && std::regex_match(text, headword))
             return std::nullopt;
         while (!text.empty() && (text[0] == ':' || text[0] == '#' || text[0] == '*')) // lo ":*text"
             text = trim(text.substr(1));
@@ -1444,6 +1452,18 @@ public:
                 return;
             }
         }
+        // Senses right under the language heading, before any section (ar "== {{اللغة|عربية}} ==" then
+        // "# …"): in a Definitions section of their own, so that they are where all senses are
+        // (not of the "line" marker, for which every line of text would be a sense)
+        // (and not of wikis whose "#" lines there are no definitions: senses.implicit false, gn pronunciation)
+        static const json::json_pointer implicitSenses("/senses/implicit");
+        if (stack_.size() == 1 && line.starts_with('#') && str(config_, "/senses/marker", "#") != "line" &&
+            !(config_.contains(implicitSenses) && !config_[implicitSenses].get<bool>()))
+            if (std::vector<int> probe; senseLine(config_, line, probe)) {
+                push(node(std::optional<std::string>("Definitions"), "section", "", headingLevel() + 1, 0));
+                current()["implicit"] = true;
+                counters_.clear();
+            }
         // Senses where definitions stand: under a part of speech, in definitions ("#", pl ": (1.1)")
         const auto &kind = current()["kind"];
         if (kind == "pos" || current()["section"] == "Definitions")
@@ -1575,6 +1595,14 @@ private:
                 item["lang_written"] = t.lang; // pl "angielski", it "{{en}}" -> en
             n["translations"].push_back(std::move(item));
         }
+        // ar {{معجمية|L1480479|معاني}}: the senses are those of a Wikidata lexeme, not in the wikitext
+        if (auto lexemeTemplate = str(config_, "/senses/lexeme_template"); !lexemeTemplate.empty())
+            for (const auto &t : allTemplates(n.value("text", std::string())))
+                if (t.name == lexemeTemplate)
+                    if (auto id = t.get(size_t{1}); id && id->size() > 1 && (*id)[0] == 'L') {
+                        n["lexeme"] = trim(std::string(*id));
+                        break;
+                    }
         stats.senses += n["senses"].size();
         stats.translations += n["translations"].size();
         n.erase("template_pos");

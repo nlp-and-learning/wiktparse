@@ -6,5 +6,8 @@
     },
     "fallback_native": true
   },
-  "status": "aliases from the dump markers"
+  "senses": {
+    "implicit": false
+  },
+  "status": "aliases from the dump markers; # lines under the language heading are the pronunciation (Oñemoñe’ẽ), no definitions"
 }

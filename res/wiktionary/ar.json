@@ -1,5 +1,8 @@
 {
   "wiki": "ar",
+  "senses": {
+    "lexeme_template": "معجمية"
+  },
   "language": {
     "lookup": "ال{name}",
     "strip": [

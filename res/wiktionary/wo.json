@@ -9,5 +9,8 @@
     },
     "fallback_native": true
   },
-  "status": "fixed from samples1000 pages without a language"
+  "senses": {
+    "implicit": false
+  },
+  "status": "fixed from samples1000 pages without a language; # lines under the language heading are placeholders ('''-'''), no definitions"
 }

@@ -1,0 +1,8 @@
+{
+  "comment": "Base words for the wordnet (HANDOFF-4): basic concepts, always in the sample (wordnetsample, reason \"base\"), with many translations in every Wiktionary: the concepts of the samples (water, dog, house, red, go) and other core vocabulary (nature, body, family, colours, numbers, common verbs and adjectives). The same concepts in every language, so that their translations meet.",
+  "languages": {
+    "en": ["water", "dog", "house", "red", "go", "fire", "earth", "sun", "moon", "tree", "stone", "bread", "milk", "cat", "horse", "bird", "fish", "man", "woman", "child", "mother", "father", "hand", "eye", "head", "heart", "day", "night", "year", "name", "white", "black", "green", "big", "small", "good", "new", "one", "two", "three", "eat", "drink", "sleep", "see", "say", "give", "come", "know"],
+    "pl": ["woda", "pies", "dom", "czerwony", "iść", "ogień", "ziemia", "słońce", "księżyc", "drzewo", "kamień", "chleb", "mleko", "kot", "koń", "ptak", "ryba", "mężczyzna", "kobieta", "dziecko", "matka", "ojciec", "ręka", "oko", "głowa", "serce", "dzień", "noc", "rok", "imię", "biały", "czarny", "zielony", "duży", "mały", "dobry", "nowy", "jeden", "dwa", "trzy", "jeść", "pić", "spać", "widzieć", "mówić", "dawać", "przyjść", "wiedzieć"],
+    "fr": ["eau", "chien", "maison", "rouge", "aller", "feu", "terre", "soleil", "lune", "arbre", "pierre", "pain", "lait", "chat", "cheval", "oiseau", "poisson", "homme", "femme", "enfant", "mère", "père", "main", "œil", "tête", "cœur", "jour", "nuit", "an", "nom", "blanc", "noir", "vert", "grand", "petit", "bon", "nouveau", "un", "deux", "trois", "manger", "boire", "dormir", "voir", "dire", "donner", "venir", "savoir"]
+  }
+}

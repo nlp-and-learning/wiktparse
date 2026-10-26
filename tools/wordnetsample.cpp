@@ -1,7 +1,8 @@
 // wordnetsample: a sample of jsonl_senses for the wordnet (HANDOFF-4), closed over translations
 // (at random only within the seed languages):
-//   1. seed languages (en and the languages of --homonyms): in the wiki of each its homonyms
-//      (res/wordnet/homonyms.json, reason "homonym"), then native entries of many translations
+//   1. seed languages (en and the languages of --homonyms and --base): in the wiki of each its
+//      homonyms (res/wordnet/homonyms.json, reason "homonym") and base words (res/wordnet/base.json:
+//      water, dog…, reason "base"), then native entries of many translations
 //      (at random of the top --high-pool) and of a medium number (--medium-min..--medium-max):
 //      --high/--medium in en, --other-high/--other-medium in the other seed languages;
 //   2. the pages their translations point to: "home" (the term's page in the wiki of its
@@ -16,6 +17,7 @@
 // every block. Output: plain <out>/<wiki>.jsonl (wiktbrowse) and <out>/selection.tsv.
 //
 // wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--homonyms res/wordnet/homonyms.json]
+//               [--base res/wordnet/base.json]
 //               [--high 300] [--medium 300] [--other-high 100] [--other-medium 100]
 //               [--high-pool 3000] [--medium-min 10] [--medium-max 40] [--min 200]
 //               [--no-seed-foreign] [--no-foreign] [--seed 1] [-j 16]
@@ -130,6 +132,7 @@ int main(int argc, char *argv[]) {
     try {
         fs::path input = "jsonl_senses", output = "jsonl_wordnet";
         fs::path homonymsFile = WIKTPARSE_RES_DIR "/wordnet/homonyms.json";
+        fs::path baseFile = WIKTPARSE_RES_DIR "/wordnet/base.json";
         size_t high = 300, medium = 300, otherHigh = 100, otherMedium = 100, highPool = 3000, mediumMin = 10,
                mediumMax = 40, minimum = 200, threads = 16;
         bool seedForeign = true, foreign = true;
@@ -143,6 +146,8 @@ int main(int argc, char *argv[]) {
                 output = argv[++i];
             else if (arg == "--homonyms" && i + 1 < argc)
                 homonymsFile = argv[++i];
+            else if (arg == "--base" && i + 1 < argc)
+                baseFile = argv[++i];
             else if (arg == "--high" && i + 1 < argc)
                 high = number();
             else if (arg == "--medium" && i + 1 < argc)
@@ -169,6 +174,7 @@ int main(int argc, char *argv[]) {
                 foreign = false;
             else {
                 std::cout << "usage: wordnetsample [-i jsonl_senses] [-o jsonl_wordnet] [--homonyms homonyms.json]\n"
+                             "       [--base base.json]\n"
                              "       [--high 300] [--medium 300] [--other-high 100] [--other-medium 100]\n"
                              "       [--high-pool 3000] [--medium-min 10] [--medium-max 40] [--min 200]\n"
                              "       [--no-seed-foreign] [--no-foreign] [--seed 1] [-j 16]\n";
@@ -196,7 +202,16 @@ int main(int argc, char *argv[]) {
                     for (const auto &word : words)
                         chosen[lang][word.value("word", std::string())] = "homonym";
         } else
-            std::cerr << "wordnetsample: no " << homonymsFile.string() << ", seeds en only" << std::endl;
+            std::cerr << "wordnetsample: no " << homonymsFile.string() << std::endl;
+        // base words: basic concepts in every seed language (water, dog…)
+        if (std::ifstream in(baseFile); in) {
+            const json base = json::parse(in);
+            for (const auto &[lang, words] : base.value("languages", json::object()).items())
+                if (exists(lang))
+                    for (const auto &word : words)
+                        chosen[lang].emplace(word.get<std::string>(), "base");
+        } else
+            std::cerr << "wordnetsample: no " << baseFile.string() << std::endl;
         std::map<std::string, std::unordered_map<std::string, std::string>> seedLines; // seed wiki -> title -> line
         for (auto &[wiki, picks] : chosen) {
             const BlockReader reader(pathOf(wiki));

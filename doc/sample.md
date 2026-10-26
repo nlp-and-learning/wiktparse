@@ -29,7 +29,10 @@ multilingual wordnet (synsets linked across languages), not the wordnet itself.
 
 1. Seed languages en, pl, fr: in the Wiktionary of each, its homonyms of
    `res/wordnet/homonyms.json` of the repository (en rock, bank, bat…; pl
-   zamek, rola, bez…; fr avocat, livre, voler…: reason `homonym`), then native
+   zamek, rola, bez…; fr avocat, livre, voler…: reason `homonym`), its base
+   words of `res/wordnet/base.json` (48 basic concepts in each language: water,
+   dog, house, fire, mother, eat…; pl woda, pies, dom…; fr eau, chien,
+   maison…: reason `base`), then native
    entries of many translations (at random of the 3000 with most) and of
    10–40 translations (`high`, `medium`): 300 and 300 in en, 100 and 100 in
    pl and fr.

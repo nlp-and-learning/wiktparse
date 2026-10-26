@@ -1718,6 +1718,17 @@ roa_rup	pron	Pronunciation	section
 fo	pron	Pronunciation	section
 mn	pron	Pronunciation	section
 vec	trad-su	Translations	section
+tk	At	Noun	pos
+tk	Has at	Proper noun	pos
+tk	Işlik	Verb	pos
+tk	Sypat	Adjective	pos
+tk	Hal	Adverb	pos
+tk	San	Numeral	pos
+tk	Çalyşma	Pronoun	pos
+tk	Ümlük	Interjection	pos
+tk	Idioma	Idiom	pos
+tk	Söz düzümi	Phrase	pos
+wa	aloyire	Phrase	pos
 skr	مذکر	Noun	pos
 skr	مؤنث	Noun	pos
 skr	مذکر / مؤنث	Noun	pos

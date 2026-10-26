@@ -1354,7 +1354,8 @@ std::pair<std::string, int> sectionKey(std::string text) {
             text = text.substr(0, all.front().location.length()); // de "{{Wortart|Substantiv|Deutsch}}, {{n}}"
     if (auto t = onlyTemplate(trim(text))) {
         // wa {{H|sustantif|wa}}, vi {{ĐM|pron}}
-        static const std::set<std::string> byParameter = {"S", "Wortart", "-pos-", "H", "ĐM"};
+        // (tk {{Söztopary|Idioma|Türkmençe}})
+        static const std::set<std::string> byParameter = {"S", "Wortart", "-pos-", "H", "ĐM", "Söztopary"};
         if (byParameter.contains(t->name)) {
             if (auto v = t->get(size_t{1}))
                 text = std::string(*v);

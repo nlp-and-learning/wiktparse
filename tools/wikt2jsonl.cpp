@@ -1295,7 +1295,8 @@ private:
 // name or its first parameter (fr {{S|nom|fr}}, de {{Wortart|Substantiv|Deutsch}}),
 // without {{-…-}} dashes (it {{-sin-}}, nl {{-noun-|nld}}) and numbering ("Etymology 2")
 std::pair<std::string, int> sectionKey(std::string text) {
-    static const std::regex numbered(R"(^(.*\S)\s+(\d+)$)");
+    // "Etymology 2", zh "詞源2" (no space), lv "Izruna Nr.2"
+    static const std::regex numbered(R"(^(.*[^\d\s.])\s*(?:Nr\.|№)?\s*(\d+)$)");
     text = trim(text);
     if (text.starts_with("{{"))
         if (auto all = wikilib::templates::find_invocations(text); !all.empty())

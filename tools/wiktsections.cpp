@@ -139,7 +139,8 @@ int main(int argc, char *argv[]) {
         }
 
         // English section headings below language level; "Etymology 2" counts as "Etymology"
-        static const std::regex numbered(R"(^(.*\S)\s+\d+(?:\.\d+)*$)");
+        // (zh "詞源2": no space; lv "Izruna Nr.2")
+        static const std::regex numbered(R"(^(.*[^\d\s.])\s*(?:Nr\.|№)?\s*\d+(?:\.\d+)*$)");
         std::map<std::string, size_t> pages; // heading as written -> pages
         for (const auto &line : readLines((headersDir / "en.tsv").string())) {
             auto f = split(line, '\t');

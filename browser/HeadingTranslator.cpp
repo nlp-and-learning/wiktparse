@@ -170,7 +170,8 @@ QString HeadingTranslator::translateText(const Wiki &w, const QString &text, con
         if (const QString inner = translateText(w, m.captured(2), display); !inner.isEmpty())
             return m.captured(1) + " (" + inner + ")";
     // "Etymology 2", "Znaczenie 1": the number kept
-    static const QRegularExpression numbered(R"(^(.*\S)\s+(\d+)$)");
+    // (zh "詞源2": no space; lv "Izruna Nr.2")
+    static const QRegularExpression numbered(R"(^(.*[^\d\s.])\s*(?:Nr\.|№)?\s*(\d+)$)");
     if (const auto m = numbered.match(text); m.hasMatch())
         if (const QString base = translateText(w, m.captured(1), display); !base.isEmpty())
             return base + ' ' + m.captured(2);

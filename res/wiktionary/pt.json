@@ -1,5 +1,12 @@
 {
   "wiki": "pt",
+  "language": {
+    "aliases": {
+      "roa-gpm": "roa-opt",
+      "roa-tal": "vec",
+      "roa-nor": "nrf"
+    }
+  },
   "translations": {
     "section": "Tradução",
     "table": {

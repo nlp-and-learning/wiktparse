@@ -1,6 +1,13 @@
 {
   "wiki": "az",
   "language": {
+    "aliases": {
+      "Serb dili": "sr",
+      "Limburq dili": "li",
+      "Yeni Norveç dili": "nn",
+      "Saxa dili": "sah",
+      "Dillərarası": "mul"
+    },
     "also": [
       {
         "form": "heading-name",

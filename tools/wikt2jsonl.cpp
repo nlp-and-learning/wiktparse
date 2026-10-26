@@ -1699,6 +1699,13 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             }
             marker.reset();
         }
+        // Of a code form with names as another form (yue, az "also": heading-name): a heading that is
+        // no language but a section of the wiki (yue "== 參考 ==", az "== Tərcümələr ==") is a section
+        if (marker && !byName && !implicit &&
+            !(config.contains(json::json_pointer("/language/aliases")) && config["language"]["aliases"].contains(*marker)) &&
+            !names.isCode(*marker) && names.wikiCode(wiki, *marker).empty() && names.mappedCode(*marker).empty() &&
+            markerCode(*marker).empty() && sectionNames.find(sectionKey(*marker).first))
+            marker.reset();
         if (marker) {
             finish(offset);
             std::string code = byName && !implicit ? markerCode(*marker) : *marker;

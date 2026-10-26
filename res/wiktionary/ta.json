@@ -1,7 +1,10 @@
 {
   "wiki": "ta",
   "language": {
-    "fallback_native": true
+    "fallback_native": true,
+    "aliases": {
+      "அரேபியம்": "ar"
+    }
   },
   "status": "fixed from samples1000 pages without a language"
 }

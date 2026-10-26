@@ -70,7 +70,7 @@ hsb	D		hsb.json
 hu	E	{{-xx-}}	hu.json
 hy	E	{{-xx-}}	
 ia	E	{{-xx-}}	ia.json
-id	B	bahasa	
+id	B	bahasa	id.json
 ie	E	{{-xx-}}	
 ig	A		ig.json
 ik	E	{{-xx-}}	
@@ -91,7 +91,7 @@ km	A		km.json
 kn	A		kn.json
 ko	A		ko.json
 ks	A		ks.json
-ku	B	ziman	
+ku	B	ziman	ku.json
 kw	A		kw.json
 ky	E	{{-xx-}}	
 la	B	-lingua-	la.json
@@ -163,7 +163,7 @@ ss	A		ss.json
 st	A		
 su	B2		
 sv	A		sv.json
-sw	B2		
+sw	B2		sw.json
 ta	B	மொழி	ta.json
 tcy	A		tcy.json
 te	A		te.json
@@ -186,7 +186,7 @@ uz	C		uz.json
 vec	E	{{-xx-}}	
 vi	E	{{-xx-}}	vi.json
 vo	E	{{-xx-}}	
-wa	B	L	
+wa	B	L	wa.json
 wo	A		wo.json
 xh	F		
 yi	A		yi.json

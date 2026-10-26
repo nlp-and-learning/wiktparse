@@ -4,7 +4,10 @@
   "language": {
     "form": "heading-dash-template",
     "heading_level": 1,
-    "value": "code"
+    "value": "code",
+    "aliases": {
+      "roa-nor": "nrf"
+    }
   },
   "homographs": null,
   "pos": {

@@ -13,5 +13,8 @@
       "فرانسیسی": "fr"
     }
   },
-  "status": "aliases from the dump markers (unresolved.tsv)"
+  "senses": {
+    "marker": "*"
+  },
+  "status": "aliases from the dump markers (unresolved.tsv); definitions as * lines under a gender heading (=== مذکر ===: a noun)"
 }

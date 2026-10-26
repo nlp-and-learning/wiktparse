@@ -1718,6 +1718,18 @@ roa_rup	pron	Pronunciation	section
 fo	pron	Pronunciation	section
 mn	pron	Pronunciation	section
 vec	trad-su	Translations	section
+skr	مذکر	Noun	pos
+skr	مؤنث	Noun	pos
+skr	مذکر / مؤنث	Noun	pos
+skr	مؤنث / مذکر	Noun	pos
+skr	مصدر مرکب	Verb	pos
+skr	علامت	Symbol	pos
+skr	مثل	Proverb	pos
+skr	مِثل	Proverb	pos
+skr	روز مرّہ	Idioms	relation
+skr	محاورہ	Idiom	pos
+skr	اُلٹاواں / متضاد	Antonyms	relation
+skr	ٻیا ݙیکھو	See also	section
 ga	fuaim	Pronunciation	section
 ga	ainm	Noun	pos
 ga	ainmd	Proper noun	pos

@@ -1490,7 +1490,9 @@ public:
         // (not of the "line" marker, for which every line of text would be a sense)
         // (and not of wikis whose "#" lines there are no definitions: senses.implicit false, gn pronunciation)
         static const json::json_pointer implicitSenses("/senses/implicit");
-        if (stack_.size() == 1 && line.starts_with('#') && str(config_, "/senses/marker", "#") != "line" &&
+        // (skr "* [[آب]]۔": of its marker)
+        const auto marker = str(config_, "/senses/marker", "#");
+        if (stack_.size() == 1 && (line.starts_with('#') || (marker == "*" && line.starts_with('*'))) && marker != "line" &&
             !(config_.contains(implicitSenses) && !config_[implicitSenses].get<bool>()))
             if (std::vector<int> probe; senseLine(config_, line, probe)) {
                 push(node(std::optional<std::string>("Definitions"), "section", "", headingLevel() + 1, 0));

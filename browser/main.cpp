@@ -21,6 +21,8 @@
 #include <QFile>
 #include <qxfiledialog.h>
 #include "FindBar.h"
+#include "HeadingTranslator.h"
+#include <QInputDialog>
 #include "TreeFindBar.h"
 #include <QFileInfo>
 #include <QHBoxLayout>
@@ -376,6 +378,11 @@ public:
                         if (n < tabs_->count())
                             tabs_->setCurrentIndex(n);
                     });
+        // F5: Original and WikiTree with the headings translated (OriginalT), again: as they are
+        connect(new QShortcut(QKeySequence(Qt::Key_F5), this), &QShortcut::activated, this, [this] {
+            translated_ = !translated_;
+            showOriginalText();
+        });
         // A node of the tree from another page of the dump (a merged subpage): Original shows that page
         connect(tree_->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex &index) {
             std::optional<std::pair<qint64, qint64>> source;
@@ -484,6 +491,18 @@ public:
         connect(byTitle, &QAction::toggled, this, [this](bool on) {
             settings().setValue("dumps/byTitle", on);
             showOriginal();
+        });
+        // F5 in Original: the headings translated (OriginalT) into this language, or codes and English sections
+        setup->addAction("Translation &language (F5)...", this, [this] {
+            bool ok = false;
+            const QString lang = QInputDialog::getText(
+                    this, "Translation language",
+                    "Language code of the names (pl, en, ja…); empty: language codes and English sections",
+                    QLineEdit::Normal, settings().value("view/translateLang").toString(), &ok);
+            if (ok) {
+                settings().setValue("view/translateLang", lang.trimmed());
+                showOriginalText();
+            }
         });
     }
 
@@ -733,8 +752,30 @@ private:
             if (!error.isEmpty())
                 text = "(" + error + ")";
         }
-        wiki_.doc->setText(text);
-        fillWikiTree(text);
+        originalText_ = text;
+        showOriginalText();
+    }
+
+    // The Original as it is, or (F5) with its headings translated: languages to codes and
+    // sections to English ones, or to names in the display language (Settings); the cursor stays
+    void showOriginalText() {
+        QString shown = originalText_;
+        if (translated_ && current_.is_object() && current_.contains("wiki") && current_["wiki"].is_string()) {
+            if (!translator_.isOpen())
+                translator_.open(QFileInfo(path_).absolutePath());
+            if (translator_.isOpen())
+                shown = translator_.translate(originalText_, QString::fromStdString(current_["wiki"].get<std::string>()),
+                                              settings().value("view/translateLang").toString());
+            else
+                statusBar()->showMessage("no wiktlangs.sqlite and wiktsections.sqlite next to the file or above it", 5000);
+        }
+        const qce::TextCursor at = wiki_.edit->area()->cursorPosition();
+        wiki_.doc->setText(shown);
+        wiki_.edit->area()->setCursorPosition(at);
+        wiki_.edit->area()->ensureVisible(wiki_.edit->area()->cursorPosition(), 5);
+        if (const int tab = tabs_->indexOf(wiki_.page); tab >= 0)
+            tabs_->setTabText(tab, translated_ ? "OriginalT" : "Original");
+        fillWikiTree(shown);
     }
 
     // The wikitext as a tree: a heading (= … = to ====== … ======) under the last heading of a
@@ -971,6 +1012,9 @@ private:
     }
 
     QAction *originalAction_ = nullptr;
+    QString originalText_;         // the page's wikitext as read
+    bool translated_ = false;      // F5: OriginalT
+    HeadingTranslator translator_; // wiktlangs.sqlite, wiktsections.sqlite
     json current_;
     std::optional<std::pair<qint64, qint64>> nodeSource_; // of the selected node, when not the page's
     QString nodeTitle_;                                    // its page title ("source_title")

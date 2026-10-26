@@ -105,7 +105,14 @@ dump_dir = ~/dump
   looked up by its title in the dump's `-index.txt.bz2` (read once per dump).
   WikiTree, with Original, shows that wikitext as a tree by the depth of its
   headings (`==English==` > `===Noun===` > `====Translations====`), the other
-  lines under their heading. The status line shows where the cursor is: the
+  lines under their heading. F5 switches Original and WikiTree to OriginalT
+  and back: headings and section template lines translated, language names
+  ("Polski", "język angielski", {{język polski}}) to codes (wiktlangs.sqlite)
+  and sections (=== Rzeczownik ===, {{znaczenia}}, {{S|nom|fr}}) to English ones
+  (wiktsections.sqlite), or with Settings > Translation language to names in
+  that language, falling back to the code and the English section; codes
+  written in templates ({{langue|fr}}) stay. The databases are found next to
+  the opened file or up to two directories above it. The status line shows where the cursor is: the
   JSON path in JSON (`$.sections[0].sections[3].translations[5]`), the headings
   in Original, the nodes from the root in Tree and WikiTree. Alt+1..Alt+4 switch
   the tabs; between JSON and Tree, and between Original and WikiTree, the other

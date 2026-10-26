@@ -11,7 +11,7 @@ name (without '-', '=') and its unnamed parameters, a number at the end left out
 are skipped.
 
 unknownheadings.py [-d .] [-o unknown_headings.tsv] [--min-pages 1] [wiki...]
-Output: pages, wiki, levels (2,3), heading.
+Output: pages, wiki, levels (2,3), kind (language or section, by the level of the language headings of the wiki), heading.
 """
 import argparse
 import collections
@@ -28,6 +28,45 @@ LINK = re.compile(r'\[\[(?:[^\]|]*\|)?([^\]|]*)\]\]')
 MARKUP = re.compile(r"<[^>]*>|''+")
 # Wiktionaries whose Wikidata label language differs (as wikt2jsonl)
 LABEL_LANGUAGE = {'no': 'nb', 'simple': 'en', 'zh-min-nan': 'nan', 'roa-rup': 'rup', 'bh': 'bho'}
+
+
+def merged(base, patch):
+    """patch over base, objects merged (as wikt2jsonl's mergeInto)"""
+    result = dict(base)
+    for key, value in patch.items():
+        result[key] = merged(result[key], value) if isinstance(value, dict) and isinstance(result.get(key), dict) else value
+    return result
+
+
+def language_levels(config_dir):
+    """wiki -> the heading levels of its language headings (by its profile, its configuration and
+    the other forms of language.also; none for markers on lines of their own, profile E)"""
+    profiles = json.load(open(os.path.join(config_dir, 'profiles.json'), encoding='utf-8'))['profiles']
+
+    def profile(name):
+        p = profiles.get(name, {})
+        return merged(profile(p['base']), p) if 'base' in p else p
+
+    levels = {}
+    with open(os.path.join(config_dir, 'wikis.tsv'), encoding='utf-8') as f:
+        for line in f:
+            fields = line.rstrip('\n').split('\t')
+            if len(fields) < 2 or fields[0] == 'wiki':
+                continue
+            config = profile(fields[1])
+            if len(fields) > 3 and fields[3]:
+                try:
+                    with open(os.path.join(config_dir, fields[3]), encoding='utf-8') as c:
+                        config = merged(config, json.load(c))
+                except (OSError, ValueError):
+                    pass
+            language = config.get('language', {})
+            found = set()
+            for form in [language] + [merged(language, a) for a in language.get('also', [])]:
+                if str(form.get('form', '')).startswith('heading'):
+                    found.add(int(form.get('heading_level', 2)))
+            levels[fields[0]] = found
+    return levels
 
 
 def plain(text):
@@ -92,6 +131,7 @@ def main():
         if pattern := language.get('lookup'):
             lookup[wiki] = pattern
         strip[wiki] = [w.lower() for w in language.get('strip', [])]
+    language_level = language_levels(config_dir)
     rows = []
     for path in sorted(glob.glob(os.path.join(args.d, 'headers', '*.tsv'))):
         wiki = os.path.basename(path)[:-4]
@@ -100,7 +140,7 @@ def main():
         lang = wiki.replace('_', '-')
         lang = LABEL_LANGUAGE.get(lang, lang)  # no.wikt is in Bokmål: Wikidata labels of nb
         known = names[wiki] | names[lang] | english | codes | aliases[wiki]
-        pages, levels = collections.Counter(), collections.defaultdict(set)
+        pages, levels = collections.Counter(), collections.defaultdict(collections.Counter)  # heading -> level -> pages
         with open(path, encoding='utf-8') as f:
             for line in f:
                 p = line.rstrip('\n').split('\t')
@@ -121,11 +161,16 @@ def main():
                         (m := r.match(x)) and m.group(1).lower() in codes for x in k):
                     continue
                 pages[heading] += int(p[2])
-                levels[heading].add(int(p[1]))
-        rows += [(n, wiki, ','.join(map(str, sorted(levels[h]))), h) for h, n in pages.items() if n >= args.min_pages]
+                levels[heading][int(p[1])] += int(p[2])
+        # kind: a language when most of its pages have it at the level of the wiki's language
+        # headings, else a section (a guess: some wikis have sections at that level too, te, ar)
+        lang_levels = language_level.get(wiki, set())
+        rows += [(n, wiki, ','.join(map(str, sorted(levels[h]))),
+                  'language' if 2 * sum(c for lv, c in levels[h].items() if lv in lang_levels) > n else 'section', h)
+                 for h, n in pages.items() if n >= args.min_pages]
     rows.sort(key=lambda r: -r[0])
     with open(args.o, 'w', encoding='utf-8') as out:
-        out.write('pages\twiki\tlevels\theading\n')
+        out.write('pages\twiki\tlevels\tkind\theading\n')
         for r in rows:
             out.write('\t'.join(map(str, r)) + '\n')
     print(f'{len(rows)} unknown headings ({sum(r[0] for r in rows)} pages) -> {args.o}')

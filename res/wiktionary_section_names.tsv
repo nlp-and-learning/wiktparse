@@ -1069,6 +1069,9 @@ no	Hanzi	Han character	pos
 no	Avledede termer	Derived terms	relation
 no	Se også	See also	section
 no	Homonymer	Homonyms	relation
+no	Antonymer	Antonyms	relation
+no	Relaterte termer	Related terms	relation
+no	Faste uttrykk	Idioms	relation
 zh	下位詞	Hyponyms	relation
 zh	同類詞彙	Coordinate terms	relation
 zh	派生語彙	Derived terms	relation

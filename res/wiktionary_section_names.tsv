@@ -1016,6 +1016,152 @@ lt	Vertimai	Translations	section
 lv	Tulkojumi	Translations	section
 lv	Skaidrojums	Definitions	section
 yue	讀音	Pronunciation	section
+sh	Flektirani oblici	Inflection	section
+sh	Izgovor	Pronunciation	section
+el	πηγές	References	section
+el	μεταγραφές	Transliteration	section
+el	αναφορές	References	section
+el	συγγενικά	Related terms	relation
+el	μορφές	Alternative forms	section
+el	βλέπε	See also	section
+el	ομώνυμα	Homonyms	relation
+ca	Miscel·lània	Miscellaneous	section
+ca	Vegeu també	See also	section
+hy	Աղբյուրներ	References	section
+hy	Արտահայտություններ	Idioms	relation
+sa	यन्त्रोपारोपितकोशांशः	References	section
+sa	Monier-Williams	References	section
+sa	कल्पद्रुमः	References	section
+sa	Apte	References	section
+sa	वाचस्पत्यम्	References	section
+sa	शब्दसागरः	References	section
+hi	शब्दसागर	References	section
+ku	Formeke navdêrê	Noun form	pos
+ku	Formeke lêkerê	Verb form	pos
+ku	Bilêvkirin	Pronunciation	section
+ku	Çavkanî	References	section
+ku	Anagram	Anagrams	relation
+ku	Etîmolojî	Etymology	section
+ku	Mane	Definitions	section
+ku	Tewandin	Inflection	section
+sr	Референце	References	section
+sr	Напомене	Usage notes	section
+ta	பொருள்	Definitions	section
+ta	மொழிபெயர்ப்புகள்	Translations	section
+zh	變格	Declension	section
+zh	分詞	Participle	pos
+zh	发音	Pronunciation	section
+zh	參考資料	References	section
+zh	参考	References	section
+zh	编码	Coding	section
+zh	異序詞	Anagrams	relation
+zh	延伸閱讀	Further reading	section
+zh	词源	Etymology	section
+zh	相關詞彙	Related terms	relation
+zh	變位	Conjugation	section
+zh	近義詞	Synonyms	relation
+zh	派生詞彙	Derived terms	relation
+zh	其他形式	Alternative forms	section
+uz	Etimologiyasi	Etymology	section
+uz	Morfologik va sintaktik xususiyatlari	Morphology	section
+uz	Maʼnoviy xususiyatlari	Semantics	section
+uz	Aytilishi	Pronunciation	section
+uz	Antonimlari	Antonyms	relation
+uz	Sinonimlari	Synonyms	relation
+sw	Tafsiri	Translations	section
+pt	Forma verbal	Verb form	pos
+pt	No Wikcionário	See also	section
+ro	Referințe	References	section
+te	వ్యాకరణ విశేషాలు	Morphology	section
+te	పద ప్రయోగాలు	Examples	section
+te	మూలాలు, వనరులు	References	section
+te	మూలాలు వనరులు	References	section
+tr	Ek okumalar	Further reading	section
+tr	Çekimleme	Inflection	section
+tr	Söyleniş	Pronunciation	section
+cs	dělení	Hyphenation	section
+cs	překlady	Translations	section
+th	รากศัพท์	Etymology	section
+th	คำวิสามานยนาม	Proper noun	pos
+li	Zelfstenjig naamwaord	Noun	pos
+li	Bieveugelik naamwaord	Adjective	pos
+li	Neet-lemma	Inflected form	pos
+li	Verbuging	Inflection	section
+li	In anger spraoke	Translations	section
+uk	Семантичні властивості	Semantics	section
+uk	Морфосинтаксичні ознаки	Morphology	section
+uk	Джерела	References	section
+uk	Споріднені слова	Related terms	relation
+uk	Усталені та термінологічні словосполучення, фразеологізми	Idioms	relation
+uk	Прислів'я та приказки	Proverbs	section
+uk	Мероніми	Meronyms	relation
+uk	Холоніми	Holonyms	relation
+uk	Колокації	Collocations	relation
+skr	گرائمر	Morphology	section
+ru	Тип и синтаксические свойства сочетания	Morphology	section
+eu	Jatorria	Etymology	section
+lo	ເຄົ້າ	Etymology	section
+lo	ປະເພດ	Part of speech	pos
+lo	ອອກສຽງ	Pronunciation	section
+io	Fonto	References	section
+io	A-lingui	Translations	section
+io	B-lingui	Translations	section
+io	C-lingui	Translations	section
+io	D-lingui	Translations	section
+io	E-lingui	Translations	section
+io	F-lingui	Translations	section
+io	G-lingui	Translations	section
+io	H-lingui	Translations	section
+io	I-lingui	Translations	section
+io	J-lingui	Translations	section
+io	K-lingui	Translations	section
+io	L-lingui	Translations	section
+io	M-lingui	Translations	section
+io	N-lingui	Translations	section
+io	O-lingui	Translations	section
+io	P-lingui	Translations	section
+io	Q-lingui	Translations	section
+io	R-lingui	Translations	section
+io	S-lingui	Translations	section
+io	T-lingui	Translations	section
+io	U-lingui	Translations	section
+io	V-lingui	Translations	section
+io	W-lingui	Translations	section
+io	X-lingui	Translations	section
+io	Y-lingui	Translations	section
+io	Z-lingui	Translations	section
+fr	caractère	Symbol	pos
+mn	Товчилсон үг	Abbreviations	relation
+mn	Үндэсний бичиг	Alternative scripts	section
+mn	Зөв бичихзүй	Spelling	section
+mn	Кирил бичгийн зөв бичихзүй	Spelling	section
+mn	Үндэсний бичгийн зөв бичихзүй	Spelling	section
+mn	Хэвшмэл хэлц	Idioms	relation
+mn	Өвөрмөц хэлц	Idioms	relation
+mn	Хэлц үг	Idioms	relation
+mn	Нийлмэл үг	Compounds	relation
+ja	文字情報	Character information	section
+ja	文字コード	Coding	section
+ja	意義	Definitions	section
+fi	Synonyymit	Synonyms	relation
+la	affines	Related terms	relation
+ast	Referencies	References	section
+et	Päritolu	Etymology	section
+lt	Tarimas	Pronunciation	section
+my	ဆက်စပ်အသုံးများ	Related terms	relation
+my	ကြောင်းတူသံကွဲများ	Synonyms	relation
+my	ဆန့်ကျင်ဘက်စကားလုံးများ	Antonyms	relation
+vi	pron	Pronunciation	section
+vi	ref	References	section
+vi	etym	Etymology	section
+vi	decl	Declension	section
+vi	rom	Romanization	pos
+vi	noun	Noun	pos
+vi	n	Noun	pos
+vi	verb	Verb	pos
+vi	v	Verb	pos
+vi	adj	Adjective	pos
+vi	pr-noun	Proper noun	pos
 ml	തർജ്ജമകൾ	Translations	section
 mn	Орчуулга	Translations	section
 nn	Omsetjingar	Translations	section

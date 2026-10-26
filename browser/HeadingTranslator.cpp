@@ -99,8 +99,12 @@ bool HeadingTranslator::open(const QString &dir) {
 const HeadingTranslator::Wiki &HeadingTranslator::wikiData(const QString &wiki) {
     if (auto it = wikis_.constFind(wiki); it != wikis_.constEnd())
         return *it;
-    QString lang = wiki == "simple" ? QStringLiteral("en") : wiki;
+    QString lang = wiki;
     lang.replace('_', '-');
+    // the language of the Wikidata labels of the wiki (as wikt2jsonl): no.wikt is in Bokmål (nb)
+    static const QHash<QString, QString> labelLanguage = {
+            {"no", "nb"}, {"simple", "en"}, {"zh-min-nan", "nan"}, {"roa-rup", "rup"}, {"bh", "bho"}};
+    lang = labelLanguage.value(lang, lang);
     Wiki w;
     for (const auto &row : query(langs_, "SELECT name, code FROM language_name WHERE in_code=?1", {lang}))
         w.languages.insert(row[0].toLower(), row[1]);

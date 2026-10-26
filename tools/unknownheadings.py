@@ -24,6 +24,8 @@ TEMPLATE = re.compile(r'^\{\{([^{}]*)\}\}')
 NUMBER = re.compile(r'^(.*[^\d\s.])\s*(?:Nr\.|№)?\s*\d+$')
 LINK = re.compile(r'\[\[(?:[^\]|]*\|)?([^\]|]*)\]\]')
 MARKUP = re.compile(r"<[^>]*>|''+")
+# Wiktionaries whose Wikidata label language differs (as wikt2jsonl)
+LABEL_LANGUAGE = {'no': 'nb', 'simple': 'en', 'zh-min-nan': 'nan', 'roa-rup': 'rup', 'bh': 'bho'}
 
 
 def keys(heading):
@@ -67,7 +69,8 @@ def main():
         wiki = os.path.basename(path)[:-4]
         if args.wiki and wiki not in args.wiki:
             continue
-        lang = 'en' if wiki == 'simple' else wiki.replace('_', '-')
+        lang = wiki.replace('_', '-')
+        lang = LABEL_LANGUAGE.get(lang, lang)  # no.wikt is in Bokmål: Wikidata labels of nb
         known = names[wiki] | names[lang] | english | codes
         pages, levels = collections.Counter(), collections.defaultdict(set)
         with open(path, encoding='utf-8') as f:

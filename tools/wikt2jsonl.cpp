@@ -1208,8 +1208,13 @@ public:
             sqlite3_close(db);
             return;
         }
-        std::string lang = wiki == "simple" ? "en" : wiki;
+        std::string lang = wiki;
         std::ranges::replace(lang, '_', '-');
+        // the language of the Wikidata labels of the wiki: no.wikt is in Bokmål (nb), as language names
+        static const std::map<std::string, std::string> labelLanguage = {
+                {"no", "nb"}, {"simple", "en"}, {"zh-min-nan", "nan"}, {"roa-rup", "rup"}, {"bh", "bho"}};
+        if (auto it = labelLanguage.find(lang); it != labelLanguage.end())
+            lang = it->second;
         auto load = [&](const char *sql) {
             sqlite3_stmt *stmt = nullptr;
             sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);

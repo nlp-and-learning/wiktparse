@@ -2,7 +2,8 @@
   "wiki": "hsb",
   "language": {
     "aliases": {
-      "{{PAGENAME}} ([[internacionale]])": "mul"
+      "{{PAGENAME}} ([[internacionale]])": "mul",
+      "internacionale": "mul"
     },
     "name_from": "parameter"
   },

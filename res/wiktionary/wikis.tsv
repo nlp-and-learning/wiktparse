@@ -161,7 +161,7 @@ sq	A		sq.json
 sr	D		sr.json
 ss	A		ss.json
 st	A		
-su	B2		
+su	B2		su.json
 sv	A		sv.json
 sw	B2		sw.json
 ta	B	மொழி	ta.json
@@ -176,7 +176,7 @@ tn	E	{{=xx=}}	tn.json
 to	F		
 tpi	E	{{-xx-}}	
 tr	A		tr.json
-ts	A		
+ts	A		ts.json
 tt	A		tt.json
 tw	F		
 ug	B	تىلى	ug.json

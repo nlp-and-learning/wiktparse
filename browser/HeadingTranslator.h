@@ -33,8 +33,9 @@ private:
         QHash<QString, QString> sections;  // lowercase name -> English section
     };
     const Wiki &wikiData(const QString &wiki);
-    QString languageOf(const Wiki &w, const QString &candidate) const;
-    QString sectionOf(const Wiki &w, const QString &candidate) const;
+    // any: by the names of any wiki or language (unambiguous ones), not of this wiki
+    QString languageOf(const Wiki &w, const QString &candidate, bool any) const;
+    QString sectionOf(const Wiki &w, const QString &candidate, bool any) const;
     QString languageName(const QString &code, const QString &display);
     QString sectionName(const QString &section, const QString &display);
     // parameters: also the parameters of a template ({{langue|fr}}), not only its name
@@ -44,5 +45,6 @@ private:
     QString dir_;
     QSet<QString> codes_; // language codes of wiktlangs
     QHash<QString, Wiki> wikis_;
+    QHash<QString, QString> anySection_, anyLanguage_; // lowercase name of any wiki or language, if unambiguous
     QHash<QString, QString> languageNames_, sectionNames_; // "code|display" -> name
 };

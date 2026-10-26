@@ -70,6 +70,24 @@ bool HeadingTranslator::open(const QString &dir) {
             codes_.clear();
             for (const auto &row : query(langs_, "SELECT code FROM language"))
                 codes_.insert(row[0]);
+            // names of any wiki or language naming one section or language only
+            anySection_.clear();
+            anyLanguage_.clear();
+            auto unique = [](const QList<QStringList> &rows, QHash<QString, QString> &into) {
+                QSet<QString> ambiguous;
+                for (const auto &row : rows) {
+                    const QString key = row[0].toLower();
+                    if (ambiguous.contains(key))
+                        continue;
+                    if (auto it = into.constFind(key); it != into.constEnd() && *it != row[1]) {
+                        into.remove(key);
+                        ambiguous.insert(key);
+                    } else
+                        into.insert(key, row[1]);
+                }
+            };
+            unique(query(sections_, "SELECT name, section FROM section_name"), anySection_);
+            unique(query(langs_, "SELECT name, code FROM language_name"), anyLanguage_);
             return isOpen();
         }
         if (!at.cdUp())
@@ -97,11 +115,15 @@ const HeadingTranslator::Wiki &HeadingTranslator::wikiData(const QString &wiki) 
     return *wikis_.insert(wiki, w);
 }
 
-QString HeadingTranslator::sectionOf(const Wiki &w, const QString &candidate) const {
-    return w.sections.value(candidate.toLower());
+// (names compared lowercase, Unicode: "Uwagi", "UWAGI", "Źródła"; not of this wiki: of any wiki or
+// language when there they name one section or language only, csb "{{Uwagi}}" as pl)
+QString HeadingTranslator::sectionOf(const Wiki &w, const QString &candidate, bool any) const {
+    return any ? anySection_.value(candidate.toLower()) : w.sections.value(candidate.toLower());
 }
 
-QString HeadingTranslator::languageOf(const Wiki &w, const QString &candidate) const {
+QString HeadingTranslator::languageOf(const Wiki &w, const QString &candidate, bool any) const {
+    if (any)
+        return anyLanguage_.value(candidate.toLower());
     if (codes_.contains(candidate))
         return candidate;
     return w.languages.value(candidate.toLower());
@@ -181,28 +203,29 @@ QString HeadingTranslator::translateText(const Wiki &w, const QString &text, con
                                     [](const QString &c) { return !c.contains(letter); }),
                      candidates.end());
     // a section first ({{S|nom|fr}}: "nom" is a noun, not the code of Nomatsiguenga), then a language
-    auto section = [&]() -> QString {
+    auto section = [&](bool any) -> QString {
         for (const QString &c : candidates)
-            if (const QString s = sectionOf(w, c); !s.isEmpty())
+            if (const QString s = sectionOf(w, c, any); !s.isEmpty())
                 return sectionName(s, display);
         return {};
     };
     // (a code in a template stays as written: {{langue|fr}}, {{-it-}}; names are translated:
     // "język angielski", "English", {{język polski}})
-    auto language = [&]() -> QString {
+    auto language = [&](bool any) -> QString {
         for (const QString &c : candidates)
-            if (const QString code = languageOf(w, c); !code.isEmpty())
+            if (const QString code = languageOf(w, c, any); !code.isEmpty())
                 return fromTemplate && code == c ? text.trimmed() : languageName(code, display);
         return {};
     };
-    if (languageFirst) {
-        if (const QString l = language(); !l.isEmpty())
-            return l;
-        return section();
+    // the names of this wiki first, those of other wikis only when it knows none
+    for (const bool any : {false, true}) {
+        const QString first = languageFirst ? language(any) : section(any);
+        if (!first.isEmpty())
+            return first;
+        if (const QString second = languageFirst ? section(any) : language(any); !second.isEmpty())
+            return second;
     }
-    if (const QString s = section(); !s.isEmpty())
-        return s;
-    return language();
+    return {};
 }
 
 QString HeadingTranslator::translate(const QString &text, const QString &wiki, const QString &display) {

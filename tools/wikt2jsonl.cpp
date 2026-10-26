@@ -1057,6 +1057,17 @@ std::vector<Translation> translations(const json &config, const std::string &tex
         auto lang = t.get(static_cast<size_t>(langParam));
         if (!lang)
             continue;
+        // An empty code (sv "*herero: {{ö||omeva}}"): the language the line begins with
+        std::string lineLanguage;
+        if (trim(std::string(*lang)).empty() && t.location.begin.offset < text.size()) {
+            const size_t start = text.rfind('\n', t.location.begin.offset);
+            const auto head = text.substr(start == std::string::npos ? 0 : start + 1,
+                                          t.location.begin.offset - (start == std::string::npos ? 0 : start + 1));
+            static const std::regex named(R"(^[:*#]*\s*([^:{}\[\]]+?)\s*:\s*$)");
+            if (std::smatch m; head.size() < 200 && std::regex_match(head, m, named))
+                lineLanguage = m[1].str();
+            lang = lineLanguage;
+        }
         if (termParam.is_number_integer()) {
             if (auto term = t.get(static_cast<size_t>(termParam.get<int>())); term && !term->empty()) {
                 Translation item{std::string(*lang), std::string(*term), tableSense, tableGloss};

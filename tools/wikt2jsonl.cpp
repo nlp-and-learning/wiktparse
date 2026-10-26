@@ -2125,6 +2125,181 @@ json mediaItems(const std::string &text, const json &names = json::array()) {
     return result;
 }
 
+// The etymology as a text a program reads, one item a line: "n. relation language form", " [m]" when
+// it is of item m, else of the entry (doc/uniform-tree.md): "1. from enm water\n2. from ang wæter\n…".
+// By the configuration of the wiki (etymology.templates: a template's relation and the parameters of
+// its language and form, or of its parts; etymology.words: the words before a mention, {{m}}, that
+// give its relation, "from", "cognate with"). An item in brackets of the text is of the item before
+// them; a descendant of the item before it. After the first paragraph with items of the chain (from,
+// borrowed, calque, compound) only cognates and descendants: the rest are notes ("The plural housen
+// is from…").
+std::string etymologyChain(const std::string &text, const json &config) {
+    const auto spec = config.value("etymology", json::object());
+    const auto templates = spec.value("templates", json::object());
+    if (text.empty() || templates.empty())
+        return {};
+    const auto words = spec.value("words", json::object());
+    static const std::set<std::string> chainRelations = {"from", "borrowed", "calque", "compound", "root"};
+    static const std::regex refs(R"(<ref[^>/]*/>|<ref[^>]*>[\s\S]*?</ref>)");
+    const std::string clean = text.size() < maxRegexLine ? std::regex_replace(text, refs, " ") : text;
+    std::vector<std::string> items;
+    bool chainDone = false;
+    // paragraphs: blank lines between them
+    std::vector<std::string> paragraphs(1);
+    for (const auto &line : textLines(clean)) {
+        if (trim(line).empty()) {
+            if (!paragraphs.back().empty())
+                paragraphs.emplace_back();
+        } else
+            paragraphs.back() += line + '\n';
+    }
+    for (const auto &paragraph : paragraphs) {
+        bool chainHere = false;
+        std::string relationOfWords; // of the last words before a mention, in this sentence
+        std::vector<int> anchors;    // the item a bracket of the text is of
+        int last = -1;               // the last item
+        size_t at = 0;
+        auto read = [&](std::string_view between) {
+            const auto lower = wikilib::unicode::to_lower(std::string(between));
+            // the words that end last, of them the longest ("borrowed from", not "from")
+            size_t best = std::string::npos, bestEnd = 0, bestSize = 0;
+            for (const auto &[word, relation] : words.items())
+                if (auto found = lower.rfind(word); found != std::string::npos &&
+                                                    (found + word.size() > bestEnd ||
+                                                     (found + word.size() == bestEnd && word.size() > bestSize))) {
+                    best = found;
+                    bestEnd = found + word.size();
+                    bestSize = word.size();
+                    relationOfWords = relation.get<std::string>();
+                }
+            for (size_t i = 0; i < between.size(); ++i) {
+                if (between[i] == '(')
+                    anchors.push_back(last);
+                else if (between[i] == ')' && !anchors.empty())
+                    anchors.pop_back();
+                else if (between[i] == '.' && (i + 1 == between.size() || between[i + 1] == ' ' || between[i + 1] == '\n') &&
+                         (best == std::string::npos || i > best))
+                    relationOfWords.clear(); // the end of a sentence
+            }
+        };
+        std::string lastRelation;
+        int lastOf = -1;
+        // (summary: of a chain template, which closes no chain, the written one may follow)
+        auto add = [&](std::string relation, const std::string &lang, const std::string &form, int of,
+                       bool summary = false) {
+            std::string line = relation + " " + lang + " " + form;
+            if (of >= 0)
+                line += " [" + std::to_string(of + 1) + "]";
+            // (once: en {{etymon}} and the chain written after it)
+            for (size_t i = 0; i < items.size(); ++i)
+                if (items[i].substr(items[i].find(' ') + 1) == line)
+                    return;
+            items.push_back(std::to_string(items.size() + 1) + ". " + line);
+            last = static_cast<int>(items.size()) - 1;
+            lastRelation = relation;
+            lastOf = of;
+            chainHere |= !summary && chainRelations.contains(relation) && relation != "root"; // (en {{root}} stands above)
+        };
+        for (const auto &t : wikilib::templates::find_invocations(paragraph)) {
+            const auto between = std::string_view(paragraph).substr(at, t.location.begin.offset - at);
+            read(between);
+            at = t.location.end.offset;
+            // A template of the chain as pairs of a relation and items (etymology.chain_template: en
+            // {{etymon|en|:inh|enm:red<id:color>|…}}, ":inh" by its relations, "enm:red" language:form)
+            if (const auto chainTemplate = spec.value("chain_template", json::object());
+                !chainDone && std::ranges::contains(chainTemplate.value("names", std::vector<std::string>{}), t.name)) {
+                const auto keys = chainTemplate.value("relations", json::object());
+                std::string relation;
+                std::vector<std::string> parts;
+                std::string partsLang;
+                auto flush = [&] {
+                    std::string form;
+                    for (const auto &part : parts)
+                        form += (form.empty() ? "" : " + ") + part;
+                    if (!parts.empty())
+                        add("compound", partsLang, form, -1, true);
+                    parts.clear();
+                };
+                for (size_t i = 2; auto v = t.get(i); ++i) {
+                    const auto value = trim(std::string(*v));
+                    if (value.starts_with(':')) {
+                        flush();
+                        auto k = keys.find(value.substr(1));
+                        relation = k == keys.end() ? "" : k->get<std::string>();
+                    } else if (auto colon = value.find(':'); colon != std::string::npos && !relation.empty()) {
+                        const auto lang = value.substr(0, colon), form = termValue(value.substr(colon + 1));
+                        if (noTerm(form))
+                            continue;
+                        if (relation == "compound") {
+                            partsLang = partsLang.empty() ? lang : partsLang;
+                            parts.push_back(form);
+                        } else
+                            add(relation, lang, form, -1, true);
+                        // the etymology of the item in it, ro "fr:dogue<ety:uder<en:dog>>": dogue from en dog
+                        static const std::regex nested(R"(<ety:([^<>:]+)<([^<>:]+):([^<>]+))");
+                        std::string rest = value.substr(colon + 1);
+                        for (std::smatch m; rest.size() < 2000 && std::regex_search(rest, m, nested);
+                             rest = m.suffix().str()) {
+                            auto k = keys.find(m[1].str());
+                            if (k != keys.end() && k->get<std::string>() != "compound")
+                                add(k->get<std::string>(), m[2].str(), termValue(m[3].str()), -1, true);
+                        }
+                    }
+                }
+                flush();
+                continue;
+            }
+            auto it = templates.find(t.name);
+            if (it == templates.end())
+                continue;
+            const auto &s = *it;
+            std::string relation = s.value("relation", std::string("mention"));
+            // a mention right after an item, by a comma only ({{cog|nds|root}}, {{m|nds|rood}}): another
+            // form of it
+            const bool sameItem = relation == "mention" && last >= 0 && trim(std::string(between)) == ",";
+            if (sameItem)
+                relation = lastRelation;
+            else if (relation == "mention" && !relationOfWords.empty())
+                relation = relationOfWords;
+            // (after the paragraph of the chain only its cognates and descendants: the rest are notes)
+            if (chainDone && relation != "compare" && relation != "descendant")
+                continue;
+            auto param = [&](const char *key) -> std::string {
+                if (!s.contains(key))
+                    return {};
+                auto v = t.get(static_cast<size_t>(s[key].get<int>()));
+                return v ? trim(std::string(*v)) : std::string();
+            };
+            const std::string lang = param("lang");
+            std::string form;
+            if (s.contains("parts")) {
+                // {{af|en|water|fall}}, {{suffix|en|water|y}} -> water + -y
+                std::vector<std::string> parts;
+                for (size_t i = s["parts"].get<size_t>(); auto v = t.get(i); ++i)
+                    if (auto part = termValue(std::string(*v)); !noTerm(part))
+                        parts.push_back(part);
+                const auto affix = s.value("affix", std::string());
+                if (affix == "suffix" && !parts.empty() && !parts.back().starts_with('-'))
+                    parts.back() = "-" + parts.back();
+                if (affix == "prefix" && !parts.empty() && !parts.front().ends_with('-'))
+                    parts.front() += "-";
+                for (const auto &part : parts)
+                    form += (form.empty() ? "" : " + ") + part;
+            } else {
+                form = termValue(param("term"));
+            }
+            if (lang.empty() || noTerm(form))
+                continue;
+            add(relation, lang, form, sameItem ? lastOf : relation == "descendant" ? last : anchors.empty() ? -1 : anchors.back());
+        }
+        chainDone |= chainHere;
+    }
+    std::string result;
+    for (const auto &item : items)
+        result += (result.empty() ? "" : "\n") + item;
+    return result;
+}
+
 // Sections of the whole language, never of an entry
 const std::set<std::string> languageNotes = {"References", "See also", "External links", "Further reading",
                                              "Anagrams", "Metagrams", "Bibliography", "Sources", "Literature"};
@@ -2172,6 +2347,8 @@ public:
                         t.erase("lang_written");
                 e["translations"] = list;
             }
+            if (auto chain = etymologyChain(e.value("etymology", std::string()), config_); !chain.empty())
+                e["etymology_chain"] = chain;
             for (const char *key : {"senses", "translations", "see", "subpages", "media", "pos_also"})
                 if (e.contains(key) && e[key].empty())
                     e.erase(key);
@@ -2182,6 +2359,8 @@ public:
         }
         if (!entries.empty())
             out["entries"] = std::move(entries);
+        if (auto chain = etymologyChain(out.value("etymology", std::string()), config_); !chain.empty())
+            out["etymology_chain"] = chain;
         for (const char *key : {"notes", "media"})
             if (out.contains(key) && out[key].empty())
                 out.erase(key);

@@ -75,6 +75,7 @@ latter with `pos_written` "czasownik zwrotny…", as the wiki has them).
 | `pronunciation` | IPA, audio files, hyphenation of the whole language section, when the wiki gives them there (en `===Pronunciation===` before `===Etymology 1===`, pl `{{wymowa}}` lines without a sense id) |
 | `audio` | sound files of the pronunciation: `["Pl-woda.ogg"]` |
 | `etymology` | the etymology of the whole section, when the wiki gives it there and marks no part of it for an entry |
+| `etymology_chain` | the etymology as a text a program reads (see *Etymology chain*), of entries too |
 | `entries` | the entries |
 | `notes` | sections of the whole language (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{section: text}` |
 | `media` | files of the language section marked for no sense or entry, as `media` of an entry |
@@ -128,6 +129,34 @@ order of the wiki):
 The fields of the later passes (wiktlink: `page`, `home`, `en`,
 `page_title`; wiktglos: `sense_ids`, `sense_method`, `sense_score`) keep their
 meaning.
+
+## Etymology chain
+
+Beside the etymology as written, `etymology_chain` gives it as a text a
+program reads, one item a line, `n. relation language form`, with ` [m]` when
+the item is of item m (a cognate of it, its descendant), else of the entry
+(en *water*):
+
+```
+1. root ine-pro *wed-
+2. from enm water
+3. from ang wæter
+4. from gmw-pro *watar
+…
+7. compare sco watter
+```
+
+Relations: `from` (inherited or derived), `borrowed`, `calque`, `compound`
+(the form its parts by ` + `: `water + -y`), `root`, `compare` (a cognate),
+`descendant` (of the item before it), `doublet`, `mention`, `attested`. The
+items without ` [m]` of `from`, `borrowed`, `calque` are the chain, each of
+the one before it. Each wiki says how it writes its etymologies in its
+configuration (`etymology` of `res/wiktionary/<wiki>.json`): the relation of
+a template and the parameters of its language and form, the words that give
+the relation of a mention (en "from", "cognate with"; de "von", "vgl."), a
+template of the whole chain (en `{{etymon|en|:inh|enm:red}}`). After the first
+paragraph with items of the chain only cognates and descendants are read: the
+rest are notes.
 
 ## Where things go
 

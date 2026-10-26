@@ -67,6 +67,9 @@
           "type": "string",
           "description": "Raw wikitext of the etymology of the whole section, when the wiki gives it there and marks no part of it for an entry"
         },
+        "etymology_chain": {
+          "$ref": "#/$defs/etymology_chain"
+        },
         "entries": {
           "type": "array",
           "items": {"$ref": "#/$defs/entry"}
@@ -114,6 +117,9 @@
         "etymology": {
           "type": "string",
           "description": "Raw wikitext of the etymology of this entry: its own section, that of its group (en Etymology 2, a ru homograph), or the lines of the language's etymology marked for it (pl (2.1), fr {{laé|fr|nom|2}}); absent: that of the language"
+        },
+        "etymology_chain": {
+          "$ref": "#/$defs/etymology_chain"
         },
         "pronunciation": {
           "type": "string",
@@ -222,6 +228,11 @@
           "description": "Label of the line or term as written (pl {{zdrobn}}, ru прилагательные=, en <q:archaic>)"
         }
       }
+    },
+    "etymology_chain": {
+      "type": "string",
+      "pattern": "^[0-9]+\\. [a-z]+ [^\\n]+( \\[[0-9]+\\])?(\\n[0-9]+\\. [a-z]+ [^\\n]+( \\[[0-9]+\\])?)*$",
+      "description": "The etymology as a text a program reads, one item a line: \"n. relation language form\", \" [m]\" when the item is of item m (a cognate of it, its descendant), else of the entry; relations from, borrowed, calque, compound (form: parts by \" + \"), root, compare, descendant, doublet, mention, attested; read by the etymology configuration of the wiki"
     },
     "audio": {
       "type": "array",

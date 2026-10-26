@@ -75,6 +75,7 @@ tak jak w wiki).
 | `pronunciation` | IPA, pliki audio, podział na sylaby całej sekcji językowej, gdy wiki podaje je tam (en `===Pronunciation===` przed `===Etymology 1===`, pl linie `{{wymowa}}` bez id znaczenia) |
 | `audio` | pliki dźwiękowe wymowy: `["Pl-woda.ogg"]` |
 | `etymology` | etymologia całej sekcji, gdy wiki podaje ją tam i nie oznacza żadnej jej części dla wpisu |
+| `etymology_chain` | etymologia jako tekst czytelny dla programu (zob. *Łańcuch etymologii*), także przy wpisach |
 | `entries` | wpisy |
 | `notes` | sekcje całego języka (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{sekcja: tekst}` |
 | `media` | pliki sekcji językowej nieoznaczone dla żadnego znaczenia ani wpisu, jak `media` wpisu |
@@ -128,6 +129,33 @@ języka w kolejności wiki):
 Pola późniejszych przejść (wiktlink: `page`, `home`, `en`, `page_title`;
 wiktglos: `sense_ids`, `sense_method`, `sense_score`) zachowują swoje
 znaczenie.
+
+## Łańcuch etymologii
+
+Obok etymologii tak, jak zapisana, `etymology_chain` podaje ją jako tekst
+czytelny dla programu, jeden element na linię, `n. relacja język forma`, z
+` [m]`, gdy element dotyczy elementu m (jego wyraz pokrewny, jego potomek),
+inaczej hasła (en *water*):
+
+```
+1. root ine-pro *wed-
+2. from enm water
+3. from ang wæter
+4. from gmw-pro *watar
+…
+7. compare sco watter
+```
+
+Relacje: `from` (odziedziczone lub pochodne), `borrowed`, `calque`,
+`compound` (forma to części przez ` + `: `water + -y`), `root`, `compare`
+(wyraz pokrewny), `descendant` (potomek elementu przed nim), `doublet`,
+`mention`, `attested`. Elementy bez ` [m]` relacji `from`, `borrowed`,
+`calque` to łańcuch, każdy od poprzedniego. Każda wiki opisuje, jak zapisuje
+etymologie, w swojej konfiguracji (`etymology` w `res/wiktionary/<wiki>.json`):
+relację szablonu i parametry jego języka i formy, słowa dające relację
+wzmianki (en „from”, „cognate with”; de „von”, „vgl.”), szablon całego
+łańcucha (en `{{etymon|en|:inh|enm:red}}`). Po pierwszym akapicie z elementami
+łańcucha czytane są tylko wyrazy pokrewne i potomkowie: reszta to uwagi.
 
 ## Co gdzie trafia
 

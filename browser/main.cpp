@@ -5,7 +5,7 @@
 // "go to line". Right: the selected line as indented JSON in a read-only
 // qcodeedit view (Kate highlighting and folding), and as a tree with readable
 // labels of sections and senses. F4 shows Cyrillic in Latin letters (its sound, the Polish way)
-// in all tabs.
+// in all tabs, F6 links and templates of one parameter as their text.
 // View > Original: the page's wikitext (the <text> of its <page>, entities
 // decoded) with Kate mediawiki highlighting, read from the dump at its "source"
 // ([bz2 block, number in it]), or of the selected node of the tree when it has its own
@@ -23,6 +23,7 @@
 #include "FindBar.h"
 #include "HeadingTranslator.h"
 #include "Latin.h"
+#include "Plain.h"
 #include <QInputDialog>
 #include "TreeFindBar.h"
 #include <QFileInfo>
@@ -224,10 +225,15 @@ private:
     quint64 cached_ = ~0ull;
 };
 
-// F4: Cyrillic shown in Latin letters (Latin.h) in all tabs
+// F4: Cyrillic shown in Latin letters (Latin.h) in all tabs; F6: links and templates of one
+// parameter as their text (Plain.h)
 bool latinShown = false;
+bool plainShown = false;
 
-QString shownText(const QString &text) { return latinShown ? cyrillicToLatin(text) : text; }
+QString shownText(const QString &text) {
+    const QString plain = plainShown ? withoutLinksAndTemplates(text) : text;
+    return latinShown ? cyrillicToLatin(plain) : plain;
+}
 
 QString scalar(const json &v) {
     return shownText(v.is_string() ? QString::fromStdString(v.get<std::string>()) : QString::fromStdString(v.dump()));
@@ -428,6 +434,15 @@ public:
             showJsonViews();
             showOriginalText();
             statusBar()->showMessage(latinShown ? "Cyrillic in Latin letters (F4)" : "Cyrillic as written (F4)", 3000);
+        });
+        // F6: links as their text, templates of one parameter as it ([[вода|воде]] воде,
+        // {{выдел|водата}} водата) in all tabs, again: as written (F3 is Find next)
+        connect(new QShortcut(QKeySequence(Qt::Key_F6), this), &QShortcut::activated, this, [this] {
+            plainShown = !plainShown;
+            showJsonViews();
+            showOriginalText();
+            statusBar()->showMessage(plainShown ? "Links and templates as their text (F6)" : "Wikitext as written (F6)",
+                                     3000);
         });
 
         auto *file = menuBar()->addMenu("&File");
@@ -1189,9 +1204,10 @@ private:
         updateTabTitles();
     }
 
-    // "(lat)" on the tabs while F4 shows Cyrillic in Latin letters
+    // "(lat)" on the tabs while F4 shows Cyrillic in Latin letters, "(text)" while F6 shows links and
+    // templates as their text
     void updateTabTitles() {
-        const QString lat = latinShown ? " (lat)" : "";
+        const QString lat = QString(plainShown ? " (text)" : "") + (latinShown ? " (lat)" : "");
         for (auto [page, title] : {std::pair<QWidget *, QString>{json_.page, "JSON"}, {treePage_, "Tree"},
                                    {wiki_.page, translated_ ? "OriginalT" : "Original"}, {wikiTreePage_, "WikiTree"}})
             if (const int tab = tabs_->indexOf(page); tab >= 0)

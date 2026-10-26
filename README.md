@@ -104,7 +104,10 @@ dump_dir = ~/dump
   through their `.jsonl.idx`, decompressing only the block shown. F4 shows
   Cyrillic in Latin letters, its sound the Polish way (вода woda, жёлтый
   żołtyj, семья siem'ja; letters of Ukrainian, Serbian, Kazakh… roughly), in
-  all tabs ("(lat)" on them), again: as written.
+  all tabs ("(lat)" on them), again: as written. F6 shows links as their text
+  and templates of one unnamed parameter as it (`[[вода|воде]]` воде,
+  `{{выдел|водата}}` водата; not `{{t|en|water}}`, files, categories) in all
+  tabs ("(text)" on them), again: as written.
   View > Original shows the wikitext of the page from the dump (Settings >
   Dump directory) at its `source`; when the page there has another title (a
   dump of another date), or with Settings > Find pages by title, the page is

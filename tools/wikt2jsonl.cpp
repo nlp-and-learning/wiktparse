@@ -40,6 +40,7 @@
 
 #include <nlohmann/json.hpp>
 #include <sqlite3.h>
+#include <wikilib/core/text_utils.hpp>
 #include <wikilib/core/unicode_utils.h>
 #include <wikilib/templates/template_parser.h>
 
@@ -2865,6 +2866,37 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     return {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"source", source}, {"sections", sections}};
 }
 
+// The text with its HTML entities decoded (ru "символ &#171;@&#187;" -> "символ «@»", &nbsp;), but those
+// of a character of wiki markup, which the writers put there not to make markup (&#124; |, &#61; =,
+// &lt; <, &#91; [ … stay)
+std::string withDecodedEntities(std::string text) {
+    if (text.find('&') == std::string::npos)
+        return text;
+    static const std::string_view markup = "<>&[]{}|=':*#;~\n\r";
+    // (arrows, which wikilib does not know)
+    static const std::map<std::string_view, std::string_view> more = {
+            {"&larr;", "←"}, {"&rarr;", "→"}, {"&uarr;", "↑"}, {"&darr;", "↓"}, {"&harr;", "↔"},
+            {"&lArr;", "⇐"}, {"&rArr;", "⇒"}, {"&hArr;", "⇔"}};
+    std::string result;
+    result.reserve(text.size());
+    for (size_t i = 0; i < text.size();) {
+        if (text[i] == '&')
+            if (const size_t end = text.find(';', i + 1); end != std::string::npos && end - i < 12) {
+                const auto entity = std::string_view(text).substr(i, end - i + 1);
+                const auto known = more.find(entity);
+                const auto decoded = known != more.end() ? std::string(known->second)
+                                                         : wikilib::text::decode_html_entities(entity);
+                if (decoded != entity && !(decoded.size() == 1 && markup.find(decoded[0]) != std::string_view::npos)) {
+                    result += decoded;
+                    i = end + 1;
+                    continue;
+                }
+            }
+        result += text[i++];
+    }
+    return result;
+}
+
 // The output: tools/jsonl_blocks.h
 using jsonlblocks::Compression;
 using jsonlblocks::JsonlWriter;
@@ -3004,7 +3036,8 @@ int main(int argc, char *argv[]) {
                             if (!convertedNamespace(*site, ns))
                                 return true;
                             auto line = convertPage(wiki, config, names, sectionNames, title, ns,
-                                                    wikilib::markup::strip_comments(content), workerStats[worker], markersOnly,
+                                                    withDecodedEntities(wikilib::markup::strip_comments(content)),
+                                                    workerStats[worker], markersOnly,
                                                     json::array({location.block, location.index}));
                             // Pages without a recognized language are left out
                             if (out && !line["sections"].empty())
@@ -3027,7 +3060,8 @@ int main(int argc, char *argv[]) {
                 text << file.rdbuf();
                 // As from dumps: without comments
                 auto line = convertPage(wiki, config, names, sectionNames, page["title"], page["ns"],
-                                        wikilib::markup::strip_comments(text.str()), stats, markersOnly,
+                                        withDecodedEntities(wikilib::markup::strip_comments(text.str())), stats,
+                                        markersOnly,
                                         page.value("source", json()));
                 if (out && !line["sections"].empty()) // pages without a recognized language are left out
                     out->add(0, written(line).dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);

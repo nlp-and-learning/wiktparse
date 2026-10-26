@@ -1558,6 +1558,9 @@ private:
         // he ==הָלַךְ==: a heading of this level is the entry word, its definitions below
         if (!name && level == num(config_, "/senses/entry_level", 0))
             name = SectionName{"Definitions", "section"};
+        // ru == {{з|ударение=за́мок}} ==: a homograph, its sections below
+        if (!name && !key.empty() && key == str(config_, "/homographs/template"))
+            name = SectionName{"Homograph", "section"};
         if (!name)
             unknown_.push_back(key);
         std::string kind = !name ? "" : name->section == "Etymology" ? "etymology" : name->kind;
@@ -1653,6 +1656,779 @@ private:
             n.erase("level");
     }
 };
+
+// ---------------------------------------------------------------------------
+// The uniform tree (--uniform; doc/uniform-tree.md, res/schema/uniform.schema.json): the tree of
+// a language's headings as entries (one per part of speech, group and form) with their senses,
+// translations and relations; what stands above the parts of speech goes to the entries it
+// belongs to: by the headings, by the sense ids of its lines, else to the language.
+namespace uniform {
+
+std::vector<std::string> textLines(const std::string &text) {
+    std::vector<std::string> result;
+    std::istringstream in(text);
+    for (std::string line; std::getline(in, line);)
+        result.push_back(line);
+    return result;
+}
+
+// "1.1, 1.5-7" -> 1.1 1.5 1.6 1.7; de "1–3" -> 1 2 3
+std::vector<std::string> expandIds(std::string written) {
+    for (size_t at; (at = written.find("\xE2\x80\x93")) != std::string::npos;) // – as -
+        written.replace(at, 3, "-");
+    std::vector<std::string> ids;
+    for (const auto &raw : split(written, ',')) {
+        const auto part = trim(raw);
+        const auto dash = part.find('-');
+        if (dash == std::string::npos) {
+            if (!part.empty())
+                ids.push_back(part);
+            continue;
+        }
+        const auto left = trim(part.substr(0, dash)), right = trim(part.substr(dash + 1));
+        const auto dot = left.rfind('.');
+        const auto prefix = dot == std::string::npos ? std::string() : left.substr(0, dot + 1);
+        const auto rightDot = right.rfind('.');
+        try {
+            const int from = std::stoi(left.substr(prefix.size()));
+            const int to = std::stoi(rightDot == std::string::npos ? right : right.substr(rightDot + 1));
+            if (to < from || to - from > 50)
+                throw std::invalid_argument(part);
+            for (int i = from; i <= to; ++i)
+                ids.push_back(prefix + std::to_string(i));
+        } catch (const std::exception &) {
+            ids.push_back(part);
+        }
+    }
+    return ids;
+}
+
+// Sense ids at the start of a line: pl ": (1.1, 1.5-7) …", de ":[1, 6] …"
+struct Mark {
+    std::string written; // "1.1, 1.5-7"
+    std::vector<std::string> ids;
+    std::string rest; // the line after the mark
+};
+
+std::optional<Mark> lineMark(const std::string &line) {
+    static const std::regex mark("^[:*#]*\\s*[(\\[]\\s*([0-9][0-9a-z.,\\s\\-\xE2\x80\x93]*)[)\\]]\\s*");
+    const auto head = line.substr(0, 120);
+    std::smatch m;
+    if (!std::regex_search(head, m, mark))
+        return std::nullopt;
+    auto written = trim(m[1].str());
+    return Mark{written, expandIds(written), line.substr(static_cast<size_t>(m.length(0)))};
+}
+
+std::string withoutListMarks(const std::string &line) {
+    size_t start = 0;
+    while (start < line.size() && (line[start] == ':' || line[start] == '*' || line[start] == '#'))
+        ++start;
+    return trim(line.substr(start));
+}
+
+void append(json &object, const std::string &key, const std::string &text) {
+    if (trim(text).empty())
+        return;
+    object[key] = object.contains(key) ? object[key].get<std::string>() + "\n" + text : text;
+}
+
+// A list value of a template without inline modifiers (en "bar<id:shoal>", "x<q:archaic>")
+std::string termValue(std::string value) {
+    if (auto lt = value.find('<'); lt != std::string::npos)
+        value = value.substr(0, lt);
+    if (value.find("[[") != std::string::npos)
+        if (auto l = links(value); !l.empty())
+            return l.front();
+    return trim(value);
+}
+
+bool noTerm(const std::string &term) {
+    return term.empty() || term == "?" || term == "-" || term == "\xE2\x80\x94" || term == "\xE2\x80\x93";
+}
+
+// The terms of a line of a relation section with the label before them:
+// "[[warownia]], [[twierdza]]", "{{zdrobn}} [[zameczek]] {{m}}", en "{{col|en|a|b}}", "* {{l|en|x}}",
+// fr "{{lien|x|fr}}", ru "{{родств-блок|прилагательные=за́мковый}}" (by its parameters as labels)
+std::vector<std::pair<std::string, std::string>> lineTerms(std::string rest) {
+    static const std::set<std::string> linkTemplates = {"l", "link", "l-self", "ll", "m", "L", "lien"};
+    static const std::regex listTemplate(R"(^(col[1-9u]?|col-auto|(der|rel|desc)[2-5]?(-u)?)$)");
+    std::vector<std::pair<std::string, std::string>> terms; // label, term
+    std::string label;
+    // labels: templates of no terms before the first term (pl {{zdrobn}}, ru {{част.}}:)
+    while (rest.starts_with("{{")) {
+        auto all = wikilib::templates::find_invocations(rest);
+        if (all.empty() || all.front().location.begin.offset != 0)
+            break;
+        const auto &t = all.front();
+        if (linkTemplates.contains(t.name) || std::regex_match(t.name, listTemplate) || t.name.starts_with("родств"))
+            break;
+        label += (label.empty() ? "" : " ") + rest.substr(0, t.location.length());
+        rest = rest.substr(t.location.length());
+        while (!rest.empty() && (rest[0] == ' ' || rest[0] == ':'))
+            rest.erase(0, 1);
+    }
+    for (const auto &[term, genders] : linkPieces(rest))
+        terms.emplace_back(label, term);
+    for (const auto &t : wikilib::templates::find_invocations(rest)) {
+        if (linkTemplates.contains(t.name)) {
+            if (auto v = t.get(size_t{t.name == "lien" ? 1u : 2u}))
+                terms.emplace_back(label, termValue(std::string(*v)));
+        } else if (std::regex_match(t.name, listTemplate)) {
+            for (size_t i = 2; auto v = t.get(i); ++i)
+                terms.emplace_back(label, termValue(std::string(*v)));
+        } else if (t.name.starts_with("родств")) {
+            for (const auto &[name, value] : t.parameters)
+                if (!name.empty() && !std::isdigit(static_cast<unsigned char>(name[0])) && name != "полн")
+                    for (const auto &piece : split(value, ','))
+                        terms.emplace_back(name, termValue(piece));
+        }
+    }
+    std::erase_if(terms, [](const auto &p) { return noTerm(p.second); });
+    return terms;
+}
+
+// Items of a relation section: {term, sense, qualifier}; the sense of a mark, or of ru "#" lines
+// by their place (the n-th line of sense n)
+std::vector<json> relationItems(const std::string &text) {
+    std::vector<json> items;
+    int place = 0;
+    for (const auto &line : textLines(text)) {
+        const auto t = trim(line);
+        if (t.empty())
+            continue;
+        std::string sense;
+        if (t.starts_with('#') && !t.starts_with("#:") && !t.starts_with("#*"))
+            sense = std::to_string(++place);
+        std::string rest = withoutListMarks(t);
+        if (auto mark = lineMark(t)) {
+            sense = mark->written;
+            rest = trim(mark->rest);
+        }
+        for (const auto &[label, term] : lineTerms(rest)) {
+            json item = {{"term", term}};
+            if (!sense.empty())
+                item["sense"] = sense;
+            if (!label.empty())
+                item["qualifier"] = label;
+            items.push_back(std::move(item));
+        }
+    }
+    return items;
+}
+
+// Relations of sense lines: en "#: {{syn|en|banker|banque}}"
+const std::map<std::string, std::string> &senseRelationTemplates() {
+    static const std::map<std::string, std::string> names = {
+            {"syn", "Synonyms"},         {"synonyms", "Synonyms"},     {"ant", "Antonyms"},
+            {"antonyms", "Antonyms"},    {"hyper", "Hypernyms"},       {"hypernyms", "Hypernyms"},
+            {"hypo", "Hyponyms"},        {"hyponyms", "Hyponyms"},     {"cot", "Coordinate terms"},
+            {"coord", "Coordinate terms"}, {"holo", "Holonyms"},       {"holonyms", "Holonyms"},
+            {"mero", "Meronyms"},        {"meronyms", "Meronyms"},     {"tropo", "Troponyms"}};
+    return names;
+}
+
+// Files with their caption and its sense: [[Plik:x.jpg|thumb|zamek (1.1)]], ru {{илл|x.jpg|Замок [1]}};
+// other files of the text by name only
+json mediaItems(const std::string &text, const json &names = json::array()) {
+    json result = json::array();
+    std::set<std::string> seen;
+    auto add = [&](const std::string &file, const std::string &caption) {
+        if (file.empty() || seen.contains(file))
+            return;
+        seen.insert(file);
+        json item = {{"file", file}};
+        if (!caption.empty()) {
+            item["caption"] = caption;
+            static const std::regex senseOf("[(\\[]\\s*([0-9][0-9.,\\s\\-]*)[)\\]]");
+            if (std::smatch m; caption.size() < maxRegexLine && std::regex_search(caption, m, senseOf))
+                item["sense"] = trim(m[1].str());
+        }
+        result.push_back(std::move(item));
+    };
+    static const std::set<std::string> options = {"thumb", "thumbnail", "mini", "miniatur", "right", "left", "center",
+                                                  "none", "upright", "frame", "frameless", "border", "vignette",
+                                                  "redresse", "droite", "gauche", "centre"};
+    for (size_t open = text.find("[["); open != std::string::npos; open = text.find("[[", open + 2)) {
+        // the link up to its "]]", links in its caption inside
+        int depth = 0;
+        size_t end = open;
+        for (; end + 1 < text.size(); ++end) {
+            if (text[end] == '[' && text[end + 1] == '[')
+                ++depth, ++end;
+            else if (text[end] == ']' && text[end + 1] == ']' && --depth == 0)
+                break;
+            else if (text[end] == ']' && text[end + 1] == ']')
+                ++end;
+        }
+        if (depth != 0)
+            break;
+        const auto inner = text.substr(open + 2, end - open - 2);
+        std::vector<std::string> parts;
+        int nested = 0;
+        parts.emplace_back();
+        for (size_t i = 0; i < inner.size(); ++i) {
+            if (i + 1 < inner.size() && (inner[i] == '[' || inner[i] == '{') && inner[i + 1] == inner[i])
+                ++nested;
+            else if (i + 1 < inner.size() && (inner[i] == ']' || inner[i] == '}') && inner[i + 1] == inner[i])
+                --nested;
+            if (inner[i] == '|' && nested == 0)
+                parts.emplace_back();
+            else
+                parts.back() += inner[i];
+        }
+        const auto colon = parts[0].find(':');
+        if (colon == std::string::npos)
+            continue;
+        const auto file = trim(parts[0].substr(colon + 1));
+        if (auto found = mediaFiles(file); found.size() != 1 || found[0] != file)
+            continue;
+        std::string caption;
+        if (parts.size() > 1) {
+            const auto last = trim(parts.back());
+            if (!options.contains(wikilib::unicode::to_lower(last)) && !last.ends_with("px") &&
+                last.find('=') == std::string::npos)
+                caption = last;
+        }
+        add(file, caption);
+        open = end;
+    }
+    for (const auto &t : allTemplates(text))
+        if (auto v = t.get(size_t{1})) {
+            const auto file = trim(std::string(*v));
+            if (auto found = mediaFiles(file); found.size() == 1 && found[0] == file) {
+                auto caption = t.get(size_t{2});
+                add(file, caption && mediaFiles(trim(std::string(*caption))).empty() ? trim(std::string(*caption)) : "");
+            }
+        }
+    for (const auto &file : mediaFiles(text))
+        add(file, "");
+    for (const auto &file : names)
+        add(file.get<std::string>(), "");
+    return result;
+}
+
+// Sections of the whole language, never of an entry
+const std::set<std::string> languageNotes = {"References", "See also", "External links", "Further reading",
+                                             "Anagrams", "Metagrams", "Bibliography", "Sources", "Literature"};
+
+class Builder {
+public:
+    Builder(const json &config, const SectionNames &names) : config_(config), names_(names) {}
+
+    json language(const json &in) {
+        json out = {{"code", in["code"]}, {"language", in["language"]}, {"native", in["native"]}};
+        language_ = &out;
+        scopes_ = {Scope{}};
+        const json root = {{"children", in.value("sections", json::array())}};
+        plan(root, 0, -1);
+        if (in.contains("text") || in.contains("media"))
+            routeMedia(mediaItems(in.value("text", std::string()), in.value("media", json::array())), 0);
+        // Before the first section, a pronunciation line: pl "{{wymowa}} {{IPA3|ˈvɔda}}"
+        for (const auto &line : textLines(in.value("text", std::string())))
+            if (auto all = wikilib::templates::find_invocations(line);
+                !all.empty() && all.front().location.begin.offset == 0)
+                if (auto name = names_.find(sectionKey(all.front().name).first); name && name->section == "Pronunciation")
+                    append(out, "pronunciation", line);
+        fill(root);
+        // What a group gives its entries (en Etymology 2, a ru homograph): theirs when they have none
+        for (size_t e = 0; e < entries_.size(); ++e)
+            for (int s = entryScope_[e]; s > 0; s = scopes_[s].parent)
+                for (const char *key : {"etymology", "pronunciation"})
+                    if (!entries_[e].contains(key) && scopes_[s].given.contains(key))
+                        entries_[e][key] = scopes_[s].given[key];
+        json entries = json::array();
+        for (auto &e : entries_) {
+            for (const char *key : {"senses", "translations", "see", "subpages", "media", "pos_also"})
+                if (e.contains(key) && e[key].empty())
+                    e.erase(key);
+            for (const char *key : {"relations", "sections"})
+                if (e.contains(key) && e[key].empty())
+                    e.erase(key);
+            entries.push_back(std::move(e));
+        }
+        if (!entries.empty())
+            out["entries"] = std::move(entries);
+        for (const char *key : {"notes", "media"})
+            if (out.contains(key) && out[key].empty())
+                out.erase(key);
+        return out;
+    }
+
+private:
+    struct Scope {
+        int parent = -1;
+        std::string group;
+        std::vector<size_t> entries; // its and of the scopes below
+        int implicit = -1;           // the entry of senses outside any part of speech
+        json given = json::object(); // etymology, pronunciation of the group
+    };
+    struct NodeInfo {
+        int scope = 0, owner = -1;
+        bool group = false; // en Etymology 2, a ru homograph: a scope of its own
+    };
+    const json &config_;
+    const SectionNames &names_;
+    json *language_ = nullptr;
+    std::vector<Scope> scopes_;
+    std::vector<json> entries_;
+    std::vector<int> entryScope_;
+    std::map<const json *, NodeInfo> info_;
+    int lastEntry_ = -1;
+    int homographs_ = 0;
+
+    std::string kind(const json &node) const {
+        if (!node.contains("section") || !node["section"].is_string())
+            return "";
+        auto name = names_.find(node["section"].get<std::string>());
+        return name ? name->kind : "";
+    }
+    static std::string section(const json &node) { return node.value("section", std::string()); }
+    static std::string text(const json &node) { return node.value("text", std::string()); }
+    // (by reference: nodes are known by their address)
+    static const json &children(const json &node) {
+        static const json none = json::array();
+        auto it = node.find("children");
+        return it == node.end() ? none : *it;
+    }
+
+    static bool hasPos(const json &node, const Builder &b) {
+        for (const auto &c : children(node))
+            if (b.kind(c) == "pos" || hasPos(c, b))
+                return true;
+        return false;
+    }
+
+    size_t newEntry(int scope, json entry) {
+        entries_.push_back(std::move(entry));
+        entryScope_.push_back(scope);
+        const size_t e = entries_.size() - 1;
+        for (int s = scope; s >= 0; s = scopes_[s].parent)
+            scopes_[s].entries.push_back(e);
+        return e;
+    }
+
+    size_t implicitEntry(int scope) {
+        if (scopes_[scope].implicit < 0) {
+            json e = {{"pos", nullptr}};
+            if (!scopes_[scope].group.empty())
+                e["group"] = scopes_[scope].group;
+            scopes_[scope].implicit = static_cast<int>(newEntry(scope, std::move(e)));
+        }
+        return static_cast<size_t>(scopes_[scope].implicit);
+    }
+
+    // Entries and groups in page order, before anything is routed to them
+    void plan(const json &node, int scope, int owner) {
+        for (const auto &c : children(node)) {
+            int childScope = scope, childOwner = owner;
+            bool group = false;
+            if (kind(c) == "pos") {
+                childOwner = static_cast<int>(newEntry(scope, posEntry(c, scope)));
+            } else if (owner < 0 && (section(c) == "Homograph" || (c.contains("index") && hasPos(c, *this)))) {
+                Scope s;
+                s.parent = scope;
+                s.group = section(c) == "Homograph" ? std::to_string(++homographs_) : c["index"].dump();
+                scopes_.push_back(std::move(s));
+                childScope = static_cast<int>(scopes_.size()) - 1;
+                group = true;
+            } else if (owner < 0 && section(c) == "Definitions" && c.contains("senses")) {
+                implicitEntry(scope);
+            }
+            info_[&c] = {childScope, childOwner, group};
+            plan(c, childScope, childOwner);
+        }
+    }
+
+    json posEntry(const json &c, int scope) {
+        json e = {{"pos", c["section"]}};
+        const auto heading = c.value("heading", std::string());
+        e["pos_written"] = heading;
+        std::string group = scopes_[scope].group;
+        std::string grammar;
+        json also = json::array();
+        if (heading.starts_with("{{")) {
+            auto all = wikilib::templates::find_invocations(heading);
+            std::string rest = all.empty() ? "" : heading.substr(all.front().location.end.offset);
+            // fr {{S|nom|fr|num=2}}
+            if (!all.empty())
+                if (auto n = all.front().get("num"); n && !trim(std::string(*n)).empty())
+                    group = trim(std::string(*n));
+            // de "{{Wortart|Substantiv|Deutsch}}, {{n}}, {{Wortart|Toponym|Deutsch}}": the others of
+            // its parts of speech, the rest its grammar
+            for (size_t i = 1; i < all.size(); ++i)
+                if (auto v = all[i].get(size_t{1}); v && all[i].name == all.front().name)
+                    if (auto name = names_.find(std::string(*v)); name && name->kind == "pos") {
+                        also.push_back(name->section);
+                        const auto written = heading.substr(all[i].location.begin.offset, all[i].location.length());
+                        if (auto at = rest.find(written); at != std::string::npos)
+                            rest.erase(at, written.size());
+                    }
+            std::vector<std::string> pieces;
+            for (const auto &p : split(rest, ','))
+                if (!trim(p).empty())
+                    pieces.push_back(trim(p));
+            for (const auto &p : pieces)
+                grammar += (grammar.empty() ? "" : ", ") + p;
+        } else if (auto comma = heading.find(','); comma != std::string::npos) {
+            grammar = trim(heading.substr(comma + 1)); // pl "rzeczownik, rodzaj żeński"
+        }
+        // pl: the group of its sense ids, 2 of (2.1) (not of nested ids of "##", fr 7.1)
+        if (group.empty() && str(config_, "/senses/marker").starts_with(": ("))
+            for (const auto &s : c.value("senses", json::array()))
+                if (auto id = s["id"].get<std::string>(); id.find('.') != std::string::npos) {
+                    group = id.substr(0, id.find('.'));
+                    break;
+                }
+        if (!group.empty())
+            e["group"] = group;
+        if (!grammar.empty())
+            e["grammar"] = grammar;
+        if (!also.empty())
+            e["pos_also"] = also;
+        // the first line of the text but a file or the lexeme (en {{wikidata lexeme|L3302}}), with the
+        // lines of its template (de {{Deutsch Substantiv Übersicht …}})
+        const auto lexemeTemplate = str(config_, "/senses/lexeme_template");
+        std::string headword;
+        int depth = 0;
+        for (const auto &line : textLines(text(c))) {
+            const auto t = trim(line);
+            if (headword.empty()) {
+                auto only = onlyTemplate(t);
+                if (t.empty() || t.starts_with("[[") || (only && !lexemeTemplate.empty() && only->name == lexemeTemplate))
+                    continue;
+            }
+            headword += (headword.empty() ? "" : "\n") + t;
+            for (size_t i = 0; i + 1 < t.size(); ++i)
+                if (t[i] == t[i + 1] && (t[i] == '{' || t[i] == '}'))
+                    depth += t[i++] == '{' ? 1 : -1;
+            if (depth <= 0)
+                break;
+        }
+        if (!headword.empty())
+            e["headword"] = headword;
+        return e;
+    }
+
+    // fr {{S|nom|fr|num=2}} -> nom, 2: for etymology lines {{laé|fr|nom|2}}
+    std::pair<std::string, std::string> key(size_t e) const {
+        const auto heading = entries_[e].value("pos_written", std::string());
+        if (!heading.starts_with("{{"))
+            return {};
+        auto all = wikilib::templates::find_invocations(heading);
+        if (all.empty() || !all.front().get(size_t{1}))
+            return {};
+        return {std::string(*all.front().get(size_t{1})), std::string(all.front().get("num").value_or(""))};
+    }
+
+    std::vector<size_t> entriesOfIds(const std::vector<std::string> &ids, const std::vector<size_t> &among) const {
+        std::vector<size_t> result;
+        for (const auto &id : ids) {
+            std::optional<size_t> found;
+            for (auto e : among)
+                for (const auto &s : entries_[e].value("senses", json::array()))
+                    if (s["id"] == id && !found)
+                        found = e;
+            // pl (2.1): the entry of group 2
+            if (!found && id.find('.') != std::string::npos)
+                for (auto e : among)
+                    if (entries_[e].value("group", std::string()) == id.substr(0, id.find('.')) && !found)
+                        found = e;
+            if (found && !std::ranges::contains(result, *found))
+                result.push_back(*found);
+        }
+        return result;
+    }
+
+    // Lines of a section to the entries they are marked for (sense ids, fr {{laé|fr|nom|2}});
+    // the unmarked rest
+    std::pair<std::map<size_t, std::string>, std::string> splitByEntries(const std::string &text,
+                                                                         const std::vector<size_t> &among) const {
+        std::map<size_t, std::string> pieces;
+        std::string rest;
+        std::vector<size_t> current;
+        for (const auto &line : textLines(text)) {
+            std::vector<size_t> targets;
+            if (auto mark = lineMark(line))
+                targets = entriesOfIds(mark->ids, among);
+            for (const auto &t : allTemplates(line))
+                if (t.name == "laé")
+                    for (auto e : among)
+                        if (auto k = key(e); !k.first.empty() && t.get(size_t{2}) && k.first == *t.get(size_t{2}) &&
+                                             (!t.get(size_t{3}) || k.second == *t.get(size_t{3})) &&
+                                             !std::ranges::contains(targets, e))
+                            targets.push_back(e);
+            const auto t = trim(line);
+            if (targets.empty() && !current.empty() && !t.empty() && t[0] != ':' && t[0] != '*' && t[0] != '#')
+                targets = current; // a line of the template of a marked line (pl {{odmiana-…|…}})
+            for (auto e : targets)
+                pieces[e] += line + '\n';
+            if (targets.empty())
+                rest += line + '\n';
+            current = t.empty() ? std::vector<size_t>() : targets;
+        }
+        return {pieces, rest};
+    }
+
+    void addRelation(size_t e, const std::string &name, json item) {
+        auto &list = entries_[e]["relations"][name];
+        if (!std::ranges::contains(list, item))
+            list.push_back(std::move(item));
+    }
+
+    void routeMedia(const json &items, int scope, std::optional<size_t> entry = std::nullopt) {
+        for (const auto &item : items) {
+            std::vector<size_t> targets;
+            if (item.contains("sense"))
+                targets = entriesOfIds(expandIds(item["sense"]), entry ? std::vector<size_t>{*entry} : scopes_[scope].entries);
+            if (targets.empty() && entry)
+                targets = {*entry};
+            if (targets.empty())
+                (*language_)["media"].push_back(item);
+            for (auto e : targets)
+                entries_[e]["media"].push_back(item);
+        }
+    }
+
+    // Examples of a section by the sense ids of its lines (pl {{przykłady}} (1.2), de {{Beispiele}} [1]);
+    // unmarked lines are returned
+    std::string examples(const std::string &text, const std::vector<size_t> &among) {
+        std::string rest;
+        for (const auto &line : textLines(text)) {
+            bool placed = false;
+            if (auto mark = lineMark(line); mark && !trim(mark->rest).empty())
+                for (const auto &id : mark->ids)
+                    for (auto e : among)
+                        for (auto &s : entries_[e]["senses"])
+                            if (s["id"] == id) {
+                                s["examples"].push_back({{"text", trim(mark->rest)}});
+                                placed = true;
+                            }
+            if (!placed)
+                rest += line + '\n';
+        }
+        return trim(rest).empty() ? "" : rest;
+    }
+
+    // Senses: examples of the definition's text (ru {{пример|…}}) and of its lines; relation
+    // templates of its lines (en "#: {{syn|en|…}}") as relations of the entry
+    void addSenses(size_t e, const json &senses) {
+        const auto exampleTemplate = str(config_, "/senses/example_template");
+        for (auto s : senses) {
+            json examples = json::array();
+            if (!exampleTemplate.empty()) {
+                auto text = s["text"].get<std::string>();
+                auto all = wikilib::templates::find_invocations(text);
+                for (auto it = all.rbegin(); it != all.rend(); ++it)
+                    if (it->name == exampleTemplate) {
+                        text.erase(it->location.begin.offset, it->location.length());
+                        if (auto v = it->get(size_t{1}); v && !trim(std::string(*v)).empty()) {
+                            json example = {{"text", trim(std::string(*v))}};
+                            std::string source;
+                            for (size_t i = 2; i <= 4; ++i)
+                                if (auto p = it->get(i); p && !trim(std::string(*p)).empty())
+                                    source += (source.empty() ? "" : ", ") + trim(std::string(*p));
+                            if (!source.empty())
+                                example["source"] = source;
+                            examples.insert(examples.begin(), std::move(example));
+                        }
+                    }
+                s["text"] = trim(text);
+            }
+            for (const auto &x : s.value("examples", json::array())) {
+                const auto written = x.get<std::string>();
+                auto t = onlyTemplate(written);
+                if (t && senseRelationTemplates().contains(t->name)) {
+                    for (size_t i = 2; auto v = t->get(i); ++i)
+                        if (auto term = termValue(std::string(*v)); !noTerm(term) && !term.starts_with("Thesaurus:"))
+                            addRelation(e, senseRelationTemplates().at(t->name), {{"term", term}, {"sense", s["id"]}});
+                    continue;
+                }
+                json example = {{"text", written}};
+                if (t)
+                    if (auto source = t->get("source"); source && !trim(std::string(*source)).empty())
+                        example["source"] = trim(std::string(*source));
+                examples.push_back(std::move(example));
+            }
+            s.erase("examples");
+            if (!examples.empty())
+                s["examples"] = std::move(examples);
+            entries_[e]["senses"].push_back(std::move(s));
+        }
+    }
+
+    void addTranslations(size_t e, const json &node) {
+        for (const auto &t : node.value("translations", json::array()))
+            entries_[e]["translations"].push_back(t);
+        for (const auto &t : node.value("see", json::array()))
+            entries_[e]["see"].push_back(t);
+        if (node.value("subpage", false)) {
+            json subpage = {{"title", node.value("source_title", std::string())}};
+            if (node.contains("source"))
+                subpage["source"] = node["source"];
+            entries_[e]["subpages"].push_back(std::move(subpage));
+        }
+    }
+
+    // ru: the part of speech of an entry without one from its morphology template ({{сущ ru m ina 3*a}})
+    void posFromTemplate(const std::string &text, const std::vector<size_t> &among) {
+        static const json::json_pointer prefixes("/pos/template_prefixes");
+        if (!config_.contains(prefixes))
+            return;
+        for (const auto &t : wikilib::templates::find_invocations(text)) {
+            const auto first = t.name.substr(0, t.name.find_first_of(" -")); // сущ ru m a, сущ-ru
+            if (auto it = config_[prefixes].find(first); it != config_[prefixes].end()) {
+                for (auto e : among)
+                    if (entries_[e]["pos"].is_null())
+                        entries_[e]["pos"] = *it;
+                return;
+            }
+        }
+    }
+
+    // A section under a part of speech: of its entry
+    void owned(const json &c, size_t e) {
+        const auto name = section(c);
+        addTranslations(e, c);
+        if (c.contains("senses"))
+            addSenses(e, c["senses"]);
+        if (c.contains("lexeme"))
+            entries_[e]["lexeme"] = c["lexeme"];
+        routeMedia(mediaItems(text(c), c.value("media", json::array())), info_[&c].scope, e);
+        if (name == "Translations" || name == "Definitions" || text(c).empty())
+            return;
+        if (name == "Etymology")
+            append(entries_[e], "etymology", text(c));
+        else if (name == "Pronunciation")
+            append(entries_[e], "pronunciation", text(c));
+        else if (name == "Examples") {
+            if (auto rest = examples(text(c), {e}); !rest.empty())
+                append(entries_[e]["sections"], name, rest);
+        } else if (kind(c) == "relation" && !languageNotes.contains(name))
+            for (auto &item : relationItems(text(c)))
+                addRelation(e, name, std::move(item));
+        else
+            append(entries_[e]["sections"], name.empty() ? c.value("heading", std::string()) : name, text(c));
+    }
+
+    // A section above the parts of speech: to the entries of its scope it belongs to
+    void shared(const json &c, int scope) {
+        const auto name = section(c);
+        const auto among = scopes_[scope].entries;
+        if (name == "Definitions" && c.contains("senses"))
+            addSenses(implicitEntry(scope), c["senses"]);
+        for (const auto &t : c.value("translations", json::array())) {
+            std::vector<size_t> targets;
+            if (t.contains("sense"))
+                if (auto ids = expandIds(t["sense"]); !ids.empty())
+                    targets = entriesOfIds({ids.front()}, among);
+            size_t e = !targets.empty()       ? targets.front()
+                       : among.size() == 1    ? among.front()
+                       : among.empty()        ? implicitEntry(scope)
+                       : lastEntry_ >= 0 && std::ranges::contains(among, static_cast<size_t>(lastEntry_))
+                               ? static_cast<size_t>(lastEntry_)
+                               : among.front();
+            entries_[e]["translations"].push_back(t);
+        }
+        if (c.contains("see") || c.value("subpage", false)) {
+            json without = c;
+            without.erase("translations");
+            const bool last = lastEntry_ >= 0 && std::ranges::contains(among, static_cast<size_t>(lastEntry_));
+            addTranslations(among.empty() ? implicitEntry(scope) : last ? static_cast<size_t>(lastEntry_) : among.front(),
+                            without);
+        }
+        if (c.contains("lexeme"))
+            for (auto e : among)
+                entries_[e]["lexeme"] = c["lexeme"];
+        routeMedia(mediaItems(text(c), c.value("media", json::array())), scope);
+        if (name == "Translations" || name == "Definitions" || text(c).empty())
+            return;
+        posFromTemplate(text(c), among);
+        if (name == "Etymology" || name == "Pronunciation") {
+            const std::string key = name == "Etymology" ? "etymology" : "pronunciation";
+            auto [pieces, rest] = splitByEntries(text(c), among);
+            for (const auto &[e, piece] : pieces)
+                append(entries_[e], key, piece);
+            if (!trim(rest).empty()) {
+                if (scope > 0)
+                    append(scopes_[scope].given, key, rest);
+                else
+                    append(*language_, key, rest);
+            }
+            return;
+        }
+        if (languageNotes.contains(name) || name.empty()) {
+            append((*language_)["notes"], name.empty() ? c.value("heading", std::string()) : name, text(c));
+            return;
+        }
+        if (kind(c) == "relation") {
+            for (auto &item : relationItems(text(c))) {
+                std::vector<size_t> targets;
+                if (item.contains("sense"))
+                    targets = entriesOfIds(expandIds(item["sense"]), among);
+                if (targets.empty())
+                    targets = among; // of all its entries (pl {{pokrewne}} without ids)
+                for (auto e : targets)
+                    addRelation(e, name, item);
+            }
+            return;
+        }
+        std::string rest = text(c);
+        if (name == "Examples")
+            rest = examples(rest, among);
+        auto [pieces, unmarked] = splitByEntries(rest, among);
+        for (const auto &[e, piece] : pieces)
+            append(entries_[e]["sections"], name, piece);
+        if (!trim(unmarked).empty()) {
+            if (among.size() == 1)
+                append(entries_[among.front()]["sections"], name, unmarked);
+            else
+                append((*language_)["notes"], name, unmarked);
+        }
+    }
+
+    void fill(const json &node) {
+        for (const auto &c : children(node)) {
+            const auto [scope, owner, group] = info_[&c];
+            if (kind(c) == "pos") {
+                const auto e = static_cast<size_t>(owner);
+                lastEntry_ = static_cast<int>(e);
+                if (c.contains("senses"))
+                    addSenses(e, c["senses"]);
+                addTranslations(e, c);
+                if (c.contains("lexeme"))
+                    entries_[e]["lexeme"] = c["lexeme"];
+                routeMedia(mediaItems(text(c), c.value("media", json::array())), scope, e);
+            } else if (owner >= 0) {
+                owned(c, static_cast<size_t>(owner));
+            } else if (group) {
+                // a group (en Etymology 2, a ru homograph): its text is of its entries
+                if (section(c) == "Etymology")
+                    append(scopes_[scope].given, "etymology", text(c));
+                else if (section(c) == "Pronunciation")
+                    append(scopes_[scope].given, "pronunciation", text(c));
+                if (c.contains("lexeme"))
+                    for (auto e : scopes_[scope].entries)
+                        entries_[e]["lexeme"] = c["lexeme"];
+                routeMedia(mediaItems(text(c), c.value("media", json::array())), scope);
+            } else {
+                shared(c, scope);
+            }
+            fill(c);
+        }
+    }
+};
+
+// The page of convertPage in the uniform tree
+json page(const json &converted, const json &config, const SectionNames &names) {
+    json languages = json::array();
+    for (const auto &language : converted["sections"])
+        languages.push_back(Builder(config, names).language(language));
+    return {{"wiki", converted["wiki"]}, {"title", converted["title"]}, {"ns", converted["ns"]},
+            {"source", converted["source"]}, {"languages", std::move(languages)}};
+}
+
+} // namespace uniform
 
 // source: where the page is in the dump, [start of its bz2 block, number in it]; null for old samples
 json convertPage(const std::string &wiki, const json &config, LanguageNames &names, const SectionNames &sectionNames,
@@ -1840,7 +2616,7 @@ int main(int argc, char *argv[]) {
         fs::path input = "samples100", output = "jsonl", dbFile = "wiktlangs.sqlite";
         fs::path configDir = WIKTPARSE_RES_DIR "/wiktionary";
         std::vector<std::string> wikis;
-        bool fromDumps = false, markersOnly = false;
+        bool fromDumps = false, markersOnly = false, uniformTree = false;
         Compression compression = Compression::none;
         int level = 0; // 0: of the format (bz2 9, zstd 9)
         size_t threads = 8;
@@ -1855,6 +2631,8 @@ int main(int argc, char *argv[]) {
                 dbFile = argv[++i];
             else if (arg == "--dump")
                 fromDumps = true;
+            else if (arg == "--uniform")
+                uniformTree = true;
             else if (arg == "--markers-only")
                 markersOnly = true;
             else if (arg == "--bz2")
@@ -1866,7 +2644,8 @@ int main(int argc, char *argv[]) {
             else if (arg == "-j" && i + 1 < argc)
                 threads = std::max(1, std::stoi(argv[++i]));
             else if (arg == "-h" || arg == "--help") {
-                std::cout << "usage: wikt2jsonl [-i samples100 | --dump [-j N]] [--markers-only] [--bz2 | --zstd [--level N]] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n"
+                std::cout << "usage: wikt2jsonl [-i samples100 | --dump [-j N]] [--markers-only] [--uniform] [--bz2 | --zstd [--level N]] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n"
+                             "       --uniform: pages in the uniform tree (doc/uniform-tree.md)\n"
                              "       --dump: all pages of the dumps, each wiki read in N threads (default 8)\n"
                              "       --markers-only: only language markers and stats, no JSONL\n"
                              "       --bz2, --zstd: <wiki>.jsonl.bz2 or .jsonl.zst in blocks of 100 lines or 512 KB\n"
@@ -1924,6 +2703,7 @@ int main(int argc, char *argv[]) {
             if (config.value("skip", false))
                 continue;
             const SectionNames sectionNames("wiktsections.sqlite", wiki);
+            auto written = [&](const json &page) { return uniformTree ? uniform::page(page, config, sectionNames) : page; };
             const auto wikiStarted = std::chrono::steady_clock::now();
             Stats stats;
             const size_t workers =
@@ -1956,7 +2736,7 @@ int main(int argc, char *argv[]) {
                                                     json::array({location.block, location.index}));
                             // Pages without a recognized language are left out
                             if (out && !line["sections"].empty())
-                                out->add(worker, line.dump(-1, ' ', false, json::error_handler_t::replace), title);
+                                out->add(worker, written(line).dump(-1, ' ', false, json::error_handler_t::replace), title);
                             return true;
                         },
                         [&](const wikilib::dump::DumpReader::ProcessProgress &p) {
@@ -1978,7 +2758,7 @@ int main(int argc, char *argv[]) {
                                         wikilib::markup::strip_comments(text.str()), stats, markersOnly,
                                         page.value("source", json()));
                 if (out && !line["sections"].empty()) // pages without a recognized language are left out
-                    out->add(0, line.dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
+                    out->add(0, written(line).dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
             }
             if (out)
                 out->close(); // (its last blocks: in the time of the wiki)

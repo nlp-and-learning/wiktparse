@@ -9,18 +9,35 @@
       "roa-nor": "nrf"
     }
   },
-  "homographs": null,
+  "homographs": {
+    "template": "з"
+  },
   "pos": {
     "form": "inflection-template",
     "section": "Морфологические и синтаксические свойства",
-    "example": "{{сущ-ru|…}}"
+    "example": "{{сущ-ru|…}}",
+    "template_prefixes": {
+      "сущ": "Noun",
+      "гл": "Verb",
+      "прил": "Adjective",
+      "adv": "Adverb",
+      "мест": "Pronoun",
+      "числ": "Numeral",
+      "прич": "Participle",
+      "prep": "Preposition",
+      "conj": "Conjunction",
+      "part": "Particle",
+      "interj": "Interjection"
+    }
   },
   "sections": {
     "form": "heading"
   },
   "senses": {
     "marker": "#",
-    "section": "Значение"
+    "section": "Значение",
+    "example_template": "пример",
+    "lexeme_template": "Лексема в Викиданных"
   },
   "translations": {
     "section": "Перевод",

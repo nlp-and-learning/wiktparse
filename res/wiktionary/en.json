@@ -20,6 +20,7 @@
   },
   "senses": {
     "marker": "#",
+    "lexeme_template": "wikidata lexeme",
     "nesting": "##",
     "examples": [
       "#:",

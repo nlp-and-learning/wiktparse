@@ -88,7 +88,11 @@ dump_dir = ~/dump
   give it (template lines like pl `{{synonimy}}` one level below), every node
   under its English name with senses or translations where they stand (not
   linked yet). Schema: `res/schema/page.schema.json`;
-  `tools/validate_jsonl.py jsonl` checks the output.
+  `tools/validate_jsonl.py jsonl` checks the output. `--uniform` writes the
+  pages in the uniform tree instead (`doc/uniform-tree.md`, schema
+  `res/schema/uniform.schema.json`): languages, entries by part of speech
+  (with the group, etymology and pronunciation they belong to), senses with
+  their examples, translations and relations (with sense ids) under their entry.
 - `wiktbrowse [file.jsonl | file.jsonl.bz2]` – browser of JSONL files (wikt2jsonl
   output, also any JSONL such as wiktNeeded), a separate project in `browser/`
   (Qt6 and qcodeedit: the sibling `../qcodeedit` when present, otherwise

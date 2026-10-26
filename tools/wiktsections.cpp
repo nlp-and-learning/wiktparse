@@ -155,7 +155,9 @@ int main(int argc, char *argv[]) {
                     heading.pop_back();
                 heading = trim(heading);
             }
-            if (heading.empty())
+            // (headings of fewer than 4 characters are no section names: "n", "an", "Use" of a few
+            // pages, which matched Wikidata items such as neuter, Q1775461, and took {{-n-}} of id)
+            if (heading.size() < 4)
                 continue;
             std::smatch m;
             if (std::regex_match(heading, m, numbered))

@@ -84,6 +84,11 @@ def keys(heading):
         found += [parts[0].strip('-='), parts[0]] + [p for p in parts[1:] if '=' not in p]
     else:
         found.append(h)
+        # as the parser: of a heading with a template not at its start, the text before it, as
+        # written (te "బ్రౌను నిఘంటువు నుండి<ref name=brown>{{…}}</ref>")
+        raw = heading.strip().strip('=').strip()
+        if (at := raw.find('{{')) > 0:
+            found += [raw[:at].strip(), MARKUP.sub('', raw[:at]).strip()]
     result = []
     for k in found:
         if k:

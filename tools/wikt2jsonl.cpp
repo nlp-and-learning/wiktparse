@@ -969,9 +969,47 @@ std::string withPictureLinksAsTerms(const std::string &text) {
     return result + text.substr(last);
 }
 
-std::vector<Translation> translations(const json &config, const std::string &text, bool lines = true) {
+// Templates of a translation section as the text they give (translations.unwrap: a template whose first
+// parameter is its text, pl {{PJM-ukryj|…}}; translations.picture_templates: a term as a picture,
+// pl {{PJM|woda}} -> [[File:SGN-PL SW woda.PNG|link=woda]] of the pattern "SGN-PL SW {1}.PNG")
+std::string rewrittenTemplates(const std::string &text, const json &tc) {
+    const auto unwrap = tc.value("unwrap", std::vector<std::string>{});
+    const auto pictures = tc.value("picture_templates", json::object());
+    if ((unwrap.empty() && pictures.empty()) || text.find("{{") == std::string::npos)
+        return text;
+    std::string result = text;
+    for (bool changed = true; changed;) {
+        changed = false;
+        std::string next;
+        size_t last = 0;
+        for (const auto &t : wikilib::templates::find_invocations(result)) {
+            std::string replacement;
+            if (std::ranges::contains(unwrap, t.name)) {
+                replacement = std::string(t.get(size_t{1}).value_or(""));
+            } else if (auto it = pictures.find(t.name); it != pictures.end()) {
+                const auto name = trim(std::string(t.get(size_t{1}).value_or("")));
+                auto file = it->get<std::string>();
+                file.replace(file.find("{1}"), 3, name);
+                // "woda 2": the second sign of woda, its term woda
+                static const std::regex variant(R"(\s+\d+$)");
+                replacement = "[[File:" + file + "|link=" + std::regex_replace(name, variant, "") + "]]";
+            } else {
+                continue;
+            }
+            next += result.substr(last, t.location.begin.offset - last) + replacement;
+            last = t.location.end.offset;
+            changed = true;
+        }
+        if (changed)
+            result = next + result.substr(last);
+    }
+    return result;
+}
+
+std::vector<Translation> translations(const json &config, const std::string &original, bool lines = true) {
     std::vector<Translation> result;
     const auto &tc = config.value("translations", json::object());
+    const std::string text = rewrittenTemplates(original, tc);
     const auto terms = tc.value("terms", json::object());
     std::vector<std::string> names = terms.value("templates", std::vector<std::string>{});
     const int langParam = terms.value("lang", 1);

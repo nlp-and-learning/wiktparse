@@ -121,6 +121,12 @@
     "terms": {
       "line": "* {language-name}: ({sense}) [[{term}]]"
     },
+    "unwrap": [
+      "PJM-ukryj"
+    ],
+    "picture_templates": {
+      "PJM": "SGN-PL SW {1}.PNG"
+    },
     "sense": "number",
     "subpage": null
   },

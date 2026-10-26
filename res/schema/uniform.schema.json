@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Wiktionary page, uniform tree",
+  "description": "One page of a Wiktionary as one JSONL line in the uniform tree (doc/uniform-tree.md): languages, entries (one per part of speech, group and form), senses; translations and relations under their entry. Empty fields and empty or default values are left out.",
+  "type": "object",
+  "required": ["wiki", "title", "ns", "languages"],
+  "additionalProperties": false,
+  "properties": {
+    "wiki": {
+      "type": "string",
+      "description": "Wiktionary code: en, pl, zh_min_nan"
+    },
+    "title": {
+      "type": "string"
+    },
+    "ns": {
+      "type": "integer",
+      "description": "Namespace number of the page: 0 main, 110 Thesaurus in en…"
+    },
+    "source": {
+      "$ref": "#/$defs/source",
+      "description": "Where the page is in the dump: [start of its bz2 block (multistream index offset), number of the page in that block]; null for samples"
+    },
+    "languages": {
+      "type": "array",
+      "description": "Language sections in page order",
+      "items": {"$ref": "#/$defs/language"}
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": ["array", "null"],
+      "items": {"type": "integer", "minimum": 0},
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "text_map": {
+      "type": "object",
+      "description": "Sections as raw wikitext by their English name (wiktsections.sqlite), or as written when the name is not known",
+      "additionalProperties": {"type": "string"}
+    },
+    "language": {
+      "type": "object",
+      "required": ["language", "code", "native"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": ["string", "null"],
+          "description": "Canonical code (wiktlangs.sqlite), null when not known"
+        },
+        "language": {
+          "type": "string",
+          "description": "Language as written in the heading or marker (język polski, {{langue|fr}}, Ingiliffaa)"
+        },
+        "native": {
+          "type": "boolean",
+          "description": "The section is in the wiki's own language"
+        },
+        "pronunciation": {
+          "type": "string",
+          "description": "Raw wikitext of the pronunciation (IPA, audio, hyphenation) of the whole language section, when the wiki gives it there (en ===Pronunciation=== before ===Etymology 1===, pl {{wymowa}} lines without a sense id)"
+        },
+        "etymology": {
+          "type": "string",
+          "description": "Raw wikitext of the etymology of the whole section, when the wiki gives it there and marks no part of it for an entry"
+        },
+        "entries": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/entry"}
+        },
+        "notes": {
+          "$ref": "#/$defs/text_map",
+          "description": "Sections of the whole language (en ===Anagrams===, pl {{źródła}}, References, See also), and sections belonging to several entries other than pronunciation, etymology and relations"
+        },
+        "media": {
+          "$ref": "#/$defs/media",
+          "description": "Files of the language section not marked for a sense or an entry"
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "required": ["pos"],
+      "additionalProperties": false,
+      "properties": {
+        "pos": {
+          "type": ["string", "null"],
+          "description": "Part of speech, an English section name of kind pos (wiktsections.sqlite): Noun, Verb, Proper noun, Han character; null when the wiki gives none"
+        },
+        "pos_also": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Further parts of speech of the same heading or line (de {{Wortart|Substantiv|Deutsch}}, {{n}}, {{Wortart|Toponym|Deutsch}}: pos Noun, pos_also [Toponym])"
+        },
+        "pos_written": {
+          "type": "string",
+          "description": "The part of speech as written (''rzeczownik, rodzaj żeński'', {{S|nom|fr|num=2}}, {{-ana-|mg}})"
+        },
+        "group": {
+          "type": "string",
+          "description": "The wiki's own number of the entry or of its group of entries: en Etymology 2, es Etimología 2, fr num=2, ru {{з|II}} (the place of the homograph when the template has no number), pl 2 of (2.1)"
+        },
+        "form": {
+          "type": "string",
+          "description": "The form when the wiki makes one an entry of its own (pl bić się beside bić)"
+        },
+        "headword": {
+          "type": "string",
+          "description": "Headword line or inflection template as written ({{en-noun}}, {{bn-বিশেষ্য|…}})"
+        },
+        "grammar": {
+          "type": "string",
+          "description": "Gender, inflection class and the like as written (rodzaj żeński, de {{f}}, ''Bänke'')"
+        },
+        "etymology": {
+          "type": "string",
+          "description": "Raw wikitext of the etymology of this entry: its own section, that of its group (en Etymology 2, a ru homograph), or the lines of the language's etymology marked for it (pl (2.1), fr {{laé|fr|nom|2}}); absent: that of the language"
+        },
+        "pronunciation": {
+          "type": "string",
+          "description": "Raw wikitext of the pronunciation of this entry or its group (de {{Aussprache}}, en ====Pronunciation==== under ===Etymology 2===, pl {{wymowa}} lines with ids); absent: that of the language"
+        },
+        "senses": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/sense"}
+        },
+        "translations": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/translation"}
+        },
+        "see": {
+          "type": "array",
+          "description": "Translations on other pages (en {{trans-see|gloss|color}}, tr {{çeviri yönlendirme}}, nl zie [[weer#Vertalingen]])",
+          "items": {
+            "type": "object",
+            "required": ["title"],
+            "additionalProperties": false,
+            "properties": {
+              "title": {"type": "string"},
+              "gloss": {"type": "string"},
+              "page": {"type": "boolean", "description": "wiktlink: the page has a section of the language"}
+            }
+          }
+        },
+        "subpages": {
+          "type": "array",
+          "description": "wiktlink: translation subpages merged into the translations (en water/translations)",
+          "items": {
+            "type": "object",
+            "required": ["title"],
+            "additionalProperties": false,
+            "properties": {
+              "title": {"type": "string"},
+              "source": {"$ref": "#/$defs/source"}
+            }
+          }
+        },
+        "relations": {
+          "type": "object",
+          "description": "Relations by the English name of a section of kind relation (wiktsections.sqlite): Synonyms, Antonyms, Hypernyms, Holonyms, Derived terms, Related terms",
+          "additionalProperties": {
+            "type": "array",
+            "items": {"$ref": "#/$defs/relation"}
+          }
+        },
+        "sections": {
+          "$ref": "#/$defs/text_map",
+          "description": "Other sections of the entry (Usage notes, Inflection, Descendants)"
+        },
+        "lexeme": {
+          "type": "string",
+          "pattern": "^L[0-9]+$",
+          "description": "The Wikidata lexeme of the entry (ru {{Лексема в Викиданных|L110019}}); ar {{معجمية|L1480479|…}} shows its senses instead of the wiki's own"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        }
+      }
+    },
+    "sense": {
+      "type": "object",
+      "required": ["id", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "1, 1.2 (from # and ##), or the wiki's own id: 1.1, 1a"
+        },
+        "text": {
+          "type": "string",
+          "description": "Raw wikitext of the definition, without the examples taken out of it"
+        },
+        "examples": {
+          "type": "array",
+          "description": "Examples and quotations of the sense: from its lines (en #:, fr #*, ru {{пример|…}}) or from an examples section by sense id (pl {{przykłady}} (1.2), de {{Beispiele}} [1])",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "additionalProperties": false,
+            "properties": {
+              "text": {"type": "string", "description": "Raw wikitext of the example"},
+              "source": {"type": "string", "description": "Author, work and year of a quotation as written"}
+            }
+          }
+        }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "required": ["term"],
+      "additionalProperties": false,
+      "properties": {
+        "term": {"type": "string"},
+        "sense": {
+          "type": "string",
+          "description": "Sense id as the wiki gives it (pl (1.1), de [1, 6], ru the place of the # line, en the sense the {{syn}} template stands under)"
+        },
+        "qualifier": {
+          "type": "string",
+          "description": "Label of the line or term as written (pl {{zdrobn}}, ru прилагательные=, en <q:archaic>)"
+        }
+      }
+    },
+    "media": {
+      "type": "array",
+      "description": "Files of Wikimedia Commons (pictures, sounds)",
+      "items": {
+        "type": "object",
+        "required": ["file"],
+        "additionalProperties": false,
+        "properties": {
+          "file": {"type": "string", "description": "File name without the namespace"},
+          "caption": {"type": "string"},
+          "sense": {"type": "string", "description": "Sense id of the caption (pl zamek (1.1), ru Замок [1])"}
+        }
+      }
+    },
+    "translation": {
+      "type": "object",
+      "required": ["lang", "term"],
+      "additionalProperties": false,
+      "properties": {
+        "lang": {
+          "type": ["string", "null"],
+          "description": "Canonical language code, null when not known"
+        },
+        "lang_written": {
+          "type": "string",
+          "description": "Language as written when it differs from lang"
+        },
+        "term": {"type": "string"},
+        "sense": {
+          "type": "string",
+          "description": "Sense id given by the wiki (pl 1.1, fr/de table number, es a1)"
+        },
+        "gloss": {
+          "type": "string",
+          "description": "Gloss of the sense of the translation table (en {{trans-top|domestic species}})"
+        },
+        "gender": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Gender and number marks as written: m, f, n, c, m-p, ż"
+        },
+        "tr": {
+          "type": "string",
+          "description": "Transliteration (tr=, ts=)"
+        },
+        "page": {
+          "type": "boolean",
+          "description": "wiktlink: this wiki has a page of the term with a section of the language"
+        },
+        "en": {
+          "type": "boolean",
+          "description": "wiktlink: en.wiktionary has a page of the term with a section of the language"
+        },
+        "home": {
+          "type": "boolean",
+          "description": "wiktlink: the Wiktionary of the language has a page of the term with a section of the language"
+        },
+        "page_title": {
+          "type": "string",
+          "description": "wiktlink: the title of the page found when it is not the term (without accents, optional parts)"
+        },
+        "sense_ids": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "wiktglos: ids of the senses of the entry the translation is linked to"
+        },
+        "sense_method": {
+          "type": "string",
+          "enum": ["positional", "best", "single", "number", "embedding", "llm", "vote", "manual", "minority"],
+          "description": "wiktglos: how the gloss was linked"
+        },
+        "sense_score": {
+          "type": "number",
+          "description": "wiktglos: the score of the link (similarity or confidence)"
+        }
+      }
+    }
+  }
+}

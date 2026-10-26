@@ -5,7 +5,7 @@ Polish version: `uniform-tree.pl.md`; change both together.
 Draft of the format of branch `uniform-tree` (after v1.1.0). Every Wiktionary,
 whatever its own layout, gives pages of the same shape, so that one program
 reads all of them. This document describes the shape for people; the JSON
-Schema follows it (`res/schema/`).
+Schema follows it (`res/schema/uniform.schema.json`).
 
 ## Why
 
@@ -76,6 +76,7 @@ and *Bank* the bank: two nouns).
 | `etymology` | the etymology of the whole section, when the wiki gives it there and marks no part of it for an entry |
 | `entries` | the entries |
 | `notes` | sections of the whole language (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{section: text}` |
+| `media` | files of the language section marked for no sense or entry, as `media` of an entry |
 
 ## Entry
 
@@ -92,6 +93,8 @@ and *Bank* the bank: two nouns).
 | `pronunciation` | as of the language, when the wiki gives it for the entry or its group (de `{{Aussprache}}`, en `====Pronunciation====` under `===Etymology 2===`, pl `{{wymowa}}` lines with ids); none: that of the language |
 | `senses` | the definitions |
 | `translations` | the translations |
+| `see` | translations on other pages (en `{{trans-see|…}}`): `{"title", "gloss"}` |
+| `subpages` | translation subpages merged into the translations (en `water/translations`): `{"title", "source"}` |
 | `relations` | `{"Synonyms": [{"term": "warownia", "sense": "1.1"}, …], …}`: sections of kind relation of wiktsections.sqlite and relation templates of senses (en `#: {{syn|en|…}}`); `sense` the sense id as the wiki gives it (pl `(1.1)`, de `[1, 6]`, ru the place of the `#` line, en the sense the template stands under), `qualifier` a label of the line (pl `{{zdrobn}}`, ru `прилагательные=`) |
 | `sections` | other sections of the entry as text: `{section: text}` (Usage notes, Inflection, Descendants…) |
 | `lexeme` | the Wikidata lexeme of the entry (ru `{{Лексема в Викиданных|L110019}}`); ar `{{معجمية|L1480479|…}}` shows its senses instead of the wiki's own |

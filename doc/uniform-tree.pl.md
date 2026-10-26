@@ -5,7 +5,7 @@ Wersja polska `uniform-tree.md`; obie trzeba zmieniać razem.
 Szkic formatu gałęzi `uniform-tree` (po v1.1.0). Każdy Wikisłownik, niezależnie
 od własnego układu, daje strony tego samego kształtu, tak aby jeden program
 czytał je wszystkie. Ten dokument opisuje kształt dla ludzi; schemat JSON
-wynika z niego (`res/schema/`).
+wynika z niego (`res/schema/uniform.schema.json`).
 
 ## Dlaczego
 
@@ -75,6 +75,7 @@ może dać kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki).
 | `etymology` | etymologia całej sekcji, gdy wiki podaje ją tam i nie oznacza żadnej jej części dla wpisu |
 | `entries` | wpisy |
 | `notes` | sekcje całego języka (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{sekcja: tekst}` |
+| `media` | pliki sekcji językowej nieoznaczone dla żadnego znaczenia ani wpisu, jak `media` wpisu |
 
 ## Wpis
 
@@ -91,6 +92,8 @@ może dać kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki).
 | `pronunciation` | jak przy języku, gdy wiki podaje ją dla wpisu lub jego grupy (de `{{Aussprache}}`, en `====Pronunciation====` pod `===Etymology 2===`, pl linie `{{wymowa}}` z id); brak: ta języka |
 | `senses` | definicje |
 | `translations` | tłumaczenia |
+| `see` | tłumaczenia na innych stronach (en `{{trans-see|…}}`): `{"title", "gloss"}` |
+| `subpages` | podstrony tłumaczeń dołączone do tłumaczeń (en `water/translations`): `{"title", "source"}` |
 | `relations` | `{"Synonyms": [{"term": "warownia", "sense": "1.1"}, …], …}`: sekcje rodzaju relation z wiktsections.sqlite i szablony relacji przy znaczeniach (en `#: {{syn|en|…}}`); `sense` – id znaczenia tak, jak podaje je wiki (pl `(1.1)`, de `[1, 6]`, ru miejsce linii `#`, en znaczenie, pod którym stoi szablon), `qualifier` – etykieta linii (pl `{{zdrobn}}`, ru `прилагательные=`) |
 | `sections` | pozostałe sekcje wpisu jako tekst: `{sekcja: tekst}` (Usage notes, Inflection, Descendants…) |
 | `lexeme` | leksem Wikidata wpisu (ru `{{Лексема в Викиданных|L110019}}`); ar `{{معجمية|L1480479|…}}` pokazuje jego znaczenia zamiast własnych |

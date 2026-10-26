@@ -69,15 +69,18 @@ def main():
         names[lang].add(name.lower())
     # Language templates of a wiki's configuration (lt {{ltv}}: "template_regex": "^([a-z]{2,3})v$")
     config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'res', 'wiktionary')
-    template_regex = {}
+    # and its language aliases (mg "roa-nor": "nrf")
+    template_regex, aliases = {}, collections.defaultdict(set)
     for path in glob.glob(os.path.join(config_dir, '*.json')):
         try:
             with open(path, encoding='utf-8') as f:
-                regex = json.load(f).get('language', {}).get('template_regex')
+                language = json.load(f).get('language', {})
         except (OSError, ValueError, AttributeError):
             continue
-        if regex:
-            template_regex[os.path.basename(path)[:-5]] = re.compile(regex)
+        wiki = os.path.basename(path)[:-5]
+        if regex := language.get('template_regex'):
+            template_regex[wiki] = re.compile(regex)
+        aliases[wiki] = {a.lower() for a in language.get('aliases', {})}
     rows = []
     for path in sorted(glob.glob(os.path.join(args.d, 'headers', '*.tsv'))):
         wiki = os.path.basename(path)[:-4]
@@ -85,7 +88,7 @@ def main():
             continue
         lang = wiki.replace('_', '-')
         lang = LABEL_LANGUAGE.get(lang, lang)  # no.wikt is in Bokmål: Wikidata labels of nb
-        known = names[wiki] | names[lang] | english | codes
+        known = names[wiki] | names[lang] | english | codes | aliases[wiki]
         pages, levels = collections.Counter(), collections.defaultdict(set)
         with open(path, encoding='utf-8') as f:
             for line in f:

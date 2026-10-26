@@ -1,7 +1,10 @@
 {
   "wiki": "mg",
   "language": {
-    "template_regex": "^=([^=]+)=$"
+    "template_regex": "^=([^=]+)=$",
+    "aliases": {
+      "roa-nor": "nrf"
+    }
   },
   "pos": {
     "form": "template-line"

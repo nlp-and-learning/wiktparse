@@ -3,7 +3,11 @@
 #include <algorithm>
 
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QRegularExpression>
 #include <QStringList>
 
@@ -70,6 +74,18 @@ bool HeadingTranslator::open(const QString &dir) {
             codes_.clear();
             for (const auto &row : query(langs_, "SELECT code FROM language"))
                 codes_.insert(row[0]);
+            codeMap_.clear();
+            for (const auto &row : query(langs_, "SELECT code, language FROM code_map"))
+                if (!codes_.contains(row[0]))
+                    codeMap_.insert(row[0].toLower(), row[1]);
+            // the configurations of the wikis: res/wiktionary of the repository, above the databases
+            configDir_.clear();
+            for (QDir up = at; configDir_.isEmpty();) {
+                if (QFileInfo::exists(up.filePath("res/wiktionary/profiles.json")))
+                    configDir_ = up.filePath("res/wiktionary");
+                else if (!up.cdUp())
+                    break;
+            }
             // names of any wiki or language naming one section or language only
             anySection_.clear();
             anyLanguage_.clear();
@@ -116,7 +132,35 @@ const HeadingTranslator::Wiki &HeadingTranslator::wikiData(const QString &wiki) 
                                  {wiki, lang}))
         if (!w.sections.contains(row[0].toLower()))
             w.sections.insert(row[0].toLower(), row[1]);
+    // the wiki's configuration: language aliases, lookup, strip, template_regex
+    if (QFile file(configDir_ + '/' + wiki + ".json"); !configDir_.isEmpty() && file.open(QIODevice::ReadOnly)) {
+        const QJsonObject language = QJsonDocument::fromJson(file.readAll()).object().value("language").toObject();
+        const QJsonObject aliases = language.value("aliases").toObject();
+        for (auto it = aliases.begin(); it != aliases.end(); ++it)
+            w.languages.insert(it.key().toLower(), it.value().toString());
+        w.lookup = language.value("lookup").toString();
+        for (const auto &word : language.value("strip").toArray())
+            w.strip << word.toString();
+        if (const QString regex = language.value("template_regex").toString(); !regex.isEmpty())
+            w.templateRegex = QRegularExpression(regex);
+    }
     return *wikis_.insert(wiki, w);
+}
+
+QString HeadingTranslator::templateCode(const Wiki &w, const QString &name) const {
+    if (w.templateRegex.pattern().isEmpty())
+        return {};
+    if (const auto m = w.templateRegex.match(name); m.hasMatch() && m.lastCapturedIndex() >= 1) {
+        const QString code = m.captured(1);
+        if (codes_.contains(code))
+            return code;
+        return canonicalCode(code);
+    }
+    return {};
+}
+
+QString HeadingTranslator::canonicalCode(const QString &code) const {
+    return codeMap_.value(code.toLower());
 }
 
 // (names compared lowercase, Unicode: "Uwagi", "UWAGI", "Źródła"; not of this wiki: of any wiki or
@@ -130,7 +174,31 @@ QString HeadingTranslator::languageOf(const Wiki &w, const QString &candidate, b
         return anyLanguage_.value(candidate.toLower());
     if (codes_.contains(candidate))
         return candidate;
-    return w.languages.value(candidate.toLower());
+    if (const QString code = canonicalCode(candidate); !code.isEmpty())
+        return code;
+    if (const QString code = templateCode(w, candidate); !code.isEmpty())
+        return code;
+    // the name cleaned as wikt2jsonl: without vowel marks (ar عَرَبِيَّة), without a word as
+    // "language" (ar لغة إنجليزية), then with the lookup pattern (ar ال{name})
+    QStringList bases{candidate};
+    QString plain;
+    for (const QChar c : candidate.normalized(QString::NormalizationForm_D))
+        if (c.category() != QChar::Mark_NonSpacing && c.category() != QChar::Mark_Enclosing)
+            plain += c;
+    if (plain != candidate)
+        bases << plain;
+    for (qsizetype i = 0, n = bases.size(); i < n; ++i)
+        for (const QString &word : w.strip)
+            if (bases[i].contains(word))
+                bases << QString(bases[i]).remove(word).simplified();
+    QStringList variants = bases;
+    if (w.lookup.contains("{name}"))
+        for (const QString &base : bases)
+            variants << QString(w.lookup).replace("{name}", base);
+    for (const QString &v : variants)
+        if (const QString code = w.languages.value(v.toLower()); !code.isEmpty())
+            return code;
+    return {};
 }
 
 QString HeadingTranslator::languageName(const QString &code, const QString &display) {
@@ -214,7 +282,10 @@ QString HeadingTranslator::translateText(const Wiki &w, const QString &text, con
     auto language = [&](bool any) -> QString {
         for (const QString &c : candidates)
             if (const QString code = languageOf(w, c, any); !code.isEmpty())
-                return fromTemplate && code == c ? text.trimmed() : languageName(code, display);
+                // (a code written in the template: as such, of its name by template_regex, of another scheme)
+                return fromTemplate && (code == c || templateCode(w, c) == code || canonicalCode(c) == code)
+                               ? text.trimmed()
+                               : languageName(code, display);
         return {};
     };
     // the names of this wiki first, those of other wikis only when it knows none

@@ -6,8 +6,10 @@
 // (wiktsections.sqlite); with a display language, as their names in it, falling back to the
 // code and the English section.
 #include <QHash>
+#include <QRegularExpression>
 #include <QSet>
 #include <QString>
+#include <QStringList>
 
 struct sqlite3;
 
@@ -29,9 +31,17 @@ public:
 
 private:
     struct Wiki {
-        QHash<QString, QString> languages; // lowercase name in the wiki's language -> code
+        QHash<QString, QString> languages; // lowercase name in the wiki's language (and aliases) -> code
         QHash<QString, QString> sections;  // lowercase name -> English section
+        // of the wiki's configuration (res/wiktionary/<wiki>.json), as wikt2jsonl
+        QString lookup;                    // ar "ال{name}"
+        QStringList strip;                 // ar "لغة": words left out of names
+        QRegularExpression templateRegex;  // lt "^([a-z]{2,3})v$": the code in a template name
     };
+    // The code of a template name by the wiki's template_regex (lt "ltv" -> lt), or empty
+    QString templateCode(const Wiki &w, const QString &name) const;
+    // A code of another scheme as the canonical one (mg "zho" -> zh), or empty
+    QString canonicalCode(const QString &code) const;
     const Wiki &wikiData(const QString &wiki);
     // any: by the names of any wiki or language (unambiguous ones), not of this wiki
     QString languageOf(const Wiki &w, const QString &candidate, bool any) const;
@@ -43,7 +53,9 @@ private:
 
     sqlite3 *langs_ = nullptr, *sections_ = nullptr;
     QString dir_;
-    QSet<QString> codes_; // language codes of wiktlangs
+    QSet<QString> codes_;            // language codes of wiktlangs
+    QHash<QString, QString> codeMap_; // other codes (ISO 639-3 zho) -> canonical (zh)
+    QString configDir_;              // res/wiktionary of the repository, when found
     QHash<QString, Wiki> wikis_;
     QHash<QString, QString> anySection_, anyLanguage_; // lowercase name of any wiki or language, if unambiguous
     QHash<QString, QString> languageNames_, sectionNames_; // "code|display" -> name

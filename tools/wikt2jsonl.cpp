@@ -681,6 +681,17 @@ struct Sense {
 // Lines longer are not matched by std::regex: its recursion per character overflows the stack
 constexpr size_t maxRegexLine = 20000;
 
+// A line beginning with one of the prefixes of a list of the configuration (senses.examples)
+bool linePrefixed(const json &config, const std::string &pointer, const std::string &line) {
+    const json::json_pointer p(pointer);
+    if (!config.contains(p))
+        return false;
+    for (const auto &prefix : config[p])
+        if (line.starts_with(prefix.get<std::string>()))
+            return true;
+    return false;
+}
+
 // Sense line by the configured marker; ids are explicit or the order of '#' lines
 std::optional<Sense> senseLine(const json &config, const std::string &line, std::vector<int> &counters) {
     const auto marker = str(config, "/senses/marker", "#");
@@ -691,6 +702,10 @@ std::optional<Sense> senseLine(const json &config, const std::string &line, std:
         // (* lines: lists of other sections, unless "line_stars" (te: definitions as * lines too))
         static const json::json_pointer lineStars("/senses/line_stars");
         const bool stars = config.contains(lineStars) && config[lineStars].get<bool>();
+        // (lines of senses.examples: examples of the definition before, lb ":*D'Jonge spillen…"; lo
+        // writes definitions so)
+        if (linePrefixed(config, "/senses/examples", text))
+            return std::nullopt;
         if (text.empty() || text.starts_with("{{") || text.starts_with("[[Category:") ||
             (text.starts_with("*") && !stars) || text.starts_with("<") || text.starts_with("|") ||
             text.starts_with("}}"))
@@ -1426,6 +1441,18 @@ public:
             if (trim(line) == "}}" && current().value("template", false))
                 return;
         }
+        // lb "{{Substantiv|lb}}{{n}} {{k M|lb}}": a part of speech as the template a line begins with
+        // (pos.leading_template); a level below the language, so that the template lines after it
+        // ({{Bedeitung}}) are its sections; the rest of the line its text
+        if (config_.value("pos", json::object()).value("leading_template", false) && line.starts_with("{{"))
+            if (auto all = wikilib::templates::find_invocations(line);
+                !all.empty() && all.front().location.begin.offset == 0)
+                if (auto name = names_.find(sectionKey(line.substr(0, all.front().location.length())).first, 2);
+                    name && name->kind == "pos") {
+                    open(line.substr(0, all.front().location.length()), root_["level"].get<int>() + 1, false);
+                    current()["text"] = trim(line.substr(all.front().location.length())) + '\n';
+                    return;
+                }
         // A template line with the name of a section; where sections are headings only a
         // {{-…-}} one or one without parameters (an, co {{-noun-}}; not es {{sinónimo|…}}
         // of a definition); not {{trans-top|…}}, no known name
@@ -1480,7 +1507,9 @@ public:
             }
         // Examples and quotations of the last sense: "#:", "#*", "##:" (en, fr, it…); "#*:" the
         // text of a quotation, after its source
-        if (auto &senses = current()["senses"]; !senses.empty() && line.starts_with('#')) {
+        if (auto &senses = current()["senses"];
+            !senses.empty() && (line.starts_with('#') ||
+                                (str(config_, "/senses/marker") == "line" && linePrefixed(config_, "/senses/examples", line)))) {
             size_t depth = 0;
             while (depth < line.size() && line[depth] == '#')
                 ++depth;

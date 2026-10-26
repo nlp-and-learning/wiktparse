@@ -3,5 +3,25 @@
   "language": {
     "template_regex": "^=([^=]+)=$"
   },
-  "status": "language code of =={{=lb=}}=="
+  "pos": {
+    "leading_template": true
+  },
+  "senses": {
+    "marker": "line",
+    "line_stars": true,
+    "examples": [
+      ":*"
+    ]
+  },
+  "translations": {
+    "terms": {
+      "templates": [
+        "Iwwersetzung",
+        "Iwwersetzung2"
+      ],
+      "lang": 1,
+      "term": 2
+    }
+  },
+  "status": "language code of =={{=lb=}}==; part of speech {{Substantiv|lb}} at the start of a line, definitions as lines under {{Bedeitung}}, translations {{Iwwersetzung|en|fever}}"
 }

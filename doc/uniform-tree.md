@@ -113,7 +113,8 @@ and *Bank* the bank: two nouns).
 ## Translation
 
 As up to v1.1.0, now always under its entry, as an array sorted by `lang`
-(those of no code last; the terms of one language in the order of the wiki):
+(those of no code last, by `lang_written`; the terms of one language in the
+order of the wiki):
 
 | field | meaning |
 |---|---|

@@ -112,7 +112,8 @@ może dać kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki).
 ## Tłumaczenie
 
 Jak do v1.1.0, ale teraz zawsze pod swoim wpisem, jako tablica posortowana
-według `lang` (te bez kodu na końcu; terminy jednego języka w kolejności wiki):
+według `lang` (te bez kodu na końcu, według `lang_written`; terminy jednego
+języka w kolejności wiki):
 
 | pole | znaczenie |
 |---|---|

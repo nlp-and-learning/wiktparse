@@ -224,11 +224,20 @@ public:
         }
         // "esperanto (morfem)", "język norweski (bokmål)": also without the note
         std::vector<std::string> variants{name};
+        // the name cleaned: without vowel marks (ar "عَرَبِيَّة"), without a word as "language"
+        // (ar "لغة إنجليزية"), and with the lookup pattern (ar "ال{name}") on each of these
+        std::vector<std::string> bases{name};
+        if (auto plain = withoutCombining(name); plain != name)
+            bases.push_back(plain);
+        for (size_t i = 0, n = bases.size(); i < n; ++i)
+            for (const auto &word : strip)
+                if (auto at = bases[i].find(word); at != std::string::npos)
+                    bases.push_back(trim(std::string(bases[i]).erase(at, word.size())));
+        for (size_t i = 1; i < bases.size(); ++i)
+            variants.push_back(bases[i]);
         if (auto at = lookup.find("{name}"); at != std::string::npos)
-            variants.push_back(std::string(lookup).replace(at, 6, name));
-        for (const auto &word : strip)
-            if (auto at = name.find(word); at != std::string::npos)
-                variants.push_back(trim(std::string(name).erase(at, word.size())));
+            for (const auto &base : bases)
+                variants.push_back(std::string(lookup).replace(at, 6, base));
         // SQLite lower() changes ASCII letters only ("Čeština")
         for (size_t i = 0, n = variants.size(); i < n; ++i)
             if (auto lower = wikilib::unicode::to_lower(variants[i]); lower != variants[i]) {
@@ -556,6 +565,9 @@ std::optional<std::string> languageMarkerOfForm(const json &config, const std::s
     if (!h || h->level != level)
         return std::nullopt;
     if (form == "heading-name") {
+        // links_only: names as links only (ar "[[إنجليزية]]"), so that "== الترجمات ==" is a section
+        if (config["language"].value("links_only", false) && !trim(h->text).starts_with("[["))
+            return std::nullopt;
         // bcl "<small>Etimolohiya</small>", "'''Kahulugan'''", am " እንግሊዝኛ " (no-break spaces)
         static const std::regex wrappers(R"(<[^>]*>|''+)");
         h->text = std::regex_replace(h->text, wrappers, "");
@@ -577,6 +589,11 @@ std::optional<std::string> languageMarkerOfForm(const json &config, const std::s
         std::smatch m;
         if (std::regex_match(h->text, m, link))
             return trim(m[1].str());
+        // ar "[[لُغَة|لغة]] [[إِنْجْلِيزِيَّة|إنجليزية]]": several links, as their texts
+        if (h->text.starts_with("[[") && h->text.ends_with("]]") && h->text.find("{{") == std::string::npos) {
+            static const std::regex anyLink(R"(\[\[(?:[^\]|]*\|)?([^\]|]*)\]\])");
+            return trim(std::regex_replace(h->text, anyLink, "$1"));
+        }
         // ang "{{sprǣc|en}}": a code parameter; "{{fro}}": a code as the name; fa "{{انگلیسی}}": a name;
         // fa "{{{3|فارسی}}}": the default of a parameter
         static const std::regex parameterDefault(R"(^\{\{\{[^|}]*\|([^}]+)\}\}\}$)");

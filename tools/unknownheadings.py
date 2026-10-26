@@ -20,6 +20,7 @@ import json
 import os
 import re
 import sqlite3
+import unicodedata
 
 TEMPLATE = re.compile(r'^\{\{([^{}]*)\}\}')
 NUMBER = re.compile(r'^(.*[^\d\s.])\s*(?:Nr\.|№)?\s*\d+$')
@@ -27,6 +28,11 @@ LINK = re.compile(r'\[\[(?:[^\]|]*\|)?([^\]|]*)\]\]')
 MARKUP = re.compile(r"<[^>]*>|''+")
 # Wiktionaries whose Wikidata label language differs (as wikt2jsonl)
 LABEL_LANGUAGE = {'no': 'nb', 'simple': 'en', 'zh-min-nan': 'nan', 'roa-rup': 'rup', 'bh': 'bho'}
+
+
+def plain(text):
+    """without combining characters (vowel marks, accents of a decomposed text)"""
+    return ''.join(c for c in unicodedata.normalize('NFD', text) if not unicodedata.combining(c))
 
 
 def keys(heading):
@@ -70,7 +76,9 @@ def main():
     # Language templates of a wiki's configuration (lt {{ltv}}: "template_regex": "^([a-z]{2,3})v$")
     config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'res', 'wiktionary')
     # and its language aliases (mg "roa-nor": "nrf")
-    template_regex, aliases = {}, collections.defaultdict(set)
+    # and its lookup pattern of names (ar "ال{name}": إنجليزية as الإنجليزية)
+    # and words left out of names (ar "لغة": language)
+    template_regex, aliases, lookup, strip = {}, collections.defaultdict(set), {}, collections.defaultdict(list)
     for path in glob.glob(os.path.join(config_dir, '*.json')):
         try:
             with open(path, encoding='utf-8') as f:
@@ -81,6 +89,9 @@ def main():
         if regex := language.get('template_regex'):
             template_regex[wiki] = re.compile(regex)
         aliases[wiki] = {a.lower() for a in language.get('aliases', {})}
+        if pattern := language.get('lookup'):
+            lookup[wiki] = pattern
+        strip[wiki] = [w.lower() for w in language.get('strip', [])]
     rows = []
     for path in sorted(glob.glob(os.path.join(args.d, 'headers', '*.tsv'))):
         wiki = os.path.basename(path)[:-4]
@@ -99,6 +110,11 @@ def main():
                 if '(' in heading and ('{{' in heading or '[[' in heading):
                     continue
                 k = keys(heading)
+                # cleaned as the parser: without vowel marks (ar "عَرَبِيَّة"), without a word as "language"
+                k += [x for x in (plain(y) for y in k) if x not in k]
+                k += [' '.join(y.replace(w, ' ').split()) for y in list(k) for w in strip[wiki] if w in y]
+                if wiki in lookup:
+                    k += [lookup[wiki].replace('{name}', x) for x in k]
                 if not k or any(x in known for x in k):
                     continue
                 if (r := template_regex.get(wiki)) and any(

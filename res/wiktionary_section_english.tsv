@@ -1,0 +1,18 @@
+# English names of Wikidata items of parts of speech and lexical relations (wiktsections --pos,
+# --relations) that have no English label (the label they have in a comment), or whose label is
+# not the heading (a relation named as the words of it: hyponymy -> Hyponyms).
+qid	english
+Q9618327	Antonyms	# antonymy
+Q31121203	Synonyms	# synonymy
+Q12797240	Hypernyms	# hyperonymy
+Q12730005	Hyponyms	# hyponymy
+Q922789	Holonyms	# holonymy
+Q837495	Meronyms	# meronymy
+Q11639937	Binome	# ja 連綿語, zh 聯綿詞: a two-syllable word of one morpheme
+Q11828264	Negation	# pl Przeczenie
+Q12579372	Reflexive	# kk Өздік
+Q12979232	Particle	# ta இடைச்சொல்
+Q20421319	Verbal noun	# ar اسم فعل, ru существительное глагола
+Q58423547	Masdar	# ar اسم مصدر, ca ism màsdar
+Q123180653	Comparative particle	# de Komparativpartikel
+Q63434973	Relative word	# fr outil relatif

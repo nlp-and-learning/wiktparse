@@ -1226,6 +1226,14 @@ public:
         load("SELECT section, name FROM section_name WHERE lang=?2 AND source='wikidata-label'");
         load("SELECT section, name FROM section_name WHERE lang=?2 AND source='wikidata-alias'");
         load("SELECT section, section FROM section WHERE ?1<>'' AND ?2<>''");
+        // Kinds of the table: the parts of speech and lexical relations of Wikidata (wiktsections
+        // --pos, --relations: "Relative pronoun", "Negation", "Holonyms")
+        sqlite3_stmt *stmt = nullptr;
+        sqlite3_prepare_v2(db, "SELECT section, kind FROM section WHERE kind IN ('pos','relation')", -1, &stmt, nullptr);
+        while (sqlite3_step(stmt) == SQLITE_ROW)
+            kinds_[wikilib::unicode::to_lower(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)))] =
+                    reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
     }
 
@@ -1273,11 +1281,14 @@ public:
         if (size_t pos = 0; !section.empty() && wikilib::unicode::decode_utf8(section, pos))
             section = wikilib::unicode::to_upper(section.substr(0, pos)) + section.substr(pos);
         std::string kind = partsOfSpeech.contains(lower) ? "pos" : relations.contains(lower) ? "relation" : "section";
+        if (auto k = kinds_.find(lower); kind == "section" && k != kinds_.end())
+            kind = k->second;
         return SectionName{section, kind};
     }
 
 private:
     std::map<std::string, std::string> names_; // first source wins
+    std::map<std::string, std::string> kinds_; // lowercase section -> pos, relation (wiktsections.sqlite)
 };
 
 // Key of a heading or template line for SectionNames: the text, a template's

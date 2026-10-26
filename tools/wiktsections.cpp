@@ -6,13 +6,19 @@
 // the sections; each is looked up in wiktNeeded by its English label or alias,
 // and the labels and aliases of that entity give its names in other
 // languages. Headings of other Wiktionaries named by hand come from
-// res/wiktionary_section_names.tsv.
+// res/wiktionary_section_names.tsv. Parts of speech and lexical relations are
+// the Wikidata items of --pos (instances of Q82042, part of speech) and
+// --relations (Q2594143, lexical relation: holonyms, meronyms…): sections of
+// kind pos and relation, named in all languages of their labels; English names
+// the items lack, by hand in res/wiktionary_section_english.tsv.
 //
 // wiktsections [-o wiktsections.sqlite] [--headers headers] [--db wiktlangs.sqlite]
-//              [--min-pages 3] [--min-labels 10] [wiktNeeded.jsonl...]
+//              [--min-pages 3] [--min-labels 10] [--pos Q82042-P31.jsonl]
+//              [--relations Q2594143-P1269.jsonl] [wiktNeeded.jsonl...]
 //
 // Tables:
-//   section(section, pages, qid, kind): English headings, with the Wikidata item
+//   section(section, pages, qid, kind): English headings, with the Wikidata item; kind pos or
+//     relation of the Wikidata items, otherwise empty (or of res/wiktionary_section_names.tsv)
 //   section_name(section, lang, name, source): names; source wikidata-label,
 //     wikidata-alias or manual (lang is then the wiki code)
 #include <algorithm>
@@ -24,6 +30,7 @@
 #include <regex>
 #include <set>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -88,6 +95,8 @@ int main(int argc, char *argv[]) {
         fs::path output = "wiktsections.sqlite", headersDir = "headers", langsFile = "wiktlangs.sqlite";
         size_t minPages = 3, minLabels = 10;
         std::vector<fs::path> wikidataFiles;
+        // Items of parts of speech (instances of Q82042) and of lexical relations (Q2594143)
+        fs::path posFile = "Q82042-P31.jsonl", relationsFile = "Q2594143-P1269.jsonl";
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
             if (arg == "-o" && i + 1 < argc)
@@ -100,9 +109,14 @@ int main(int argc, char *argv[]) {
                 minPages = std::stoul(argv[++i]);
             else if (arg == "--min-labels" && i + 1 < argc)
                 minLabels = std::stoul(argv[++i]);
+            else if (arg == "--pos" && i + 1 < argc)
+                posFile = argv[++i];
+            else if (arg == "--relations" && i + 1 < argc)
+                relationsFile = argv[++i];
             else if (arg == "-h" || arg == "--help") {
                 std::cout << "usage: wiktsections [-o wiktsections.sqlite] [--headers headers] [--db wiktlangs.sqlite] "
-                             "[--min-pages 3] [--min-labels 10] [wiktNeeded.jsonl...]\n";
+                             "[--min-pages 3] [--min-labels 10] [--pos Q82042-P31.jsonl] "
+                             "[--relations Q2594143-P1269.jsonl] [wiktNeeded.jsonl...]\n";
                 return 0;
             } else
                 wikidataFiles.emplace_back(arg);
@@ -132,6 +146,16 @@ int main(int argc, char *argv[]) {
             if (f.size() < 4 || f[0] != "(main)" || f[1] == "level" || std::stoi(f[1]) < 2)
                 continue;
             std::string heading = trim(f[3]);
+            // "=Derived terms", "Derived terms=": stray '=' of a heading written unevenly
+            while (!heading.empty() && (heading.front() == '=' || heading.back() == '=')) {
+                if (heading.front() == '=')
+                    heading.erase(0, 1);
+                if (!heading.empty() && heading.back() == '=')
+                    heading.pop_back();
+                heading = trim(heading);
+            }
+            if (heading.empty())
+                continue;
             std::smatch m;
             if (std::regex_match(heading, m, numbered))
                 heading = m[1].str();
@@ -238,6 +262,76 @@ int main(int argc, char *argv[]) {
             ++manual;
         }
         db.insert("INSERT OR IGNORE INTO section VALUES(?,?,?,?)", sectionRows);
+
+        // Parts of speech and lexical relations of Wikidata: their kind (the only parts of speech
+        // of the table), and their labels and aliases in all languages as names; the English name
+        // is the English label (a heading of that name when there is one: "verb" -> "Verb"), or
+        // by hand (res/wiktionary_section_english.tsv: pl "Przeczenie" -> "Negation")
+        std::map<std::string, std::string> englishOf;
+        for (const auto &line : readLines(WIKTPARSE_RES_DIR "/wiktionary_section_english.tsv")) {
+            auto f = split(line, '\t');
+            if (f.size() >= 2 && f[0].starts_with("Q"))
+                englishOf[f[0]] = trim(f[1]);
+        }
+        std::set<std::tuple<std::string, std::string, std::string>> named; // section, lang, name
+        for (const auto &row : nameRows)
+            named.insert({row[0], row[1], row[2]});
+        std::vector<std::vector<std::string>> kindRows, kindNames;
+        std::set<std::string> posSections;
+        for (const auto &[file, kind] : {std::pair{posFile, "pos"}, std::pair{relationsFile, "relation"}}) {
+            std::ifstream in(file);
+            if (!in) {
+                std::cout << "no " << file.string() << ": no " << kind << " items" << std::endl;
+                continue;
+            }
+            size_t items = 0;
+            for (std::string line; std::getline(in, line);) {
+                auto e = json::parse(line, nullptr, false);
+                if (e.is_discarded() || !e.contains("id"))
+                    continue;
+                const std::string qid = e["id"];
+                std::string english;
+                if (auto it = englishOf.find(qid); it != englishOf.end())
+                    english = it->second;
+                else if (e.contains("labels") && e["labels"].contains("en"))
+                    english = e["labels"]["en"]["value"];
+                if (english.empty()) {
+                    std::cout << kind << " " << qid << ": no English name (res/wiktionary_section_english.tsv)" << std::endl;
+                    continue;
+                }
+                std::string section = english;
+                if (auto it = byLower.find(lower(english)); it != byLower.end())
+                    section = it->second;
+                else if (size_t pos = 0; wikilib::unicode::decode_utf8(section, pos))
+                    section = wikilib::unicode::to_upper(section.substr(0, pos)) + section.substr(pos);
+                kindRows.push_back({section, "0", qid, kind});
+                if (std::string(kind) == "pos")
+                    posSections.insert(section);
+                auto addName = [&](const std::string &lang, const std::string &name, const char *source) {
+                    if (named.insert({section, lang, name}).second)
+                        kindNames.push_back({section, lang, name, source});
+                };
+                for (const auto &[lang, label] : e.value("labels", json::object()).items())
+                    addName(lang, label["value"], "wikidata-label");
+                for (const auto &[lang, list] : e.value("aliases", json::object()).items())
+                    for (const auto &a : list)
+                        addName(lang, a["value"], "wikidata-alias");
+                ++items;
+            }
+            std::cout << items << " " << kind << " items of " << file.string() << std::endl;
+        }
+        // (a heading already in the table keeps its pages and gets the kind; its qid when it had none)
+        db.insert("INSERT OR IGNORE INTO section VALUES(?,?,?,?)", kindRows);
+        for (const auto &row : kindRows)
+            db.insert("UPDATE section SET kind=?2, qid=COALESCE(NULLIF(qid,''),?3) WHERE section=?1",
+                      {{row[0], row[3], row[2]}});
+        nameRows.insert(nameRows.end(), kindNames.begin(), kindNames.end());
+        // Other parts of speech (by hand, "Symbol") are not Wikidata's: no kind
+        if (!posSections.empty())
+            for (const auto &section : db.column("SELECT section FROM section WHERE kind='pos'"))
+                if (!posSections.contains(section))
+                    db.insert("UPDATE section SET kind='' WHERE section=?1", {{section}});
+
         db.insert("INSERT INTO section_name VALUES(?,?,?,?)", nameRows);
         db.exec("CREATE INDEX section_name_lang ON section_name(lang, name); COMMIT;");
         std::cout << nameRows.size() << " names (" << manual << " by hand) written to " << output.string() << std::endl;

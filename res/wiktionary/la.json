@@ -9,6 +9,8 @@
       },
       {
         "form": "heading-dash-template",
+        "template": "-lingua-",
+        "code": 1,
         "heading_level": 2
       }
     ],

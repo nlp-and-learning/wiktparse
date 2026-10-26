@@ -614,6 +614,12 @@ std::optional<std::string> languageMarkerOfForm(const json &config, const std::s
     }
     if (form == "heading-dash-template") {
         auto t = onlyTemplate(h->text);
+        // la =={{-lingua-|la|eo}}==: a named template with the code as a parameter (not "lingua")
+        if (auto name = str(config, "/language/template"); t && !name.empty() && t->name == name) {
+            if (auto v = t->get(static_cast<size_t>(num(config, "/language/code", 1))); v && !v->empty())
+                return std::string(*v);
+            return std::nullopt;
+        }
         static const std::regex dash(R"(^-([a-z][a-z-]*)-$)");
         std::smatch m;
         if (t && std::regex_match(t->name, m, dash))
@@ -2542,6 +2548,15 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             markerCode = code;
             ++count;
             stats.markerExamples.emplace(*marker, title);
+            // A section of nothing followed by a marker of its language (la {{caput|la|aqua}} then
+            // =={{-lingua-|la|aqua}}==): one section, of the later marker
+            if (current && current->value("sections", json::array()).empty() && !current->contains("text") &&
+                !current->contains("media") && (*current)["code"] == (code.empty() ? json() : json(code))) {
+                stats.sections--;
+                stats.sectionsWithCode -= !code.empty();
+                stats.nativeSections -= (*current)["native"].get<bool>();
+                sections.erase(sections.end() - 1);
+            }
             sections.push_back({{"language", *marker}, {"code", code.empty() ? json() : json(code)},
                                 {"native", std::ranges::contains(native, code)}});
             current = &sections.back();

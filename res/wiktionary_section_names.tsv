@@ -1083,7 +1083,73 @@ shn	ႁိၵ်ႈ	Noun	pos
 shn	သၢင်ႈ	Verb	pos
 mn	Аман зохиолд орсон нь	Proverbs	section
 la	appellatio	Pronunciation	section
-la	proprietates	Inflection	section
+la	proprietates	Inflected form	pos
+la	int:wikt-appellatio	Pronunciation	section
+la	trans	Translations	section
+la	int:wikt-trans	Translations	section
+la	Translationes	Translations	section
+la	notatio	Etymology	section
+la	int:wikt-notatio	Etymology	section
+la	substantivum	Noun	pos
+la	int:wikt-nomen-subst	Noun	pos
+la	nomen	Noun	pos
+la	int:wikt-nomen	Noun	pos
+la	Nomen	Noun	pos
+la	proprium	Proper noun	pos
+la	propria	Proper noun	pos
+la	int:wikt-nomen-prop	Proper noun	pos
+la	int:wikt-nomen-adj	Adjective	pos
+la	int:wikt-adverbium	Adverb	pos
+la	int:wikt-pronomen	Pronoun	pos
+la	int:wikt-verbum	Verb	pos
+la	int:wikt-verbum-tr	Verb	pos
+la	int:wikt-verbum-intr	Verb	pos
+la	int:wikt-deponens	Verb	pos
+la	transitivum	Verb	pos
+la	intransitivum	Verb	pos
+la	Verbum copulativum	Verb	pos
+la	int:wikt-praep	Preposition	pos
+la	int:wikt-coniunctio	Conjunction	pos
+la	int:wikt-articulus	Article	pos
+la	int:wikt-participium	Participle	pos
+la	Symbolus	Symbol	pos
+la	pars	Forms	section
+la	collatae	Related terms	relation
+la	int:wikt-collatae	Related terms	relation
+la	Dictiones collatae	Related terms	relation
+la	derivatae	Derived terms	relation
+la	int:wikt-derivatae	Derived terms	relation
+la	Dictiones derivatae	Derived terms	relation
+la	Verba Derivata	Derived terms	relation
+la	int:wikt-affines	Related terms	relation
+la	Formae affines	Related terms	relation
+la	conexus	Related terms	relation
+la	formae	Alternative forms	section
+la	int:wikt-formae	Alternative forms	section
+la	Formae aliae	Alternative forms	section
+la	declinatio	Declension	section
+la	int:wikt-declinatio	Declension	section
+la	coniugatio	Conjugation	section
+la	int:wikt-coniugatio	Conjugation	section
+la	similes	Cognates	section
+la	vide	See also	section
+la	int:wikt-vide-etiam	See also	section
+la	loci	Quotations	section
+la	Loci	Quotations	section
+la	int:wikt-loci	Quotations	section
+la	Latinitas Romana	Quotations	section
+la	Latinitas postclassica	Quotations	section
+la	Latinitas nova	Quotations	section
+la	Latinitas mediaevalis	Quotations	section
+la	Latinitas humanistica	Quotations	section
+la	usus	Usage notes	section
+la	int:wikt-usus	Usage notes	section
+la	Nota	Usage notes	section
+la	Exempla	Examples	section
+la	progenies	Descendants	relation
+la	Synonyma	Synonyms	relation
+la	Antonyma	Antonyms	relation
+la	Hyponyma	Hyponyms	relation
 vo	tradutods	Translations	section
 fr	dico sinogrammes	References	section
 sg	âlïndïpa	References	section

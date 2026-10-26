@@ -139,17 +139,12 @@ QString HeadingTranslator::languageName(const QString &code, const QString &disp
     const QString key = code + '|' + display;
     if (auto it = languageNames_.constFind(key); it != languageNames_.constEnd())
         return *it;
-    // The label (ja 英語), or its last word when that is a name too (pl "język polski" -> "polski")
+    // The Wikidata label (pl "język litewski", ja 英語); an alias only when there is no label
     const auto rows = query(langs_,
-                            "SELECT name, source FROM language_name WHERE code=?1 AND in_code=?2 "
-                            "ORDER BY source='wikidata-label' DESC, length(name)",
+                            "SELECT name FROM language_name WHERE code=?1 AND in_code=?2 "
+                            "ORDER BY source='wikidata-label' DESC, source='wikidata-alias' DESC, length(name) LIMIT 1",
                             {code, display});
-    QString name = rows.isEmpty() ? code : rows[0][0];
-    if (const auto space = name.lastIndexOf(' '); space > 0)
-        for (const auto &row : rows)
-            if (row[0] == name.mid(space + 1))
-                name = row[0];
-    return *languageNames_.insert(key, name);
+    return *languageNames_.insert(key, rows.isEmpty() ? code : rows[0][0]);
 }
 
 QString HeadingTranslator::sectionName(const QString &section, const QString &display) {

@@ -1,6 +1,7 @@
 {
   "wiki": "blk",
   "language": {
+    "fallback_native": true,
     "aliases": {
       "ပအိုဝ်ႏ": "blk",
       "မန်ဒရိဉ်း": "cmn",

@@ -57,5 +57,8 @@
     "sense": "number-and-gloss",
     "subpage": null
   },
+  "etymology": {
+    "placeholders": ["{{ébauche-étym"]
+  },
   "status": "draft from samples (doc/wiktionary-profiles.md)"
 }

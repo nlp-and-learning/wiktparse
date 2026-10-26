@@ -130,5 +130,31 @@
     "sense": "number",
     "subpage": null
   },
+  "etymology": {
+    "language_switch": "Szablon:etym/język",
+    "templates": {
+      "etym": {"relation": "compound", "single": "from", "lang": 1, "parts": 2},
+      "etymn": {"relation": "compound", "single": "from", "lang": 1, "parts": 2},
+      "etym2": {"relation": "from", "lang": 1, "term": 2},
+      "etym2n": {"relation": "from", "lang": 1, "term": 2},
+      "zapożyczenie": {"relation": "borrowed", "lang": 1, "term": 2},
+      "kalka": {"relation": "calque", "lang": 1, "term": 2},
+      "pochodne": {"relation": "from", "lang": 1, "term": 2},
+      "odczasownikowy od": {"relation": "from", "lang": "entry", "term": 1},
+      "odprzymiotnikowy od": {"relation": "from", "lang": "entry", "term": 1},
+      "źródło dla": {"relation": "descendant", "of": "entry", "lang": 1, "term": 2}
+    },
+    "marker_templates": {
+      "por": "compare",
+      "zob": "mention"
+    },
+    "words": {
+      "od": "from",
+      "z ": "from",
+      "kalka z": "calque",
+      "por.": "compare",
+      "zob.": "mention"
+    }
+  },
   "status": "draft from samples (doc/wiktionary-profiles.md)"
 }

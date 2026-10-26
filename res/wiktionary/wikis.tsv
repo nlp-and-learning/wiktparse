@@ -45,7 +45,7 @@ en	A		en.json
 eo	B	Lingvo	
 es	B	lengua	es.json
 et	E	{{-xx-}}	
-eu	E	{{-xx-}}	
+eu	E	{{-xx-}}	eu.json
 fa	A		fa.json
 fi	A		fi.json
 fj	E	{{-xx-}}	fj.json
@@ -136,7 +136,7 @@ pt	C		pt.json
 qu	E	{{-xx-}}	
 rm	F		
 rn	F		
-ro	B	limba	
+ro	B	limba	ro.json
 roa_rup	E	{{-xx-}}	
 ru	C		ru.json
 rw	E	{{=xx=}}	rw.json

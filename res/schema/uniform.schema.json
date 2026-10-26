@@ -70,6 +70,10 @@
         "etymology_chain": {
           "$ref": "#/$defs/etymology_chain"
         },
+        "etymology_unparsed": {
+          "const": true,
+          "description": "There is an etymology, not read into etymology_chain (prose, a wiki of no etymology configuration); absent of a placeholder of none (en {{rfe}})"
+        },
         "entries": {
           "type": "array",
           "items": {"$ref": "#/$defs/entry"}
@@ -120,6 +124,10 @@
         },
         "etymology_chain": {
           "$ref": "#/$defs/etymology_chain"
+        },
+        "etymology_unparsed": {
+          "const": true,
+          "description": "There is an etymology, not read into etymology_chain (prose, a wiki of no etymology configuration); absent of a placeholder of none (en {{rfe}})"
         },
         "pronunciation": {
           "type": "string",

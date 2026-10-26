@@ -1881,6 +1881,9 @@ private:
 // belongs to: by the headings, by the sense ids of its lines, else to the language.
 namespace uniform {
 
+// A language as written (a code, a name of the wiki) as its canonical code; empty when not known
+using LanguageCode = std::function<std::string(const std::string &)>;
+
 std::vector<std::string> textLines(const std::string &text) {
     std::vector<std::string> result;
     std::istringstream in(text);
@@ -2133,12 +2136,27 @@ json mediaItems(const std::string &text, const json &names = json::array()) {
 // them; a descendant of the item before it. After the first paragraph with items of the chain (from,
 // borrowed, calque, compound) only cognates and descendants: the rest are notes ("The plural housen
 // is from…").
-std::string etymologyChain(const std::string &text, const json &config) {
+// entryCode: of the language of the entry (templates of "lang": "entry", pl {{odczasownikowy od|boksować}})
+std::string etymologyChain(const std::string &text, const json &config, const std::string &entryCode,
+                           const LanguageCode &languageCode) {
     const auto spec = config.value("etymology", json::object());
     const auto templates = spec.value("templates", json::object());
     if (text.empty() || templates.empty())
         return {};
     const auto words = spec.value("words", json::object());
+    const auto markers = spec.value("marker_templates", json::object()); // pl {{por}}: as the words "compare"
+    // A language as written as its code: an abbreviation of the wiki's (pl "niem", language_names, before
+    // codes: pl "ang" is English), a code, a name; else as written (spaces as _)
+    const auto languageNames = spec.value("language_names", json::object());
+    auto resolve = [&](const std::string &written) -> std::string {
+        if (auto it = languageNames.find(written); it != languageNames.end())
+            return it->get<std::string>();
+        if (auto code = languageCode(written); !code.empty())
+            return code;
+        std::string w = written;
+        std::ranges::replace(w, ' ', '_');
+        return w;
+    };
     static const std::set<std::string> chainRelations = {"from", "borrowed", "calque", "compound", "root"};
     static const std::regex refs(R"(<ref[^>/]*/>|<ref[^>]*>[\s\S]*?</ref>)");
     const std::string clean = text.size() < maxRegexLine ? std::regex_replace(text, refs, " ") : text;
@@ -2231,10 +2249,10 @@ std::string etymologyChain(const std::string &text, const json &config) {
                         if (noTerm(form))
                             continue;
                         if (relation == "compound") {
-                            partsLang = partsLang.empty() ? lang : partsLang;
+                            partsLang = partsLang.empty() ? resolve(lang) : partsLang;
                             parts.push_back(form);
                         } else
-                            add(relation, lang, form, -1, true);
+                            add(relation, resolve(lang), form, -1, true);
                         // the etymology of the item in it, ro "fr:dogue<ety:uder<en:dog>>": dogue from en dog
                         static const std::regex nested(R"(<ety:([^<>:]+)<([^<>:]+):([^<>]+))");
                         std::string rest = value.substr(colon + 1);
@@ -2242,11 +2260,15 @@ std::string etymologyChain(const std::string &text, const json &config) {
                              rest = m.suffix().str()) {
                             auto k = keys.find(m[1].str());
                             if (k != keys.end() && k->get<std::string>() != "compound")
-                                add(k->get<std::string>(), m[2].str(), termValue(m[3].str()), -1, true);
+                                add(k->get<std::string>(), resolve(m[2].str()), termValue(m[3].str()), -1, true);
                         }
                     }
                 }
                 flush();
+                continue;
+            }
+            if (auto m = markers.find(t.name); m != markers.end()) {
+                relationOfWords = m->get<std::string>();
                 continue;
             }
             auto it = templates.find(t.name);
@@ -2265,12 +2287,13 @@ std::string etymologyChain(const std::string &text, const json &config) {
             if (chainDone && relation != "compare" && relation != "descendant")
                 continue;
             auto param = [&](const char *key) -> std::string {
-                if (!s.contains(key))
+                if (!s.contains(key) || !s[key].is_number_integer())
                     return {};
                 auto v = t.get(static_cast<size_t>(s[key].get<int>()));
                 return v ? trim(std::string(*v)) : std::string();
             };
-            const std::string lang = param("lang");
+            // "lang": "entry", the language of the entry (pl {{odczasownikowy od|boksować}})
+            const std::string lang = s.value("lang", json()) == "entry" ? entryCode : resolve(param("lang"));
             std::string form;
             if (s.contains("parts")) {
                 // {{af|en|water|fall}}, {{suffix|en|water|y}} -> water + -y
@@ -2283,6 +2306,9 @@ std::string etymologyChain(const std::string &text, const json &config) {
                     parts.back() = "-" + parts.back();
                 if (affix == "prefix" && !parts.empty() && !parts.front().ends_with('-'))
                     parts.front() += "-";
+                // one part: of the relation "single" (pl {{etymn|białor|хлопец}}: from хлопец)
+                if (parts.size() == 1 && s.contains("single"))
+                    relation = s["single"].get<std::string>();
                 for (const auto &part : parts)
                     form += (form.empty() ? "" : " + ") + part;
             } else {
@@ -2290,7 +2316,13 @@ std::string etymologyChain(const std::string &text, const json &config) {
             }
             if (lang.empty() || noTerm(form))
                 continue;
-            add(relation, lang, form, sameItem ? lastOf : relation == "descendant" ? last : anchors.empty() ? -1 : anchors.back());
+            // "of": "entry": of the entry, not of the item before (pl {{źródło dla}}: the entry is its source)
+            const int of = s.value("of", std::string()) == "entry" ? -1
+                           : sameItem                             ? lastOf
+                           : relation == "descendant"             ? last
+                           : anchors.empty()                      ? -1
+                                                                  : anchors.back();
+            add(relation, lang, form, of);
         }
         chainDone |= chainHere;
     }
@@ -2306,7 +2338,8 @@ const std::set<std::string> languageNotes = {"References", "See also", "External
 
 class Builder {
 public:
-    Builder(const json &config, const SectionNames &names) : config_(config), names_(names) {}
+    Builder(const json &config, const SectionNames &names, const LanguageCode &languageCode)
+        : config_(config), names_(names), languageCode_(languageCode) {}
 
     json language(const json &in) {
         json out = {{"code", in["code"]}, {"language", in["language"]}, {"native", in["native"]}};
@@ -2330,6 +2363,7 @@ public:
                     if (!entries_[e].contains(key) && scopes_[s].given.contains(key))
                         entries_[e][key] = scopes_[s].given[key];
         json entries = json::array();
+        const std::string code = out["code"].is_string() ? out["code"].get<std::string>() : std::string();
         for (auto &e : entries_) {
             // Translations by their language code, those of none last by the language as written, each
             // language in the order of the wiki; the language as written only of those without a code
@@ -2347,8 +2381,7 @@ public:
                         t.erase("lang_written");
                 e["translations"] = list;
             }
-            if (auto chain = etymologyChain(e.value("etymology", std::string()), config_); !chain.empty())
-                e["etymology_chain"] = chain;
+            addEtymologyChain(e, code);
             for (const char *key : {"senses", "translations", "see", "subpages", "media", "pos_also"})
                 if (e.contains(key) && e[key].empty())
                     e.erase(key);
@@ -2359,8 +2392,7 @@ public:
         }
         if (!entries.empty())
             out["entries"] = std::move(entries);
-        if (auto chain = etymologyChain(out.value("etymology", std::string()), config_); !chain.empty())
-            out["etymology_chain"] = chain;
+        addEtymologyChain(out, code);
         for (const char *key : {"notes", "media"})
             if (out.contains(key) && out[key].empty())
                 out.erase(key);
@@ -2381,6 +2413,7 @@ private:
     };
     const json &config_;
     const SectionNames &names_;
+    const LanguageCode &languageCode_;
     json *language_ = nullptr;
     std::vector<Scope> scopes_;
     std::vector<json> entries_;
@@ -2587,6 +2620,24 @@ private:
         auto &list = entries_[e]["relations"][name];
         if (!std::ranges::contains(list, item))
             list.push_back(std::move(item));
+    }
+
+    // etymology_chain of the etymology of an entry or a language; an etymology of no chain is
+    // etymology_unparsed (there is one, not read yet: prose, a wiki of no etymology configuration), but
+    // a placeholder of none (etymology.placeholders: en {{rfe}}, fr {{ébauche-étym}}, eu "Oraindik ez
+    // daukagu…")
+    void addEtymologyChain(json &object, const std::string &code) const {
+        const auto text = object.contains("etymology") ? object["etymology"].get<std::string>() : std::string();
+        if (trim(text).empty())
+            return;
+        if (auto chain = etymologyChain(text, config_, code, languageCode_); !chain.empty()) {
+            object["etymology_chain"] = chain;
+            return;
+        }
+        for (const auto &p : config_.value("etymology", json::object()).value("placeholders", std::vector<std::string>{}))
+            if (text.find(p) != std::string::npos)
+                return;
+        object["etymology_unparsed"] = true;
     }
 
     // Files of a node but those of its translations (pl hieroglyphs: the image of a term)
@@ -2856,10 +2907,10 @@ private:
 };
 
 // The page of convertPage in the uniform tree
-json page(const json &converted, const json &config, const SectionNames &names) {
+json page(const json &converted, const json &config, const SectionNames &names, const LanguageCode &languageCode) {
     json languages = json::array();
     for (const auto &language : converted["sections"])
-        languages.push_back(Builder(config, names).language(language));
+        languages.push_back(Builder(config, names, languageCode).language(language));
     return {{"wiki", converted["wiki"]}, {"title", converted["title"]}, {"ns", converted["ns"]},
             {"source", converted["source"]}, {"languages", std::move(languages)}};
 }
@@ -3237,11 +3288,42 @@ int main(int argc, char *argv[]) {
                     std::cout << wiki << ": " << added << " language names from " << module << std::endl;
                 }
             }
+            // pl: a template of the wiki maps the abbreviations of languages of its etymologies to names
+            // (Szablon:etym/język: "|niem=Język niemiecki"); they become codes (etymology.language_names)
+            if (auto page = str(config, "/etymology/language_switch"); !page.empty()) {
+                auto pages = WikiDump::wiktionary(wiki).extractMatching([&](const std::string &t) { return t == page; });
+                size_t added = 0;
+                if (auto it = pages.find(page); it != pages.end()) {
+                    static const std::regex option(R"(^\s*\|([^=|{}]+)=([^|{}<]*))");
+                    for (const auto &line : uniform::textLines(it->second)) {
+                        std::smatch m;
+                        if (line.size() > 500 || !std::regex_search(line, m, option))
+                            continue;
+                        const auto key = trim(m[1].str()), name = trim(m[2].str());
+                        if (auto code = names.code(wiki, wikilib::unicode::to_lower(name), str(config, "/language/lookup"),
+                                                   config["language"].value("strip", std::vector<std::string>{}));
+                            !key.empty() && !code.empty()) {
+                            config["etymology"]["language_names"][key] = code;
+                            ++added;
+                        }
+                    }
+                }
+                std::cout << wiki << ": " << added << " etymology language abbreviations from " << page << std::endl;
+            }
             if (config.value("skip", false))
                 continue;
             const SectionNames sectionNames("wiktsections.sqlite", wiki);
+            // A language as written in an etymology (a code, a name of the wiki) as its code, else empty
+            auto languageCode = [&](const std::string &written) -> std::string {
+                if (names.isCode(written))
+                    return written;
+                if (auto mapped = names.mappedCode(written); !mapped.empty())
+                    return mapped;
+                return names.code(wiki, wikilib::unicode::to_lower(written), str(config, "/language/lookup"),
+                                  config["language"].value("strip", std::vector<std::string>{}));
+            };
             auto written = [&](const json &page) {
-                return withOutputText(uniformTree ? uniform::page(page, config, sectionNames) : page);
+                return withOutputText(uniformTree ? uniform::page(page, config, sectionNames, languageCode) : page);
             };
             const auto wikiStarted = std::chrono::steady_clock::now();
             Stats stats;

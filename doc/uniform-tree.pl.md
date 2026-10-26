@@ -154,8 +154,12 @@ Relacje: `from` (odziedziczone lub pochodne), `borrowed`, `calque`,
 etymologie, w swojej konfiguracji (`etymology` w `res/wiktionary/<wiki>.json`):
 relację szablonu i parametry jego języka i formy, słowa dające relację
 wzmianki (en „from”, „cognate with”; de „von”, „vgl.”), szablon całego
-łańcucha (en `{{etymon|en|:inh|enm:red}}`). Po pierwszym akapicie z elementami
-łańcucha czytane są tylko wyrazy pokrewne i potomkowie: reszta to uwagi.
+łańcucha (en `{{etymon|en|:inh|enm:red}}`), szablon jej skrótów języków
+(pl `Szablon:etym/język`: `niem` de, `ang` en), puste szablony braku
+etymologii (en `{{rfe}}`). Po pierwszym akapicie z elementami łańcucha czytane
+są tylko wyrazy pokrewne i potomkowie: reszta to uwagi. Etymologia bez
+łańcucha, ale nie pusty szablon, ma `etymology_unparsed`: jest, jeszcze
+nieodczytana (proza, wiki bez konfiguracji).
 
 ## Co gdzie trafia
 

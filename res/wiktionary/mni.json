@@ -2,7 +2,8 @@
   "wiki": "mni",
   "language": {
     "aliases": {
-      "ꯃꯤꯇꯩꯂꯣꯟ": "mni"
+      "ꯃꯤꯇꯩꯂꯣꯟ": "mni",
+      "ꯂꯣꯟ-ꯑꯇꯩꯗ": "mul"
     }
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

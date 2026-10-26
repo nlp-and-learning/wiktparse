@@ -1,5 +1,7 @@
 # The uniform tree: one JSON shape for every Wiktionary
 
+Polish version: `uniform-tree.pl.md`; change both together.
+
 Draft of the format of branch `uniform-tree` (after v1.1.0). Every Wiktionary,
 whatever its own layout, gives pages of the same shape, so that one program
 reads all of them. This document describes the shape for people; the JSON

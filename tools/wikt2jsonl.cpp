@@ -1719,13 +1719,19 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
                                        config["language"]["aliases"].contains(*marker)) &&
             markerCode(*marker).empty()) {
             // A heading that is no language (sections at the same level: "Napomene",
-            // "Референце"); counted for review, the section goes on
+            // "Референце"); counted for review, the section goes on. The first heading of a page,
+            // before any language, that is no section either: a language of its own, code null
+            // (it takes no entry of a known language, and its entry is not lost)
             if (!knownSections[wiki].contains(*marker)) {
                 auto &[markerCode, count] = stats.markers[*marker];
                 ++count;
                 stats.markerExamples.emplace(*marker, title);
             }
-            marker.reset();
+            // (not of wikis whose pages without a language marker are of the wiki's language,
+            // fallback_native: there the first heading is rather a section of it, nds, mr)
+            if (current || config["language"].value("fallback_native", false) ||
+                knownSections[wiki].contains(*marker) || sectionNames.find(sectionKey(*marker).first))
+                marker.reset();
         }
         // Of a code form with names as another form (yue, az "also": heading-name): a heading that is
         // no language but a section of the wiki (yue "== 參考 ==", az "== Tərcümələr ==") is a section

@@ -1187,10 +1187,28 @@ private:
     // JSON and Tree of the current line (F4: Cyrillic in Latin letters); the cursor of JSON stays
     void showJsonViews() {
         const qce::TextCursor at = json_.edit->area()->cursorPosition();
+        // (the strings as shown before the dump, so that a " of &quot; is escaped and the JSON stays JSON)
+        std::function<json(const json &)> shown = [&](const json &v) -> json {
+            if (v.is_string())
+                return shownText(QString::fromStdString(v.get<std::string>())).toStdString();
+            if (v.is_array()) {
+                json out = json::array();
+                for (const auto &x : v)
+                    out.push_back(shown(x));
+                return out;
+            }
+            if (v.is_object()) {
+                json out = json::object();
+                for (const auto &[k, x] : v.items())
+                    out[shownText(QString::fromStdString(k)).toStdString()] = shown(x);
+                return out;
+            }
+            return v;
+        };
         json_.doc->setText(current_.is_null()
                                    ? shownText(QString::fromUtf8(raw_))
-                                   : shownText(QString::fromStdString(
-                                             current_.dump(2, ' ', false, json::error_handler_t::replace))));
+                                   : QString::fromStdString((latinShown || plainShown ? shown(current_) : current_)
+                                                                    .dump(2, ' ', false, json::error_handler_t::replace)));
         json_.edit->area()->setCursorPosition(at);
         model_->clear();
         model_->setHorizontalHeaderLabels({"Key", "Value"});

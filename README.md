@@ -87,7 +87,9 @@ dump_dir = ~/dump
   with canonical codes, each with the tree of its sections as the headings
   give it (template lines like pl `{{synonimy}}` one level below), every node
   under its English name with senses or translations where they stand (not
-  linked yet). Schema: `res/schema/page.schema.json`;
+  linked yet). HTML entities of the wikitext are decoded (`&#171;@&#187;` «@»,
+  `&nbsp;`), but those of a character of wiki markup (`&#124;` |, `&#61;` =,
+  `&lt;` <, `&#91;` [), which stand there not to make markup. Schema: `res/schema/page.schema.json`;
   `tools/validate_jsonl.py jsonl` checks the output. `--uniform` writes the
   pages in the uniform tree instead (`doc/uniform-tree.md`, schema
   `res/schema/uniform.schema.json`): languages, entries by part of speech
@@ -106,8 +108,9 @@ dump_dir = ~/dump
   żołtyj, семья siem'ja; letters of Ukrainian, Serbian, Kazakh… roughly), in
   all tabs ("(lat)" on them), again: as written. F6 shows links as their text
   and templates of one unnamed parameter as it (`[[вода|воде]]` воде,
-  `{{выдел|водата}}` водата; not `{{t|en|water}}`, files, categories) in all
-  tabs ("(text)" on them), again: as written.
+  `{{выдел|водата}}` водата; not `{{t|en|water}}`, files, categories) and HTML
+  entities as their characters (`&#171;@&#187;` «@», `&#124;` |) in all tabs
+  ("(text)" on them), again: as written.
   View > Original shows the wikitext of the page from the dump (Settings >
   Dump directory) at its `source`; when the page there has another title (a
   dump of another date), or with Settings > Find pages by title, the page is

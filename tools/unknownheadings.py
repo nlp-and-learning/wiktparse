@@ -16,6 +16,7 @@ Output: pages, wiki, levels (2,3), heading.
 import argparse
 import collections
 import glob
+import json
 import os
 import re
 import sqlite3
@@ -64,6 +65,17 @@ def main():
         names[in_code].add(name.lower())
     for lang, name in sections.execute('SELECT lang, name FROM section_name'):
         names[lang].add(name.lower())
+    # Language templates of a wiki's configuration (lt {{ltv}}: "template_regex": "^([a-z]{2,3})v$")
+    config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'res', 'wiktionary')
+    template_regex = {}
+    for path in glob.glob(os.path.join(config_dir, '*.json')):
+        try:
+            with open(path, encoding='utf-8') as f:
+                regex = json.load(f).get('language', {}).get('template_regex')
+        except (OSError, ValueError, AttributeError):
+            continue
+        if regex:
+            template_regex[os.path.basename(path)[:-5]] = re.compile(regex)
     rows = []
     for path in sorted(glob.glob(os.path.join(args.d, 'headers', '*.tsv'))):
         wiki = os.path.basename(path)[:-4]
@@ -83,6 +95,9 @@ def main():
                     continue
                 k = keys(heading)
                 if not k or any(x in known for x in k):
+                    continue
+                if (r := template_regex.get(wiki)) and any(
+                        (m := r.match(x)) and m.group(1).lower() in codes for x in k):
                     continue
                 pages[heading] += int(p[2])
                 levels[heading].add(int(p[1]))

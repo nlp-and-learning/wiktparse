@@ -72,6 +72,7 @@ może dać kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki).
 | `language` | język tak, jak zapisany w nagłówku lub znaczniku (`język polski`, `{{langue|fr}}`, `Ingiliffaa`) |
 | `native` | język wiki (hasło we własnym języku wiki) |
 | `pronunciation` | IPA, pliki audio, podział na sylaby całej sekcji językowej, gdy wiki podaje je tam (en `===Pronunciation===` przed `===Etymology 1===`, pl linie `{{wymowa}}` bez id znaczenia) |
+| `audio` | pliki dźwiękowe wymowy: `["Pl-woda.ogg"]` |
 | `etymology` | etymologia całej sekcji, gdy wiki podaje ją tam i nie oznacza żadnej jej części dla wpisu |
 | `entries` | wpisy |
 | `notes` | sekcje całego języka (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{sekcja: tekst}` |
@@ -90,6 +91,7 @@ może dać kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki).
 | `grammar` | rodzaj, klasa odmiany i podobne tak, jak zapisuje je wiki (`rodzaj żeński`, de `{{f}}, ''Bänke''`) |
 | `etymology` | etymologia tego wpisu jako tekst: jego własna sekcja (de `{{Herkunft}}` pod częścią mowy), sekcja jego grupy (en `Etymology 2`, homograf ru) albo linie etymologii języka oznaczone dla niego (pl `(2.1)`, fr `{{laé|fr|nom|2}}`); brak: ta języka |
 | `pronunciation` | jak przy języku, gdy wiki podaje ją dla wpisu lub jego grupy (de `{{Aussprache}}`, en `====Pronunciation====` pod `===Etymology 2===`, pl linie `{{wymowa}}` z id); brak: ta języka |
+| `audio` | jak przy języku, dźwięki wymowy wpisu |
 | `senses` | definicje |
 | `translations` | tłumaczenia |
 | `see` | tłumaczenia na innych stronach (en `{{trans-see|…}}`): `{"title", "gloss"}` |
@@ -97,7 +99,7 @@ może dać kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki).
 | `relations` | `{"Synonyms": [{"term": "warownia", "sense": "1.1"}, …], …}`: sekcje rodzaju relation z wiktsections.sqlite i szablony relacji przy znaczeniach (en `#: {{syn|en|…}}`); `sense` – id znaczenia tak, jak podaje je wiki (pl `(1.1)`, de `[1, 6]`, ru miejsce linii `#`, en znaczenie, pod którym stoi szablon), `qualifier` – etykieta linii (pl `{{zdrobn}}`, ru `прилагательные=`) |
 | `sections` | pozostałe sekcje wpisu jako tekst: `{sekcja: tekst}` (Usage notes, Inflection, Descendants…) |
 | `lexeme` | leksem Wikidata wpisu (ru `{{Лексема в Викиданных|L110019}}`); ar `{{معجمية|L1480479|…}}` pokazuje jego znaczenia zamiast własnych |
-| `media` | pliki Wikimedia Commons (obrazy, dźwięki): `{"file": "…", "caption": "…", "sense": "1.1"}` (pl `[[Plik:…|thumb|zamek (1.1)]]`, ru `{{илл|…|Замок [1]}}`) |
+| `media` | obrazy Wikimedia Commons (dźwięki są w `audio`): `{"file": "…", "caption": "…", "sense": "1.1"}` (pl `[[Plik:…|thumb|zamek (1.1)]]`, ru `{{илл|…|Замок [1]}}`) |
 
 ## Znaczenie
 
@@ -118,6 +120,7 @@ Jak do v1.1.0, ale teraz zawsze pod swoim wpisem:
 | `sense` | id znaczenia podane przez wiki (pl `1.1`, de `[1]`, fr) |
 | `gloss` | glosa tabeli tłumaczeń (en `{{trans-top|domestic species}}`) |
 | `gender`, `tr` | oznaczenia rodzaju, transliteracja |
+| `image` | termin jako obrazek: pl hieroglify `[[Plik:Egyptian-mw.PNG\|link=mw]]` dają `term` `mw`, `image` `Egyptian-mw.PNG`; znak języka migowego bez `link=` ma plik jako termin |
 
 Pola późniejszych przejść (wiktlink: `page`, `home`, `en`, `page_title`;
 wiktglos: `sense_ids`, `sense_method`, `sense_score`) zachowują swoje

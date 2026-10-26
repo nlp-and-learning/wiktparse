@@ -60,6 +60,9 @@
           "type": "string",
           "description": "Raw wikitext of the pronunciation (IPA, audio, hyphenation) of the whole language section, when the wiki gives it there (en ===Pronunciation=== before ===Etymology 1===, pl {{wymowa}} lines without a sense id)"
         },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
         "etymology": {
           "type": "string",
           "description": "Raw wikitext of the etymology of the whole section, when the wiki gives it there and marks no part of it for an entry"
@@ -119,6 +122,9 @@
         "pronunciation": {
           "type": "string",
           "description": "Raw wikitext of the pronunciation of this entry or its group (de {{Aussprache}}, en ====Pronunciation==== under ===Etymology 2===, pl {{wymowa}} lines with ids); absent: that of the language"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
         },
         "senses": {
           "type": "array",
@@ -221,9 +227,14 @@
         }
       }
     },
+    "audio": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Sound files of the pronunciation (pl {{audio|Pl-woda.ogg}}, en {{audio|en|En-us-water.ogg}}), files of Wikimedia Commons without the namespace"
+    },
     "media": {
       "type": "array",
-      "description": "Files of Wikimedia Commons (pictures, sounds)",
+      "description": "Files of Wikimedia Commons (pictures; sounds are in audio)",
       "items": {
         "type": "object",
         "required": ["file"],
@@ -265,6 +276,10 @@
         "tr": {
           "type": "string",
           "description": "Transliteration (tr=, ts=)"
+        },
+        "image": {
+          "type": "string",
+          "description": "The term as a picture, a file of Wikimedia Commons without the namespace (pl hieroglyphs [[Plik:Egyptian-mw.PNG|link=mw]]: term mw; signs of a sign language: term the file)"
         },
         "page": {
           "type": "boolean",

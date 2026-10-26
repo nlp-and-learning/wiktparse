@@ -262,6 +262,10 @@
           "type": "string",
           "description": "Transliteration (tr=, ts=)"
         },
+        "image": {
+          "type": "string",
+          "description": "The term as a picture, a file of Wikimedia Commons without the namespace (pl hieroglyphs [[Plik:Egyptian-mw.PNG|link=mw]]: term mw; signs of a sign language: term the file)"
+        },
         "page": {
           "type": "boolean",
           "description": "wiktlink: this wiki has a page of the term with a section of the language"

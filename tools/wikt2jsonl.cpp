@@ -765,6 +765,7 @@ struct Translation {
     bool generic = false; // not by the configuration: kept only when its language is known
     std::vector<std::string> gender; // de {{Ü|de|Hund}} {{m}}, en {{t|de|Hund|m}}
     std::string tr;                  // transliteration: en {{t|ru|вода|tr=voda}}
+    std::string image;               // the term as a picture: pl Egyptian-mw.PNG (hieroglyphs)
 };
 
 // A gender or number mark: m, f, n, c, m-p, pl ż (żeński), mf
@@ -923,6 +924,49 @@ std::vector<std::pair<std::string, std::vector<std::string>>> linkPieces(const s
             result.emplace_back(term, genders);
     }
     return result;
+}
+
+// Links of files in a text ([[Plik:Egyptian-mw.PNG|18px|link=mw]]), in order: where they are, the
+// file without its namespace, the target of link= (empty when none)
+struct PictureLink {
+    size_t at, length;
+    std::string file, target;
+};
+
+std::vector<PictureLink> pictureLinkList(const std::string &text) {
+    static const std::regex link(R"(\[\[[^\]|:]+:([^\]|]+\.[A-Za-z0-9]{3,4})((?:\|[^\]]*)?)\]\])");
+    std::vector<PictureLink> result;
+    if (text.size() >= maxRegexLine || text.find("[[") == std::string::npos)
+        return result;
+    for (std::sregex_iterator it(text.begin(), text.end(), link), end; it != end; ++it) {
+        const auto file = trim((*it)[1].str());
+        if (auto found = mediaFiles(file); found.size() != 1 || found[0] != file)
+            continue;
+        std::string target;
+        for (const auto &option : split((*it)[2].str(), '|'))
+            if (trim(option).starts_with("link="))
+                target = trim(trim(option).substr(5));
+        result.push_back({static_cast<size_t>(it->position(0)), static_cast<size_t>(it->length(0)), file, target});
+    }
+    return result;
+}
+
+std::vector<std::pair<std::string, std::string>> pictureLinks(const std::string &text) {
+    std::vector<std::pair<std::string, std::string>> result;
+    for (const auto &l : pictureLinkList(text))
+        result.emplace_back(l.file, l.target);
+    return result;
+}
+
+// The text with its file links as links of their term: [[mw]] of link=mw, else [[the file]]
+std::string withPictureLinksAsTerms(const std::string &text) {
+    std::string result;
+    size_t last = 0;
+    for (const auto &l : pictureLinkList(text)) {
+        result += text.substr(last, l.at - last) + "[[" + (l.target.empty() ? l.file : l.target) + "]]";
+        last = l.at + l.length;
+    }
+    return result + text.substr(last);
 }
 
 std::vector<Translation> translations(const json &config, const std::string &text, bool lines = true) {
@@ -1126,10 +1170,21 @@ std::vector<Translation> translations(const json &config, const std::string &tex
             const std::string rest = m[4].str();
             std::string sense = m[3].matched && m[3].length() ? m[3].str() : lineSense;
             size_t from = 0;
-            auto take = [&](const std::string &piece) {
+            auto take = [&](std::string piece) {
+                // A term as a picture (pl hieroglyphs "[[Plik:Egyptian-mw.PNG|18px|link=mw]]", signs of a
+                // sign language "[[Plik:Sign language A.svg|50px]]"): the term of its link= (else the file),
+                // the file its image
+                std::map<std::string, std::vector<std::string>> images; // term -> files, in order
+                for (const auto &[file, target] : pictureLinks(piece))
+                    images[target.empty() ? file : target].push_back(file);
+                piece = withPictureLinksAsTerms(piece);
                 for (const auto &[term, genders] : linkPieces(piece)) {
                     Translation item{lang, term, sense, lineGloss};
                     item.gender = genders;
+                    if (auto it = images.find(term); it != images.end() && !it->second.empty()) {
+                        item.image = it->second.front();
+                        it->second.erase(it->second.begin());
+                    }
                     result.push_back(std::move(item));
                 }
             };
@@ -1704,6 +1759,8 @@ private:
                 item["gender"] = t.gender;
             if (!t.tr.empty())
                 item["tr"] = t.tr;
+            if (!t.image.empty())
+                item["image"] = t.image;
             if (code != t.lang)
                 item["lang_written"] = t.lang; // pl "angielski", it "{{en}}" -> en
             n["translations"].push_back(std::move(item));
@@ -2287,8 +2344,31 @@ private:
             list.push_back(std::move(item));
     }
 
+    // Files of a node but those of its translations (pl hieroglyphs: the image of a term)
+    static json nodeMedia(const json &c) {
+        json names = json::array();
+        for (const auto &file : c.value("media", json::array())) {
+            bool term = false;
+            for (const auto &t : c.value("translations", json::array()))
+                term |= t.value("image", std::string()) == file.get<std::string>();
+            if (!term)
+                names.push_back(file);
+        }
+        return mediaItems(text(c), names);
+    }
+
     void routeMedia(const json &items, int scope, std::optional<size_t> entry = std::nullopt) {
+        static const std::set<std::string> sounds = {"ogg", "oga", "wav", "mp3", "flac", "opus", "mid"};
         for (const auto &item : items) {
+            // Sounds are of the pronunciation (pl {{audio|Pl-woda.ogg}}): "audio" of the entry or the language
+            auto file = item["file"].get<std::string>();
+            auto extension = wikilib::unicode::to_lower(file.substr(file.rfind('.') + 1));
+            if (sounds.contains(extension)) {
+                auto &audio = entry ? entries_[*entry]["audio"] : (*language_)["audio"];
+                if (!std::ranges::contains(audio, json(file)))
+                    audio.push_back(file);
+                continue;
+            }
             std::vector<size_t> targets;
             if (item.contains("sense"))
                 targets = entriesOfIds(expandIds(item["sense"]), entry ? std::vector<size_t>{*entry} : scopes_[scope].entries);
@@ -2405,7 +2485,7 @@ private:
             addSenses(e, c["senses"]);
         if (c.contains("lexeme"))
             entries_[e]["lexeme"] = c["lexeme"];
-        routeMedia(mediaItems(text(c), c.value("media", json::array())), info_[&c].scope, e);
+        routeMedia(nodeMedia(c), info_[&c].scope, e);
         if (name == "Translations" || name == "Definitions" || text(c).empty())
             return;
         if (name == "Etymology")
@@ -2451,7 +2531,7 @@ private:
         if (c.contains("lexeme"))
             for (auto e : among)
                 entries_[e]["lexeme"] = c["lexeme"];
-        routeMedia(mediaItems(text(c), c.value("media", json::array())), scope);
+        routeMedia(nodeMedia(c), scope);
         if (name == "Translations" || name == "Definitions" || text(c).empty())
             return;
         posFromTemplate(text(c), among);
@@ -2509,7 +2589,7 @@ private:
                 addTranslations(e, c);
                 if (c.contains("lexeme"))
                     entries_[e]["lexeme"] = c["lexeme"];
-                routeMedia(mediaItems(text(c), c.value("media", json::array())), scope, e);
+                routeMedia(nodeMedia(c), scope, e);
             } else if (owner >= 0) {
                 owned(c, static_cast<size_t>(owner));
             } else if (group) {
@@ -2521,7 +2601,7 @@ private:
                 if (c.contains("lexeme"))
                     for (auto e : scopes_[scope].entries)
                         entries_[e]["lexeme"] = c["lexeme"];
-                routeMedia(mediaItems(text(c), c.value("media", json::array())), scope);
+                routeMedia(nodeMedia(c), scope);
             } else {
                 shared(c, scope);
             }

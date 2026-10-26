@@ -73,6 +73,7 @@ and *Bank* the bank: two nouns).
 | `language` | the language as written in the heading or marker (`język polski`, `{{langue|fr}}`, `Ingiliffaa`) |
 | `native` | the language of the wiki (an entry of the wiki's own language) |
 | `pronunciation` | IPA, audio files, hyphenation of the whole language section, when the wiki gives them there (en `===Pronunciation===` before `===Etymology 1===`, pl `{{wymowa}}` lines without a sense id) |
+| `audio` | sound files of the pronunciation: `["Pl-woda.ogg"]` |
 | `etymology` | the etymology of the whole section, when the wiki gives it there and marks no part of it for an entry |
 | `entries` | the entries |
 | `notes` | sections of the whole language (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{section: text}` |
@@ -91,6 +92,7 @@ and *Bank* the bank: two nouns).
 | `grammar` | gender, inflection class and the like as the wiki writes them (`rodzaj żeński`, de `{{f}}, ''Bänke''`) |
 | `etymology` | the etymology of this entry as text: its own section (de `{{Herkunft}}` under the part of speech), that of its group (en `Etymology 2`, a ru homograph), or the lines of the language's etymology marked for it (pl `(2.1)`, fr `{{laé|fr|nom|2}}`); none: that of the language |
 | `pronunciation` | as of the language, when the wiki gives it for the entry or its group (de `{{Aussprache}}`, en `====Pronunciation====` under `===Etymology 2===`, pl `{{wymowa}}` lines with ids); none: that of the language |
+| `audio` | as of the language, of the pronunciation of the entry |
 | `senses` | the definitions |
 | `translations` | the translations |
 | `see` | translations on other pages (en `{{trans-see|…}}`): `{"title", "gloss"}` |
@@ -98,7 +100,7 @@ and *Bank* the bank: two nouns).
 | `relations` | `{"Synonyms": [{"term": "warownia", "sense": "1.1"}, …], …}`: sections of kind relation of wiktsections.sqlite and relation templates of senses (en `#: {{syn|en|…}}`); `sense` the sense id as the wiki gives it (pl `(1.1)`, de `[1, 6]`, ru the place of the `#` line, en the sense the template stands under), `qualifier` a label of the line (pl `{{zdrobn}}`, ru `прилагательные=`) |
 | `sections` | other sections of the entry as text: `{section: text}` (Usage notes, Inflection, Descendants…) |
 | `lexeme` | the Wikidata lexeme of the entry (ru `{{Лексема в Викиданных|L110019}}`); ar `{{معجمية|L1480479|…}}` shows its senses instead of the wiki's own |
-| `media` | files of Wikimedia Commons (pictures, sounds): `{"file": "…", "caption": "…", "sense": "1.1"}` (pl `[[Plik:…|thumb|zamek (1.1)]]`, ru `{{илл|…|Замок [1]}}`) |
+| `media` | pictures of Wikimedia Commons (sounds are in `audio`): `{"file": "…", "caption": "…", "sense": "1.1"}` (pl `[[Plik:…|thumb|zamek (1.1)]]`, ru `{{илл|…|Замок [1]}}`) |
 
 ## Sense
 
@@ -119,6 +121,7 @@ As up to v1.1.0, now always under its entry:
 | `sense` | the sense id the wiki gives (pl `1.1`, de `[1]`, fr) |
 | `gloss` | the gloss of the translation table (en `{{trans-top|domestic species}}`) |
 | `gender`, `tr` | gender marks, transliteration |
+| `image` | the term as a picture: pl hieroglyphs `[[Plik:Egyptian-mw.PNG\|link=mw]]` give `term` `mw`, `image` `Egyptian-mw.PNG`; a sign of a sign language without `link=` has the file as its term |
 
 The fields of the later passes (wiktlink: `page`, `home`, `en`,
 `page_title`; wiktglos: `sense_ids`, `sense_method`, `sense_score`) keep their

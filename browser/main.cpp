@@ -4,7 +4,8 @@
 // .jsonl.idx (only the block of the shown line is decompressed). Left: the lines with their titles, a filter and
 // "go to line". Right: the selected line as indented JSON in a read-only
 // qcodeedit view (Kate highlighting and folding), and as a tree with readable
-// labels of sections and senses. F4 opens the line, indented, in Kate.
+// labels of sections and senses. F4 shows Cyrillic in Latin letters (its sound, the Polish way)
+// in all tabs.
 // View > Original: the page's wikitext (the <text> of its <page>, entities
 // decoded) with Kate mediawiki highlighting, read from the dump at its "source"
 // ([bz2 block, number in it]), or of the selected node of the tree when it has its own
@@ -16,12 +17,12 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QDir>
-#include <QProcess>
 #include <QShortcut>
 #include <QFile>
 #include <qxfiledialog.h>
 #include "FindBar.h"
 #include "HeadingTranslator.h"
+#include "Latin.h"
 #include <QInputDialog>
 #include "TreeFindBar.h"
 #include <QFileInfo>
@@ -223,8 +224,13 @@ private:
     quint64 cached_ = ~0ull;
 };
 
+// F4: Cyrillic shown in Latin letters (Latin.h) in all tabs
+bool latinShown = false;
+
+QString shownText(const QString &text) { return latinShown ? cyrillicToLatin(text) : text; }
+
 QString scalar(const json &v) {
-    return v.is_string() ? QString::fromStdString(v.get<std::string>()) : QString::fromStdString(v.dump());
+    return shownText(v.is_string() ? QString::fromStdString(v.get<std::string>()) : QString::fromStdString(v.dump()));
 }
 
 // A readable label of an array element: sections, senses, translations, languages
@@ -295,7 +301,7 @@ void addItems(QStandardItem *parent, const json &v, const QString &name, const Q
                          sourceRole);
     if (v.is_object())
         for (const auto &[k, child] : v.items())
-            addItems(keyItem, child, QString::fromStdString(k));
+            addItems(keyItem, child, shownText(QString::fromStdString(k)), QString::fromStdString(k));
     else if (v.is_array()) {
         valueItem->setText(QString("%1 items").arg(v.size()));
         for (size_t i = 0; i < v.size(); ++i)
@@ -416,8 +422,13 @@ public:
                 showLine(item->data(Qt::UserRole).toInt());
         });
         connect(lineBox_, &QSpinBox::editingFinished, this, [this] { showLine(lineBox_->value() - 1); });
-        // F4: the line, indented, in Kate itself (a read-only file in the temporary directory)
-        connect(new QShortcut(QKeySequence(Qt::Key_F4), this), &QShortcut::activated, this, [this] { openInKate(); });
+        // F4: Cyrillic in Latin letters (its sound, the Polish way) in all tabs, again: as it is
+        connect(new QShortcut(QKeySequence(Qt::Key_F4), this), &QShortcut::activated, this, [this] {
+            latinShown = !latinShown;
+            showJsonViews();
+            showOriginalText();
+            statusBar()->showMessage(latinShown ? "Cyrillic in Latin letters (F4)" : "Cyrillic as written (F4)", 3000);
+        });
 
         auto *file = menuBar()->addMenu("&File");
         file->addAction("&Open...", QKeySequence::Open, this, [this] {
@@ -769,12 +780,12 @@ private:
             else
                 statusBar()->showMessage("no wiktlangs.sqlite and wiktsections.sqlite next to the file or above it", 5000);
         }
+        shown = shownText(shown);
         const qce::TextCursor at = wiki_.edit->area()->cursorPosition();
         wiki_.doc->setText(shown);
         wiki_.edit->area()->setCursorPosition(at);
         wiki_.edit->area()->ensureVisible(wiki_.edit->area()->cursorPosition(), 5);
-        if (const int tab = tabs_->indexOf(wiki_.page); tab >= 0)
-            tabs_->setTabText(tab, translated_ ? "OriginalT" : "Original");
+        updateTabTitles();
         fillWikiTree(shown);
     }
 
@@ -1016,6 +1027,7 @@ private:
     bool translated_ = false;      // F5: OriginalT
     HeadingTranslator translator_; // wiktlangs.sqlite, wiktsections.sqlite
     json current_;
+    QByteArray raw_; // the line as read (shown as it is when it is no JSON)
     std::optional<std::pair<qint64, qint64>> nodeSource_; // of the selected node, when not the page's
     QString nodeTitle_;                                    // its page title ("source_title")
     std::unique_ptr<Lines> lines_;
@@ -1145,42 +1157,45 @@ private:
         status_->setText(QString("%1 lines, %2 shown").arg(lines_->count()).arg(list_->count()));
     }
 
-    void openInKate() {
-        const QString dir = QDir::tempPath() + "/wiktbrowse";
-        QDir().mkpath(dir);
-        QString name = lines_ ? lines_->title(static_cast<size_t>(lineBox_->value() - 1)) : QString();
-        name.replace('/', '_');
-        const QString path = QString("%1/%2 %3.json").arg(dir).arg(lineBox_->value()).arg(name.left(80));
-        QFile file(path);
-        file.setPermissions(QFileDevice::WriteOwner | QFileDevice::ReadOwner);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
-            return;
-        file.write(json_.doc->toPlainText().toUtf8());
-        file.close();
-        file.setPermissions(QFileDevice::ReadOwner | QFileDevice::ReadGroup | QFileDevice::ReadOther);
-        QProcess::startDetached("kate", {path});
-    }
-
     void showLine(int line) {
         if (!lines_ || line < 0 || line >= static_cast<int>(lines_->count()))
             return;
-        const QByteArray raw = lines_->line(static_cast<size_t>(line));
-        json value = json::parse(raw.constData(), raw.constData() + raw.size(), nullptr, false);
+        raw_ = lines_->line(static_cast<size_t>(line));
+        json value = json::parse(raw_.constData(), raw_.constData() + raw_.size(), nullptr, false);
         lineBox_->setValue(line + 1);
-        json_.doc->setText(value.is_discarded()
-                              ? QString::fromUtf8(raw)
-                              : QString::fromStdString(value.dump(2, ' ', false, json::error_handler_t::replace)));
+        current_ = value.is_discarded() ? json() : std::move(value);
+        showJsonViews();
+        nodeSource_.reset();
+        showOriginal();
+    }
+
+    // JSON and Tree of the current line (F4: Cyrillic in Latin letters); the cursor of JSON stays
+    void showJsonViews() {
+        const qce::TextCursor at = json_.edit->area()->cursorPosition();
+        json_.doc->setText(current_.is_null()
+                                   ? shownText(QString::fromUtf8(raw_))
+                                   : shownText(QString::fromStdString(
+                                             current_.dump(2, ' ', false, json::error_handler_t::replace))));
+        json_.edit->area()->setCursorPosition(at);
         model_->clear();
         model_->setHorizontalHeaderLabels({"Key", "Value"});
-        if (!value.is_discarded())
-            for (const auto &[k, child] : value.items())
-                addItems(model_->invisibleRootItem(), child, QString::fromStdString(k));
+        if (!current_.is_null())
+            for (const auto &[k, child] : current_.items())
+                addItems(model_->invisibleRootItem(), child, shownText(QString::fromStdString(k)),
+                         QString::fromStdString(k));
         tree_->collapseAll(); // (opened by hand or by a search match)
         tree_->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
         treeFind_->reset();
-        current_ = value.is_discarded() ? json() : std::move(value);
-        nodeSource_.reset();
-        showOriginal();
+        updateTabTitles();
+    }
+
+    // "(lat)" on the tabs while F4 shows Cyrillic in Latin letters
+    void updateTabTitles() {
+        const QString lat = latinShown ? " (lat)" : "";
+        for (auto [page, title] : {std::pair<QWidget *, QString>{json_.page, "JSON"}, {treePage_, "Tree"},
+                                   {wiki_.page, translated_ ? "OriginalT" : "Original"}, {wikiTreePage_, "WikiTree"}})
+            if (const int tab = tabs_->indexOf(page); tab >= 0)
+                tabs_->setTabText(tab, title + lat);
     }
 };
 

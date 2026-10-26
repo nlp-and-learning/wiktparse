@@ -101,8 +101,10 @@ dump_dir = ~/dump
   Lines with titles (or Wikidata id and English label), a filter, the selected
   line as indented JSON in a read-only editor with Kate highlighting and
   folding, and as a tree. `.jsonl.bz2` files of `wikt2jsonl --bz2` are read
-  through their `.jsonl.idx`, decompressing only the block shown. F4 opens
-  the line, indented, in Kate (a read-only file in the temporary directory).
+  through their `.jsonl.idx`, decompressing only the block shown. F4 shows
+  Cyrillic in Latin letters, its sound the Polish way (вода woda, жёлтый
+  żołtyj, семья siem'ja; letters of Ukrainian, Serbian, Kazakh… roughly), in
+  all tabs ("(lat)" on them), again: as written.
   View > Original shows the wikitext of the page from the dump (Settings >
   Dump directory) at its `source`; when the page there has another title (a
   dump of another date), or with Settings > Find pages by title, the page is

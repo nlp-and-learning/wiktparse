@@ -1611,17 +1611,27 @@ private:
 
     // A part of speech of a text: without list marks, links, bold, a remark in brackets
     // (gu "પ્રત્યય (સં)"); the whole or its first word, of kind pos but the generic "Part of speech"
+    // (sat "<nowiki>*</nowiki>ᱜᱩᱱᱩᱱ", "᱑ᱹ ᱧᱩᱱᱩᱢ" numbered in Ol Chiki digits, "* ᱧᱩᱱᱩᱢ।" with a danda,
+    // "(ᱧᱩᱱᱩᱢ)", two of them "ᱠᱟᱱᱣᱟ, ᱜᱩᱱᱩᱢ": the first one known)
     std::optional<std::string> posOf(std::string text) const {
-        static const std::regex link(R"(\[\[(?:[^\]|]*\|)?([^\]|]*)\]\])"), marks(R"(''+|\([^)]*\))");
+        static const std::regex link(R"(\[\[(?:[^\]|]*\|)?([^\]|]*)\]\])"), tags("<[^>]*>|''+"),
+                wrapped(R"(^\s*\(([^()]*)\)\s*$)"), remark(R"(\([^)]*\))"),
+                number("^\\s*(?:[0-9]|\xE1\xB1[\x90-\x99])+(?:[.)]|\xE1\xB1\xB9)?\\s*");
         if (text.size() > 200)
             return std::nullopt;
-        text = std::regex_replace(std::regex_replace(text, link, "$1"), marks, "");
+        text = std::regex_replace(std::regex_replace(text, link, "$1"), tags, "");
         while (!text.empty() && std::string_view("*#: ").find(text.front()) != std::string_view::npos)
             text.erase(0, 1);
+        text = std::regex_replace(std::regex_replace(std::regex_replace(text, wrapped, "$1"), remark, ""), number, "");
+        for (std::string_view end : {".", ",", ":", ";", " ", "\xE0\xA5\xA4" /* । */, "\xE1\xB1\xBE" /* ᱾ */})
+            while (text.ends_with(end))
+                text.erase(text.size() - end.size());
         text = trim(text);
-        while (!text.empty() && std::string_view(".,:;").find(text.back()) != std::string_view::npos)
-            text.pop_back();
-        for (const auto &candidate : {text, text.substr(0, text.find(' '))})
+        std::vector<std::string> candidates = {text, text.substr(0, text.find(' '))};
+        for (const auto &piece : split(text, ','))
+            for (const auto &part : split(piece, '/'))
+                candidates.push_back(trim(part));
+        for (const auto &candidate : candidates)
             if (auto name = names_.find(trim(candidate)); name && name->kind == "pos" && name->section != "Part of speech")
                 return name->section;
         return std::nullopt;
@@ -1638,10 +1648,14 @@ private:
                 if (auto v = t->get(i))
                     found = posOf(std::string(*v));
         if (!found) {
-            auto text = n.value("text", std::string());
-            auto first = trim(text.substr(0, text.find_first_not_of(" \n") == std::string::npos ? 0 : text.find('\n', text.find_first_not_of(" \n"))));
-            if (!first.empty() && !first.starts_with("{{"))
-                found = posOf(first);
+            // its first line of text (not a file [[चित्र:…]], a link of a namespace; not a template)
+            for (const auto &line : split(n.value("text", std::string()), '\n'))
+                if (auto first = trim(line);
+                    !first.empty() && !(first.starts_with("[[") && first.find(':') < first.find("]]"))) {
+                    if (!first.starts_with("{{"))
+                        found = posOf(first);
+                    break;
+                }
         }
         if (!found && !n["senses"].empty())
             if ((found = posOf(n["senses"][0]["text"].get<std::string>()))) {
@@ -2137,7 +2151,8 @@ private:
     }
 
     json posEntry(const json &c, int scope) {
-        json e = {{"pos", c["section"]}};
+        // (a heading "part of speech" whose part of speech is not known says none: sat "*" not filled in)
+        json e = {{"pos", c["section"] == "Part of speech" ? json() : c["section"]}};
         const auto heading = c.value("heading", std::string());
         e["pos_written"] = heading;
         std::string group = scopes_[scope].group;

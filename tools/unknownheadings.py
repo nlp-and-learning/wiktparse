@@ -10,7 +10,7 @@ name (without '-', '=') and its unnamed parameters, a number at the end left out
 "Izruna Nr.2"); headings of a word and a language in parentheses (pl "woda ({{język polski}})")
 are skipped.
 
-unknownheadings.py [-d .] [-o unknown_headings.tsv] [--min-pages 1] [wiki...]
+unknownheadings.py [-d .] [-o unknown_headings.tsv] [--min-pages 4] [wiki...]
 Output: pages, wiki, levels (2,3), kind (language or section, by the level of the language headings of the wiki), heading.
 """
 import argparse
@@ -102,7 +102,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-d', default='.', help='directory of headers/, wiktlangs.sqlite, wiktsections.sqlite')
     parser.add_argument('-o', default='unknown_headings.tsv')
-    parser.add_argument('--min-pages', type=int, default=1)
+    # (headings of 1 to 3 pages are mostly words written as headings, not sections: 91% of the rows,
+    # 14% of the pages)
+    parser.add_argument('--min-pages', type=int, default=4, help='headings of fewer pages left out (1: all)')
     parser.add_argument('wiki', nargs='*')
     args = parser.parse_args()
     langs = sqlite3.connect(os.path.join(args.d, 'wiktlangs.sqlite'))

@@ -117,11 +117,14 @@ dump_dir = ~/dump
   in Original, the nodes from the root in Tree and WikiTree. Alt+1..Alt+4 switch
   the tabs; between JSON and Tree, and between Original and WikiTree, the other
   tab shows the same place (the tree expanded to it).
-- `tools/unknownheadings.py [-d .] [-o unknown_headings.tsv] [wiki...]` – the
+- `tools/unknownheadings.py [-d .] [-o unknown_headings.tsv] [--min-pages 4] [wiki...]` – the
   headings of the dumps (`headers/<wiki>.tsv`) known neither as a language
   (`wiktlangs.sqlite`) nor as a section (`wiktsections.sqlite`), by pages, most
   first, as the parser keys them: to name them in
-  `res/wiktionary_section_names.tsv` or in the wiki's configuration.
+  `res/wiktionary_section_names.tsv` or in the wiki's configuration. Headings
+  of fewer than `--min-pages` pages (by default 4: those of 1 to 3 pages are
+  mostly words written as headings) are left out; a column `kind` guesses
+  language or section by the level of the wiki's language headings.
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

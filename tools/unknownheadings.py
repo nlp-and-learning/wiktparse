@@ -108,8 +108,18 @@ def main():
     english = {r[0].lower() for r in langs.execute('SELECT name FROM language') if r[0]}
     english |= {r[0].lower() for r in sections.execute('SELECT section FROM section')}
     names = collections.defaultdict(set)  # language or wiki -> lowercase names
-    for in_code, name in langs.execute('SELECT in_code, name FROM language_name'):
+    # whole words of the names of a language in a language, of one language only (as the parser:
+    # gor "Hulontalo" of "Bahasa Hulontalo", pl "polski" of "język polski"; 4 letters at least)
+    parts = collections.defaultdict(dict)  # in_code -> word -> code, None when of several languages
+    for code, in_code, name in langs.execute('SELECT code, in_code, name FROM language_name'):
         names[in_code].add(name.lower())
+        words = re.split(r'[ -]', name.lower())
+        for word in words if len(words) > 1 else []:
+            if len(word) >= 4:
+                seen = parts[in_code].get(word, code)
+                parts[in_code][word] = code if seen == code else None
+    # English names of languages also the English aliases (gor: Wikidata alias "Hulontalo")
+    english |= names['en']
     for lang, name in sections.execute('SELECT lang, name FROM section_name'):
         names[lang].add(name.lower())
     # Language templates of a wiki's configuration (lt {{ltv}}: "template_regex": "^([a-z]{2,3})v$")
@@ -156,6 +166,8 @@ def main():
                 if wiki in lookup:
                     k += [lookup[wiki].replace('{name}', x) for x in k]
                 if not k or any(x in known for x in k):
+                    continue
+                if any(parts[lang].get(x) for x in k if len(x) >= 4):
                     continue
                 if (r := template_regex.get(wiki)) and any(
                         (m := r.match(x)) and m.group(1).lower() in codes for x in k):

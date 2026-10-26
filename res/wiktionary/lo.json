@@ -101,7 +101,8 @@
   "senses": {
     "marker": "line",
     "ignore": [
-      "ກະລຸນາ"
+      "ກະລຸນາ",
+      "(ກະລຸນາ"
     ]
   },
   "status": "aliases from the dump markers (unresolved.tsv)"

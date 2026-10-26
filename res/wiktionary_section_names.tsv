@@ -1718,6 +1718,30 @@ roa_rup	pron	Pronunciation	section
 fo	pron	Pronunciation	section
 mn	pron	Pronunciation	section
 vec	trad-su	Translations	section
+gu	સ્ત્રીo	Noun	pos
+gu	સ્ત્રી○	Noun	pos
+gu	પુંo	Noun	pos
+gu	નo	Noun	pos
+gu	વિo	Adjective	pos
+gu	અoક્રિo	Verb	pos
+gu	સoક્રિo	Verb	pos
+ig	Aha	Noun	pos
+ig	Áhà	Noun	pos
+ig	Nkọwaaha	Adjective	pos
+ig	Nkọwa aha	Adjective	pos
+ig	Okwu Omume	Verb	pos
+ig	Ilu	Proverb	pos
+ne	विशेषण	Adjective	pos
+ne	क्रियाविशेषण	Adverb	pos
+ne	अकर्मक क्रिया	Verb	pos
+ne	सकर्मक क्रिया	Verb	pos
+ne	कर्मवाच्य क्रिया	Verb	pos
+ne	नामपद	Noun	pos
+lo	ຄຳຄຸນນາມ	Adjective	pos
+lo	ຄຳກິລິຍາ	Verb	pos
+lo	ຈຳນວນ	Numeral	pos
+lo	ຄຳແທນນາມ	Pronoun	pos
+lo	ພະຍັນຊະນະ	Letter	pos
 tk	At	Noun	pos
 tk	Has at	Proper noun	pos
 tk	Işlik	Verb	pos

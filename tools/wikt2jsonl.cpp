@@ -1609,7 +1609,65 @@ private:
         counters_.clear();
     }
 
+    // A part of speech of a text: without list marks, links, bold, a remark in brackets
+    // (gu "પ્રત્યય (સં)"); the whole or its first word, of kind pos but the generic "Part of speech"
+    std::optional<std::string> posOf(std::string text) const {
+        static const std::regex link(R"(\[\[(?:[^\]|]*\|)?([^\]|]*)\]\])"), marks(R"(''+|\([^)]*\))");
+        if (text.size() > 200)
+            return std::nullopt;
+        text = std::regex_replace(std::regex_replace(text, link, "$1"), marks, "");
+        while (!text.empty() && std::string_view("*#: ").find(text.front()) != std::string_view::npos)
+            text.erase(0, 1);
+        text = trim(text);
+        while (!text.empty() && std::string_view(".,:;").find(text.back()) != std::string_view::npos)
+            text.pop_back();
+        for (const auto &candidate : {text, text.substr(0, text.find(' '))})
+            if (auto name = names_.find(trim(candidate)); name && name->kind == "pos" && name->section != "Part of speech")
+                return name->section;
+        return std::nullopt;
+    }
+
+    // Under a heading of no particular part of speech ("Part of speech": ne पद वर्ग, lo ປະເພດ, ig
+    // Nkejiasụsụ) the part of speech is a parameter of the heading (ka
+    // {{კატეგორია|ქართული|არსებითი სახელი}}), its first line (ne "नाम"; lo "ຄຳນາມ", taken as the
+    // first sense of the "line" marker, which is no sense then), or a headword template (om {{Om-noun}})
+    void resolvePartOfSpeech(json &n) const {
+        std::optional<std::string> found;
+        if (auto t = onlyTemplate(n.value("heading", std::string())))
+            for (size_t i = 2; i >= 1 && !found; --i)
+                if (auto v = t->get(i))
+                    found = posOf(std::string(*v));
+        if (!found) {
+            auto text = n.value("text", std::string());
+            auto first = trim(text.substr(0, text.find_first_not_of(" \n") == std::string::npos ? 0 : text.find('\n', text.find_first_not_of(" \n"))));
+            if (!first.empty() && !first.starts_with("{{"))
+                found = posOf(first);
+        }
+        if (!found && !n["senses"].empty())
+            if ((found = posOf(n["senses"][0]["text"].get<std::string>()))) {
+                n["text"] = n["senses"][0]["text"].get<std::string>() + '\n' + n.value("text", std::string());
+                n["senses"].erase(0);
+                // ids of the order of lines: renumbered
+                bool ordered = true;
+                for (size_t i = 0; i < n["senses"].size(); ++i)
+                    ordered &= n["senses"][i]["id"] == std::to_string(i + 2);
+                if (ordered)
+                    for (size_t i = 0; i < n["senses"].size(); ++i)
+                        n["senses"][i]["id"] = std::to_string(i + 1);
+            }
+        if (!found)
+            for (const auto &t : wikilib::templates::find_invocations(n.value("text", std::string())))
+                if (auto name = names_.find(t.name, 2); name && name->kind == "pos" && name->section != "Part of speech") {
+                    found = name->section;
+                    break;
+                }
+        if (found)
+            n["section"] = *found;
+    }
+
     void finishNode(json &n, Stats &stats) {
+        if (n["section"] == "Part of speech")
+            resolvePartOfSpeech(n);
         // Translations of translation sections; of a part of speech without one, its templates
         bool hasTranslationSection = false;
         for (const auto &c : n["children"])

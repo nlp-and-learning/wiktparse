@@ -112,11 +112,13 @@ and *Bank* the bank: two nouns).
 
 ## Translation
 
-As up to v1.1.0, now always under its entry:
+As up to v1.1.0, now always under its entry, as an array sorted by `lang`
+(those of no code last; the terms of one language in the order of the wiki):
 
 | field | meaning |
 |---|---|
-| `lang`, `lang_written` | the language of the translation: canonical code, as written |
+| `lang` | the language of the translation, a canonical code; `null` when not known |
+| `lang_written` | the language as written, only when `lang` is `null` (names of languages in any language are for a reader to show, from wiktlangs.sqlite) |
 | `term` | the translated word or phrase |
 | `sense` | the sense id the wiki gives (pl `1.1`, de `[1]`, fr) |
 | `gloss` | the gloss of the translation table (en `{{trans-top|domestic species}}`) |

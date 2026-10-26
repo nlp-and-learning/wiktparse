@@ -111,11 +111,13 @@ może dać kilka wpisów (de *Bank* ławka i *Bank* bank: dwa rzeczowniki).
 
 ## Tłumaczenie
 
-Jak do v1.1.0, ale teraz zawsze pod swoim wpisem:
+Jak do v1.1.0, ale teraz zawsze pod swoim wpisem, jako tablica posortowana
+według `lang` (te bez kodu na końcu; terminy jednego języka w kolejności wiki):
 
 | pole | znaczenie |
 |---|---|
-| `lang`, `lang_written` | język tłumaczenia: kod kanoniczny, tak jak zapisany |
+| `lang` | język tłumaczenia, kod kanoniczny; `null`, gdy nieznany |
+| `lang_written` | język tak, jak zapisany, tylko gdy `lang` jest `null` (nazwy języków w dowolnym języku pokazuje czytający, z wiktlangs.sqlite) |
 | `term` | przetłumaczone słowo lub fraza |
 | `sense` | id znaczenia podane przez wiki (pl `1.1`, de `[1]`, fr) |
 | `gloss` | glosa tabeli tłumaczeń (en `{{trans-top|domestic species}}`) |

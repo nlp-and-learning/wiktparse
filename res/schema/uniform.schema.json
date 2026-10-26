@@ -257,7 +257,7 @@
         },
         "lang_written": {
           "type": "string",
-          "description": "Language as written when it differs from lang"
+          "description": "Language as written, only when lang is null (not known)"
         },
         "term": {"type": "string"},
         "sense": {

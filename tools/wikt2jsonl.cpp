@@ -2106,6 +2106,20 @@ public:
                         entries_[e][key] = scopes_[s].given[key];
         json entries = json::array();
         for (auto &e : entries_) {
+            // Translations by their language code, those of none last, each language in the order of
+            // the wiki; the language as written only of those without a code
+            if (e.contains("translations")) {
+                std::vector<json> list(e["translations"].begin(), e["translations"].end());
+                std::ranges::stable_sort(list, [](const json &a, const json &b) {
+                    if (a["lang"].is_null() != b["lang"].is_null())
+                        return b["lang"].is_null();
+                    return !a["lang"].is_null() && a["lang"].get<std::string>() < b["lang"].get<std::string>();
+                });
+                for (auto &t : list)
+                    if (!t["lang"].is_null())
+                        t.erase("lang_written");
+                e["translations"] = list;
+            }
             for (const char *key : {"senses", "translations", "see", "subpages", "media", "pos_also"})
                 if (e.contains(key) && e[key].empty())
                     e.erase(key);

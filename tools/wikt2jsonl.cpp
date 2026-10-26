@@ -1725,6 +1725,9 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
             if (auto aliases = json::json_pointer("/language/aliases"); config.contains(aliases))
                 if (auto it = config[aliases].find(*marker); it != config[aliases].end())
                     code = it->get<std::string>();
+            // A marker that is no known language (jbo "TLI", su "bahasa"): a language of its own, code null
+            if (!code.empty() && !names.isCode(code) && names.mappedCode(code).empty())
+                code.clear();
             auto &[markerCode, count] = stats.markers[*marker];
             markerCode = code;
             ++count;

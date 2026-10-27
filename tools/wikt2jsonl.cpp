@@ -2437,7 +2437,18 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                     }
             if (!found)
                 continue;
-            const auto &s = *found;
+            // "variants": the settings of a value of the first parameter over the template's (es
+            // {{etimología|sufijo|arzorn|ioù}}: a compound; {{etimología|la|aqua}}: from)
+            json variant;
+            if (auto v = t.get(size_t{1}); v && found->contains("variants"))
+                if (auto it = (*found)["variants"].find(trim(std::string(*v))); it != (*found)["variants"].end()) {
+                    variant = *found;
+                    variant.erase("variants");
+                    mergeInto(variant, *it);
+                }
+            const auto &s = variant.is_null() ? *found : variant;
+            if (s.value("skip", false)) // (es {{etimología|incierta}}: of no form)
+                continue;
             std::string relation = s.value("relation", std::string("mention"));
             // a mention right after an item, by a comma only ({{cog|nds|root}}, {{m|nds|rood}}): another
             // form of it
@@ -2463,11 +2474,14 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             // "lang": "entry", the language of the entry (pl {{odczasownikowy od|boksować}}); "=code" a
             // language of the template (ru {{праслав|…}}: "=sla-pro")
             const json langSpec = s.value("lang", json());
-            const std::string lang = !nameLanguage.empty() ? resolve(nameLanguage)
-                                     : langSpec == "entry" ? entryCode
-                                     : langSpec.is_string() && langSpec.get<std::string>().starts_with('=')
-                                             ? langSpec.get<std::string>().substr(1)
-                                             : resolve(param("lang"));
+            std::string lang = !nameLanguage.empty() ? resolve(nameLanguage)
+                               : langSpec == "entry" ? entryCode
+                               : langSpec.is_string() && langSpec.get<std::string>().starts_with('=')
+                                       ? langSpec.get<std::string>().substr(1)
+                                       : resolve(param("lang"));
+            // "lang_default": "entry", when the parameter of the language is not given (es leng=)
+            if (param("lang").empty() && s.value("lang_default", std::string()) == "entry" && nameLanguage.empty())
+                lang = entryCode;
             std::string form;
             if (s.contains("parts")) {
                 // {{af|en|water|fall}}, {{suffix|en|water|y}} -> water + -y
@@ -2837,7 +2851,8 @@ private:
             object["etymology_chain"] = chain;
             return;
         }
-        // (a placeholder "=…": the whole text, spaces as one, hr "={{napomene}}"; else a part of it)
+        // (a placeholder "=…": the whole text, spaces as one, hr "={{napomene}}"; "~…" a regular expression
+        // of the whole text, es "{{etimología|leng=ast}}"; else a part of it)
         std::string whole;
         for (const auto &word : split(trim(text), ' '))
             for (const auto &w : split(word, '\n'))
@@ -2845,7 +2860,9 @@ private:
                     whole += (whole.empty() ? "" : " ") + trim(w);
         if (auto spec = config_.find("etymology"); spec != config_.end())
             for (const auto &p : spec->value("placeholders", std::vector<std::string>{}))
-                if (p.starts_with('=') ? whole == p.substr(1) : text.find(p) != std::string::npos)
+                if (p.starts_with('~') ? whole.size() < maxRegexLine && std::regex_match(whole, std::regex(p.substr(1)))
+                    : p.starts_with('=') ? whole == p.substr(1)
+                                         : text.find(p) != std::string::npos)
                     return;
         object["etymology_unparsed"] = true;
     }

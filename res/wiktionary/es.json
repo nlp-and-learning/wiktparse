@@ -45,5 +45,37 @@
     "sense": "number",
     "subpage": null
   },
+  "etymology": {
+    "placeholders": ["~\\{\\{etim(ología)?(\\|leng=[^|{}]*)?(\\|[a-z-]*)?\\}\\}\\.?"],
+    "templates": {
+      "etimología": {
+        "relation": "from", "lang": 1, "term": 2,
+        "variants": {
+          "sufijo": {"relation": "compound", "lang": "leng", "lang_default": "entry", "parts": 2, "affix": "suffix"},
+          "prefijo": {"relation": "compound", "lang": "leng", "lang_default": "entry", "parts": 2, "affix": "prefix"},
+          "compuesto": {"relation": "compound", "lang": "leng", "lang_default": "entry", "parts": 2},
+          "confijo": {"relation": "compound", "lang": "leng", "lang_default": "entry", "parts": 2},
+          "pronominal": {"relation": "from", "lang": "leng", "lang_default": "entry", "term": 2},
+          "endo": {"relation": "from", "lang": "leng", "lang_default": "entry", "term": 2},
+          "véase": {"relation": "mention", "lang": "leng", "lang_default": "entry", "term": 2},
+          "incierta": {"skip": true},
+          "onomatopeya": {"skip": true}
+        }
+      },
+      "etim": {"relation": "from", "lang": 1, "term": 2},
+      "l+": {"relation": "mention", "lang": 1, "term": 2},
+      "año de documentación": {"relation": "attested", "term": 1}
+    },
+    "words": {
+      "del ": "from",
+      "de la ": "from",
+      "y este": "from",
+      "y esta": "from",
+      "compárese": "compare",
+      "compárense": "compare",
+      "cognado": "compare",
+      "véase": "mention"
+    }
+  },
   "status": "draft from samples (doc/wiktionary-profiles.md)"
 }

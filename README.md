@@ -139,6 +139,11 @@ dump_dir = ~/dump
   of fewer than `--min-pages` pages (by default 4: those of 1 to 3 pages are
   mostly words written as headings) are left out; a column `kind` guesses
   language or section by the level of the wiki's language headings.
+- `tools/etymologytemplates.py [-i uniform1000] [-n 15] [--examples 3] [--all] wiki...` –
+  the templates of the etymologies of a wiki not read yet (`etymology_unparsed`
+  of `wikt2jsonl --uniform`), most first, with examples of their parameters,
+  marked when the wiki's configuration has them, and the words between them:
+  to write the `etymology` configuration of the wiki.
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

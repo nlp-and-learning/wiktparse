@@ -1,4 +1,7 @@
 {
+  "etymology": {
+    "placeholders": ["{{etimologija-stub"]
+  },
   "wiki": "lt",
   "language": {
     "template_regex": "^([a-z]{2,3})v$"

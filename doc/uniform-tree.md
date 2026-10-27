@@ -156,7 +156,10 @@ a template and the parameters of its language and form, the words that give
 the relation of a mention (en "from", "cognate with"; de "von", "vgl."), a
 template of the whole chain (en `{{etymon|en|:inh|enm:red}}`), a template of
 its abbreviations of languages (pl `Szablon:etym/język`: `niem` de, `ang` en),
-the placeholders of no etymology (en `{{rfe}}`). After the first paragraph with
+the placeholders of no etymology (en `{{rfe}}`; `=…` the whole text). A way
+shared by several wikis is a profile of `res/wiktionary/etymology_profiles.json`
+(`en`: the templates of en.wikt, taken by si, bn, ja, zh, ms…), which a wiki
+takes by `"etymology": {"profile": "en"}`. After the first paragraph with
 items of the chain only cognates and descendants are read: the rest are
 notes. An etymology of no chain, but a placeholder, is `etymology_unparsed`:
 there is one, not read yet (prose, a wiki of no configuration).

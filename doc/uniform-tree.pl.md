@@ -156,7 +156,10 @@ relację szablonu i parametry jego języka i formy, słowa dające relację
 wzmianki (en „from”, „cognate with”; de „von”, „vgl.”), szablon całego
 łańcucha (en `{{etymon|en|:inh|enm:red}}`), szablon jej skrótów języków
 (pl `Szablon:etym/język`: `niem` de, `ang` en), puste szablony braku
-etymologii (en `{{rfe}}`). Po pierwszym akapicie z elementami łańcucha czytane
+etymologii (en `{{rfe}}`; `=…` cały tekst). Sposób wspólny dla kilku wiki to
+profil z `res/wiktionary/etymology_profiles.json` (`en`: szablony en.wikt,
+przejęte przez si, bn, ja, zh, ms…), który wiki bierze przez
+`"etymology": {"profile": "en"}`. Po pierwszym akapicie z elementami łańcucha czytane
 są tylko wyrazy pokrewne i potomkowie: reszta to uwagi. Etymologia bez
 łańcucha, ale nie pusty szablon, ma `etymology_unparsed`: jest, jeszcze
 nieodczytana (proza, wiki bez konfiguracji).

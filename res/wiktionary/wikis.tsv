@@ -13,7 +13,7 @@ av	A
 ay	E	{{-xx-}}	
 az	B	Dil	az.json
 bcl	A		bcl.json
-be	C		
+be	C		be.json
 bew	B	basa	
 bg	E	{{-xx-}}	
 bh	F		
@@ -23,7 +23,7 @@ blk	A		blk.json
 bm	F		
 bn	B	ভাষা	bn.json
 bo	F		
-br	E	{{=xx=}}	
+br	E	{{=xx=}}	br.json
 bs	F		
 btm	B2		
 ca	B1		
@@ -97,7 +97,7 @@ ky	E	{{-xx-}}
 la	B	-lingua-	la.json
 lb	B2		lb.json
 li	A		li.json
-lmo	B1		
+lmo	B1		lmo.json
 ln	E	{{-xx-}}	ln.json
 lo	A		lo.json
 lt	B2		lt.json
@@ -124,7 +124,7 @@ nia	E		nia.json
 nl	E	{{=xx=}}	nl.json
 nn	A		nn.json
 no	A		no.json
-oc	E	{{=xx=}}	
+oc	E	{{=xx=}}	oc.json
 om	E	{{-xx-}}	om.json
 or	A		or.json
 pa	A		pa.json
@@ -143,7 +143,7 @@ rw	E	{{=xx=}}	rw.json
 sa	A1		sa.json
 sat	A		sat.json
 sc	F		
-scn	E	{{-xx-}}	
+scn	E	{{-xx-}}	scn.json
 sd	A		sd.json
 sg	B	Y	sg.json
 sh	A		sh.json
@@ -174,16 +174,16 @@ tk	B	Dil	tk.json
 tl	A		tl.json
 tn	E	{{=xx=}}	tn.json
 to	F		
-tpi	E	{{-xx-}}	
+tpi	E	{{-xx-}}	tpi.json
 tr	A		tr.json
 ts	A		ts.json
 tt	A		tt.json
 tw	F		
 ug	B	تىلى	ug.json
-uk	E	{{=xx=}}	
+uk	E	{{=xx=}}	uk.json
 ur	A		ur.json
 uz	C		uz.json
-vec	E	{{-xx-}}	
+vec	E	{{-xx-}}	vec.json
 vi	E	{{-xx-}}	vi.json
 vo	E	{{-xx-}}	
 wa	B	L	wa.json

@@ -1,4 +1,7 @@
 {
+  "etymology": {
+    "profile": "en"
+  },
   "wiki": "blk",
   "language": {
     "fallback_native": true,

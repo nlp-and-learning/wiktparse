@@ -56,67 +56,7 @@
     "subpage": "{title}/translations"
   },
   "etymology": {
-    "placeholders": ["{{rfe", "{{etystub", "{{unk|", "{{unk}}"],
-    "chain_template": {
-      "names": ["etymon", "ety"],
-      "relations": {"inh": "from", "der": "from", "uder": "from", "bor": "borrowed", "lbor": "borrowed",
-                    "slbor": "borrowed", "obor": "borrowed", "cal": "calque", "af": "compound",
-                    "affix": "compound", "com": "compound"}
-    },
-    "templates": {
-      "inh": {"relation": "from", "lang": 2, "term": 3},
-      "inh+": {"relation": "from", "lang": 2, "term": 3},
-      "inh-lite": {"relation": "from", "lang": 2, "term": 3},
-      "der": {"relation": "from", "lang": 2, "term": 3},
-      "der+": {"relation": "from", "lang": 2, "term": 3},
-      "der-lite": {"relation": "from", "lang": 2, "term": 3},
-      "uder": {"relation": "from", "lang": 2, "term": 3},
-      "bor": {"relation": "borrowed", "lang": 2, "term": 3},
-      "bor+": {"relation": "borrowed", "lang": 2, "term": 3},
-      "lbor": {"relation": "borrowed", "lang": 2, "term": 3},
-      "slbor": {"relation": "borrowed", "lang": 2, "term": 3},
-      "obor": {"relation": "borrowed", "lang": 2, "term": 3},
-      "ubor": {"relation": "borrowed", "lang": 2, "term": 3},
-      "cal": {"relation": "calque", "lang": 2, "term": 3},
-      "calque": {"relation": "calque", "lang": 2, "term": 3},
-      "clq": {"relation": "calque", "lang": 2, "term": 3},
-      "cog": {"relation": "compare", "lang": 1, "term": 2},
-      "noncog": {"relation": "mention", "lang": 1, "term": 2},
-      "ncog": {"relation": "mention", "lang": 1, "term": 2},
-      "m": {"relation": "mention", "lang": 1, "term": 2},
-      "m+": {"relation": "mention", "lang": 1, "term": 2},
-      "mention": {"relation": "mention", "lang": 1, "term": 2},
-      "l": {"relation": "mention", "lang": 1, "term": 2},
-      "link": {"relation": "mention", "lang": 1, "term": 2},
-      "doublet": {"relation": "doublet", "lang": 1, "term": 2},
-      "dbt": {"relation": "doublet", "lang": 1, "term": 2},
-      "root": {"relation": "root", "lang": 2, "term": 3},
-      "af": {"relation": "compound", "lang": 1, "parts": 2},
-      "affix": {"relation": "compound", "lang": 1, "parts": 2},
-      "compound": {"relation": "compound", "lang": 1, "parts": 2},
-      "com": {"relation": "compound", "lang": 1, "parts": 2},
-      "blend": {"relation": "compound", "lang": 1, "parts": 2},
-      "confix": {"relation": "compound", "lang": 1, "parts": 2},
-      "com+": {"relation": "compound", "lang": 1, "parts": 2},
-      "surf": {"relation": "compound", "lang": 1, "parts": 2},
-      "clipping": {"relation": "from", "lang": 1, "term": 2},
-      "pseudo-loan": {"relation": "borrowed", "lang": 2, "term": 3},
-      "suffix": {"relation": "compound", "lang": 1, "parts": 2, "affix": "suffix"},
-      "prefix": {"relation": "compound", "lang": 1, "parts": 2, "affix": "prefix"}
-    },
-    "words": {
-      "from": "from",
-      "borrowed from": "borrowed",
-      "calque of": "calque",
-      "cognate with": "compare",
-      "cognates": "compare",
-      "akin to": "compare",
-      "compare": "compare",
-      "cf.": "compare",
-      "doublet of": "doublet",
-      "more at": "mention",
-      "see": "mention"
-    }
+    "profile": "en"
   },
   "status": "draft from samples (doc/wiktionary-profiles.md)"
 }

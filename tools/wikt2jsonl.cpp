@@ -87,6 +87,7 @@ class Configs {
 public:
     explicit Configs(const fs::path &dir) : dir_(dir) {
         profiles_ = readJson(dir / "profiles.json").at("profiles");
+        etymologyProfiles_ = readJson(dir / "etymology_profiles.json").at("profiles");
         for (const auto &line : readLines((dir / "wikis.tsv").string())) {
             auto fields = split(line, '\t');
             if (fields.size() < 2 || fields[0] == "wiki")
@@ -110,6 +111,14 @@ public:
         }
         if (!file.empty())
             mergeInto(config, readJson(dir_ / file));
+        // The way of etymologies of several wikis (etymology_profiles.json: en, the templates of en.wikt
+        // copied by si, bn, ja…), under the wiki's own settings
+        if (auto ptr = json::json_pointer("/etymology/profile"); config.contains(ptr)) {
+            json etymology = etymologyProfiles_.at(config[ptr].get<std::string>());
+            mergeInto(etymology, config["etymology"]);
+            etymology.erase("profile");
+            config["etymology"] = std::move(etymology);
+        }
         // Other forms of language markers, prepared once: {"language": merged without aliases}
         if (config["language"].contains("also")) {
             json base = config["language"];
@@ -142,7 +151,7 @@ private:
         std::string profile, languageTemplate, file;
     };
     fs::path dir_;
-    json profiles_;
+    json profiles_, etymologyProfiles_;
     std::map<std::string, Wiki> wikis_;
 
     [[nodiscard]] json profile_(const std::string &name) const {
@@ -2321,6 +2330,21 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             }
             if (lang.empty() || noTerm(form))
                 continue;
+            // a mention after "+" of an item of its language: a part of it, a compound (ks "{{l|fa|سی}} +
+            // {{l|fa|و}} + {{l|fa|پنج}}": compound fa سی + و + پنج)
+            if (s.value("relation", std::string()) == "mention" && last >= 0 && trim(std::string(between)) == "+") {
+                auto &item = items[static_cast<size_t>(last)];
+                const auto dot = item.find(". ");
+                const auto afterRelation = item.find(' ', dot + 2);
+                const auto afterLang = item.find(' ', afterRelation + 1);
+                if (item.substr(afterRelation + 1, afterLang - afterRelation - 1) == lang &&
+                    item.find(" [") == std::string::npos) {
+                    item = item.substr(0, dot + 2) + "compound" + item.substr(afterRelation) + " + " + form;
+                    lastRelation = "compound";
+                    chainHere = true;
+                    continue;
+                }
+            }
             // "of": "entry": of the entry, not of the item before (pl {{źródło dla}}: the entry is its source)
             const int of = s.value("of", std::string()) == "entry" ? -1
                            : sameItem                             ? lastOf
@@ -2639,8 +2663,14 @@ private:
             object["etymology_chain"] = chain;
             return;
         }
+        // (a placeholder "=…": the whole text, spaces as one, hr "={{napomene}}"; else a part of it)
+        std::string whole;
+        for (const auto &word : split(trim(text), ' '))
+            for (const auto &w : split(word, '\n'))
+                if (!trim(w).empty())
+                    whole += (whole.empty() ? "" : " ") + trim(w);
         for (const auto &p : config_.value("etymology", json::object()).value("placeholders", std::vector<std::string>{}))
-            if (text.find(p) != std::string::npos)
+            if (p.starts_with('=') ? whole == p.substr(1) : text.find(p) != std::string::npos)
                 return;
         object["etymology_unparsed"] = true;
     }

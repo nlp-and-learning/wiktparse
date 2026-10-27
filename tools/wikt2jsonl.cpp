@@ -209,11 +209,13 @@ public:
     // Thread-safe
     // lookup: the full label when the wiki writes a short name (sr "српски" -> "{name} језик")
     // strip: words for "language" that labels may lack (hr "jezik", th "ภาษา")
+    // parts: also a whole word of the names of one language (headings; not etymologies, where de "Buch"
+    // would be Buch-Pahlavi)
     std::string code(const std::string &wiki, const std::string &name, const std::string &lookup = "",
-                      const std::vector<std::string> &strip = {}) {
+                      const std::vector<std::string> &strip = {}, bool parts = true) {
         if (!db_ || name.empty())
             return "";
-        auto key = wiki + '\t' + name + '\t' + lookup;
+        auto key = wiki + '\t' + name + '\t' + lookup + (parts ? "" : "\tno parts");
         {
             std::shared_lock shared(mutex_); // threads read the cache together
             if (auto it = cache_.find(key); it != cache_.end())
@@ -293,7 +295,7 @@ public:
                 result = find(index.module, n);
         // A name that is a whole part of names of one language only: fr "eudeve" of
         // "opata-eudeve" (opt); not pl "szkocki" ("język szkocki" sco, "gaelicki szkocki" gd)
-        if (const auto lower = wikilib::unicode::to_lower(name); result.empty() && lower.size() >= 4)
+        if (const auto lower = wikilib::unicode::to_lower(name); parts && result.empty() && lower.size() >= 4)
             if (auto part = find(index.part, lower); part != ambiguous)
                 result = part;
         std::lock_guard lock(mutex_);
@@ -2149,18 +2151,60 @@ json mediaItems(const std::string &text, const json &names = json::array()) {
 // them; a descendant of the item before it. After the first paragraph with items of the chain (from,
 // borrowed, calque, compound) only cognates and descendants: the rest are notes ("The plural housen
 // is from…").
+// The text with the templates of etymology.transcluded as their text (ru "Происходит от
+// {{этимология:вода|да}}": the text of Шаблон:этимология:вода): {{{1}}}, {{{1|…}}} its first parameter,
+// without <noinclude>…</noinclude> and parser functions ({{#if:…}}, {{#switch:…}})
+std::string withTranscluded(const std::string &text, const json &transcluded) {
+    if (transcluded.empty() || text.find("{{") == std::string::npos)
+        return text;
+    std::string result;
+    size_t last = 0;
+    for (const auto &t : wikilib::templates::find_invocations(text)) {
+        auto it = transcluded.find(t.name);
+        if (it == transcluded.end())
+            continue;
+        std::string body = it->get<std::string>();
+        for (size_t at; (at = body.find("<noinclude>")) != std::string::npos;) {
+            const auto end = body.find("</noinclude>", at);
+            body.erase(at, end == std::string::npos ? std::string::npos : end + 12 - at);
+        }
+        for (const char *tag : {"<includeonly>", "</includeonly>"})
+            for (size_t at; (at = body.find(tag)) != std::string::npos;)
+                body.erase(at, std::strlen(tag));
+        // parser functions out (their texts are variants of the template's)
+        auto inner = wikilib::templates::find_invocations(body);
+        for (auto f = inner.rbegin(); f != inner.rend(); ++f)
+            if (f->name.starts_with('#'))
+                body.erase(f->location.begin.offset, f->location.length());
+        static const std::regex parameter(R"(\{\{\{1(?:\|([^{}]*))?\}\}\})");
+        const auto first = t.get(size_t{1});
+        body = body.size() < maxRegexLine
+                       ? std::regex_replace(body, parameter, first ? std::string(*first) : std::string("$1"))
+                       : body;
+        result += text.substr(last, t.location.begin.offset - last) + body;
+        last = t.location.end.offset;
+    }
+    return result + text.substr(last);
+}
+
 // entryCode: of the language of the entry (templates of "lang": "entry", pl {{odczasownikowy od|boksować}})
 std::string etymologyChain(const std::string &text, const json &config, const std::string &entryCode,
                            const LanguageCode &languageCode) {
-    const auto spec = config.value("etymology", json::object());
-    const auto templates = spec.value("templates", json::object());
+    // (by reference: the configuration may hold the texts of thousands of templates, ru "transcluded")
+    static const json none = json::object();
+    auto part = [](const json &o, const char *key) -> const json & {
+        auto it = o.find(key);
+        return it == o.end() ? none : *it;
+    };
+    const json &spec = part(config, "etymology");
+    const json &templates = part(spec, "templates");
     if (text.empty() || templates.empty())
         return {};
-    const auto words = spec.value("words", json::object());
-    const auto markers = spec.value("marker_templates", json::object()); // pl {{por}}: as the words "compare"
+    const json &words = part(spec, "words");
+    const json &markers = part(spec, "marker_templates"); // pl {{por}}: as the words "compare"
     // A language as written as its code: an abbreviation of the wiki's (pl "niem", language_names, before
     // codes: pl "ang" is English), a code, a name; else as written (spaces as _)
-    const auto languageNames = spec.value("language_names", json::object());
+    const json &languageNames = part(spec, "language_names");
     // a known language: its code, else empty
     auto known = [&](const std::string &written) -> std::string {
         if (auto it = languageNames.find(written); it != languageNames.end())
@@ -2176,7 +2220,8 @@ std::string etymologyChain(const std::string &text, const json &config, const st
     };
     static const std::set<std::string> chainRelations = {"from", "borrowed", "calque", "compound", "root"};
     static const std::regex refs(R"(<ref[^>/]*/>|<ref[^>]*>[\s\S]*?</ref>)");
-    const std::string clean = text.size() < maxRegexLine ? std::regex_replace(text, refs, " ") : text;
+    const std::string body = withTranscluded(text, part(spec, "transcluded"));
+    const std::string clean = body.size() < maxRegexLine ? std::regex_replace(body, refs, " ") : body;
     std::vector<std::string> items;
     bool chainDone = false;
     // paragraphs: blank lines between them
@@ -2377,10 +2422,22 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                 relationOfWords = m->get<std::string>();
                 continue;
             }
-            auto it = templates.find(t.name);
-            if (it == templates.end())
+            // a template of the configuration, or one of a prefixed name whose rest is the language
+            // (etymology.prefixed_templates: uk {{lang-lt|[[vanduõ]]}}, language lt)
+            const json *found = nullptr;
+            std::string nameLanguage;
+            if (auto it = templates.find(t.name); it != templates.end())
+                found = &*it;
+            else
+                for (const auto &[prefix, ps] : part(spec, "prefixed_templates").items())
+                    if (t.name.starts_with(prefix) && t.name.size() > prefix.size()) {
+                        found = &ps;
+                        nameLanguage = t.name.substr(prefix.size());
+                        break;
+                    }
+            if (!found)
                 continue;
-            const auto &s = *it;
+            const auto &s = *found;
             std::string relation = s.value("relation", std::string("mention"));
             // a mention right after an item, by a comma only ({{cog|nds|root}}, {{m|nds|rood}}): another
             // form of it
@@ -2403,8 +2460,14 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                     v = t.get(s[key].get<std::string>());
                 return v ? trim(std::string(*v)) : std::string();
             };
-            // "lang": "entry", the language of the entry (pl {{odczasownikowy od|boksować}})
-            const std::string lang = s.value("lang", json()) == "entry" ? entryCode : resolve(param("lang"));
+            // "lang": "entry", the language of the entry (pl {{odczasownikowy od|boksować}}); "=code" a
+            // language of the template (ru {{праслав|…}}: "=sla-pro")
+            const json langSpec = s.value("lang", json());
+            const std::string lang = !nameLanguage.empty() ? resolve(nameLanguage)
+                                     : langSpec == "entry" ? entryCode
+                                     : langSpec.is_string() && langSpec.get<std::string>().starts_with('=')
+                                             ? langSpec.get<std::string>().substr(1)
+                                             : resolve(param("lang"));
             std::string form;
             if (s.contains("parts")) {
                 // {{af|en|water|fall}}, {{suffix|en|water|y}} -> water + -y
@@ -2457,6 +2520,11 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                            : anchors.empty()                      ? -1
                                                                   : anchors.back();
             add(relation, lang, form, of);
+            // "then": the relation of the mentions after it (ru {{праслав|*vodā}} {{lang|cu|вода}}: its descendants)
+            if (s.contains("then")) {
+                relationOfWords = s["then"].get<std::string>();
+                wordsHere = true;
+            }
         }
         read(std::string_view(paragraph).substr(std::min(at, paragraph.size()))); // (after its last template)
         chainDone |= chainHere;
@@ -2775,9 +2843,10 @@ private:
             for (const auto &w : split(word, '\n'))
                 if (!trim(w).empty())
                     whole += (whole.empty() ? "" : " ") + trim(w);
-        for (const auto &p : config_.value("etymology", json::object()).value("placeholders", std::vector<std::string>{}))
-            if (p.starts_with('=') ? whole == p.substr(1) : text.find(p) != std::string::npos)
-                return;
+        if (auto spec = config_.find("etymology"); spec != config_.end())
+            for (const auto &p : spec->value("placeholders", std::vector<std::string>{}))
+                if (p.starts_with('=') ? whole == p.substr(1) : text.find(p) != std::string::npos)
+                    return;
         object["etymology_unparsed"] = true;
     }
 
@@ -3457,6 +3526,17 @@ int main(int argc, char *argv[]) {
                 }
                 std::cout << wiki << ": " << added << " etymology language abbreviations from " << page << std::endl;
             }
+            // ru: the etymologies of templates of their own (Шаблон:этимология:вода), their texts
+            // (etymology.transclude: namespace and prefix) as etymology.transcluded
+            if (auto ptr = json::json_pointer("/etymology/transclude"); config.contains(ptr)) {
+                const auto ns = config[ptr].value("namespace", std::string()), prefix = config[ptr].value("prefix", std::string());
+                auto pages = WikiDump::wiktionary(wiki).extractMatching(
+                        [&](const std::string &t) { return t.starts_with(ns + prefix); });
+                for (const auto &[title, body] : pages)
+                    config["etymology"]["transcluded"][title.substr(ns.size())] =
+                            wikilib::markup::strip_comments(withDecodedEntities(body));
+                std::cout << wiki << ": " << pages.size() << " etymology templates of " << ns << prefix << std::endl;
+            }
             if (config.value("skip", false))
                 continue;
             const SectionNames sectionNames("wiktsections.sqlite", wiki);
@@ -3467,7 +3547,7 @@ int main(int argc, char *argv[]) {
                 if (auto mapped = names.mappedCode(written); !mapped.empty())
                     return mapped;
                 return names.code(wiki, wikilib::unicode::to_lower(written), str(config, "/language/lookup"),
-                                  config["language"].value("strip", std::vector<std::string>{}));
+                                  config["language"].value("strip", std::vector<std::string>{}), false);
             };
             auto written = [&](const json &page) {
                 return withOutputText(uniformTree ? uniform::page(page, config, sectionNames, languageCode) : page);

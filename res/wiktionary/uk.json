@@ -1,7 +1,27 @@
 {
   "etymology": {
-    "placeholders": ["{{етимологія|}}"]
+    "placeholders": ["{{етимологія|}}"],
+    "transclude": {"namespace": "Шаблон:", "prefix": "етимологія:"},
+    "language_names": {"psl": "sla-pro", "ine": "ine-pro", "gem": "gem-pro"},
+    "templates": {
+      "праслов": {"relation": "from", "lang": "=sla-pro", "term": 1, "then": "descendant"},
+      "праіндоєвр": {"relation": "from", "lang": "=ine-pro", "term": 1},
+      "прагерм": {"relation": "from", "lang": "=gem-pro", "term": 1},
+      "lang": {"relation": "mention", "lang": 1, "term": 2}
+    },
+    "prefixed_templates": {
+      "lang-": {"relation": "mention", "term": 1}
+    },
+    "words": {
+      "від": "from",
+      "запозичення з": "borrowed",
+      "запозичене з": "borrowed",
+      "калька": "calque",
+      "споріднене з": "compare",
+      "споріднене": "compare",
+      "пор.": "compare"
+    }
   },
   "wiki": "uk",
-  "status": "{{етимологія|}}: an etymology template of no word, none written"
+  "status": "{{етимологія|}}: an etymology template of no word, none written; Шаблон:етимологія:вода the etymology of вода"
 }

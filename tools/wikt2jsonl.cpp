@@ -1969,6 +1969,10 @@ std::string termValue(std::string value) {
     if (value.find("[[") != std::string::npos)
         if (auto l = links(value); !l.empty())
             return l.front();
+    // (without italics and bold, fr {{lien|''aqua''|la}})
+    for (size_t at; (at = value.find("''")) != std::string::npos;)
+        value.erase(at, value.find_first_not_of('\'', at) == std::string::npos ? std::string::npos
+                                                                              : value.find_first_not_of('\'', at) - at);
     return trim(value);
 }
 
@@ -2214,7 +2218,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
         // (summary: of a chain template, which closes no chain, the written one may follow)
         auto add = [&](std::string relation, const std::string &lang, const std::string &form, int of,
                        bool summary = false) {
-            std::string line = relation + " " + lang + " " + form;
+            std::string line = relation + " " + (lang.empty() ? "" : lang + " ") + form;
             if (of >= 0)
                 line += " [" + std::to_string(of + 1) + "]";
             // (once: en {{etymon}} and the chain written after it)
@@ -2295,10 +2299,15 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             // (after the paragraph of the chain only its cognates and descendants: the rest are notes)
             if (chainDone && relation != "compare" && relation != "descendant")
                 continue;
+            // a parameter by its number or its name (fr {{composé de|…|lang=fr}}, {{étyl|la|fr|mot=aqua}})
             auto param = [&](const char *key) -> std::string {
-                if (!s.contains(key) || !s[key].is_number_integer())
+                if (!s.contains(key))
                     return {};
-                auto v = t.get(static_cast<size_t>(s[key].get<int>()));
+                std::optional<std::string_view> v;
+                if (s[key].is_number_integer())
+                    v = t.get(static_cast<size_t>(s[key].get<int>()));
+                else if (s[key].is_string() && s[key] != "entry")
+                    v = t.get(s[key].get<std::string>());
                 return v ? trim(std::string(*v)) : std::string();
             };
             // "lang": "entry", the language of the entry (pl {{odczasownikowy od|boksować}})
@@ -2325,10 +2334,13 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                     form += (form.empty() ? "" : " + ") + part;
             } else {
                 form = termValue(param("term"));
+                if (noTerm(form)) // ("term_also": another parameter of it, fr mot=)
+                    form = termValue(param("term_also"));
                 if (s.value("by_words", false) && !relationOfWords.empty() && !sameItem)
                     relation = relationOfWords;
             }
-            if (lang.empty() || noTerm(form))
+            // (attested: a date, of no language, fr {{date|lang=fr|vers 980}})
+            if ((lang.empty() && relation != "attested") || noTerm(form))
                 continue;
             // a mention after "+" of an item of its language: a part of it, a compound (ks "{{l|fa|سی}} +
             // {{l|fa|و}} + {{l|fa|پنج}}": compound fa سی + و + پنج)

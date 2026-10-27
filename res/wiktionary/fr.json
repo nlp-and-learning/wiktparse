@@ -58,7 +58,30 @@
     "subpage": null
   },
   "etymology": {
-    "placeholders": ["{{ébauche-étym"]
+    "placeholders": ["{{ébauche-étym"],
+    "templates": {
+      "étyl": {"relation": "from", "by_words": true, "lang": 1, "term": 3, "term_also": "mot"},
+      "étylp": {"relation": "from", "by_words": true, "lang": 1, "term": 3, "term_also": "mot"},
+      "lien": {"relation": "mention", "lang": 2, "term": 1},
+      "composé de": {"relation": "compound", "single": "from", "lang": "lang", "parts": 1},
+      "cf": {"relation": "compare", "lang": "lang", "term": 1},
+      "substantivation de": {"relation": "from", "lang": 2, "term": 1},
+      "déverbal": {"relation": "from", "lang": 1, "term": "de"},
+      "date": {"relation": "attested", "term": 1},
+      "siècle": {"relation": "attested", "term": 1}
+    },
+    "words": {
+      "du ": "from",
+      "de l’": "from",
+      "de l'": "from",
+      "dérivé de": "from",
+      "issu de": "from",
+      "emprunté": "borrowed",
+      "apparenté": "compare",
+      "comparez": "compare",
+      "cf.": "compare",
+      "voir": "mention"
+    }
   },
   "status": "draft from samples (doc/wiktionary-profiles.md)"
 }

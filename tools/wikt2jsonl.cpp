@@ -2161,10 +2161,14 @@ std::string etymologyChain(const std::string &text, const json &config, const st
     // A language as written as its code: an abbreviation of the wiki's (pl "niem", language_names, before
     // codes: pl "ang" is English), a code, a name; else as written (spaces as _)
     const auto languageNames = spec.value("language_names", json::object());
-    auto resolve = [&](const std::string &written) -> std::string {
+    // a known language: its code, else empty
+    auto known = [&](const std::string &written) -> std::string {
         if (auto it = languageNames.find(written); it != languageNames.end())
             return it->get<std::string>();
-        if (auto code = languageCode(written); !code.empty())
+        return languageCode(written);
+    };
+    auto resolve = [&](const std::string &written) -> std::string {
+        if (auto code = known(written); !code.empty())
             return code;
         std::string w = written;
         std::ranges::replace(w, ' ', '_');
@@ -2184,32 +2188,86 @@ std::string etymologyChain(const std::string &text, const json &config, const st
         } else
             paragraphs.back() += line + '\n';
     }
+    // etymology.compound_text: an etymology telling a compound or a derivation in words (de
+    // "Determinativkompositum aus den Substantiven [[Zeit]] und [[Geruch]] sowie dem Fugenelement [[-s]]"):
+    // a compound of its links in the language of the entry, but links of its words of grammar ("skip")
+    // and of language names
+    if (const auto ct = spec.value("compound_text", json::object()); !ct.empty() && !entryCode.empty()) {
+        const auto lower = wikilib::unicode::to_lower(clean);
+        bool compound = false;
+        for (const auto &w : ct.value("words", std::vector<std::string>{}))
+            compound |= lower.find(w) != std::string::npos;
+        if (compound && clean.size() < maxRegexLine) {
+            std::set<std::string> skip;
+            for (const auto &w : ct.value("skip", std::vector<std::string>{}))
+                skip.insert(wikilib::unicode::to_lower(w));
+            // ("italic_only": the parts are the links in italics, de ''[[Glanz]]'', not words of grammar)
+            static const std::regex link(R"(\[\[([^\]|:\[#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\])"),
+                    italicLink(R"(''\s*\[\[([^\]|:\[#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]\s*'')");
+            const auto &pattern = ct.value("italic_only", false) ? italicLink : link;
+            std::string form;
+            std::set<std::string> seen;
+            for (std::sregex_iterator it(clean.begin(), clean.end(), pattern), end; it != end; ++it) {
+                const auto part = trim((*it)[1].str());
+                if (part.empty() || skip.contains(wikilib::unicode::to_lower(part)) ||
+                    (!ct.value("italic_only", false) && !known(part).empty()) || !seen.insert(part).second)
+                    continue;
+                form += (form.empty() ? "" : " + ") + part;
+            }
+            if (!form.empty())
+                items.push_back("1. compound " + entryCode + " " + form);
+        }
+    }
     for (const auto &paragraph : paragraphs) {
         bool chainHere = false;
         std::string relationOfWords; // of the last words before a mention, in this sentence
         std::vector<int> anchors;    // the item a bracket of the text is of
+        std::vector<std::string> outerRelations; // the relation of the words before a bracket
+        bool wordsHere = false;                  // words of a relation in the last text read
         int last = -1;               // the last item
         size_t at = 0;
-        auto read = [&](std::string_view between) {
+        // the words of the text before a mention, the brackets, the ends of sentences
+        auto scan = [&](std::string_view between) {
             const auto lower = wikilib::unicode::to_lower(std::string(between));
+            // a word as a whole word (de "zu", not of "zum"): no letter just before or after it
+            auto letter = [](unsigned char c) { return std::isalnum(c) || c >= 0x80; };
+            auto whole = [&](size_t found, const std::string &word) {
+                return (found == 0 || !letter(static_cast<unsigned char>(lower[found - 1])) ||
+                        !letter(static_cast<unsigned char>(word.front()))) &&
+                       (found + word.size() == lower.size() || !letter(static_cast<unsigned char>(lower[found + word.size()])) ||
+                        !letter(static_cast<unsigned char>(word.back())));
+            };
+            const std::string ofWords = relationOfWords; // (before the words of this text)
+            wordsHere = false;
             // the words that end last, of them the longest ("borrowed from", not "from")
             size_t best = std::string::npos, bestEnd = 0, bestSize = 0;
-            for (const auto &[word, relation] : words.items())
-                if (auto found = lower.rfind(word); found != std::string::npos &&
-                                                    (found + word.size() > bestEnd ||
-                                                     (found + word.size() == bestEnd && word.size() > bestSize))) {
+            for (const auto &[word, relation] : words.items()) {
+                size_t found = lower.rfind(word);
+                while (found != std::string::npos && !whole(found, word))
+                    found = found == 0 ? std::string::npos : lower.rfind(word, found - 1);
+                if (found != std::string::npos && (found + word.size() > bestEnd ||
+                                                   (found + word.size() == bestEnd && word.size() > bestSize))) {
                     best = found;
                     bestEnd = found + word.size();
                     bestSize = word.size();
                     relationOfWords = relation.get<std::string>();
+                    wordsHere = true;
                 }
+            }
+            // (a bracket keeps the relation of the words before it: de "(vgl. A (zu B, zu C), D)", D compared)
             for (size_t i = 0; i < between.size(); ++i) {
-                if (between[i] == '(')
+                if (between[i] == '(') {
                     anchors.push_back(last);
-                else if (between[i] == ')' && !anchors.empty())
+                    outerRelations.push_back(i > bestEnd || best == std::string::npos ? relationOfWords : ofWords);
+                } else if (between[i] == ')' && !anchors.empty()) {
                     anchors.pop_back();
-                else if (between[i] == '.' && (i + 1 == between.size() || between[i + 1] == ' ' || between[i + 1] == '\n') &&
-                         (best == std::string::npos || i > best))
+                    if (!outerRelations.empty()) {
+                        if (best == std::string::npos || i > best)
+                            relationOfWords = outerRelations.back();
+                        outerRelations.pop_back();
+                    }
+                } else if (between[i] == '.' && (i + 1 == between.size() || between[i + 1] == ' ' || between[i + 1] == '\n') &&
+                           (best == std::string::npos || i >= bestEnd)) // (not of the words, de "vgl.")
                     relationOfWords.clear(); // the end of a sentence
             }
         };
@@ -2230,6 +2288,41 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             lastRelation = relation;
             lastOf = of;
             chainHere |= !summary && chainRelations.contains(relation) && relation != "root"; // (en {{root}} stands above)
+        };
+        // A descendant is of the item before it; after another descendant with no words of its own a
+        // sibling of it (de "zu Englisch water und Scots wattir": both of Middle English water)
+        auto parentOf = [&] { return !wordsHere && lastRelation == "descendant" ? lastOf : last; };
+        // The text between templates; with etymology.language_links also its forms after a link of a
+        // language name (de "von [[Urwestgermanisch]] ''[[Wiktionary:Urwestgermanisch/watar|*watar]]''")
+        static const std::regex languageLink(R"(\[\[([^\]|:\[]+)\]\]\s*''\s*(\[\[[^\]]*\]\]|[^'\[\]{}]+?)\s*'')");
+        auto read = [&](std::string_view between) {
+            if (!spec.value("language_links", false) || between.size() >= maxRegexLine) {
+                scan(between);
+                return;
+            }
+            const std::string text(between);
+            size_t from = 0;
+            for (std::sregex_iterator it(text.begin(), text.end(), languageLink), end; it != end; ++it) {
+                const auto at = static_cast<size_t>(it->position(0)), length = static_cast<size_t>(it->length(0));
+                scan(std::string_view(text).substr(from, at - from));
+                from = at + length;
+                const auto code = known(trim((*it)[1].str()));
+                const std::string inner = (*it)[2].str();
+                std::string form;
+                if (inner.starts_with("[[")) { // the shown text of the link
+                    const auto bar = inner.find('|');
+                    form = trim(bar == std::string::npos ? inner.substr(2, inner.size() - 4)
+                                                         : inner.substr(bar + 1, inner.size() - bar - 3));
+                } else
+                    form = termValue(inner);
+                const std::string relation = relationOfWords.empty() ? "mention" : relationOfWords;
+                if (code.empty() || noTerm(form) || (chainDone && relation != "compare" && relation != "descendant")) {
+                    scan(std::string_view(text).substr(at, length));
+                    continue;
+                }
+                add(relation, code, form, relation == "descendant" ? parentOf() : anchors.empty() ? -1 : anchors.back());
+            }
+            scan(std::string_view(text).substr(from));
         };
         for (const auto &t : wikilib::templates::find_invocations(paragraph)) {
             const auto between = std::string_view(paragraph).substr(at, t.location.begin.offset - at);
@@ -2360,11 +2453,12 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             // "of": "entry": of the entry, not of the item before (pl {{źródło dla}}: the entry is its source)
             const int of = s.value("of", std::string()) == "entry" ? -1
                            : sameItem                             ? lastOf
-                           : relation == "descendant"             ? last
+                           : relation == "descendant"             ? parentOf()
                            : anchors.empty()                      ? -1
                                                                   : anchors.back();
             add(relation, lang, form, of);
         }
+        read(std::string_view(paragraph).substr(std::min(at, paragraph.size()))); // (after its last template)
         chainDone |= chainHere;
     }
     std::string result;

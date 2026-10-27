@@ -155,7 +155,9 @@ etymologie, w swojej konfiguracji (`etymology` w `res/wiktionary/<wiki>.json`):
 relację szablonu i parametry jego języka i formy, słowa dające relację
 wzmianki (en „from”, „cognate with”; de „von”, „vgl.”), szablon całego
 łańcucha (en `{{etymon|en|:inh|enm:red}}`), szablon jej skrótów języków
-(pl `Szablon:etym/język`: `niem` de, `ang` en), puste szablony braku
+(pl `Szablon:etym/język`: `niem` de, `ang` en), formy po linku z nazwą
+języka (de `[[Urwestgermanisch]] ''…*watar''`), złożenie opisane słowami
+(de „Determinativkompositum aus ''[[Zeit]]'' und ''[[Dauer]]''”), puste szablony braku
 etymologii (en `{{rfe}}`; `=…` cały tekst). Sposób wspólny dla kilku wiki to
 profil z `res/wiktionary/etymology_profiles.json` (`en`: szablony en.wikt,
 przejęte przez si, bn, ja, zh, ms…), który wiki bierze przez

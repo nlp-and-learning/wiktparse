@@ -75,5 +75,42 @@
     "sense": "number-and-gloss",
     "subpage": null
   },
+  "etymology": {
+    "placeholders": ["{{QS Herkunft|fehlt}}"],
+    "language_links": true,
+    "templates": {
+      "Ü": {"relation": "mention", "lang": 1, "term": 2},
+      "Üt": {"relation": "mention", "lang": 1, "term": 2},
+      "Ü-Liste": {"relation": "mention", "lang": 1, "term": 2}
+    },
+    "words": {
+      "von": "from",
+      "aus": "from",
+      "entlehnt": "borrowed",
+      "lehnübersetzung": "calque",
+      "vgl.": "compare",
+      "verwandt mit": "compare",
+      "zu": "descendant"
+    },
+    "language_names": {
+      "Urwestgermanisch": "gmw-pro",
+      "Urgermanisch": "gem-pro",
+      "Urindogermanisch": "ine-pro",
+      "Altfränkisch": "frk",
+      "Altniederländisch": "odt"
+    },
+    "compound_text": {
+      "italic_only": true,
+      "words": ["kompositum", "ableitung", "derivat", "zusammensetzung", "zusammenrückung", "zusammenbildung",
+                "kontamination", "konversion"],
+      "skip": ["Substantiv", "Substantiven", "Substantivs", "Verb", "Verbs", "Verben", "Adjektiv", "Adjektivs",
+               "Adjektiven", "Adverb", "Adverbs", "Fugenelement", "Suffix", "Präfix", "Derivatem", "Derivat",
+               "Kompositum", "Determinativkompositum", "Kopulativkompositum", "Possessivkompositum", "Ableitung",
+               "Derivation", "Konversion", "Zusammenrückung", "Zusammenbildung", "Wortstamm", "Stamm", "Partikel",
+               "Präposition", "Pronomen", "Numerale", "Plural", "Singular", "Infinitiv", "Partizip", "Lehnwort",
+               "Fremdwort", "Lehnübersetzung", "Kurzwort", "Abkürzung", "Morphem", "Wurzel", "Kontamination",
+               "Interfix", "Zirkumfix", "Konfix", "Affix", "Endung", "Diminutiv", "Movierung"]
+    }
+  },
   "status": "draft from samples (doc/wiktionary-profiles.md)"
 }

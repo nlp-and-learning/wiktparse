@@ -156,6 +156,9 @@ a template and the parameters of its language and form, the words that give
 the relation of a mention (en "from", "cognate with"; de "von", "vgl."), a
 template of the whole chain (en `{{etymon|en|:inh|enm:red}}`), a template of
 its abbreviations of languages (pl `Szablon:etym/język`: `niem` de, `ang` en),
+forms after a link of a language name (de `[[Urwestgermanisch]] ''…*watar''`),
+a compound told in words (de "Determinativkompositum aus ''[[Zeit]]'' und
+''[[Dauer]]''"),
 the placeholders of no etymology (en `{{rfe}}`; `=…` the whole text). A way
 shared by several wikis is a profile of `res/wiktionary/etymology_profiles.json`
 (`en`: the templates of en.wikt, taken by si, bn, ja, zh, ms…), which a wiki

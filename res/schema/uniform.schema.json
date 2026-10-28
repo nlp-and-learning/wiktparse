@@ -74,6 +74,10 @@
           "const": true,
           "description": "There is an etymology, not read into etymology_chain (prose, a wiki of no etymology configuration); absent of a placeholder of none (en {{rfe}})"
         },
+        "etymology_prose": {
+          "const": true,
+          "description": "The etymology has prose of 40 words and more besides templates, links and notes (en dog, its guesses), not read into etymology_chain: for a reader of prose (a model)"
+        },
         "entries": {
           "type": "array",
           "items": {"$ref": "#/$defs/entry"}
@@ -128,6 +132,10 @@
         "etymology_unparsed": {
           "const": true,
           "description": "There is an etymology, not read into etymology_chain (prose, a wiki of no etymology configuration); absent of a placeholder of none (en {{rfe}})"
+        },
+        "etymology_prose": {
+          "const": true,
+          "description": "The etymology has prose of 40 words and more besides templates, links and notes (en dog, its guesses), not read into etymology_chain: for a reader of prose (a model)"
         },
         "pronunciation": {
           "type": "string",
@@ -239,8 +247,8 @@
     },
     "etymology_chain": {
       "type": "string",
-      "pattern": "^[0-9]+\\. [a-z]+ [^\\n]+( \\[[0-9]+\\])?(\\n[0-9]+\\. [a-z]+ [^\\n]+( \\[[0-9]+\\])?)*$",
-      "description": "The etymology as a text a program reads, one item a line: \"n. relation language form\", \" [m]\" when the item is of item m (a cognate of it, its descendant), else of the entry; relations from, borrowed, calque, compound (form: parts by \" + \"), root, compare, descendant, doublet, mention, attested; read by the etymology configuration of the wiki"
+      "pattern": "^[0-9]+\\. [a-z]+( [^\\n]+)?(\\n[0-9]+\\. [a-z]+( [^\\n]+)?)*$",
+      "description": "The etymology as a text a program reads, one item a line: \"n. relation language form\", \" [m]\" when the item is of item m (a cognate of it, its descendant), else of the entry, \" ?\" at the end of a guess; relations from, borrowed, calque, compound (form: parts by \" + \"), root, compare, descendant, doublet, mention, attested (a date, no language), uncertain (of the item before it, no language, no form); read by the etymology configuration of the wiki"
     },
     "audio": {
       "type": "array",

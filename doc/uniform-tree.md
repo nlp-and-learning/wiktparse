@@ -148,7 +148,10 @@ the item is of item m (a cognate of it, its descendant), else of the entry
 
 Relations: `from` (inherited or derived), `borrowed`, `calque`, `compound`
 (the form its parts by ` + `: `water + -y`), `root`, `compare` (a cognate),
-`descendant` (of the item before it), `doublet`, `mention`, `attested`. The
+`descendant` (of the item before it), `doublet`, `mention`, `attested` (a
+date, no language), `uncertain` (the origin of the item before it is not
+known: en `{{unc}}`, no language, no form). ` ?` at the end of an item: a
+guess, of a sentence of words of a guess (en "possibly from *(s)kews-"). The
 items without ` [m]` of `from`, `borrowed`, `calque` are the chain, each of
 the one before it. Each wiki says how it writes its etymologies in its
 configuration (`etymology` of `res/wiktionary/<wiki>.json`): the relation of
@@ -164,8 +167,12 @@ shared by several wikis is a profile of `res/wiktionary/etymology_profiles.json`
 (`en`: the templates of en.wikt, taken by si, bn, ja, zh, ms…), which a wiki
 takes by `"etymology": {"profile": "en"}`. After the first paragraph with
 items of the chain only cognates and descendants are read: the rest are
-notes. An etymology of no chain, but a placeholder, is `etymology_unparsed`:
-there is one, not read yet (prose, a wiki of no configuration).
+notes; with words of a guess (`doubt_words`, en "proposal", "possibly") they
+are left out there. An etymology of no chain, but a placeholder, is
+`etymology_unparsed`: there is one, not read yet (prose, a wiki of no
+configuration). `etymology_prose` marks one of 40 words and more besides its
+templates, links and notes, with a chain or not (en *dog*, its guesses): for a
+reader of prose, a model, later.
 
 ## Where things go
 

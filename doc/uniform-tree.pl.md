@@ -149,7 +149,10 @@ inaczej hasła (en *water*):
 Relacje: `from` (odziedziczone lub pochodne), `borrowed`, `calque`,
 `compound` (forma to części przez ` + `: `water + -y`), `root`, `compare`
 (wyraz pokrewny), `descendant` (potomek elementu przed nim), `doublet`,
-`mention`, `attested`. Elementy bez ` [m]` relacji `from`, `borrowed`,
+`mention`, `attested` (data, bez języka), `uncertain` (pochodzenie elementu
+przed nim jest nieznane: en `{{unc}}`, bez języka i formy). ` ?` na końcu
+elementu: hipoteza, ze zdania ze słowami niepewności (en „possibly from
+*(s)kews-”). Elementy bez ` [m]` relacji `from`, `borrowed`,
 `calque` to łańcuch, każdy od poprzedniego. Każda wiki opisuje, jak zapisuje
 etymologie, w swojej konfiguracji (`etymology` w `res/wiktionary/<wiki>.json`):
 relację szablonu i parametry jego języka i formy, słowa dające relację
@@ -162,9 +165,13 @@ etymologii (en `{{rfe}}`; `=…` cały tekst). Sposób wspólny dla kilku wiki t
 profil z `res/wiktionary/etymology_profiles.json` (`en`: szablony en.wikt,
 przejęte przez si, bn, ja, zh, ms…), który wiki bierze przez
 `"etymology": {"profile": "en"}`. Po pierwszym akapicie z elementami łańcucha czytane
-są tylko wyrazy pokrewne i potomkowie: reszta to uwagi. Etymologia bez
-łańcucha, ale nie pusty szablon, ma `etymology_unparsed`: jest, jeszcze
-nieodczytana (proza, wiki bez konfiguracji).
+są tylko wyrazy pokrewne i potomkowie: reszta to uwagi; ze słowami
+niepewności (`doubt_words`, en „proposal”, „possibly”) są tam pomijane.
+Etymologia bez łańcucha, ale nie pusty szablon, ma `etymology_unparsed`: jest,
+jeszcze nieodczytana (proza, wiki bez konfiguracji). `etymology_prose` oznacza
+etymologię z co najmniej 40 słowami poza szablonami, linkami i przypisami, z
+łańcuchem lub bez (en *dog*, jej hipotezy): dla czytającego prozę, modelu,
+później.
 
 ## Co gdzie trafia
 

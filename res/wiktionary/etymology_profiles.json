@@ -47,6 +47,8 @@
         "surf": {"relation": "compound", "lang": 1, "parts": 2},
         "clipping": {"relation": "from", "lang": 1, "term": 2},
         "pseudo-loan": {"relation": "borrowed", "lang": 2, "term": 3},
+        "unc": {"relation": "uncertain"},
+        "unk": {"relation": "uncertain"},
         "suffix": {"relation": "compound", "lang": 1, "parts": 2, "affix": "suffix"},
         "prefix": {"relation": "compound", "lang": 1, "parts": 2, "affix": "prefix"}
       },

@@ -2151,6 +2151,35 @@ json mediaItems(const std::string &text, const json &names = json::array()) {
 // them; a descendant of the item before it. After the first paragraph with items of the chain (from,
 // borrowed, calque, compound) only cognates and descendants: the rest are notes ("The plural housen
 // is from…").
+// The words of a text besides its templates, the targets of its links and its notes (<ref>…</ref>)
+size_t proseWords(const std::string &text) {
+    std::string t = text;
+    if (t.size() < maxRegexLine) {
+        static const std::regex refs(R"(<ref[^>/]*/>|<ref[^>]*>[\s\S]*?</ref>|<[^>]+>)"),
+                link(R"(\[\[(?:[^\]|]*\|)?([^\]]*)\]\])");
+        t = std::regex_replace(std::regex_replace(t, refs, " "), link, "$1");
+    }
+    // templates out, inner ones first
+    for (bool changed = true; changed;) {
+        changed = false;
+        auto all = wikilib::templates::find_invocations(t);
+        for (auto it = all.rbegin(); it != all.rend(); ++it) {
+            t.erase(it->location.begin.offset, it->location.length());
+            changed = true;
+        }
+        if (!changed || t.find("{{") == std::string::npos)
+            break;
+    }
+    size_t words = 0;
+    bool inWord = false;
+    for (unsigned char c : t) {
+        const bool letter = std::isalpha(c) || c >= 0x80;
+        words += letter && !inWord;
+        inWord = letter;
+    }
+    return words;
+}
+
 // The text with the templates of etymology.transcluded as their text (ru "Происходит от
 // {{этимология:вода|да}}": the text of Шаблон:этимология:вода): {{{1}}}, {{{1|…}}} its first parameter,
 // without <noinclude>…</noinclude> and parser functions ({{#if:…}}, {{#switch:…}})
@@ -2285,10 +2314,13 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             };
             const std::string ofWords = relationOfWords; // (before the words of this text)
             wordsHere = false;
-            // words of a guess in the sentence (etymology.doubt_words: en "Another proposal is…")
+            // words of a guess in the sentence (etymology.doubt_words: en "Another proposal is…"), the
+            // last place of one (by the end of the sentence before it below)
+            size_t lastDoubt = std::string::npos;
             for (const auto &w : part(spec, "doubt_words"))
-                if (lower.find(w.get<std::string>()) != std::string::npos)
-                    doubt = true;
+                if (auto at = lower.rfind(w.get<std::string>()); at != std::string::npos)
+                    lastDoubt = lastDoubt == std::string::npos ? at : std::max(lastDoubt, at);
+            size_t lastEnd = std::string::npos; // of a sentence
             // the words that end last, of them the longest ("borrowed from", not "from")
             size_t best = std::string::npos, bestEnd = 0, bestSize = 0;
             for (const auto &[word, relation] : words.items()) {
@@ -2317,20 +2349,32 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                         outerRelations.pop_back();
                     }
                 } else if (between[i] == '.' && (i + 1 == between.size() || between[i + 1] == ' ' || between[i + 1] == '\n') &&
-                           (best == std::string::npos || i >= bestEnd)) { // (not of the words, de "vgl.")
-                    relationOfWords.clear(); // the end of a sentence
-                    doubt = false;
+                           (best == std::string::npos || i < best || i >= bestEnd)) { // (not of the words, de "vgl.")
+                    if (best == std::string::npos || i >= bestEnd)
+                        relationOfWords.clear(); // the end of a sentence (of words after it: theirs)
+                    lastEnd = i;
                 }
             }
+            // a guess: words of one after the last end of a sentence here, or before it (none here)
+            if (lastEnd != std::string::npos)
+                doubt = lastDoubt != std::string::npos && lastDoubt > lastEnd;
+            else if (lastDoubt != std::string::npos)
+                doubt = true;
         };
         std::string lastRelation;
         int lastOf = -1;
         // (summary: of a chain template, which closes no chain, the written one may follow)
         auto add = [&](std::string relation, const std::string &lang, const std::string &form, int of,
                        bool summary = false) {
-            std::string line = relation + " " + (lang.empty() ? "" : lang + " ") + form;
+            std::string line = relation;
+            for (const auto &field : {lang, form}) // (uncertain: neither, attested: no language)
+                if (!field.empty())
+                    line += " " + field;
             if (of >= 0)
                 line += " [" + std::to_string(of + 1) + "]";
+            // " ?": a guess, of a sentence of words of a guess (en "possibly from *(s)kews-")
+            if (doubt && relation != "uncertain")
+                line += " ?";
             // (once: en {{etymon}} and the chain written after it)
             for (size_t i = 0; i < items.size(); ++i)
                 if (items[i].substr(items[i].find(' ') + 1) == line)
@@ -2520,6 +2564,11 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                     relation = relationOfWords;
             }
             // (attested: a date, of no language, fr {{date|lang=fr|vers 980}})
+            // (uncertain: of no language and form, of the item before it, en {{unc}} "of uncertain origin")
+            if (relation == "uncertain") {
+                add(relation, "", "", last);
+                continue;
+            }
             if ((lang.empty() && relation != "attested") || noTerm(form))
                 continue;
             // a mention after "+" of an item of its language: a part of it, a compound (ks "{{l|fa|سی}} +
@@ -2857,6 +2906,10 @@ private:
         const auto text = object.contains("etymology") ? object["etymology"].get<std::string>() : std::string();
         if (trim(text).empty())
             return;
+        // prose: 40 words and more besides templates, links, notes (en dog, its guesses): for a reader
+        // of prose (a model) beside etymology_chain
+        if (proseWords(text) >= 40)
+            object["etymology_prose"] = true;
         if (auto chain = etymologyChain(text, config_, code, languageCode_); !chain.empty()) {
             object["etymology_chain"] = chain;
             return;

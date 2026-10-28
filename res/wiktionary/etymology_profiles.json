@@ -51,6 +51,8 @@
         "prefix": {"relation": "compound", "lang": 1, "parts": 2, "affix": "prefix"}
       },
       "marker_templates": {"etyl": "from"},
+      "doubt_words": ["proposal", "possibly", "perhaps", "probably", "theory", "suggested", "speculat", "hypothes",
+                      "alternatively", "it may", "might be"],
       "words": {"from": "from", "<": "from", "borrowed from": "borrowed", "calque of": "calque", "cognate with": "compare",
                 "cognates": "compare", "akin to": "compare", "compare": "compare", "cf.": "compare",
                 "doublet of": "doublet", "more at": "mention", "see": "mention"}

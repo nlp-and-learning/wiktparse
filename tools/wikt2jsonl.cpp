@@ -2269,6 +2269,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
         std::vector<int> anchors;    // the item a bracket of the text is of
         std::vector<std::string> outerRelations; // the relation of the words before a bracket
         bool wordsHere = false;                  // words of a relation in the last text read
+        bool doubt = false;                      // words of a guess in this sentence
         int last = -1;               // the last item
         size_t at = 0;
         // the words of the text before a mention, the brackets, the ends of sentences
@@ -2284,6 +2285,10 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             };
             const std::string ofWords = relationOfWords; // (before the words of this text)
             wordsHere = false;
+            // words of a guess in the sentence (etymology.doubt_words: en "Another proposal is…")
+            for (const auto &w : part(spec, "doubt_words"))
+                if (lower.find(w.get<std::string>()) != std::string::npos)
+                    doubt = true;
             // the words that end last, of them the longest ("borrowed from", not "from")
             size_t best = std::string::npos, bestEnd = 0, bestSize = 0;
             for (const auto &[word, relation] : words.items()) {
@@ -2312,8 +2317,10 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                         outerRelations.pop_back();
                     }
                 } else if (between[i] == '.' && (i + 1 == between.size() || between[i + 1] == ' ' || between[i + 1] == '\n') &&
-                           (best == std::string::npos || i >= bestEnd)) // (not of the words, de "vgl.")
+                           (best == std::string::npos || i >= bestEnd)) { // (not of the words, de "vgl.")
                     relationOfWords.clear(); // the end of a sentence
+                    doubt = false;
+                }
             }
         };
         std::string lastRelation;
@@ -2361,7 +2368,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                 } else
                     form = termValue(inner);
                 const std::string relation = relationOfWords.empty() ? "mention" : relationOfWords;
-                if (code.empty() || noTerm(form) || (chainDone && relation != "compare" && relation != "descendant")) {
+                if (code.empty() || noTerm(form) || chainDone) { // (after the chain: of the words, notes)
                     scan(std::string_view(text).substr(at, length));
                     continue;
                 }
@@ -2457,8 +2464,11 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                 relation = lastRelation;
             else if (relation == "mention" && !relationOfWords.empty())
                 relation = relationOfWords;
-            // (after the paragraph of the chain only its cognates and descendants: the rest are notes)
-            if (chainDone && relation != "compare" && relation != "descendant")
+            // (after the paragraph of the chain only its cognates and descendants of templates telling so,
+            // en {{cog}}, or another form of one: mentions of the words there are of notes and guesses, en dog
+            // "Possibly a pet-form diminutive with suffix -ga (compare frocga, *picga)")
+            const bool ofTemplate = s.value("relation", std::string("mention")) != "mention";
+            if (chainDone && ((relation != "compare" && relation != "descendant") || !(ofTemplate || sameItem) || doubt))
                 continue;
             // a parameter by its number or its name (fr {{composé de|…|lang=fr}}, {{étyl|la|fr|mot=aqua}})
             auto param = [&](const char *key) -> std::string {

@@ -83,7 +83,8 @@ def export(db, path):
     with open(path, 'w', encoding='utf-8') as f:
         f.write('# Phrases of the etymologies of each wiki and their relation (tools/etymologywords.py):\n'
                 '# from, borrowed, calque, compare, descendant, mention, unrelated, uncertain, guess (a word\n'
-                '# of a guess: possibly), none (a word of no relation, reviewed).\n'
+                '# of a guess: possibly), gloss (the next form a meaning: it "cioè"), none (a word of no\n'
+                '# relation, reviewed).\n'
                 'wiki\tphrase\trelation\n')
         for row in rows:
             f.write('\t'.join(row) + '\n')

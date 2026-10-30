@@ -234,11 +234,12 @@ public:
     // strip: words for "language" that labels may lack (hr "jezik", th "ภาษา")
     // parts: also a whole word of the names of one language (headings; not etymologies, where de "Buch"
     // would be Buch-Pahlavi)
+    // englishNames: also the English names of en.wikt (not of words of prose, ro "pare" would be Pare)
     std::string code(const std::string &wiki, const std::string &name, const std::string &lookup = "",
-                      const std::vector<std::string> &strip = {}, bool parts = true) {
+                      const std::vector<std::string> &strip = {}, bool parts = true, bool englishNames = true) {
         if (!db_ || name.empty())
             return "";
-        auto key = wiki + '\t' + name + '\t' + lookup + (parts ? "" : "\tno parts");
+        auto key = wiki + '\t' + name + '\t' + lookup + (parts ? "" : "\tno parts") + (englishNames ? "" : "\tno English");
         {
             std::shared_lock shared(mutex_); // threads read the cache together
             if (auto it = cache_.find(key); it != cache_.end())
@@ -308,9 +309,9 @@ public:
         }
         // English names of en.wikt (not the wikis' own codes: their names are no English ones);
         // fr "proto-munda": en.wikt "Proto-Munda"
-        if (result.empty())
+        if (result.empty() && englishNames)
             result = find(english.exact, name);
-        if (result.empty())
+        if (result.empty() && englishNames)
             result = find(english.lower, wikilib::unicode::to_lower(name));
         // Names from Lua modules of Wiktionaries in the wiki's language (wiktmodules)
         for (const auto &n : variants)
@@ -1916,7 +1917,8 @@ private:
 namespace uniform {
 
 // A language as written (a code, a name of the wiki) as its canonical code; empty when not known
-using LanguageCode = std::function<std::string(const std::string &)>;
+// prose: a word of the text, a name in the language of the wiki only (no code, no English name)
+using LanguageCode = std::function<std::string(const std::string &, bool prose)>;
 
 std::vector<std::string> textLines(const std::string &text) {
     std::vector<std::string> result;
@@ -2250,7 +2252,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
     };
     const json &spec = part(config, "etymology");
     const json &templates = part(spec, "templates");
-    if (text.empty() || templates.empty())
+    if (text.empty() || (templates.empty() && part(spec, "text_forms").empty() && !spec.value("language_links", false)))
         return {};
     const json &words = part(spec, "words");
     const json &markers = part(spec, "marker_templates"); // pl {{por}}: as the words "compare"
@@ -2258,10 +2260,11 @@ std::string etymologyChain(const std::string &text, const json &config, const st
     // codes: pl "ang" is English), a code, a name; else as written (spaces as _)
     const json &languageNames = part(spec, "language_names");
     // a known language: its code, else empty
-    auto known = [&](const std::string &written) -> std::string {
+    // (prose: a word of the text, a name in the language of the wiki only)
+    auto known = [&](const std::string &written, bool prose = false) -> std::string {
         if (auto it = languageNames.find(written); it != languageNames.end())
             return it->get<std::string>();
-        return languageCode(written);
+        return languageCode(written, prose);
     };
     auto resolve = [&](const std::string &written) -> std::string {
         if (auto code = known(written); !code.empty())
@@ -2417,35 +2420,147 @@ std::string etymologyChain(const std::string &text, const json &config, const st
         // A descendant is of the item before it; after another descendant with no words of its own a
         // sibling of it (de "zu Englisch water und Scots wattir": both of Middle English water)
         auto parentOf = [&] { return !wordsHere && lastRelation == "descendant" ? lastOf : last; };
-        // The text between templates; with etymology.language_links also its forms after a link of a
-        // language name (de "von [[Urwestgermanisch]] ''[[Wiktionary:Urwestgermanisch/watar|*watar]]''")
-        static const std::regex languageLink(R"(\[\[([^\]|:\[]+)\]\]\s*''\s*(\[\[[^\]]*\]\]|[^'\[\]{}]+?)\s*'')");
+        // A mention after "+" of an item of its language: a part of it, a compound (ks "{{l|fa|سی}} +
+        // {{l|fa|و}}": compound fa سی + و; ro "''[[în]]'' + ''[[temei]]''")
+        // (also "+" and a word or two, ro "''a [[vorbi]]'' + sufixul ''[[-areț]]''")
+        auto joinPart = [&](std::string_view between, const std::string &lang, const std::string &form) {
+            const auto joint = trim(std::string(between));
+            if (last < 0 || !joint.starts_with('+') || joint.find_first_of(".,;:()<>\"'[]{}", 1) != std::string::npos ||
+                std::ranges::count(joint, ' ') > 2)
+                return false;
+            auto &item = items[static_cast<size_t>(last)];
+            const auto dot = item.find(". ");
+            const auto afterRelation = item.find(' ', dot + 2);
+            const auto afterLang = item.find(' ', afterRelation + 1);
+            if (afterRelation == std::string::npos || afterLang == std::string::npos ||
+                item.substr(afterRelation + 1, afterLang - afterRelation - 1) != lang || item.find(" [") != std::string::npos ||
+                item.ends_with(" ?"))
+                return false;
+            item = item.substr(0, dot + 2) + "compound" + item.substr(afterRelation) + " + " + form;
+            lastRelation = "compound";
+            chainHere = true;
+            return true;
+        };
+        // The text between templates, and its forms (etymology.text_forms; de etymology.language_links):
+        // a form after a link of a language name (de "von [[Urwestgermanisch]] ''[[…|*watar]]''"), in
+        // italics (ro "latină ''[[velocitas|vēlōcitās]]''"), a link in quotation marks (scn "di
+        // "[[comèrço]]""), a link ("links": lt "<= [[pri-]] + [[gaminti]]"); its language that of the
+        // link, of the word before it ("language_words": ro latină, scn latinu), of a template before it
+        // ("pending", oc {{etil|la|pt}} ''pantex''), else ("default_entry") of the entry
+        // (italics of words and a link, ro ''a [[huli]]'')
+        static const std::regex formPattern(
+                R"re(\[\[([^\]|:\[]+)\]\]\s*''\s*(\[\[[^\]]*\]\]|[^'\[\]{}]+?)\s*''|''\s*((?:\[\[[^\]]*\]\]|[^'\[\]{}])+?)\s*''|"\s*(\[\[[^\]]*\]\])\s*"|(\[\[[^\]:]*\]\]))re");
+        const json &textForms = part(spec, "text_forms");
+        const bool languageLinks = spec.value("language_links", false);
+        std::string pendingLanguage; // of a template before a form (oc {{etil|la|pt}})
+        // a link as its shown text; of italics of words and one link that link (ro ''a [[huli]]'': huli),
+        // of more links the words with the links shown; else the form
+        auto shown = [](const std::string &inner) {
+            static const std::regex link(R"(\[\[([^\]|]*)(?:\|([^\]]*))?\]\])");
+            auto linkText = [](const std::smatch &m) { return trim(m[2].matched ? m[2].str() : m[1].str()); };
+            std::smatch m;
+            if (!std::regex_search(inner, m, link))
+                return termValue(inner);
+            if (std::distance(std::sregex_iterator(inner.begin(), inner.end(), link), std::sregex_iterator()) == 1)
+                return linkText(m);
+            std::string out;
+            size_t from = 0;
+            for (std::sregex_iterator it(inner.begin(), inner.end(), link), end; it != end; ++it) {
+                out += inner.substr(from, static_cast<size_t>(it->position(0)) - from) + linkText(*it);
+                from = static_cast<size_t>(it->position(0) + it->length(0));
+            }
+            return trim(out + inner.substr(from));
+        };
+        // a language name in the language of the wiki, not a word of the letters of a code (ro "din" of
+        // "Din latină", it "da", "che": Chechen, "e": eee) nor an English name (ro "pare": Pare)
+        auto nameOf = [&](const std::string &written) -> std::string {
+            static const std::regex codeLike(R"([A-Za-z]{1,3})");
+            return std::regex_match(written, codeLike) ? std::string() : known(written, true);
+        };
+        bool textItem = false;    // the last item a form of the text
+        std::string textLanguage; // of the last form of the text
         auto readText = [&](std::string_view between) {
-            if (!spec.value("language_links", false) || between.size() >= maxRegexLine) {
+            if ((!languageLinks && textForms.empty()) || between.size() >= maxRegexLine) {
                 scan(between);
                 return;
             }
             const std::string text(between);
             size_t from = 0;
-            for (std::sregex_iterator it(text.begin(), text.end(), languageLink), end; it != end; ++it) {
+            std::string beforeAbbreviation; // the text before a skipped abbreviation (lt "+ [[sangrž.]] [[si-]]")
+            for (std::sregex_iterator it(text.begin(), text.end(), formPattern), end; it != end; ++it) {
                 const auto at = static_cast<size_t>(it->position(0)), length = static_cast<size_t>(it->length(0));
-                scan(std::string_view(text).substr(from, at - from));
+                std::string before = text.substr(from, at - from);
+                scan(before);
                 from = at + length;
-                const auto code = known(trim((*it)[1].str()));
-                const std::string inner = (*it)[2].str();
-                std::string form;
-                if (inner.starts_with("[[")) { // the shown text of the link
-                    const auto bar = inner.find('|');
-                    form = trim(bar == std::string::npos ? inner.substr(2, inner.size() - 4)
-                                                         : inner.substr(bar + 1, inner.size() - bar - 3));
-                } else
-                    form = termValue(inner);
+                if (trim(before).empty() && !beforeAbbreviation.empty())
+                    before = beforeAbbreviation;
+                beforeAbbreviation.clear();
+                std::string code, form;
+                if ((*it)[1].matched) { // [[language]] ''form''
+                    code = known(trim((*it)[1].str()));
+                    form = shown((*it)[2].str());
+                } else if (!textForms.empty()) {
+                    const bool link = (*it)[5].matched;
+                    form = shown((*it)[3].matched ? (*it)[3].str() : (*it)[4].matched ? (*it)[4].str() : (*it)[5].str());
+                    // a link of a language name: the language of the next form (it "dal [[latino]] tardo
+                    // ''[[visualis]]''")
+                    if (link && !nameOf(form).empty()) {
+                        pendingLanguage = nameOf(form);
+                        continue;
+                    }
+                    // a link a form with "links", a link in quotation marks with "quoted" (scn; it quotes
+                    // meanings)
+                    if ((link && !textForms.value("links", false)) || ((*it)[4].matched && !textForms.value("quoted", false))) {
+                        scan(std::string_view(text).substr(at, length));
+                        continue;
+                    }
+                    // "comma_same": a form after a form by a comma only, another form of it (lt "<=
+                    // [[gaminti]], [[gamina]], [[gamino]]": the principal parts of a verb); an abbreviation
+                    // ("[[sangrž.]]"): no form
+                    if ((textItem && textForms.value("comma_same", false) && trim(before) == ",") || form.ends_with('.')) {
+                        if (form.ends_with('.'))
+                            beforeAbbreviation = before;
+                        scan(std::string_view(text).substr(at, length));
+                        continue;
+                    }
+                    // a gloss (words of the relation "gloss": it "cioè "[[angoscia]]""): no form
+                    if (relationOfWords == "gloss") {
+                        relationOfWords.clear();
+                        continue;
+                    }
+                    // the language: of the last language name before it (two words or one), of a template,
+                    // of the entry
+                    if (textForms.value("language_words", false)) {
+                        std::vector<std::string> words;
+                        static const std::regex word(R"([^\s,;:()'"\[\]{}<>=+.]+)");
+                        for (std::sregex_iterator w(before.begin(), before.end(), word), wend; w != wend; ++w)
+                            words.push_back(w->str());
+                        for (size_t i = words.size(); i-- > 0 && code.empty();) {
+                            if (i + 1 < words.size())
+                                code = nameOf(words[i] + " " + words[i + 1]);
+                            if (code.empty())
+                                code = nameOf(words[i]);
+                        }
+                    }
+                    if (code.empty() && !pendingLanguage.empty())
+                        code = pendingLanguage;
+                    // in a chain, of the form before it (oc "Del latin ''elegantia'', de ''elegans''": la)
+                    if (code.empty() && !textLanguage.empty() && chainRelations.contains(relationOfWords))
+                        code = textLanguage;
+                    if (code.empty() && textForms.value("default_entry", false))
+                        code = entryCode;
+                    pendingLanguage.clear();
+                }
                 const std::string relation = relationOfWords.empty() ? "mention" : relationOfWords;
                 if (code.empty() || noTerm(form) || chainDone) { // (after the chain: of the words, notes)
                     scan(std::string_view(text).substr(at, length));
                     continue;
                 }
+                if (joinPart(before, code, form))
+                    continue;
                 add(relation, code, form, relation == "descendant" ? parentOf() : anchors.empty() ? -1 : anchors.back());
+                textItem = true;
+                textLanguage = code;
             }
             scan(std::string_view(text).substr(from));
         };
@@ -2459,6 +2574,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
         for (const auto &t : wikilib::templates::find_invocations(paragraph)) {
             const auto between = std::string_view(paragraph).substr(at, t.location.begin.offset - at);
             read(between);
+            textItem = false;
             at = t.location.end.offset;
             // A template of the chain as pairs of a relation and items (etymology.chain_template: en
             // {{etymon|en|:inh|enm:red<id:color>|…}}, ":inh" by its relations, "enm:red" language:form)
@@ -2522,8 +2638,13 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                         nameLanguage = t.name.substr(prefix.size());
                         break;
                     }
-            if (!found)
+            if (!found) {
+                // "language_templates": a template of a language code with no parameters, the language of
+                // the next form (it "dal {{el}} ''[[Εἱλῶται]]''")
+                if (textForms.value("language_templates", false) && !t.get(size_t{1}) && known(t.name) == t.name)
+                    pendingLanguage = t.name;
                 continue;
+            }
             // "variants": the settings of a value of the first parameter over the template's (es
             // {{etimología|sufijo|arzorn|ioù}}: a compound; {{etimología|la|aqua}}: from)
             json variant;
@@ -2542,6 +2663,8 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             const bool sameItem = relation == "mention" && last >= 0 && trim(std::string(between)) == ",";
             if (sameItem)
                 relation = lastRelation;
+            else if (relation == "mention" && relationOfWords == "gloss")
+                continue;
             else if (relation == "mention" && !relationOfWords.empty())
                 relation = relationOfWords;
             // (after the paragraph of the chain only its cognates and descendants of templates telling so,
@@ -2605,23 +2728,19 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                 add(relation, "", "", last);
                 continue;
             }
+            // "pending": a template of a language whose form follows in the text (oc {{etil|la|pt}} ''pantex''):
+            // the language of the next form, its relation that of the words
+            if (noTerm(form) && !lang.empty() && s.value("pending", false)) {
+                pendingLanguage = lang;
+                relationOfWords = relation;
+                continue;
+            }
             if ((lang.empty() && relation != "attested") || noTerm(form))
                 continue;
             // a mention after "+" of an item of its language: a part of it, a compound (ks "{{l|fa|سی}} +
             // {{l|fa|و}} + {{l|fa|پنج}}": compound fa سی + و + پنج)
-            if (s.value("relation", std::string()) == "mention" && last >= 0 && trim(std::string(between)) == "+") {
-                auto &item = items[static_cast<size_t>(last)];
-                const auto dot = item.find(". ");
-                const auto afterRelation = item.find(' ', dot + 2);
-                const auto afterLang = item.find(' ', afterRelation + 1);
-                if (item.substr(afterRelation + 1, afterLang - afterRelation - 1) == lang &&
-                    item.find(" [") == std::string::npos) {
-                    item = item.substr(0, dot + 2) + "compound" + item.substr(afterRelation) + " + " + form;
-                    lastRelation = "compound";
-                    chainHere = true;
-                    continue;
-                }
-            }
+            if (s.value("relation", std::string()) == "mention" && joinPart(between, lang, form))
+                continue;
             // "of": "entry": of the entry, not of the item before (pl {{źródło dla}}: the entry is its source)
             const int of = s.value("of", std::string()) == "entry" ? -1
                            : sameItem                             ? lastOf
@@ -3657,13 +3776,13 @@ int main(int argc, char *argv[]) {
                 continue;
             const SectionNames sectionNames("wiktsections.sqlite", wiki);
             // A language as written in an etymology (a code, a name of the wiki) as its code, else empty
-            auto languageCode = [&](const std::string &written) -> std::string {
-                if (names.isCode(written))
+            auto languageCode = [&](const std::string &written, bool prose) -> std::string {
+                if (!prose && names.isCode(written))
                     return written;
-                if (auto mapped = names.mappedCode(written); !mapped.empty())
+                if (auto mapped = prose ? std::string() : names.mappedCode(written); !mapped.empty())
                     return mapped;
                 return names.code(wiki, wikilib::unicode::to_lower(written), str(config, "/language/lookup"),
-                                  config["language"].value("strip", std::vector<std::string>{}), false);
+                                  config["language"].value("strip", std::vector<std::string>{}), false, !prose);
             };
             auto written = [&](const json &page) {
                 return withOutputText(uniformTree ? uniform::page(page, config, sectionNames, languageCode) : page);

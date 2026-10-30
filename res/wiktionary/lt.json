@@ -1,6 +1,7 @@
 {
   "etymology": {
-    "placeholders": ["{{etimologija-stub"]
+    "placeholders": ["{{etimologija-stub"],
+    "text_forms": {"links": true, "comma_same": true, "default_entry": true}
   },
   "wiki": "lt",
   "language": {

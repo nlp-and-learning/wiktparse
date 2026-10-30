@@ -1,6 +1,14 @@
 {
   "etymology": {
-    "placeholders": ["{{esbòs-etim"]
+    "placeholders": ["{{esbòs-etim"],
+    "templates": {
+      "etil": {"relation": "from", "lang": 1, "term": 3, "pending": true}
+    },
+    "text_forms": {"language_words": true, "language_templates": true, "default_entry": true},
+    "language_names": {"francés ancian": "fro", "occitan ancian": "pro", "latin vulgar": "la-vul", "latin tardièr": "la-lat",
+                       "latin medieval": "la-med", "grèc ancian": "grc", "germanic": "gem-pro", "francic": "frk",
+                       "protoeslau": "sla-pro", "proto-eslau": "sla-pro", "proto-indoeuropèu": "ine-pro",
+                       "protoindoeuropèu": "ine-pro", "proto-baltoeslau": "ine-bsl-pro"}
   },
   "wiki": "oc",
   "status": "{{esbòs-etim}}: no etymology yet"

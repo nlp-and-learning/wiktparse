@@ -1,7 +1,8 @@
 {
   "wiki": "ro",
   "etymology": {
-    "placeholders": ["Etimologie necunoscută", "{{-etim-lipsă-"]
+    "placeholders": ["Etimologie necunoscută", "{{-etim-lipsă-"],
+    "text_forms": {"language_words": true, "default_entry": true}
   },
   "status": "etymologies of no known origin ('unknown etymology')"
 }

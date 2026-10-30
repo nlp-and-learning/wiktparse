@@ -1,4 +1,11 @@
 {
+  "etymology": {
+    "placeholders": ["{{Etim-link", "{{Noetim"],
+    "templates": {
+      "Vd": {"relation": "mention", "lang": "entry", "term": 1}
+    },
+    "text_forms": {"language_words": true, "language_templates": true, "default_entry": true}
+  },
   "wiki": "it",
   "profile": "B1",
   "language": {

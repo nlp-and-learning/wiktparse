@@ -161,7 +161,12 @@ template of the whole chain (en `{{etymon|en|:inh|enm:red}}`), a template of
 its abbreviations of languages (pl `Szablon:etym/język`: `niem` de, `ang` en),
 forms after a link of a language name (de `[[Urwestgermanisch]] ''…*watar''`),
 a compound told in words (de "Determinativkompositum aus ''[[Zeit]]'' und
-''[[Dauer]]''"),
+''[[Dauer]]''"), forms written in the text with no template (`text_forms`: ro
+"Din latină ''[[aqua]]''", scn "veni dû latinu "[[gallus]]"", lt "<=
+[[gaminti]]"; the language that of the language name in the wiki's language
+just before the form, of a language template, of the form before it in the
+chain, else of the entry; phrases of the relation `gloss`, it "cioè", mark a
+meaning, no form),
 the placeholders of no etymology (en `{{rfe}}`; `=…` the whole text). A way
 shared by several wikis is a profile of `res/wiktionary/etymology_profiles.json`
 (`en`: the templates of en.wikt, taken by si, bn, ja, zh, ms…), which a wiki

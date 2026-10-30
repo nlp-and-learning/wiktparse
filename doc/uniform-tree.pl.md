@@ -160,7 +160,12 @@ wzmianki (en „from”, „cognate with”; de „von”, „vgl.”), szablon 
 łańcucha (en `{{etymon|en|:inh|enm:red}}`), szablon jej skrótów języków
 (pl `Szablon:etym/język`: `niem` de, `ang` en), formy po linku z nazwą
 języka (de `[[Urwestgermanisch]] ''…*watar''`), złożenie opisane słowami
-(de „Determinativkompositum aus ''[[Zeit]]'' und ''[[Dauer]]''”), puste szablony braku
+(de „Determinativkompositum aus ''[[Zeit]]'' und ''[[Dauer]]''”), formy pisane
+w tekście bez szablonu (`text_forms`: ro „Din latină ''[[aqua]]''”, scn „veni dû
+latinu "[[gallus]]"”, lt „<= [[gaminti]]”; język to ten z nazwy języka w języku
+danej wiki tuż przed formą, z szablonu języka, z formy przed nią w łańcuchu,
+w ostatku język wpisu; frazy relacji `gloss`, it „cioè”, oznaczają znaczenie,
+nie formę), puste szablony braku
 etymologii (en `{{rfe}}`; `=…` cały tekst). Sposób wspólny dla kilku wiki to
 profil z `res/wiktionary/etymology_profiles.json` (`en`: szablony en.wikt,
 przejęte przez si, bn, ja, zh, ms…), który wiki bierze przez

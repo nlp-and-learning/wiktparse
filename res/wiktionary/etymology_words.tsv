@@ -1,6 +1,7 @@
 # Phrases of the etymologies of each wiki and their relation (tools/etymologywords.py):
 # from, borrowed, calque, compare, descendant, mention, unrelated, uncertain, guess (a word
-# of a guess: possibly), none (a word of no relation, reviewed).
+# of a guess: possibly), gloss (the next form a meaning: it "cioè"), none (a word of no
+# relation, reviewed).
 wiki	phrase	relation
 *	<	from
 *	←	from
@@ -119,12 +120,19 @@ ia	del	from
 ia	derivate de	from
 id	dari	from
 id	kognat dengan	compare
+it	cioè	gloss
 it	da	from
 it	dal	from
+it	dall'	from
 it	deriva	from
+it	deriva da	from
+it	derivato	from
+it	di	none
+it	e	none
 it	etimologia incerta	uncertain
 it	forse	guess
 it	origine incerta	uncertain
+it	ossia	gloss
 it	probabilmente	guess
 it	vedi	mention
 ja	<	from
@@ -134,7 +142,11 @@ ku	hevreha	compare
 ku	ji	from
 la	a	from
 la	←	from
+lt	----	none
+lt	<=	from
 lt	iš	from
+lt	kilęs iš	from
+lt	plg.	compare
 mg	avy amin'ny	from
 mk	<	from
 mk	од	from
@@ -146,7 +158,16 @@ nl	waarschijnlijk	guess
 nn	frå	from
 no	av	from
 no	fra	from
+oc	a comparar amb	compare
+oc	a partir de	from
+oc	a partir del	from
+oc	amb lo sufix	none
+oc	comparar	compare
+oc	de	from
 oc	del	from
+oc	derivat	from
+oc	manlevat	borrowed
+oc	parent	compare
 pl	<	from
 pl	być może	guess
 pl	kalka z	calque
@@ -168,7 +189,9 @@ pt	do	from
 pt	origem incerta	uncertain
 pt	provavelmente	guess
 pt	talvez	guess
+ro	+	none
 ro	<	from
+ro	compus din	none
 ro	confer	compare
 ro	din	from
 ru	вероятно	guess
@@ -219,8 +242,11 @@ rw	theory	guess
 rw	uncertain origin	uncertain
 rw	unknown origin	uncertain
 rw	unrelated to	unrelated
+scn	dû	from
 scn	forsi	guess
+scn	veni	from
 scn	veni di	from
+scn	veni dû	from
 si	akin to	compare
 si	alternatively	guess
 si	borrowed from	borrowed

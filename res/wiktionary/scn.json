@@ -1,6 +1,10 @@
 {
   "etymology": {
-    "placeholders": ["Nun si sapi d'unni veni"]
+    "placeholders": ["Nun si sapi d'unni veni"],
+    "text_forms": {"language_words": true, "quoted": true, "default_entry": true},
+    "language_names": {"latinu": "la", "grecu": "grc", "grecu anticu": "grc", "francisi": "fr", "spagnolu": "es",
+                       "talianu": "it", "àrabbu": "ar", "catalanu": "ca", "nglisi": "en", "tudiscu": "de",
+                       "pruvinzali": "oc", "nurmannu": "xno", "latinu mediuevali": "la", "francupruvinzali": "frp"}
   },
   "wiki": "scn",
   "status": "\"Nun si sapi d'unni veni\": the origin is not known"

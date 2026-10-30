@@ -69,18 +69,6 @@
       "déverbal": {"relation": "from", "lang": 1, "term": "de"},
       "date": {"relation": "attested", "term": 1},
       "siècle": {"relation": "attested", "term": 1}
-    },
-    "words": {
-      "du ": "from",
-      "de l’": "from",
-      "de l'": "from",
-      "dérivé de": "from",
-      "issu de": "from",
-      "emprunté": "borrowed",
-      "apparenté": "compare",
-      "comparez": "compare",
-      "cf.": "compare",
-      "voir": "mention"
     }
   },
   "status": "draft from samples (doc/wiktionary-profiles.md)"

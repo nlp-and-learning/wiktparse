@@ -8,20 +8,6 @@
       "прагерм": {"relation": "from", "lang": "=gem-pro", "term": 1},
       "lang": {"relation": "mention", "lang": 1, "term": 2},
       "lang2": {"relation": "mention", "lang": 1, "term": 2}
-    },
-    "words": {
-      "от": "from",
-      "из": "from",
-      "далее от": "from",
-      "восходит к": "from",
-      "заимств.": "borrowed",
-      "заимствовано": "borrowed",
-      "калька": "calque",
-      "от корня": "root",
-      "ср.": "compare",
-      "сравнивают": "compare",
-      "родственно": "compare",
-      "родств.": "compare"
     }
   },
   "wiki": "ru",

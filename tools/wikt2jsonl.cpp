@@ -88,6 +88,17 @@ public:
     explicit Configs(const fs::path &dir) : dir_(dir) {
         profiles_ = readJson(dir / "profiles.json").at("profiles");
         etymologyProfiles_ = readJson(dir / "etymology_profiles.json").at("profiles");
+        // The phrases of the etymologies of all wikis (etymology_words.tsv: wiki, phrase, relation):
+        // the words of a relation, of a guess, none (reviewed, of no relation)
+        for (const auto &line : readLines((dir / "etymology_words.tsv").string())) {
+            auto f = split(line, '\t');
+            if (f.size() != 3 || f[0] == "wiki" || f[0].starts_with("#") || f[2] == "none")
+                continue;
+            if (f[2] == "guess")
+                etymologyWords_[f[0]]["doubt_words"].push_back(f[1]);
+            else
+                etymologyWords_[f[0]]["words"][f[1]] = f[2];
+        }
         for (const auto &line : readLines((dir / "wikis.tsv").string())) {
             auto fields = split(line, '\t');
             if (fields.size() < 2 || fields[0] == "wiki")
@@ -119,6 +130,17 @@ public:
             etymology.erase("profile");
             config["etymology"] = std::move(etymology);
         }
+        // (the phrases of all wikis, "*": "<", "←"; then the wiki's own)
+        for (const std::string &key : {std::string("*"), wiki})
+            if (auto it = etymologyWords_.find(key); it != etymologyWords_.end() && config.contains("etymology")) {
+                auto doubt = config["etymology"].value("doubt_words", json::array());
+                mergeInto(config["etymology"], it->second);
+                for (const auto &w : it->second.value("doubt_words", json::array()))
+                    if (!std::ranges::contains(doubt, w))
+                        doubt.push_back(w);
+                if (!doubt.empty())
+                    config["etymology"]["doubt_words"] = doubt;
+            }
         // Other forms of language markers, prepared once: {"language": merged without aliases}
         if (config["language"].contains("also")) {
             json base = config["language"];
@@ -152,6 +174,7 @@ private:
     };
     fs::path dir_;
     json profiles_, etymologyProfiles_;
+    std::map<std::string, json> etymologyWords_; // wiki -> {"words": {…}, "doubt_words": […]}
     std::map<std::string, Wiki> wikis_;
 
     [[nodiscard]] json profile_(const std::string &name) const {
@@ -2299,6 +2322,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
         std::vector<std::string> outerRelations; // the relation of the words before a bracket
         bool wordsHere = false;                  // words of a relation in the last text read
         bool doubt = false;                      // words of a guess in this sentence
+        bool uncertainHere = false;              // words of an uncertain origin in the last text read
         int last = -1;               // the last item
         size_t at = 0;
         // the words of the text before a mention, the brackets, the ends of sentences
@@ -2327,6 +2351,11 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                 size_t found = lower.rfind(word);
                 while (found != std::string::npos && !whole(found, word))
                     found = found == 0 ? std::string::npos : lower.rfind(word, found - 1);
+                // (words of an uncertain origin: an item of their own, en "of uncertain origin")
+                if (relation == "uncertain") {
+                    uncertainHere |= found != std::string::npos;
+                    continue;
+                }
                 if (found != std::string::npos && (found + word.size() > bestEnd ||
                                                    (found + word.size() == bestEnd && word.size() > bestSize))) {
                     best = found;
@@ -2391,7 +2420,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
         // The text between templates; with etymology.language_links also its forms after a link of a
         // language name (de "von [[Urwestgermanisch]] ''[[Wiktionary:Urwestgermanisch/watar|*watar]]''")
         static const std::regex languageLink(R"(\[\[([^\]|:\[]+)\]\]\s*''\s*(\[\[[^\]]*\]\]|[^'\[\]{}]+?)\s*'')");
-        auto read = [&](std::string_view between) {
+        auto readText = [&](std::string_view between) {
             if (!spec.value("language_links", false) || between.size() >= maxRegexLine) {
                 scan(between);
                 return;
@@ -2419,6 +2448,13 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                 add(relation, code, form, relation == "descendant" ? parentOf() : anchors.empty() ? -1 : anchors.back());
             }
             scan(std::string_view(text).substr(from));
+        };
+        // the text, and an item uncertain of the item before it when its words tell so ("of uncertain origin")
+        auto read = [&](std::string_view between) {
+            readText(between);
+            if (uncertainHere && !chainDone)
+                add("uncertain", "", "", last);
+            uncertainHere = false;
         };
         for (const auto &t : wikilib::templates::find_invocations(paragraph)) {
             const auto between = std::string_view(paragraph).substr(at, t.location.begin.offset - at);

@@ -151,13 +151,6 @@
     "marker_templates": {
       "por": "compare",
       "zob": "mention"
-    },
-    "words": {
-      "od": "from",
-      "z ": "from",
-      "kalka z": "calque",
-      "por.": "compare",
-      "zob.": "mention"
     }
   },
   "status": "draft from samples (doc/wiktionary-profiles.md)"

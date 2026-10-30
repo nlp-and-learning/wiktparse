@@ -1,5 +1,5 @@
 {
-  "comment": "Ways of writing etymologies shared by several Wiktionaries; a wiki takes one by \"etymology\": {\"profile\": \"en\"} in its configuration, its own settings over it (doc/uniform-tree.md, Etymology chain). en: the templates of en.wikt, copied by many (si, bn, ja, zh, ms…).",
+  "comment": "Ways of writing etymologies shared by several Wiktionaries; a wiki takes one by \"etymology\": {\"profile\": \"en\"} in its configuration, its own settings over it (doc/uniform-tree.md, Etymology chain). en: the templates of en.wikt, copied by many (si, bn, ja, zh, ms…). The words of relations of each wiki are in etymology_words.tsv.",
   "profiles": {
     "en": {
       "placeholders": ["{{rfe", "{{etystub", "{{unk|", "{{unk}}"],
@@ -17,6 +17,7 @@
         "der+": {"relation": "from", "lang": 2, "term": 3},
         "der-lite": {"relation": "from", "lang": 2, "term": 3},
         "uder": {"relation": "from", "lang": 2, "term": 3},
+        "from-": {"relation": "from", "lang": 2, "term": 3},
         "bor": {"relation": "borrowed", "lang": 2, "term": 3},
         "bor+": {"relation": "borrowed", "lang": 2, "term": 3},
         "lbor": {"relation": "borrowed", "lang": 2, "term": 3},
@@ -52,12 +53,7 @@
         "suffix": {"relation": "compound", "lang": 1, "parts": 2, "affix": "suffix"},
         "prefix": {"relation": "compound", "lang": 1, "parts": 2, "affix": "prefix"}
       },
-      "marker_templates": {"etyl": "from"},
-      "doubt_words": ["proposal", "possibly", "perhaps", "probably", "theory", "suggested", "speculat", "hypothes",
-                      "alternatively", "it may", "might be"],
-      "words": {"from": "from", "<": "from", "borrowed from": "borrowed", "calque of": "calque", "cognate with": "compare",
-                "cognates": "compare", "akin to": "compare", "compare": "compare", "cf.": "compare",
-                "doublet of": "doublet", "more at": "mention", "see": "mention"}
+      "marker_templates": {"etyl": "from"}
     }
   }
 }

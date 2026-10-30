@@ -1,0 +1,308 @@
+# Phrases of the etymologies of each wiki and their relation (tools/etymologywords.py):
+# from, borrowed, calque, compare, descendant, mention, unrelated, uncertain, guess (a word
+# of a guess: possibly), none (a word of no relation, reviewed).
+wiki	phrase	relation
+*	<	from
+*	←	from
+bn	থেকে	from
+ckb	لە	from
+co	vene da	from
+cs	od	from
+cs	odvozeno	from
+cs	pravděpodobně	guess
+cs	z	from
+cy	cymharer	compare
+da	fra	from
+da	gennem	from
+da	sandsynligvis	guess
+de	aus	from
+de	entlehnt	borrowed
+de	herkunft ungeklärt	uncertain
+de	herkunft unklar	uncertain
+de	lehnübersetzung	calque
+de	möglicherweise	guess
+de	nicht verwandt	unrelated
+de	unklarer herkunft	uncertain
+de	vermutlich	guess
+de	verwandt mit	compare
+de	vgl.	compare
+de	von	from
+de	wahrscheinlich	guess
+de	wohl	guess
+de	zu	descendant
+el	<	from
+el	από	from
+en	akin to	compare
+en	alternatively	guess
+en	borrowed from	borrowed
+en	calque of	calque
+en	cf.	compare
+en	cognate with	compare
+en	cognates	compare
+en	colloquial form of	from
+en	compare	compare
+en	doublet of	doublet
+en	from	from
+en	hypothes	guess
+en	it may	guess
+en	might be	guess
+en	more at	mention
+en	not cognate with	unrelated
+en	not related to	unrelated
+en	origin uncertain	uncertain
+en	origin unknown	uncertain
+en	perhaps	guess
+en	possibly	guess
+en	probably	guess
+en	proposal	guess
+en	see	mention
+en	speculat	guess
+en	suggested	guess
+en	theory	guess
+en	uncertain origin	uncertain
+en	unknown origin	uncertain
+en	unrelated to	unrelated
+es	cognado	compare
+es	compárense	compare
+es	compárese	compare
+es	de la	from
+es	del	from
+es	en última instancia	from
+es	origen desconocido	uncertain
+es	origen incierto	uncertain
+es	posiblemente	guess
+es	probablemente	guess
+es	quizá	guess
+es	véase	mention
+es	y esta	from
+es	y este	from
+et	kaudu	from
+et	sõnast	from
+fa	از	from
+fr	apparenté	compare
+fr	cf.	compare
+fr	comparez	compare
+fr	de l'	from
+fr	de l’	from
+fr	du	from
+fr	dérivé de	from
+fr	emprunté	borrowed
+fr	issu de	from
+fr	origine incertaine	uncertain
+fr	origine inconnue	uncertain
+fr	origine obscure	uncertain
+fr	peut-être	guess
+fr	probablement	guess
+fr	sans rapport avec	unrelated
+fr	voir	mention
+he	כנראה	guess
+he	מן	from
+hif	se	from
+hif	se aais hae	from
+hu	vö.	compare
+hy	հմմտ	compare
+ia	del	from
+id	dari	from
+id	kognat dengan	compare
+it	dal	from
+it	deriva	from
+it	etimologia incerta	uncertain
+it	forse	guess
+it	origine incerta	uncertain
+it	probabilmente	guess
+it	vedi	mention
+ja	<	from
+km	មកពីពាក្យ	from
+ks	<	from
+ku	hevreha	compare
+ku	ji	from
+la	a	from
+la	←	from
+lt	iš	from
+mg	avy amin'ny	from
+mk	<	from
+mk	од	from
+ms	daripada	from
+nl	afgeleid van	from
+nl	herkomst onzeker	uncertain
+nl	van	from
+nl	waarschijnlijk	guess
+nn	frå	from
+no	av	from
+no	fra	from
+oc	del	from
+pl	<	from
+pl	być może	guess
+pl	kalka z	calque
+pl	nie jest spokrewnione	unrelated
+pl	niejasnego pochodzenia	uncertain
+pl	niespokrewnione z	unrelated
+pl	od	from
+pl	pochodzenie niejasne	uncertain
+pl	pochodzenie nieznane	uncertain
+pl	por.	compare
+pl	prawdopodobnie	guess
+pl	przypuszczalnie	guess
+pl	spokrewnione z	compare
+pl	z	from
+pl	zapewne	guess
+pl	zob.	mention
+pl	źródłosłów dla	descendant
+pt	do	from
+pt	origem incerta	uncertain
+pt	provavelmente	guess
+pt	talvez	guess
+ro	<	from
+ro	din	from
+ru	вероятно	guess
+ru	возможно	guess
+ru	восходит к	from
+ru	далее от	from
+ru	заимств.	borrowed
+ru	заимствовано	borrowed
+ru	из	from
+ru	калька	calque
+ru	неясного происхождения	uncertain
+ru	от	from
+ru	от корня	root
+ru	предположительно	guess
+ru	происходит от	from
+ru	происхождение неясно	uncertain
+ru	родств.	compare
+ru	родственно	compare
+ru	ср.	compare
+ru	сравнивают	compare
+rw	akin to	compare
+rw	alternatively	guess
+rw	borrowed from	borrowed
+rw	calque of	calque
+rw	cf.	compare
+rw	cognate with	compare
+rw	cognates	compare
+rw	colloquial form of	from
+rw	compare	compare
+rw	doublet of	doublet
+rw	from	from
+rw	hypothes	guess
+rw	it may	guess
+rw	might be	guess
+rw	more at	mention
+rw	not cognate with	unrelated
+rw	not related to	unrelated
+rw	origin uncertain	uncertain
+rw	origin unknown	uncertain
+rw	perhaps	guess
+rw	possibly	guess
+rw	probably	guess
+rw	proposal	guess
+rw	see	mention
+rw	speculat	guess
+rw	suggested	guess
+rw	theory	guess
+rw	uncertain origin	uncertain
+rw	unknown origin	uncertain
+rw	unrelated to	unrelated
+scn	veni di	from
+si	akin to	compare
+si	alternatively	guess
+si	borrowed from	borrowed
+si	calque of	calque
+si	cf.	compare
+si	cognate with	compare
+si	cognates	compare
+si	colloquial form of	from
+si	compare	compare
+si	doublet of	doublet
+si	from	from
+si	hypothes	guess
+si	it may	guess
+si	might be	guess
+si	more at	mention
+si	not cognate with	unrelated
+si	not related to	unrelated
+si	origin uncertain	uncertain
+si	origin unknown	uncertain
+si	perhaps	guess
+si	possibly	guess
+si	probably	guess
+si	proposal	guess
+si	see	mention
+si	speculat	guess
+si	suggested	guess
+si	theory	guess
+si	uncertain origin	uncertain
+si	unknown origin	uncertain
+si	unrelated to	unrelated
+simple	akin to	compare
+simple	alternatively	guess
+simple	borrowed from	borrowed
+simple	calque of	calque
+simple	cf.	compare
+simple	cognate with	compare
+simple	cognates	compare
+simple	colloquial form of	from
+simple	compare	compare
+simple	doublet of	doublet
+simple	from	from
+simple	hypothes	guess
+simple	it may	guess
+simple	might be	guess
+simple	more at	mention
+simple	not cognate with	unrelated
+simple	not related to	unrelated
+simple	origin uncertain	uncertain
+simple	origin unknown	uncertain
+simple	perhaps	guess
+simple	possibly	guess
+simple	probably	guess
+simple	proposal	guess
+simple	see	mention
+simple	speculat	guess
+simple	suggested	guess
+simple	theory	guess
+simple	uncertain origin	uncertain
+simple	unknown origin	uncertain
+simple	unrelated to	unrelated
+sk	pochádza	from
+sk	porovnaj	compare
+sk	z	from
+sr	akin to	compare
+sr	alternatively	guess
+sr	borrowed from	borrowed
+sr	calque of	calque
+sr	cf.	compare
+sr	cognate with	compare
+sr	cognates	compare
+sr	colloquial form of	from
+sr	compare	compare
+sr	doublet of	doublet
+sr	from	from
+sr	hypothes	guess
+sr	it may	guess
+sr	might be	guess
+sr	more at	mention
+sr	not cognate with	unrelated
+sr	not related to	unrelated
+sr	origin uncertain	uncertain
+sr	origin unknown	uncertain
+sr	perhaps	guess
+sr	possibly	guess
+sr	probably	guess
+sr	proposal	guess
+sr	see	mention
+sr	speculat	guess
+sr	suggested	guess
+sr	theory	guess
+sr	uncertain origin	uncertain
+sr	unknown origin	uncertain
+sr	unrelated to	unrelated
+uk	від	from
+uk	запозичене з	borrowed
+uk	запозичення з	borrowed
+uk	калька	calque
+uk	можливо	guess
+uk	пор.	compare
+uk	походження неясне	uncertain
+uk	споріднене	compare
+uk	споріднене з	compare
+uk	імовірно	guess

@@ -65,16 +65,6 @@
       "etim": {"relation": "from", "lang": 1, "term": 2},
       "l+": {"relation": "mention", "lang": 1, "term": 2},
       "año de documentación": {"relation": "attested", "term": 1}
-    },
-    "words": {
-      "del ": "from",
-      "de la ": "from",
-      "y este": "from",
-      "y esta": "from",
-      "compárese": "compare",
-      "compárense": "compare",
-      "cognado": "compare",
-      "véase": "mention"
     }
   },
   "status": "draft from samples (doc/wiktionary-profiles.md)"

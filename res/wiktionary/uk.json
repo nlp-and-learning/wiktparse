@@ -11,15 +11,6 @@
     },
     "prefixed_templates": {
       "lang-": {"relation": "mention", "term": 1}
-    },
-    "words": {
-      "від": "from",
-      "запозичення з": "borrowed",
-      "запозичене з": "borrowed",
-      "калька": "calque",
-      "споріднене з": "compare",
-      "споріднене": "compare",
-      "пор.": "compare"
     }
   },
   "wiki": "uk",

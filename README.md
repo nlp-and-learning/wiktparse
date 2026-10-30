@@ -96,7 +96,8 @@ dump_dir = ~/dump
   pages in the uniform tree instead (`doc/uniform-tree.md`, schema
   `res/schema/uniform.schema.json`): languages, entries by part of speech
   (with the group, etymology and pronunciation they belong to), senses with
-  their examples, translations and relations (with sense ids) under their entry.
+  their examples, translations and relations (with sense ids) under their entry;
+  `tools/validate_jsonl.py --uniform <dir>` checks it.
 - `wiktbrowse [file.jsonl | file.jsonl.bz2]` – browser of JSONL files (wikt2jsonl
   output, also any JSONL such as wiktNeeded), a separate project in `browser/`
   (Qt6 and qcodeedit: the sibling `../qcodeedit` when present, otherwise
@@ -144,6 +145,13 @@ dump_dir = ~/dump
   of `wikt2jsonl --uniform`), most first, with examples of their parameters,
   marked when the wiki's configuration has them, and the words between them:
   to write the `etymology` configuration of the wiki.
+- `tools/etymologywords.py [-i uniform10] [-o etymology_words.sqlite] [--min 2] [wiki...]` –
+  the words of description of the etymologies of each wiki (their text without
+  templates, links, italics, quotations: "From", "cognate with", "von", "od"),
+  phrases of one to three words, into SQLite with the relation known to
+  `res/wiktionary/etymology_words.tsv`; the others get a relation by hand and
+  `--export res/wiktionary/etymology_words.tsv` writes them, the phrases of
+  the relations of all wikis that `wikt2jsonl` reads (`*`: of all wikis).
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

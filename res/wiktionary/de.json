@@ -83,15 +83,6 @@
       "Üt": {"relation": "mention", "lang": 1, "term": 2},
       "Ü-Liste": {"relation": "mention", "lang": 1, "term": 2}
     },
-    "words": {
-      "von": "from",
-      "aus": "from",
-      "entlehnt": "borrowed",
-      "lehnübersetzung": "calque",
-      "vgl.": "compare",
-      "verwandt mit": "compare",
-      "zu": "descendant"
-    },
     "language_names": {
       "Urwestgermanisch": "gmw-pro",
       "Urgermanisch": "gem-pro",

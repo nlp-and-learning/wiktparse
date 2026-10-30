@@ -152,17 +152,24 @@ struct Count {
     }
 };
 
+// A string field, empty when missing or null (the uniform tree: "pos": null of an entry of no part of
+// speech)
+std::string field(const json &o, const char *key) {
+    const auto it = o.find(key);
+    return it != o.end() && it->is_string() ? it->get<std::string>() : std::string();
+}
+
 // The senses of a part of speech: its own, and those of its Definitions children (pl-like)
 void collectSenses(const json &node, std::vector<defglos::Item> &defs) {
     if (auto it = node.find("senses"); it != node.end())
         for (const auto &s : *it)
-            defs.push_back({s.value("id", ""), plainText(s.value("text", ""))});
+            defs.push_back({field(s, "id"), plainText(field(s, "text"))});
     // (and of a part of speech of the same name below it: en {{en-verb}} under ===Verb=== of
     // wikt2jsonl before 2026-10-25)
     if (auto it = node.find("children"); it != node.end())
         for (const auto &c : *it)
-            if (c.value("section", "") == "Definitions" ||
-                (c.value("section", "") == node.value("section", "") && c.contains("senses")))
+            if (field(c, "section") == "Definitions" ||
+                (field(c, "section") == field(node, "section") && c.contains("senses")))
                 collectSenses(c, defs);
 }
 
@@ -244,7 +251,7 @@ void linkEntry(defglos::Entry &entry, const std::vector<json *> &translations, C
     std::map<std::string, size_t> glossIndex;
     for (json *list : translations)
         for (const auto &t : *list)
-            if (t.contains("gloss") && !t.contains("sense"))
+            if (!field(t, "gloss").empty() && !t.contains("sense"))
                 if (const std::string g = t["gloss"].get<std::string>(); !glossIndex.contains(g)) {
                     glossIndex[g] = entry.glosses.size();
                     entry.glosses.push_back({std::to_string(entry.glosses.size() + 1), plainText(g)});
@@ -297,7 +304,7 @@ void linkEntry(defglos::Entry &entry, const std::vector<json *> &translations, C
         count.linked += !r.ids.empty();
     for (json *list : translations)
         for (auto &t : *list) {
-            if (!t.contains("gloss") || t.contains("sense"))
+            if (field(t, "gloss").empty() || t.contains("sense"))
                 continue;
             ++count.translations;
             const auto &r = results[glossIndex[t["gloss"].get<std::string>()]];
@@ -323,13 +330,13 @@ void linkNode(json &node, const std::string &title, Count &count, const std::str
         return;
     std::vector<json *> tables;
     for (auto &c : node["children"])
-        if (c.value("section", "") == "Translations" && c.contains("translations"))
+        if (field(c, "section") == "Translations" && c.contains("translations"))
             tables.push_back(&c["translations"]);
     if (tables.empty())
         return;
     defglos::Entry entry;
     entry.title = title;
-    entry.pos = node.value("section", "");
+    entry.pos = field(node, "section");
     collectSenses(node, entry.defs);
     linkEntry(entry, tables, count, [&](const std::string &gloss) -> const Extra * {
         auto it = extras.byPath.find(extraKey(title, language, path, gloss));
@@ -348,9 +355,9 @@ void linkUniform(json &language, const std::string &title, Count &count, const s
             continue;
         defglos::Entry entry;
         entry.title = title;
-        entry.pos = e.value("pos", "");
+        entry.pos = field(e, "pos");
         for (const auto &s : e["senses"])
-            entry.defs.push_back({s.value("id", ""), plainText(s.value("text", ""))});
+            entry.defs.push_back({field(s, "id"), plainText(field(s, "text"))});
         // (a link of the part of speech and gloss whose ids are all senses of this entry; of a later
         // file first, as the later one wins of the same path)
         linkEntry(entry, {&e["translations"]}, count, [&](const std::string &gloss) -> const Extra * {
@@ -376,6 +383,7 @@ int main(int argc, char *argv[]) {
     size_t threads = 16;
     std::vector<std::string> only;
     std::vector<fs::path> extraFiles;
+    bool force = false;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "-i" && i + 1 < argc)
@@ -386,11 +394,15 @@ int main(int argc, char *argv[]) {
             threads = std::max(1, std::stoi(argv[++i]));
         else if (arg == "--extra" && i + 1 < argc)
             extraFiles.emplace_back(argv[++i]);
+        else if (arg == "--force")
+            force = true;
         else if (arg == "-h" || arg == "--help") {
-            std::cout << "usage: wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [--extra glossembed-en.tsv]... [wiki...]\n"
+            std::cout << "usage: wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [--extra glossembed-en.tsv]... [--force] [wiki...]\n"
                          "       input: the tree of headings or the uniform tree (wikt2jsonl --uniform)\n"
                          "       --extra: links by embeddings or LLMs (glossembed.py --apply, glossllm.py), the accepted\n"
-                         "       ones; for the uniform tree their TSV by part of speech (glossrekey.py)\n";
+                         "       ones; for the uniform tree their TSV by part of speech (glossrekey.py)\n"
+                         "       a wiki whose output is complete (its .idx ends with EOF=) and newer than its input is\n"
+                         "       left as it is; --force: all again (after a change of the --extra files)\n";
             return 0;
         } else
             only.push_back(arg);
@@ -409,11 +421,45 @@ int main(int argc, char *argv[]) {
         if (files.empty())
             throw std::runtime_error("no <wiki>.jsonl.zst in " + input.string());
         fs::create_directories(output);
+        // The rows of stats.tsv of a run before, by wiki: of the wikis left as they are
+        std::map<std::string, std::string> statsBefore;
+        {
+            std::ifstream in(output / "stats.tsv");
+            for (std::string line; std::getline(in, line);)
+                if (auto tab = line.find('\t'); tab != std::string::npos && !line.starts_with("wiki\t"))
+                    statsBefore[line.substr(0, tab)] = line;
+        }
+        // A wiki done before: its index ends with EOF=<size> (written when it is closed), and it is not
+        // older than its input (of the last bytes only: en's index is of some 180 MB)
+        auto complete = [&](const std::string &wiki, const fs::path &in) {
+            const fs::path idx = output / (wiki + ".jsonl.idx"), zst = output / (wiki + ".jsonl.zst");
+            std::error_code error;
+            if (!fs::exists(zst) || fs::last_write_time(zst, error) < fs::last_write_time(in, error))
+                return false;
+            std::ifstream index(idx, std::ios::binary | std::ios::ate);
+            if (!index)
+                return false;
+            const auto size = static_cast<std::streamoff>(index.tellg());
+            const auto take = std::min<std::streamoff>(size, 256);
+            std::string tail(static_cast<size_t>(take), '\0');
+            index.seekg(size - take);
+            index.read(tail.data(), take);
+            while (!tail.empty() && (tail.back() == '\n' || tail.back() == '\r'))
+                tail.pop_back();
+            const auto lineStart = tail.rfind('\n');
+            return tail.substr(lineStart == std::string::npos ? 0 : lineStart + 1).starts_with("EOF=");
+        };
         std::ofstream stats(output / "stats.tsv");
         stats << "wiki\tentries\tglosses\tlinked\ttranslations\twith_sense\n";
         for (const auto &[wiki, path] : files) {
             if (!only.empty() && !std::ranges::contains(only, wiki))
                 continue;
+            if (!force && complete(wiki, path)) {
+                if (statsBefore.contains(wiki))
+                    stats << statsBefore[wiki] << '\n';
+                std::cout << wiki << ": done before, left as it is (--force: again)" << std::endl;
+                continue;
+            }
             const auto wikiStarted = std::chrono::steady_clock::now();
             BlockReader reader(path);
             // A wiki without table glosses is linked as it is (no decoding, encoding)

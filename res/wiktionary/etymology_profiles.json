@@ -18,6 +18,8 @@
         "der-lite": {"relation": "from", "lang": 2, "term": 3},
         "uder": {"relation": "from", "lang": 2, "term": 3},
         "from-": {"relation": "from", "lang": 2, "term": 3},
+        "from": {"relation": "from", "lang": 2, "term": 3},
+        "term/t": {"relation": "mention", "lang": 1, "term": 2},
         "bor": {"relation": "borrowed", "lang": 2, "term": 3},
         "bor+": {"relation": "borrowed", "lang": 2, "term": 3},
         "lbor": {"relation": "borrowed", "lang": 2, "term": 3},

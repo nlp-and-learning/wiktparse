@@ -4,7 +4,11 @@
 wiki	phrase	relation
 *	<	from
 *	←	from
+af	van	from
+bn	আগত	from
 bn	থেকে	from
+bn	থেকে আগত	from
+br	diwar	from
 ckb	لە	from
 co	vene da	from
 cs	od	from
@@ -12,6 +16,8 @@ cs	odvozeno	from
 cs	pravděpodobně	guess
 cs	z	from
 cy	cymharer	compare
+cy	o'r	from
+da	af	from
 da	fra	from
 da	gennem	from
 da	sandsynligvis	guess
@@ -41,6 +47,7 @@ en	cognate with	compare
 en	cognates	compare
 en	colloquial form of	from
 en	compare	compare
+en	derived from	from
 en	doublet of	doublet
 en	from	from
 en	hypothes	guess
@@ -55,6 +62,7 @@ en	perhaps	guess
 en	possibly	guess
 en	probably	guess
 en	proposal	guess
+en	related to	compare
 en	see	mention
 en	speculat	guess
 en	suggested	guess
@@ -77,6 +85,7 @@ es	véase	mention
 es	y esta	from
 es	y este	from
 et	kaudu	from
+et	sõnadest	from
 et	sõnast	from
 fa	از	from
 fr	apparenté	compare
@@ -95,15 +104,22 @@ fr	peut-être	guess
 fr	probablement	guess
 fr	sans rapport avec	unrelated
 fr	voir	mention
+ga	ón	from
+he	השוו	compare
 he	כנראה	guess
 he	מן	from
 hif	se	from
 hif	se aais hae	from
+hu	lásd	mention
 hu	vö.	compare
 hy	հմմտ	compare
+hy	հմմտ.	compare
+hy	տե՛ս	mention
 ia	del	from
+ia	derivate de	from
 id	dari	from
 id	kognat dengan	compare
+it	da	from
 it	dal	from
 it	deriva	from
 it	etimologia incerta	uncertain
@@ -153,6 +169,7 @@ pt	origem incerta	uncertain
 pt	provavelmente	guess
 pt	talvez	guess
 ro	<	from
+ro	confer	compare
 ro	din	from
 ru	вероятно	guess
 ru	возможно	guess
@@ -202,6 +219,7 @@ rw	theory	guess
 rw	uncertain origin	uncertain
 rw	unknown origin	uncertain
 rw	unrelated to	unrelated
+scn	forsi	guess
 scn	veni di	from
 si	akin to	compare
 si	alternatively	guess
@@ -212,6 +230,7 @@ si	cognate with	compare
 si	cognates	compare
 si	colloquial form of	from
 si	compare	compare
+si	derived from	from
 si	doublet of	doublet
 si	from	from
 si	hypothes	guess
@@ -226,6 +245,7 @@ si	perhaps	guess
 si	possibly	guess
 si	probably	guess
 si	proposal	guess
+si	related to	compare
 si	see	mention
 si	speculat	guess
 si	suggested	guess
@@ -266,6 +286,7 @@ simple	unrelated to	unrelated
 sk	pochádza	from
 sk	porovnaj	compare
 sk	z	from
+sl	iz	from
 sr	akin to	compare
 sr	alternatively	guess
 sr	borrowed from	borrowed
@@ -296,6 +317,10 @@ sr	theory	guess
 sr	uncertain origin	uncertain
 sr	unknown origin	uncertain
 sr	unrelated to	unrelated
+th	จาก	from
+th	ร่วมเชื้อสายกับ	compare
+th	เทียบ	compare
+tl	mula sa	from
 uk	від	from
 uk	запозичене з	borrowed
 uk	запозичення з	borrowed
@@ -306,3 +331,8 @@ uk	походження неясне	uncertain
 uk	споріднене	compare
 uk	споріднене з	compare
 uk	імовірно	guess
+vec	da	from
+vec	formà da	from
+vi	cùng gốc với	compare
+vi	từ	from
+zh	源自	from

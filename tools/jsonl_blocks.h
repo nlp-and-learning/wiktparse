@@ -300,4 +300,29 @@ private:
     std::vector<Block> blocks_;
 };
 
+// The output of a wiki written whole: <dir>/<wiki>.jsonl.idx ends with EOF=<size> (written when it is
+// closed), and its <wiki>.jsonl.zst (or .bz2) is not older than the input it is made of, when given
+// (of the last bytes of the index only: en's is of some 180 MB); for a run broken off to go on
+inline bool complete(const fs::path &dir, const std::string &wiki, const fs::path &input = {}) {
+    fs::path data;
+    for (const char *ext : {".jsonl.zst", ".jsonl.bz2"})
+        if (fs::exists(dir / (wiki + ext)))
+            data = dir / (wiki + ext);
+    std::error_code error;
+    if (data.empty() || (!input.empty() && fs::last_write_time(data, error) < fs::last_write_time(input, error)))
+        return false;
+    std::ifstream index(dir / (wiki + ".jsonl.idx"), std::ios::binary | std::ios::ate);
+    if (!index)
+        return false;
+    const auto size = static_cast<std::streamoff>(index.tellg());
+    const auto take = std::min<std::streamoff>(size, 256);
+    std::string tail(static_cast<size_t>(take), '\0');
+    index.seekg(size - take);
+    index.read(tail.data(), take);
+    while (!tail.empty() && (tail.back() == '\n' || tail.back() == '\r'))
+        tail.pop_back();
+    const auto lineStart = tail.rfind('\n');
+    return tail.substr(lineStart == std::string::npos ? 0 : lineStart + 1).starts_with("EOF=");
+}
+
 } // namespace jsonlblocks

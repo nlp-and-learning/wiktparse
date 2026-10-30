@@ -8,8 +8,11 @@
 // gets "page": true when that page has a section of the language.
 // Pass 1 reads every wiki's (title, section code) pairs as 64-bit hashes; pass 2 rewrites the
 // pages with the links, in the same blocks (zstd with a dictionary per wiki, or bz2).
+// Translation subpages (en water/translations) go into their base page. The uniform tree
+// (wikt2jsonl --uniform) the same way: its languages, the translations of its entries; the
+// translations of an entry of the subpage go into the entry of the same part of speech.
 //
-// wiktlink [-i jsonl_dump] [-o jsonl_link] [-j 16] [--bz2] [wiki...]
+// wiktlink [-i jsonl_dump] [-o jsonl_link] [-j 16] [--bz2] [--force] [wiki...]
 //   wiki...: the wikis to rewrite (all of the input by default); pass 1 reads all of them
 #include <algorithm>
 #include <atomic>
@@ -75,15 +78,29 @@ void forBlocks(const BlockReader &reader, size_t threads, const std::function<vo
         std::rethrow_exception(error);
 }
 
-// Every translation of a section tree
-void eachTranslation(json &node, const std::function<void(json &)> &f) {
-    if (auto it = node.find("translations"); it != node.end())
-        for (auto &t : *it)
-            f(t);
-    for (const char *key : {"sections", "children"})
-        if (auto it = node.find(key); it != node.end())
-            for (auto &child : *it)
-                eachTranslation(child, f);
+// Every item of the lists of a key ("translations", "see") anywhere in a page: of the tree of
+// headings (nodes of sections, children) and of the uniform tree (languages, entries)
+void eachOf(json &node, const char *key, const std::function<void(json &)> &f) {
+    if (node.is_object()) {
+        for (auto &[k, v] : node.items())
+            if (k == key && v.is_array()) {
+                for (auto &item : v)
+                    f(item);
+            } else if (v.is_structured())
+                eachOf(v, key, f);
+    } else if (node.is_array())
+        for (auto &item : node)
+            eachOf(item, key, f);
+}
+
+void eachTranslation(json &node, const std::function<void(json &)> &f) { eachOf(node, "translations", f); }
+
+// The language sections of a page: "languages" of the uniform tree, "sections" of the tree of headings
+json &languagesOf(json &page) { return page[page.contains("languages") ? "languages" : "sections"]; }
+const json &languagesOf(const json &page) {
+    static const json none = json::array();
+    auto it = page.find(page.contains("languages") ? "languages" : "sections");
+    return it == page.end() ? none : *it;
 }
 
 // The term as a page title: without an interwiki prefix (kn ":en:fire"), {{PAGENAME}} as the
@@ -240,16 +257,49 @@ size_t mergeSubpage(json &page, json subpage) {
     return merged;
 }
 
-// Every node of a section tree with references to other pages ("see" of wikt2jsonl)
-void eachSee(json &node, const std::function<void(json &)> &f) {
-    if (auto it = node.find("see"); it != node.end())
-        for (auto &e : *it)
-            f(e);
-    for (const char *key : {"sections", "children"})
-        if (auto it = node.find(key); it != node.end())
-            for (auto &child : *it)
-                eachSee(child, f);
+// The translations of a subpage into its base page of the uniform tree: each entry of the subpage
+// with translations into the first entry of its language and part of speech on the page without
+// translations of its own (en water/translations, Noun: water, Noun), with "subpages": its title and
+// place in the dump; of none such a new entry of them, not lost; the number merged
+size_t mergeUniformSubpage(json &page, const json &subpage) {
+    size_t merged = 0;
+    for (const auto &subLanguage : subpage.value("languages", json::array()))
+        for (const auto &from : subLanguage.value("entries", json::array())) {
+            if (!from.contains("translations") && !from.contains("see"))
+                continue;
+            json *to = nullptr, *language = nullptr;
+            for (auto &l : page["languages"]) {
+                if (l.value("code", json()) != subLanguage.value("code", json()))
+                    continue;
+                language = &l;
+                if (auto entries = l.find("entries"); entries != l.end())
+                    for (auto &e : *entries)
+                        if (e.value("pos", json()) == from.value("pos", json()) && !e.contains("translations")) {
+                            to = &e;
+                            break;
+                        }
+                break;
+            }
+            if (!language)
+                continue; // (no section of the language on the page: the subpage stays on its own)
+            if (!to) {
+                (*language)["entries"].push_back({{"pos", from.value("pos", json())}});
+                to = &(*language)["entries"].back();
+            }
+            for (const char *key : {"translations", "see"})
+                for (const auto &t : from.value(key, json::array()))
+                    (*to)[key].push_back(t);
+            json source = {{"title", subpage.value("title", "")}};
+            if (subpage.contains("source"))
+                source["source"] = subpage["source"];
+            (*to)["subpages"].push_back(std::move(source));
+            ++merged;
+        }
+    return merged;
 }
+
+// Every reference to the translations of other pages ("see" of wikt2jsonl)
+void eachSee(json &node, const std::function<void(json &)> &f) { eachOf(node, "see", f); }
 
 double seconds(std::chrono::steady_clock::time_point since) {
     return std::chrono::duration<double>(std::chrono::steady_clock::now() - since).count();
@@ -262,6 +312,7 @@ int main(int argc, char *argv[]) {
     size_t threads = 16;
     Compression compression = Compression::zstd;
     std::vector<std::string> only;
+    bool force = false;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "-i" && i + 1 < argc)
@@ -272,8 +323,13 @@ int main(int argc, char *argv[]) {
             threads = std::max(1, std::stoi(argv[++i]));
         else if (arg == "--bz2")
             compression = Compression::bz2;
+        else if (arg == "--force")
+            force = true;
         else if (arg == "-h" || arg == "--help") {
-            std::cout << "usage: wiktlink [-i jsonl_dump] [-o jsonl_link] [-j 16] [--bz2] [wiki...]\n";
+            std::cout << "usage: wiktlink [-i jsonl_dump] [-o jsonl_link] [-j 16] [--bz2] [--force] [wiki...]\n"
+                         "       input: the tree of headings or the uniform tree (wikt2jsonl --uniform)\n"
+                         "       a wiki whose output is complete (its .idx ends with EOF=) and newer than its input is\n"
+                         "       left as it is; --force: all again\n";
             return 0;
         } else
             only.push_back(arg);
@@ -308,7 +364,7 @@ int main(int argc, char *argv[]) {
                         std::lock_guard lock(subpageMutex);
                         subpages[wiki][base] = line;
                     }
-                    for (const auto &s : page["sections"])
+                    for (const auto &s : languagesOf(page))
                         if (s.contains("code") && s["code"].is_string())
                             found[worker].push_back(key(title, s["code"].get<std::string>()));
                 }
@@ -385,11 +441,26 @@ int main(int argc, char *argv[]) {
 
         // Pass 2: the pages with their translations linked
         fs::create_directories(output);
+        // The rows of stats.tsv of a run before, by wiki: of the wikis left as they are
+        std::map<std::string, std::string> statsBefore;
+        {
+            std::ifstream in(output / "stats.tsv");
+            for (std::string line; std::getline(in, line);)
+                if (auto tab = line.find('\t'); tab != std::string::npos && !line.starts_with("wiki\t"))
+                    statsBefore[line.substr(0, tab)] = line;
+        }
         std::ofstream stats(output / "stats.tsv");
         stats << "wiki\ttranslations\tpage\thome\ten\tboth\tnone\tno_lang\tno_term\tsubpages\tsee\tsee_found\n";
         for (const auto &[wiki, path] : files) {
             if (!only.empty() && !std::ranges::contains(only, wiki))
                 continue;
+            // (a wiki done before, not older than its input)
+            if (!force && jsonlblocks::complete(output, wiki, path)) {
+                if (statsBefore.contains(wiki))
+                    stats << statsBefore[wiki] << '\n';
+                std::cout << wiki << ": done before, left as it is (--force: again)" << std::endl;
+                continue;
+            }
             const auto wikiStarted = std::chrono::steady_clock::now();
             BlockReader reader(path);
             JsonlWriter out(output / wiki, compression, 9, threads, fs::file_size(path));
@@ -408,7 +479,7 @@ int main(int argc, char *argv[]) {
                     // A subpage goes into its base page (of a section of its language), not on its own
                     if (auto base = subpageBase(title); !base.empty()) {
                         bool intoBase = false;
-                        for (const auto &s : page["sections"])
+                        for (const auto &s : languagesOf(page))
                             intoBase |= s.contains("code") && s["code"].is_string() &&
                                         has(wiki, base, s["code"].get<std::string>());
                         if (intoBase)
@@ -416,9 +487,10 @@ int main(int argc, char *argv[]) {
                     }
                     if (wikiSubpages)
                         if (auto it = wikiSubpages->find(title); it != wikiSubpages->end())
-                            c.subpages += mergeSubpage(page, json::parse(it->second)) > 0;
+                            c.subpages += (page.contains("languages") ? mergeUniformSubpage(page, json::parse(it->second))
+                                                                      : mergeSubpage(page, json::parse(it->second))) > 0;
                     // References to the translations of other pages: their page, of this language
-                    for (auto &s : page["sections"])
+                    for (auto &s : languagesOf(page))
                         if (s.contains("code") && s["code"].is_string())
                             eachSee(s, [&](json &e) {
                                 ++c.see;
@@ -427,7 +499,7 @@ int main(int argc, char *argv[]) {
                                     ++c.seeFound;
                                 }
                             });
-                    for (auto &s : page["sections"])
+                    for (auto &s : languagesOf(page))
                         eachTranslation(s, [&](json &t) {
                             ++c.translations;
                             if (!t.contains("lang") || !t["lang"].is_string()) {

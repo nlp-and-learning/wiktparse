@@ -429,32 +429,13 @@ int main(int argc, char *argv[]) {
                 if (auto tab = line.find('\t'); tab != std::string::npos && !line.starts_with("wiki\t"))
                     statsBefore[line.substr(0, tab)] = line;
         }
-        // A wiki done before: its index ends with EOF=<size> (written when it is closed), and it is not
-        // older than its input (of the last bytes only: en's index is of some 180 MB)
-        auto complete = [&](const std::string &wiki, const fs::path &in) {
-            const fs::path idx = output / (wiki + ".jsonl.idx"), zst = output / (wiki + ".jsonl.zst");
-            std::error_code error;
-            if (!fs::exists(zst) || fs::last_write_time(zst, error) < fs::last_write_time(in, error))
-                return false;
-            std::ifstream index(idx, std::ios::binary | std::ios::ate);
-            if (!index)
-                return false;
-            const auto size = static_cast<std::streamoff>(index.tellg());
-            const auto take = std::min<std::streamoff>(size, 256);
-            std::string tail(static_cast<size_t>(take), '\0');
-            index.seekg(size - take);
-            index.read(tail.data(), take);
-            while (!tail.empty() && (tail.back() == '\n' || tail.back() == '\r'))
-                tail.pop_back();
-            const auto lineStart = tail.rfind('\n');
-            return tail.substr(lineStart == std::string::npos ? 0 : lineStart + 1).starts_with("EOF=");
-        };
         std::ofstream stats(output / "stats.tsv");
         stats << "wiki\tentries\tglosses\tlinked\ttranslations\twith_sense\n";
         for (const auto &[wiki, path] : files) {
             if (!only.empty() && !std::ranges::contains(only, wiki))
                 continue;
-            if (!force && complete(wiki, path)) {
+            // (a wiki done before, not older than its input)
+            if (!force && jsonlblocks::complete(output, wiki, path)) {
                 if (statsBefore.contains(wiki))
                     stats << statsBefore[wiki] << '\n';
                 std::cout << wiki << ": done before, left as it is (--force: again)" << std::endl;

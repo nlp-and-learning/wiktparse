@@ -2888,11 +2888,22 @@ public:
         json entries = json::array();
         const std::string code = out["code"].is_string() ? out["code"].get<std::string>() : std::string();
         for (auto &e : entries_) {
-            // Translations by their language code, those of none last by the language as written, each
-            // language in the order of the wiki; the language as written only of those without a code
+            // Translations by their table (gloss) in the order of the page, of a table by their language
+            // code, those of none last by the language as written, each language in the order of the
+            // wiki; the language as written only of those without a code (the order of the tables is
+            // that of the senses: wiktglos links the n-th gloss to the n-th sense)
             if (e.contains("translations")) {
                 std::vector<json> list(e["translations"].begin(), e["translations"].end());
-                std::ranges::stable_sort(list, [](const json &a, const json &b) {
+                std::map<std::string, size_t> tableOrder;
+                for (const auto &t : list)
+                    tableOrder.emplace(t.contains("gloss") && t["gloss"].is_string() ? t["gloss"].get<std::string>() : "",
+                                       tableOrder.size());
+                auto table = [&](const json &t) {
+                    return tableOrder.at(t.contains("gloss") && t["gloss"].is_string() ? t["gloss"].get<std::string>() : "");
+                };
+                std::ranges::stable_sort(list, [&](const json &a, const json &b) {
+                    if (table(a) != table(b))
+                        return table(a) < table(b);
                     if (a["lang"].is_null() != b["lang"].is_null())
                         return b["lang"].is_null();
                     if (a["lang"].is_null())
@@ -3917,22 +3928,6 @@ int main(int argc, char *argv[]) {
         std::string header = "wiki\tprofile\tpages\twith_sections\tsections\twith_code\tsenses\ttranslations\tnative_sections\tnative_senses\tnative_translations\tseconds";
         statsFile << header << '\n';
         std::cout << header << '\n';
-        // A wiki whose output is complete: its index ends with EOF=<size> (written when it is closed)
-        // (its last bytes only: en's index is of some 180 MB)
-        auto complete = [&](const std::string &wiki) {
-            std::ifstream index(output / (wiki + ".jsonl.idx"), std::ios::binary | std::ios::ate);
-            if (!index)
-                return false;
-            const auto size = static_cast<std::streamoff>(index.tellg());
-            const auto take = std::min<std::streamoff>(size, 256);
-            std::string tail(static_cast<size_t>(take), '\0');
-            index.seekg(size - take);
-            index.read(tail.data(), take);
-            while (!tail.empty() && (tail.back() == '\n' || tail.back() == '\r'))
-                tail.pop_back();
-            const auto lineStart = tail.rfind('\n');
-            return tail.substr(lineStart == std::string::npos ? 0 : lineStart + 1).starts_with("EOF=");
-        };
         auto convertWiki = [&](const std::string &wiki) {
             json config = configs.of(wiki);
             // zh: a Lua module of the wiki maps language names to codes
@@ -4080,7 +4075,7 @@ int main(int argc, char *argv[]) {
         std::vector<std::string> failed;
         for (const auto &wiki : wikis) {
             // (of dumps: a wiki done before is left, its rows of stats and markers kept)
-            if (fromDumps && !force && !markersOnly && complete(wiki)) {
+            if (fromDumps && !force && !markersOnly && jsonlblocks::complete(output, wiki)) {
                 for (const auto &row : statsBefore[wiki])
                     statsFile << row << '\n';
                 for (const auto &row : markersBefore[wiki])

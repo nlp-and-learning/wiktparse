@@ -112,7 +112,8 @@ tak jak w wiki).
 
 ## Tłumaczenie
 
-Jak do v1.1.0, ale teraz zawsze pod swoim wpisem, jako tablica posortowana
+Jak do v1.1.0, ale teraz zawsze pod swoim wpisem, jako tablica jego tabel
+(glos) w kolejności strony, czyli kolejności znaczeń, każda posortowana
 według `lang` (te bez kodu na końcu, według `lang_written`; terminy jednego
 języka w kolejności wiki):
 

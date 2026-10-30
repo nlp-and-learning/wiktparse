@@ -112,7 +112,8 @@ latter with `pos_written` "czasownik zwrotny…", as the wiki has them).
 
 ## Translation
 
-As up to v1.1.0, now always under its entry, as an array sorted by `lang`
+As up to v1.1.0, now always under its entry, as an array of its tables
+(glosses) in page order, the order of the senses, each sorted by `lang`
 (those of no code last, by `lang_written`; the terms of one language in the
 order of the wiki):
 

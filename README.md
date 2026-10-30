@@ -167,6 +167,16 @@ dump_dir = ~/dump
   continues (one goes on where the other stops: en.wikt Polish *woda* from Old
   Polish, pl.wikt from Proto-Slavic; ancestors of `wiktlangs.sqlite`), apart,
   conflict (mostly parser errors), one-sided – and examples of the conflicts.
+- `wiktlink [-i jsonl_dump] [-o jsonl_link] [-j 16] [--bz2] [--force] [wiki...]` –
+  the translations linked to pages, of the output of `wikt2jsonl --dump`
+  (no dumps): `page` (the wiki has a page of the term with a section of its
+  language), `home` (the Wiktionary of that language has one), `en`
+  (en.wiktionary has one), `page_title` (the title found when it differs:
+  ru `кана́тная` → `канатная`); translation subpages (en
+  `water/translations`) go into their base page, in the uniform tree into
+  the entry of the same part of speech. Reads the tree of headings and the
+  uniform tree; a wiki whose output is complete and newer than its input is
+  left as it is (`--force`: all again).
 - `wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [--extra file.tsv]... [wiki...]` –
   links the glosses of translation tables to the senses of their entry (en
   `{{trans-top|domestic species}}` to sense 1): translations get `sense_ids`,

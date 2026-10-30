@@ -8,8 +8,11 @@
 // "sense_score"; --extra: links by embeddings (glossembed.py --apply) for the glosses left
 // ("embedding"; "llm" of glossllm-*.tsv; "minority" of *.minority.tsv: the one model of three
 // that gave a definition, so that a gloss with translations is not left unlinked). Input: wiktlink output (deterministic again: the TSV is of its entries).
+// The uniform tree (wikt2jsonl --uniform) the same way, entry by entry: the senses of an entry and
+// the glosses of its translations; its TSV keyed by part of speech instead of the path of a node of
+// the tree of headings (glossrekey.py).
 //
-// wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [wiki...]
+// wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [--extra file.tsv]... [wiki...]
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -163,73 +166,84 @@ void collectSenses(const json &node, std::vector<defglos::Item> &defs) {
                 collectSenses(c, defs);
 }
 
-// Links found by embeddings (glossembed.py --apply, accepted ones): title, language, path of
-// the node ("sections:2/children:0"), gloss -> sense id, score
+// Links found by embeddings and LLMs (glossembed.py --apply, glossllm.py; the accepted ones) -> sense
+// id, score. Of the tree of headings (wikt2jsonl): title, language, path of the node
+// ("sections:2/children:0"), gloss; of the uniform tree (wikt2jsonl --uniform; the TSV of
+// glossrekey.py, a column "pos" for "path"): title, language, part of speech, gloss, of the entry whose
+// senses have its ids (two entries of a part of speech: en Etymology 1 and 2)
 struct Extra {
     std::string id;
     double score;
-    std::string method; // embedding (glossembed-*), llm (glossllm-*)
+    std::string method; // embedding (glossembed-*), llm (glossllm-*), minority, vote, manual
 };
-using Extras = std::map<std::string, Extra>;
+struct Extras {
+    std::map<std::string, Extra> byPath;
+    std::multimap<std::string, Extra> byPos;
+    [[nodiscard]] size_t size() const { return byPath.size() + byPos.size(); }
+};
 
-std::string extraKey(const std::string &title, const std::string &language, const std::string &path,
+std::string extraKey(const std::string &title, const std::string &language, const std::string &where,
                      const std::string &gloss) {
-    return title + '\t' + language + '\t' + path + '\t' + gloss;
+    return title + '\t' + language + '\t' + where + '\t' + gloss;
 }
 
 Extras readExtras(const std::vector<fs::path> &files) {
     Extras extras;
+    auto fields = [](const std::string &line) {
+        std::vector<std::string> f;
+        for (size_t from = 0;;) {
+            const size_t tab = line.find('\t', from);
+            f.push_back(line.substr(from, tab == std::string::npos ? std::string::npos : tab - from));
+            if (tab == std::string::npos)
+                break;
+            from = tab + 1;
+        }
+        return f;
+    };
     for (const auto &file : files) {
         std::ifstream in(file);
         std::string line;
-        std::getline(in, line); // header: wiki title language path gloss sense_id score margin accepted
-        while (std::getline(in, line)) {
-            std::vector<std::string> f;
-            for (size_t from = 0;;) {
-                const size_t tab = line.find('\t', from);
-                f.push_back(line.substr(from, tab == std::string::npos ? std::string::npos : tab - from));
-                if (tab == std::string::npos)
-                    break;
-                from = tab + 1;
+        std::getline(in, line); // header: wiki title language path|pos gloss sense_id score margin accepted
+        const auto header = fields(line);
+        const bool byPos = header.size() > 3 && header[3] == "pos";
+        const std::string name = file.filename().string();
+        const std::string method = name.ends_with(".minority.tsv")       ? "minority"
+                                   : name.ends_with(".voted.chosen.tsv") ? "vote"
+                                   : name.ends_with(".chosen.tsv")       ? "manual"
+                                   : name.starts_with("glossllm")        ? "llm"
+                                                                         : "embedding";
+        while (std::getline(in, line))
+            if (const auto f = fields(line); f.size() >= 9 && f[8] == "1") {
+                const Extra extra{f[5], std::stod(f[6]), method};
+                if (byPos)
+                    extras.byPos.emplace(extraKey(f[1], f[2], f[3], f[4]), extra);
+                else
+                    extras.byPath[extraKey(f[1], f[2], f[3], f[4])] = extra;
             }
-            if (f.size() >= 9 && f[8] == "1")
-                extras[extraKey(f[1], f[2], f[3], f[4])] = {
-                        f[5], std::stod(f[6]),
-                        file.filename().string().ends_with(".minority.tsv")     ? "minority"
-                        : file.filename().string().ends_with(".voted.chosen.tsv") ? "vote"
-                        : file.filename().string().ends_with(".chosen.tsv")     ? "manual"
-                        : file.filename().string().starts_with("glossllm") ? "llm"
-                                                                            : "embedding"};
-        }
     }
     return extras;
 }
 
-// A part of speech with senses and Translations children: its glosses linked to its senses
-// (path: of the node in its language section, as glossembed.py writes it)
-void linkNode(json &node, const std::string &title, Count &count, const std::string &language = "",
-              const std::string &path = "", const Extras *extras = nullptr) {
-    for (const char *key : {"sections", "children"})
-        if (auto it = node.find(key); it != node.end())
-            for (size_t i = 0; i < it->size(); ++i)
-                linkNode((*it)[i], title, count, language,
-                         (path.empty() ? "" : path + "/") + key + ":" + std::to_string(i), extras);
-    if (!node.contains("senses") || !node.contains("children"))
-        return;
-    std::vector<json *> tables;
-    for (auto &c : node["children"])
-        if (c.value("section", "") == "Translations" && c.contains("translations"))
-            tables.push_back(&c);
-    if (tables.empty())
-        return;
-    defglos::Entry entry;
-    entry.title = title;
-    entry.pos = node.value("section", "");
-    collectSenses(node, entry.defs);
+// The ids of a link ("2,3": a gloss of several definitions, en tourmaline "both senses")
+std::vector<std::string> extraIds(const Extra &extra) {
+    std::vector<std::string> ids;
+    for (size_t from = 0; from <= extra.id.size();) {
+        const size_t comma = std::min(extra.id.find(',', from), extra.id.size());
+        if (comma > from)
+            ids.push_back(extra.id.substr(from, comma - from));
+        from = comma + 1;
+    }
+    return ids;
+}
+
+// The glosses of the translations of an entry (translations: the arrays of its tables) linked to its
+// senses (defs); extra: the link of embeddings or an LLM of a gloss left, if any
+void linkEntry(defglos::Entry &entry, const std::vector<json *> &translations, Count &count,
+               const std::function<const Extra *(const std::string &gloss)> &extra) {
     // The distinct glosses in order, of translations without a sense number of the wiki
     std::map<std::string, size_t> glossIndex;
-    for (json *table : tables)
-        for (const auto &t : (*table)["translations"])
+    for (json *list : translations)
+        for (const auto &t : *list)
             if (t.contains("gloss") && !t.contains("sense"))
                 if (const std::string g = t["gloss"].get<std::string>(); !glossIndex.contains(g)) {
                     glossIndex[g] = entry.glosses.size();
@@ -269,24 +283,11 @@ void linkNode(json &node, const std::string &title, Count &count, const std::str
             r.ids.push_back(entry.defs[link.def].id);
             r.score = std::max(r.score, link.score);
         }
-    // By embeddings, for the glosses left (glossembed.py)
-    if (extras)
-        for (size_t g = 0; g < results.size(); ++g)
-            if (results[g].ids.empty())
-                for (const auto &[gloss, index] : glossIndex)
-                    if (index == g)
-                        if (auto it = extras->find(extraKey(title, language, path, gloss)); it != extras->end())
-                        {
-                            // "2,3": a gloss of several definitions (en tourmaline "both senses")
-                            std::vector<std::string> ids;
-                            for (size_t from = 0; from <= it->second.id.size();) {
-                                const size_t comma = std::min(it->second.id.find(',', from), it->second.id.size());
-                                if (comma > from)
-                                    ids.push_back(it->second.id.substr(from, comma - from));
-                                from = comma + 1;
-                            }
-                            results[g] = {ids, it->second.method, it->second.score};
-                        }
+    // By embeddings and LLMs, for the glosses left (glossembed.py, glossllm.py)
+    for (const auto &[gloss, g] : glossIndex)
+        if (results[g].ids.empty())
+            if (const Extra *e = extra(gloss))
+                results[g] = {extraIds(*e), e->method, e->score};
     // One definition only: every gloss is of it (en Panama: "country")
     if (entry.defs.size() == 1)
         for (auto &r : results)
@@ -294,8 +295,8 @@ void linkNode(json &node, const std::string &title, Count &count, const std::str
                 r = {{entry.defs[0].id}, "single", 1.0};
     for (const auto &r : results)
         count.linked += !r.ids.empty();
-    for (json *table : tables)
-        for (auto &t : (*table)["translations"]) {
+    for (json *list : translations)
+        for (auto &t : *list) {
             if (!t.contains("gloss") || t.contains("sense"))
                 continue;
             ++count.translations;
@@ -307,6 +308,61 @@ void linkNode(json &node, const std::string &title, Count &count, const std::str
             t["sense_method"] = r.method;
             t["sense_score"] = std::round(r.score * 1000) / 1000;
         }
+}
+
+// A part of speech with senses and Translations children of the tree of headings: its glosses linked
+// to its senses (path: of the node in its language section, as glossembed.py writes it)
+void linkNode(json &node, const std::string &title, Count &count, const std::string &language,
+              const std::string &path, const Extras &extras) {
+    for (const char *key : {"sections", "children"})
+        if (auto it = node.find(key); it != node.end())
+            for (size_t i = 0; i < it->size(); ++i)
+                linkNode((*it)[i], title, count, language,
+                         (path.empty() ? "" : path + "/") + key + ":" + std::to_string(i), extras);
+    if (!node.contains("senses") || !node.contains("children"))
+        return;
+    std::vector<json *> tables;
+    for (auto &c : node["children"])
+        if (c.value("section", "") == "Translations" && c.contains("translations"))
+            tables.push_back(&c["translations"]);
+    if (tables.empty())
+        return;
+    defglos::Entry entry;
+    entry.title = title;
+    entry.pos = node.value("section", "");
+    collectSenses(node, entry.defs);
+    linkEntry(entry, tables, count, [&](const std::string &gloss) -> const Extra * {
+        auto it = extras.byPath.find(extraKey(title, language, path, gloss));
+        return it == extras.byPath.end() ? nullptr : &it->second;
+    });
+}
+
+// The entries of a language of the uniform tree (wikt2jsonl --uniform): the glosses of each one's
+// translations linked to its senses
+void linkUniform(json &language, const std::string &title, Count &count, const std::string &code,
+                 const Extras &extras) {
+    if (!language.contains("entries"))
+        return;
+    for (auto &e : language["entries"]) {
+        if (!e.contains("senses") || !e.contains("translations"))
+            continue;
+        defglos::Entry entry;
+        entry.title = title;
+        entry.pos = e.value("pos", "");
+        for (const auto &s : e["senses"])
+            entry.defs.push_back({s.value("id", ""), plainText(s.value("text", ""))});
+        // (a link of the part of speech and gloss whose ids are all senses of this entry; of a later
+        // file first, as the later one wins of the same path)
+        linkEntry(entry, {&e["translations"]}, count, [&](const std::string &gloss) -> const Extra * {
+            const auto [from, to] = extras.byPos.equal_range(extraKey(title, code, entry.pos, gloss));
+            for (auto it = std::make_reverse_iterator(to); it != std::make_reverse_iterator(from); ++it)
+                if (std::ranges::all_of(extraIds(it->second), [&](const std::string &id) {
+                        return std::ranges::any_of(entry.defs, [&](const auto &d) { return d.id == id; });
+                    }))
+                    return &it->second;
+            return nullptr;
+        });
+    }
 }
 
 double seconds(std::chrono::steady_clock::time_point since) {
@@ -332,7 +388,9 @@ int main(int argc, char *argv[]) {
             extraFiles.emplace_back(argv[++i]);
         else if (arg == "-h" || arg == "--help") {
             std::cout << "usage: wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [--extra glossembed-en.tsv]... [wiki...]\n"
-                         "       --extra: links by embeddings (glossembed.py --apply), the accepted ones\n";
+                         "       input: the tree of headings or the uniform tree (wikt2jsonl --uniform)\n"
+                         "       --extra: links by embeddings or LLMs (glossembed.py --apply, glossllm.py), the accepted\n"
+                         "       ones; for the uniform tree their TSV by part of speech (glossrekey.py)\n";
             return 0;
         } else
             only.push_back(arg);
@@ -341,7 +399,7 @@ int main(int argc, char *argv[]) {
         const auto started = std::chrono::steady_clock::now();
         const Extras extras = readExtras(extraFiles);
         if (!extraFiles.empty())
-            std::cout << std::format("{} links by embeddings", extras.size()) << std::endl;
+            std::cout << std::format("{} links by embeddings and LLMs", extras.size()) << std::endl;
         std::map<std::string, fs::path> files;
         for (const auto &entry : fs::directory_iterator(input)) {
             const std::string name = entry.path().filename().string();
@@ -391,11 +449,16 @@ int main(int argc, char *argv[]) {
                 for (const auto &line : reader.lines(block)) {
                     json page = json::parse(line);
                     const std::string title = page["title"].get<std::string>();
-                    for (auto &s : page["sections"]) {
+                    // (the uniform tree: "languages"; the tree of headings: "sections")
+                    const bool uniform = page.contains("languages");
+                    for (auto &s : page[uniform ? "languages" : "sections"]) {
                         const std::string language = s.contains("code") && s["code"].is_string()
                                                              ? s["code"].get<std::string>()
                                                              : std::string("None");
-                        linkNode(s, title, counts[worker], language, "", &extras);
+                        if (uniform)
+                            linkUniform(s, title, counts[worker], language, extras);
+                        else
+                            linkNode(s, title, counts[worker], language, "", extras);
                     }
                     out.add(worker, page.dump(-1, ' ', false, json::error_handler_t::replace), title);
                 }

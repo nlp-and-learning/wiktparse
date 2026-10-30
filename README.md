@@ -164,6 +164,19 @@ dump_dir = ~/dump
   continues (one goes on where the other stops: en.wikt Polish *woda* from Old
   Polish, pl.wikt from Proto-Slavic; ancestors of `wiktlangs.sqlite`), apart,
   conflict (mostly parser errors), one-sided – and examples of the conflicts.
+- `wiktglos [-i jsonl_link] [-o jsonl_senses] [-j 16] [--extra file.tsv]... [wiki...]` –
+  links the glosses of translation tables to the senses of their entry (en
+  `{{trans-top|domestic species}}` to sense 1): translations get `sense_ids`,
+  `sense_method` (positional, best, number, single; embedding, llm, vote,
+  manual, minority of the `--extra` files of `tools/glossembed.py` and
+  `tools/glossllm.py`) and `sense_score`. Reads the tree of headings and the
+  uniform tree (`wikt2jsonl --dump --uniform --zstd`, no `wiktlink` needed);
+  for the uniform tree the `--extra` files keyed by part of speech, from
+  `tools/glossrekey.py`.
+- `tools/glossrekey.py [-i jsonl_link] [-o gloss_uniform] file.tsv...` – the
+  link files of embeddings and LLMs, which name a node of the tree of headings
+  by its path, keyed by its part of speech instead, for `wiktglos` on the
+  uniform tree; reads only the blocks of their titles.
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

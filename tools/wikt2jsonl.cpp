@@ -3141,18 +3141,36 @@ private:
             return;
         }
         // (a placeholder "=…": the whole text, spaces as one, hr "={{napomene}}"; "~…" a regular expression
-        // of the whole text, es "{{etimología|leng=ast}}"; else a part of it)
+        // of the whole text, es "{{etimología|leng=ast}}"; else a part of it: a text, eu "Oraindik ez
+        // daukagu…", or a template, but of prose beside it, three words or more (uk червоний: prose and
+        // an empty {{етимологія|}}; not "Від {{етимологія|}}"))
         std::string whole;
         for (const auto &word : split(trim(text), ' '))
             for (const auto &w : split(word, '\n'))
                 if (!trim(w).empty())
                     whole += (whole.empty() ? "" : " ") + trim(w);
-        if (auto spec = config_.find("etymology"); spec != config_.end())
+        if (auto spec = config_.find("etymology"); spec != config_.end()) {
+            // the words of prose but those of relations (ru "Происходит от {{этимология:|}}": none), the
+            // longest phrases first ("происходит от" before "от"), of letters only (not "<" of "<br>")
+            auto prose = [&] {
+                auto lower = wikilib::unicode::to_lower(text);
+                std::vector<std::string> phrases;
+                for (const auto &[phrase, relation] : spec->value("words", json::object()).items())
+                    if (std::ranges::any_of(phrase, [](unsigned char c) { return std::isalpha(c) || c >= 0x80; }))
+                        phrases.push_back(phrase);
+                std::ranges::sort(phrases, [](const auto &a, const auto &b) { return a.size() > b.size(); });
+                for (const auto &phrase : phrases)
+                    for (size_t at; (at = lower.find(phrase)) != std::string::npos;)
+                        lower.erase(at, phrase.size());
+                return proseWords(lower);
+            };
             for (const auto &p : spec->value("placeholders", std::vector<std::string>{}))
                 if (p.starts_with('~') ? whole.size() < maxRegexLine && std::regex_match(whole, std::regex(p.substr(1)))
                     : p.starts_with('=') ? whole == p.substr(1)
-                                         : text.find(p) != std::string::npos)
+                    : p.starts_with("{{") ? text.find(p) != std::string::npos && prose() < 3
+                                          : text.find(p) != std::string::npos)
                     return;
+        }
         object["etymology_unparsed"] = true;
     }
 

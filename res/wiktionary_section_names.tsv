@@ -1119,6 +1119,9 @@ cy	nform	Noun form	section
 cy	altsp	Alternative forms	section
 cy	hffon	Homophones	section
 lmo	prov	Proverbs	relation
+lmo	sin	Synonyms	relation
+vec	prov	Proverbs	relation
+vec	sin	Synonyms	relation
 lmo	locverb	Phrase	section
 lmo	locnom	Phrase	section
 lmo	locavv	Phrase	section

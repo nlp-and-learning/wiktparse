@@ -1494,7 +1494,8 @@ private:
 // without {{-…-}} dashes (it {{-sin-}}, nl {{-noun-|nld}}) and numbering ("Etymology 2")
 std::pair<std::string, int> sectionKey(std::string text) {
     // "Etymology 2", zh "詞源2" (no space), lv "Izruna Nr.2"
-    static const std::regex numbered(R"(^(.*[^\d\s.])\s*(?:Nr\.|№)?\s*(\d+)$)");
+    // (a number of six digits at most: a longer one, sa, is no number of a heading, and over int)
+    static const std::regex numbered(R"(^(.*[^\d\s.])\s*(?:Nr\.|№)?\s*(\d{1,6})$)");
     text = trim(text);
     if (text.starts_with("{{"))
         if (auto all = wikilib::templates::find_invocations(text); !all.empty())
@@ -2851,13 +2852,33 @@ public:
         plan(root, 0, -1);
         if (in.contains("text") || in.contains("media"))
             routeMedia(mediaItems(in.value("text", std::string()), in.value("media", json::array())), 0);
-        // Before the first section, a pronunciation line: pl "{{wymowa}} {{IPA3|ˈvɔda}}"
+        // Before the first section, a pronunciation line: pl "{{wymowa}} {{IPA3|ˈvɔda}}"; the other lines
+        // of prose after the sections are read
+        std::vector<std::string> before;
         for (const auto &line : textLines(in.value("text", std::string())))
             if (auto all = wikilib::templates::find_invocations(line);
                 !all.empty() && all.front().location.begin.offset == 0)
                 if (auto name = names_.find(sectionKey(all.front().name).first); name && name->section == "Pronunciation")
                     append(out, "pronunciation", line);
+        for (const auto &line : proseLines(in.value("text", std::string())))
+            if (const auto pronunciation = out.value("pronunciation", std::string());
+                pronunciation.find(line) == std::string::npos)
+                before.push_back(line);
         fill(root);
+        // Lines of prose before the first section: a note of the language; of a language of no entry of
+        // a wiki of definitions without "#" (senses.plain_lines) its definitions
+        if (!before.empty()) {
+            if (entries_.empty() && plainLines()) {
+                json &e = entries_[implicitEntry(0)];
+                for (const auto &line : before)
+                    e["senses"].push_back({{"id", std::to_string(e["senses"].size() + 1)}, {"text", line}});
+            } else {
+                std::string rest;
+                for (const auto &line : before)
+                    rest += line + '\n';
+                append(out["notes"], "Text", rest);
+            }
+        }
         // What a group gives its entries (en Etymology 2, a ru homograph): theirs when they have none
         for (size_t e = 0; e < entries_.size(); ++e)
             for (int s = entryScope_[e]; s > 0; s = scopes_[s].parent)
@@ -3389,6 +3410,8 @@ private:
                     targets = entriesOfIds(expandIds(item["sense"]), among);
                 if (targets.empty())
                     targets = among; // of all its entries (pl {{pokrewne}} without ids)
+                if (targets.empty()) // (a language of no part of speech: sr вода, its Ukrainian synonyms)
+                    targets = {implicitEntry(scope)};
                 for (auto e : targets)
                     addRelation(e, name, item);
             }
@@ -3436,8 +3459,89 @@ private:
                 shared(c, scope);
             }
             fill(c);
+            if (kind(c) == "pos") // (after its children: their senses, pl Definitions)
+                restOfPos(c, static_cast<size_t>(owner));
         }
     }
+
+    // A line of prose: not a template alone, a table, files or categories only, a heading, the word in
+    // bold alone (fj "'''wai'''": a headword)
+    static bool proseLine(const std::string &line) {
+        const auto t = trim(line);
+        if (t.empty() || t.starts_with("{|") || t.starts_with("|") || t.starts_with("!") || t.starts_with("=") ||
+            t.starts_with("__") || t.starts_with("<") || t == "----" || onlyTemplate(t))
+            return false;
+        // [[File:…|thumb|…]] (its media are read), [[Category:…]][[…]]: a line of a link whose target has
+        // a colon first
+        if (t.starts_with("[[")) {
+            const auto colon = t.find(':'), end = t.find_first_of("|]");
+            if (colon != std::string::npos && colon < end && colon > 2)
+                return false;
+        }
+        static const std::regex bold(R"('''[^']+'''\s*)");
+        if (t.size() < 2000 && std::regex_match(t, bold))
+            return false;
+        return std::ranges::any_of(t, [](unsigned char ch) { return std::isalpha(ch) || ch >= 0x80; });
+    }
+
+    // The lines of prose of a text but those of a template of several lines (ang
+    // "{{TH-Forenaman-Tabule|\nHwā oþþe hwæt?…}}", sv "{{uttal|…\n…}}"), and those a template of several
+    // lines begins
+    static std::vector<std::string> proseLines(const std::string &text) {
+        std::vector<std::string> out;
+        int depth = 0;
+        for (const auto &line : textLines(text)) {
+            const int before = depth;
+            for (size_t i = 0; i + 1 < line.size(); ++i)
+                if (line[i] == line[i + 1] && (line[i] == '{' || line[i] == '}'))
+                    depth += line[i++] == '{' ? 1 : -1;
+            depth = std::max(depth, 0);
+            if (before == 0 && depth == 0 && proseLine(line))
+                out.push_back(trim(line));
+        }
+        return out;
+    }
+
+    // The text of a part of speech besides its headword and senses (wikt2jsonl keeps there what is no
+    // sense line): its lines of prose are the entry's "Text" (tl "''(pambalana, di-tiyak)''"), so that
+    // nothing of it is lost; of an entry of no senses of a wiki of definitions without "#"
+    // (senses.plain_lines: rw "Amazi ni kimwe…") its definitions, a long line of prose taken as the
+    // headword too
+    void restOfPos(const json &c, size_t e) {
+        auto &entry = entries_[e];
+        const auto headword = entry.value("headword", std::string());
+        std::set<std::string> head;
+        for (const auto &line : textLines(headword))
+            head.insert(trim(line));
+        std::vector<std::string> prose;
+        for (const auto &line : proseLines(text(c)))
+            if (!head.contains(line))
+                prose.push_back(line);
+        const bool noSenses = !entry.contains("senses") || entry["senses"].empty();
+        if (noSenses && plainLines()) {
+            auto words = [](const std::string &s) { return std::ranges::count(s, ' ') + 1; };
+            if (prose.empty() && proseLine(headword) && !headword.starts_with("'''") && words(headword) >= 4) {
+                prose.push_back(trim(headword));
+                entry.erase("headword");
+            }
+            for (const auto &line : prose) {
+                std::string definition = line;
+                while (!definition.empty() && (definition.front() == '*' || definition.front() == ':'))
+                    definition = trim(definition.substr(1));
+                if (!definition.empty())
+                    entry["senses"].push_back({{"id", std::to_string(entry["senses"].size() + 1)}, {"text", definition}});
+            }
+            return;
+        }
+        std::string rest;
+        for (const auto &line : prose)
+            rest += line + '\n';
+        if (!rest.empty())
+            append(entry["sections"], "Text", rest);
+    }
+
+    // senses.plain_lines: definitions of lines no "#" begins (rw), of an entry of no "#" senses
+    bool plainLines() const { return config_.value("senses", json::object()).value("plain_lines", false); }
 };
 
 // The page of convertPage in the uniform tree
@@ -3735,7 +3839,7 @@ int main(int argc, char *argv[]) {
         fs::path input = "samples100", output = "jsonl", dbFile = "wiktlangs.sqlite";
         fs::path configDir = WIKTPARSE_RES_DIR "/wiktionary";
         std::vector<std::string> wikis;
-        bool fromDumps = false, markersOnly = false, uniformTree = false;
+        bool fromDumps = false, markersOnly = false, uniformTree = false, force = false;
         Compression compression = Compression::none;
         int level = 0; // 0: of the format (bz2 9, zstd 9)
         size_t threads = 8;
@@ -3754,6 +3858,8 @@ int main(int argc, char *argv[]) {
                 uniformTree = true;
             else if (arg == "--markers-only")
                 markersOnly = true;
+            else if (arg == "--force")
+                force = true;
             else if (arg == "--bz2")
                 compression = Compression::bz2;
             else if (arg == "--zstd")
@@ -3765,7 +3871,9 @@ int main(int argc, char *argv[]) {
             else if (arg == "-h" || arg == "--help") {
                 std::cout << "usage: wikt2jsonl [-i samples100 | --dump [-j N]] [--markers-only] [--uniform] [--bz2 | --zstd [--level N]] [-o jsonl] [--db wiktlangs.sqlite] [wiki...]\n"
                              "       --uniform: pages in the uniform tree (doc/uniform-tree.md)\n"
-                             "       --dump: all pages of the dumps, each wiki read in N threads (default 8)\n"
+                             "       --dump: all pages of the dumps, each wiki read in N threads (default 8); a wiki\n"
+                             "              whose output is complete (its .idx ends with EOF=) is left as it is,\n"
+                             "              --force: all again; a wiki that fails is told, the others go on\n"
                              "       --markers-only: only language markers and stats, no JSONL\n"
                              "       --bz2, --zstd: <wiki>.jsonl.bz2 or .jsonl.zst in blocks of 100 lines or 512 KB\n"
                              "              with <wiki>.jsonl.idx; --level: bz2 1-9, zstd 1-22 (9);\n"
@@ -3796,6 +3904,12 @@ int main(int argc, char *argv[]) {
         }
         LanguageNames names(dbFile);
         fs::create_directories(output);
+        // The rows of stats.tsv and markers.tsv of a run before, by wiki: of the wikis left as they are
+        std::map<std::string, std::vector<std::string>> statsBefore, markersBefore;
+        for (auto &[file, rows] : {std::pair{"stats.tsv", &statsBefore}, std::pair{"markers.tsv", &markersBefore}})
+            for (const auto &line : readLines((output / file).string()))
+                if (auto tab = line.find('\t'); tab != std::string::npos && !line.starts_with("wiki\t"))
+                    (*rows)[line.substr(0, tab)].push_back(line);
         std::ofstream statsFile(output / "stats.tsv");
         // For wiktlangs.sqlite (table wikt_marker): how each wiki writes languages
         std::ofstream markersFile(output / "markers.tsv");
@@ -3803,7 +3917,23 @@ int main(int argc, char *argv[]) {
         std::string header = "wiki\tprofile\tpages\twith_sections\tsections\twith_code\tsenses\ttranslations\tnative_sections\tnative_senses\tnative_translations\tseconds";
         statsFile << header << '\n';
         std::cout << header << '\n';
-        for (const auto &wiki : wikis) {
+        // A wiki whose output is complete: its index ends with EOF=<size> (written when it is closed)
+        // (its last bytes only: en's index is of some 180 MB)
+        auto complete = [&](const std::string &wiki) {
+            std::ifstream index(output / (wiki + ".jsonl.idx"), std::ios::binary | std::ios::ate);
+            if (!index)
+                return false;
+            const auto size = static_cast<std::streamoff>(index.tellg());
+            const auto take = std::min<std::streamoff>(size, 256);
+            std::string tail(static_cast<size_t>(take), '\0');
+            index.seekg(size - take);
+            index.read(tail.data(), take);
+            while (!tail.empty() && (tail.back() == '\n' || tail.back() == '\r'))
+                tail.pop_back();
+            const auto lineStart = tail.rfind('\n');
+            return tail.substr(lineStart == std::string::npos ? 0 : lineStart + 1).starts_with("EOF=");
+        };
+        auto convertWiki = [&](const std::string &wiki) {
             json config = configs.of(wiki);
             // zh: a Lua module of the wiki maps language names to codes
             // ("Module:Languages/canonical names": ["阿歐語"] = "aou"); its entries become aliases
@@ -3862,7 +3992,7 @@ int main(int argc, char *argv[]) {
                 std::cout << wiki << ": " << pages.size() << " etymology templates of " << ns << prefix << std::endl;
             }
             if (config.value("skip", false))
-                continue;
+                return;
             const SectionNames sectionNames("wiktsections.sqlite", wiki);
             // A language as written in an etymology (a code, a name of the wiki) as its code, else empty
             auto languageCode = [&](const std::string &written, bool prose) -> std::string {
@@ -3946,6 +4076,33 @@ int main(int argc, char *argv[]) {
                 markersFile << wiki << '\t' << str(config, "/language/form") << '\t' << marker << '\t' << value.first
                             << '\t' << value.second << '\t' << stats.markerExamples[marker] << '\n';
             std::cout << row << std::endl;
+        };
+        std::vector<std::string> failed;
+        for (const auto &wiki : wikis) {
+            // (of dumps: a wiki done before is left, its rows of stats and markers kept)
+            if (fromDumps && !force && !markersOnly && complete(wiki)) {
+                for (const auto &row : statsBefore[wiki])
+                    statsFile << row << '\n';
+                for (const auto &row : markersBefore[wiki])
+                    markersFile << row << '\n';
+                std::cout << wiki << ": done before, left as it is (--force: again)" << std::endl;
+                continue;
+            }
+            try {
+                convertWiki(wiki);
+            } catch (const std::exception &e) {
+                std::cerr << wiki << ": " << e.what() << std::endl;
+                failed.push_back(wiki);
+            }
+            statsFile.flush();
+            markersFile.flush();
+        }
+        if (!failed.empty()) {
+            std::cerr << failed.size() << " wikis failed:";
+            for (const auto &wiki : failed)
+                std::cerr << ' ' << wiki;
+            std::cerr << std::endl;
+            return 1;
         }
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;

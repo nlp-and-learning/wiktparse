@@ -102,6 +102,9 @@ dump_dir = ~/dump
   (with the group, etymology and pronunciation they belong to), senses with
   their examples, translations and relations (with sense ids) under their entry;
   `tools/validate_jsonl.py --uniform <dir>` checks it.
+  With `--dump`, a wiki whose output is complete (its `.idx` ends with `EOF=`)
+  is left as it is, so that a run broken off goes on where it stopped
+  (`--force`: all again); a wiki that fails is reported and the others go on.
 - `wiktbrowse [file.jsonl | file.jsonl.bz2]` – browser of JSONL files (wikt2jsonl
   output, also any JSONL such as wiktNeeded), a separate project in `browser/`
   (Qt6 and qcodeedit: the sibling `../qcodeedit` when present, otherwise
@@ -172,7 +175,8 @@ dump_dir = ~/dump
   `tools/glossllm.py`) and `sense_score`. Reads the tree of headings and the
   uniform tree (`wikt2jsonl --dump --uniform --zstd`, no `wiktlink` needed);
   for the uniform tree the `--extra` files keyed by part of speech, from
-  `tools/glossrekey.py`.
+  `tools/glossrekey.py`. A wiki whose output is complete and newer than its
+  input is left as it is (`--force`: all again, after new `--extra` files).
 - `tools/glossrekey.py [-i jsonl_link] [-o gloss_uniform] file.tsv...` – the
   link files of embeddings and LLMs, which name a node of the tree of headings
   by its path, keyed by its part of speech instead, for `wiktglos` on the

@@ -77,7 +77,7 @@ latter with `pos_written` "czasownik zwrotny…", as the wiki has them).
 | `etymology` | the etymology of the whole section, when the wiki gives it there and marks no part of it for an entry |
 | `etymology_chain` | the etymology as a text a program reads (see *Etymology chain*), of entries too |
 | `entries` | the entries |
-| `notes` | sections of the whole language (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{section: text}` |
+| `notes` | sections of the whole language (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{section: text}`; `Text`: lines of prose before the first section |
 | `media` | files of the language section marked for no sense or entry, as `media` of an entry |
 
 ## Entry
@@ -98,7 +98,7 @@ latter with `pos_written` "czasownik zwrotny…", as the wiki has them).
 | `see` | translations on other pages (en `{{trans-see|…}}`): `{"title", "gloss"}` |
 | `subpages` | translation subpages merged into the translations (en `water/translations`): `{"title", "source"}` |
 | `relations` | `{"Synonyms": [{"term": "warownia", "sense": "1.1"}, …], …}`: sections of kind relation of wiktsections.sqlite and relation templates of senses (en `#: {{syn|en|…}}`); `sense` the sense id as the wiki gives it (pl `(1.1)`, de `[1, 6]`, ru the place of the `#` line, en the sense the template stands under), `qualifier` a label of the line (pl `{{zdrobn}}`, ru `прилагательные=`) |
-| `sections` | other sections of the entry as text: `{section: text}` (Usage notes, Inflection, Descendants…) |
+| `sections` | other sections of the entry as text: `{section: text}` (Usage notes, Inflection, Descendants…); `Text`: the lines of prose of the part of speech that are no headword and no sense (tl `''(pambalana, di-tiyak)''`), so that nothing is lost; of a wiki whose definitions have no `#` (`senses.plain_lines`: rw) they are its senses |
 | `lexeme` | the Wikidata lexeme of the entry (ru `{{Лексема в Викиданных|L110019}}`); ar `{{معجمية|L1480479|…}}` shows its senses instead of the wiki's own |
 | `media` | pictures of Wikimedia Commons (sounds are in `audio`): `{"file": "…", "caption": "…", "sense": "1.1"}` (pl `[[Plik:…|thumb|zamek (1.1)]]`, ru `{{илл|…|Замок [1]}}`) |
 

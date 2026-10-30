@@ -77,7 +77,7 @@ tak jak w wiki).
 | `etymology` | etymologia całej sekcji, gdy wiki podaje ją tam i nie oznacza żadnej jej części dla wpisu |
 | `etymology_chain` | etymologia jako tekst czytelny dla programu (zob. *Łańcuch etymologii*), także przy wpisach |
 | `entries` | wpisy |
-| `notes` | sekcje całego języka (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{sekcja: tekst}` |
+| `notes` | sekcje całego języka (en `===Anagrams===`, pl `{{źródła}}`, References, See also…): `{sekcja: tekst}`; `Text`: linie prozy przed pierwszą sekcją |
 | `media` | pliki sekcji językowej nieoznaczone dla żadnego znaczenia ani wpisu, jak `media` wpisu |
 
 ## Wpis
@@ -98,7 +98,7 @@ tak jak w wiki).
 | `see` | tłumaczenia na innych stronach (en `{{trans-see|…}}`): `{"title", "gloss"}` |
 | `subpages` | podstrony tłumaczeń dołączone do tłumaczeń (en `water/translations`): `{"title", "source"}` |
 | `relations` | `{"Synonyms": [{"term": "warownia", "sense": "1.1"}, …], …}`: sekcje rodzaju relation z wiktsections.sqlite i szablony relacji przy znaczeniach (en `#: {{syn|en|…}}`); `sense` – id znaczenia tak, jak podaje je wiki (pl `(1.1)`, de `[1, 6]`, ru miejsce linii `#`, en znaczenie, pod którym stoi szablon), `qualifier` – etykieta linii (pl `{{zdrobn}}`, ru `прилагательные=`) |
-| `sections` | pozostałe sekcje wpisu jako tekst: `{sekcja: tekst}` (Usage notes, Inflection, Descendants…) |
+| `sections` | pozostałe sekcje wpisu jako tekst: `{sekcja: tekst}` (Usage notes, Inflection, Descendants…); `Text`: linie prozy części mowy, które nie są ani linią hasła, ani znaczeniem (tl `''(pambalana, di-tiyak)''`), aby nic nie ginęło; w wiki, której definicje nie mają `#` (`senses.plain_lines`: rw), są to jej znaczenia |
 | `lexeme` | leksem Wikidata wpisu (ru `{{Лексема в Викиданных|L110019}}`); ar `{{معجمية|L1480479|…}}` pokazuje jego znaczenia zamiast własnych |
 | `media` | obrazy Wikimedia Commons (dźwięki są w `audio`): `{"file": "…", "caption": "…", "sense": "1.1"}` (pl `[[Plik:…|thumb|zamek (1.1)]]`, ru `{{илл|…|Замок [1]}}`) |
 

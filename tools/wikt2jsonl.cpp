@@ -2598,9 +2598,23 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                         flush();
                         auto k = keys.find(value.substr(1));
                         relation = k == keys.end() ? "" : k->get<std::string>();
-                    } else if (auto colon = value.find(':'); colon != std::string::npos && !relation.empty()) {
-                        const auto lang = value.substr(0, colon), form = termValue(value.substr(colon + 1));
-                        if (noTerm(form))
+                    } else if (!relation.empty()) {
+                        // "language:form", the colon before the modifiers (en "a-<id:verb prefix>": a
+                        // part of the language of the template, of a compound only)
+                        const auto colon = value.substr(0, value.find('<')).find(':');
+                        if (colon == std::string::npos && relation != "compound")
+                            continue;
+                        const auto lang = colon == std::string::npos ? trim(std::string(t.get(size_t{1}).value_or("")))
+                                                                     : value.substr(0, colon);
+                        // the form without its modifiers (<t:garden>, <id:…>, <ety:…<en:dog>>)
+                        std::string bare = colon == std::string::npos ? value : value.substr(colon + 1);
+                        static const std::regex modifier(R"(<[^<>]*>)");
+                        for (std::string before; before != bare && bare.size() < 2000;) {
+                            before = bare;
+                            bare = std::regex_replace(bare, modifier, "");
+                        }
+                        const auto form = termValue(bare);
+                        if (noTerm(form) || lang.empty())
                             continue;
                         if (relation == "compound") {
                             partsLang = partsLang.empty() ? resolve(lang) : partsLang;
@@ -2609,7 +2623,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                             add(relation, resolve(lang), form, -1, true);
                         // the etymology of the item in it, ro "fr:dogue<ety:uder<en:dog>>": dogue from en dog
                         static const std::regex nested(R"(<ety:([^<>:]+)<([^<>:]+):([^<>]+))");
-                        std::string rest = value.substr(colon + 1);
+                        std::string rest = colon == std::string::npos ? value : value.substr(colon + 1);
                         for (std::smatch m; rest.size() < 2000 && std::regex_search(rest, m, nested);
                              rest = m.suffix().str()) {
                             auto k = keys.find(m[1].str());
@@ -2674,11 +2688,18 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             if (chainDone && ((relation != "compare" && relation != "descendant") || !(ofTemplate || sameItem) || doubt))
                 continue;
             // a parameter by its number or its name (fr {{composé de|…|lang=fr}}, {{étyl|la|fr|mot=aqua}})
+            // the language as lang= (the old way of en templates, da {{compound|lang=de|Feuer|Löscher}}):
+            // the numbered parameters one place earlier
+            const size_t shift = s.value("lang", json()) == 1 && t.get(std::string("lang")) ? 1 : 0;
             auto param = [&](const char *key) -> std::string {
                 if (!s.contains(key))
                     return {};
                 std::optional<std::string_view> v;
-                if (s[key].is_number_integer())
+                if (shift && std::string_view(key) == "lang")
+                    v = t.get(std::string("lang"));
+                else if (s[key].is_number_integer() && static_cast<size_t>(s[key].get<int>()) > shift)
+                    v = t.get(static_cast<size_t>(s[key].get<int>()) - shift);
+                else if (s[key].is_number_integer())
                     v = t.get(static_cast<size_t>(s[key].get<int>()));
                 else if (s[key].is_string() && s[key] != "entry")
                     v = t.get(s[key].get<std::string>());
@@ -2699,7 +2720,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             if (s.contains("parts")) {
                 // {{af|en|water|fall}}, {{suffix|en|water|y}} -> water + -y
                 std::vector<std::string> parts;
-                for (size_t i = s["parts"].get<size_t>(); auto v = t.get(i); ++i)
+                for (size_t i = s["parts"].get<size_t>() - shift; auto v = t.get(i); ++i)
                     if (auto part = termValue(std::string(*v)); !noTerm(part))
                         parts.push_back(part);
                 const auto affix = s.value("affix", std::string());

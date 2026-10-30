@@ -2225,16 +2225,27 @@ std::string withTranscluded(const std::string &text, const json &transcluded) {
         for (const char *tag : {"<includeonly>", "</includeonly>"})
             for (size_t at; (at = body.find(tag)) != std::string::npos;)
                 body.erase(at, std::strlen(tag));
-        // parser functions out (their texts are variants of the template's)
+        if (body.size() < maxRegexLine) {
+            // the numbered parameters ({{{2|}}}: its default when not given)
+            static const std::regex parameter(R"(\{\{\{(\d+)(?:\|([^{}]*))?\}\}\})");
+            std::string substituted;
+            auto from = body.cbegin();
+            for (std::sregex_iterator m(body.begin(), body.end(), parameter), end; m != end; ++m) {
+                const auto v = t.get(static_cast<size_t>(std::stoul((*m)[1].str())));
+                substituted.append(from, (*m)[0].first).append(v ? std::string(*v) : (*m)[2].str());
+                from = (*m)[0].second;
+            }
+            body = substituted.append(from, body.cend());
+            // {{#if:x|a|b}} of plain texts, innermost first (ru {{этимология:rarus|la}}: {{#if:la|la}})
+            static const std::regex ifFunction(R"(\{\{\s*#if:\s*([^{}|]*?)\s*\|([^{}|]*)(?:\|([^{}|]*))?\}\})");
+            for (std::smatch m; std::regex_search(body, m, ifFunction);)
+                body = m.prefix().str() + (m[1].length() ? m[2].str() : m[3].str()) + m.suffix().str();
+        }
+        // the other parser functions out (their texts are variants of the template's)
         auto inner = wikilib::templates::find_invocations(body);
         for (auto f = inner.rbegin(); f != inner.rend(); ++f)
             if (f->name.starts_with('#'))
                 body.erase(f->location.begin.offset, f->location.length());
-        static const std::regex parameter(R"(\{\{\{1(?:\|([^{}]*))?\}\}\})");
-        const auto first = t.get(size_t{1});
-        body = body.size() < maxRegexLine
-                       ? std::regex_replace(body, parameter, first ? std::string(*first) : std::string("$1"))
-                       : body;
         result += text.substr(last, t.location.begin.offset - last) + body;
         last = t.location.end.offset;
     }

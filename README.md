@@ -80,6 +80,10 @@ dump_dir = ~/dump
   the index (about 15 thousand pages, 66 MB) for testing converters without
   the dumps. Run it in the build directory; samples are not versioned.
   Reads only the needed indexed ranges (about 20 s for all 198 dumps).
+  `--same-titles samples100 -o same100 en` writes instead the en.wikt pages of
+  the titles of the samples of the other wikis (about 9 thousand, 30 s), to
+  compare an entry of two wikis (pl.wikt *woda* and the Polish section of
+  en.wikt *woda*).
 - `wikt2jsonl [-i samples100] [-o jsonl] [wiki...]` – converts pages (by default
   the samples) to JSONL with the configuration of `res/wiktionary`: language
   sections with codes, headings, senses, translations; `jsonl/stats.tsv` shows
@@ -152,6 +156,12 @@ dump_dir = ~/dump
   `res/wiktionary/etymology_words.tsv`; the others get a relation by hand and
   `--export res/wiktionary/etymology_words.tsv` writes them, the phrases of
   the relations of all wikis that `wikt2jsonl` reads (`*`: of all wikis).
+- `tools/etymologycompare.py [-i uniform100] [--en uniform_same100/en.jsonl] [--examples 3] [wiki...]` –
+  the etymology chains of one entry (title and language) in a wiki and in
+  en.wikt (`wiktsamples --same-titles`, then `wikt2jsonl --uniform -i same100
+  -o uniform_same100 en`): per wiki the entries with a chain in both, how many
+  have the same first step, the share of their items found in en.wikt, and
+  examples of those that differ.
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

@@ -12,6 +12,8 @@
 // (ids 100-199 in the dump's <siteinfo>).
 //
 // wiktsamples [-j N] [-n pages] [--other N] [-o samples] [--db wiktlangs.sqlite] [wiki...]
+// wiktsamples --same-titles samples1000 -o samples_en [en]: the pages of en.wikt of the titles of the
+// samples of the other wikis, to compare their entries (etymologies) with en.wikt
 //
 // Output: samples/<wiki>/NN <title>.wiki and samples/<wiki>/meta.json
 // ([{"file","title","ns","reason","source"}], source: [bz2 block, number in it]),
@@ -436,11 +438,35 @@ void writeSamples(const fs::path &dir, const std::vector<Chosen> &chosen) {
         const auto &c = chosen[i];
         auto file = fileName(i + 1, c.title);
         std::ofstream(dir / file) << c.text;
-        meta.push_back({{"file", file}, {"title", c.title}, {"ns", c.ns}, {"reason", c.reason},
-                        {"source", {c.block, c.index}}});
-        positions << c.block << '\t' << c.index << '\t' << c.title << '\n';
+        json page = {{"file", file}, {"title", c.title}, {"ns", c.ns}, {"reason", c.reason}};
+        if (c.block) // (pages of --same-titles: of no known block)
+            page["source"] = {c.block, c.index};
+        meta.push_back(std::move(page));
+        if (c.block)
+            positions << c.block << '\t' << c.index << '\t' << c.title << '\n';
     }
     std::ofstream(dir / "meta.json") << meta.dump(1, '\t', false, json::error_handler_t::replace) << '\n';
+}
+
+// --same-titles: the pages of a wiki of the titles of the main namespace pages of the samples of the
+// other wikis (samples1000/*/meta.json), to compare an entry of two wikis (pl.wikt woda and the Polish
+// section of en.wikt woda)
+std::vector<Chosen> sameTitles(const std::string &wiki, const fs::path &samples) {
+    std::map<std::string, std::string> wanted; // title -> the first wiki of it
+    for (const auto &entry : fs::directory_iterator(samples)) {
+        const auto other = entry.path().filename().string();
+        if (other == wiki || !fs::exists(entry.path() / "meta.json"))
+            continue;
+        std::ifstream in(entry.path() / "meta.json");
+        for (const auto &page : json::parse(in))
+            if (page.value("ns", 0) == 0)
+                wanted.emplace(page["title"].get<std::string>(), other);
+    }
+    auto pages = WikiDump::wiktionary(wiki).extractMatching([&](const std::string &t) { return wanted.contains(t); });
+    std::vector<Chosen> chosen;
+    for (auto &[title, text] : pages)
+        chosen.push_back({title, 0, "title of the " + wanted[title] + " sample", std::move(text)});
+    return chosen;
 }
 
 } // namespace
@@ -450,6 +476,7 @@ int main(int argc, char *argv[]) {
         size_t threads = 8;
         fs::path output = "samples";
         fs::path dbFile = "wiktlangs.sqlite";
+        fs::path sameTitlesOf;
         std::vector<std::string> wikis;
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
@@ -464,11 +491,23 @@ int main(int argc, char *argv[]) {
                 output = argv[++i];
             else if (arg == "--db" && i + 1 < argc)
                 dbFile = argv[++i];
+            else if (arg == "--same-titles" && i + 1 < argc)
+                sameTitlesOf = argv[++i];
             else if (arg == "-h" || arg == "--help") {
-                std::cout << "usage: wiktsamples [-j N] [-n pages] [--other N] [-o samples] [--db wiktlangs.sqlite] [wiki...]\n";
+                std::cout << "usage: wiktsamples [-j N] [-n pages] [--other N] [-o samples] [--db wiktlangs.sqlite] [wiki...]\n"
+                             "       wiktsamples --same-titles samples1000 -o samples_en [en]\n";
                 return 0;
             } else
                 wikis.push_back(arg);
+        }
+        if (!sameTitlesOf.empty()) {
+            for (const auto &wiki : wikis.empty() ? std::vector<std::string>{"en"} : wikis) {
+                auto chosen = sameTitles(wiki, sameTitlesOf);
+                writeSamples(output / wiki, chosen);
+                std::cout << wiki << ": " << chosen.size() << " pages of the titles of " << sameTitlesOf.string()
+                          << " -> " << (output / wiki).string() << std::endl;
+            }
+            return 0;
         }
         if (wikis.empty())
             wikis = WikiDump::dumpPath(WikiProject::Wiktionary, "en").available_languages();

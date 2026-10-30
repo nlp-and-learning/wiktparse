@@ -1093,6 +1093,39 @@ br	dist	Pronunciation	section
 br	notenn	Notes	section
 br	anagr	Anagrams	relation
 br	skriv-all	Alternative forms	section
+gl	substf	Noun	section
+gl	substm	Noun	section
+gl	topon	Proper noun	section
+gl	nomep	Proper noun	section
+gl	adx	Adjective	section
+gl	verbo	Verb	section
+gl	verbot	Verb	section
+gl	verboi	Verb	section
+gl	numcard	Numeral	section
+gl	conx	Conjunction	section
+gl	locsm	Phrase	section
+gl	locsf	Phrase	section
+gl	símbolo	Symbol	section
+gl	trad	Translations	section
+gl	relac	Related terms	relation
+gl	sin	Synonyms	relation
+gl	ver	See also	section
+gl	var	Alternative forms	section
+gl	ref	References	section
+rw	izina	Noun	section
+rw	inshinga	Verb	section
+cy	be	Verb	section
+cy	nform	Noun form	section
+cy	altsp	Alternative forms	section
+cy	hffon	Homophones	section
+lmo	prov	Proverbs	relation
+lmo	locverb	Phrase	section
+lmo	locnom	Phrase	section
+lmo	locavv	Phrase	section
+lmo	locadj	Phrase	section
+lmo	avv	Adverb	section
+lmo	pronom	Pronoun	section
+lmo	prep	Preposition	section
 sa	यन्त्रोपारोपितकोशांशः	References	section
 sa	Monier-Williams	References	section
 sa	कल्पद्रुमः	References	section

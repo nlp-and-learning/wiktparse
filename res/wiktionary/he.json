@@ -1,5 +1,8 @@
 {
   "wiki": "he",
+  "etymology": {
+    "numbered": true
+  },
   "language": {
     "form": "implicit"
   },

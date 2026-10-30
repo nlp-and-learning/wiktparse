@@ -1603,18 +1603,22 @@ public:
                 }
         // A template line with the name of a section; where sections are headings only a
         // {{-…-}} one or one without parameters (an, co {{-noun-}}; not es {{sinónimo|…}}
-        // of a definition); not {{trans-top|…}}, no known name
-        if (auto t = templateLine(line);
+        // of a definition); not {{trans-top|…}}, no known name; links of categories after it are left
+        // out (an "{{-adj-}}[[Categoría:EN:Adchectivos]]")
+        static const std::regex trailingLinks(R"((\}\})(?:\s*\[\[[^\]\[:]+:[^\]\[]*\]\])+\s*$)");
+        const std::string sectionLine =
+                line.size() < 500 && line.find("}}[[") != std::string::npos ? std::regex_replace(line, trailingLinks, "$1") : line;
+        if (auto t = templateLine(sectionLine);
             t && t->name.size() < 40 &&
             (str(config_, "/sections/form") != "heading" || t->parameters.empty() ||
              (t->name.size() > 2 && t->name.starts_with('-') && t->name.ends_with('-'))) &&
-            names_.find(sectionKey(trim(line)).first, dashTemplate(line))) {
+            names_.find(sectionKey(trim(sectionLine)).first, dashTemplate(sectionLine))) {
             // A headword template under its part of speech (en ===Verb=== {{en-verb}}) is a line of
             // it, not a part of speech of its own (shn {{shn-noun}} without a heading is one)
-            const bool headword = dashTemplate(line) == 2 && !names_.find(sectionKey(trim(line)).first) &&
+            const bool headword = dashTemplate(sectionLine) == 2 && !names_.find(sectionKey(trim(sectionLine)).first) &&
                                   current()["kind"] == "pos";
             if (!headword) {
-                open(trim(line), headingLevel() + 1, true); // {{synonimy}}, {{-sin-}}
+                open(trim(sectionLine), headingLevel() + 1, true); // {{synonimy}}, {{-sin-}}
                 return;
             }
         }
@@ -1644,6 +1648,20 @@ public:
             !(config_.contains(implicitSenses) && !config_[implicitSenses].get<bool>()))
             if (std::vector<int> probe; senseLine(config_, line, probe)) {
                 push(node(std::optional<std::string>("Definitions"), "section", "", headingLevel() + 1, 0));
+                current()["implicit"] = true;
+                counters_.clear();
+            }
+        // Senses right after an etymology, of no part of speech between (fa "* [[عربی]]" then "# …"): in a
+        // Definitions section of their own beside it, after a text of the etymology only; not of
+        // etymologies written as "#" lines (en "# From {{inh|gld|tuw-pro|*kūke}}", oc "# Del [[latin]]…";
+        // etymology.numbered: he, all its etymologies so)
+        if (current()["section"] == "Etymology" && line.starts_with('#') && marker != "line" &&
+            !trim(current().value("text", std::string())).empty() &&
+            !config_.value("etymology", json::object()).value("numbered", false))
+            if (std::vector<int> probe; senseLine(config_, line, probe)) {
+                const int level = current()["level"].get<int>();
+                close();
+                push(node(std::optional<std::string>("Definitions"), "section", "", level, 0));
                 current()["implicit"] = true;
                 counters_.clear();
             }

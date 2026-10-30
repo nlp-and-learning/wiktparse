@@ -156,12 +156,14 @@ dump_dir = ~/dump
   `res/wiktionary/etymology_words.tsv`; the others get a relation by hand and
   `--export res/wiktionary/etymology_words.tsv` writes them, the phrases of
   the relations of all wikis that `wikt2jsonl` reads (`*`: of all wikis).
-- `tools/etymologycompare.py [-i uniform100] [--en uniform_same100/en.jsonl] [--examples 3] [wiki...]` –
+- `tools/etymologycompare.py [-i uniform100] [--en uniform_same100/en.jsonl] [--db wiktlangs.sqlite] [--examples 3] [wiki...]` –
   the etymology chains of one entry (title and language) in a wiki and in
   en.wikt (`wiktsamples --same-titles`, then `wikt2jsonl --uniform -i same100
-  -o uniform_same100 en`): per wiki the entries with a chain in both, how many
-  have the same first step, the share of their items found in en.wikt, and
-  examples of those that differ.
+  -o uniform_same100 en`): per wiki the entries with a chain in both by kind –
+  the same first step, consistent (a step in both, one chain longer),
+  continues (one goes on where the other stops: en.wikt Polish *woda* from Old
+  Polish, pl.wikt from Proto-Slavic; ancestors of `wiktlangs.sqlite`), apart,
+  conflict (mostly parser errors), one-sided – and examples of the conflicts.
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

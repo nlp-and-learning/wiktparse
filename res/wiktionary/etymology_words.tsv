@@ -1,6 +1,7 @@
 # Phrases of the etymologies of each wiki and their relation (tools/etymologywords.py):
 # from, borrowed, calque, compare, descendant, mention, unrelated, uncertain, guess (a word
-# of a guess: possibly), gloss (the next form a meaning: it "cioè"), none (a word of no
+# of a guess: possibly), gloss (the next form a meaning: it "cioè"), aside (the rest of the
+# sentence beside the etymology, its forms no items: uk "паралелі"), none (a word of no
 # relation, reviewed).
 wiki	phrase	relation
 *	<	from
@@ -354,6 +355,7 @@ uk	запозичене з	borrowed
 uk	запозичення з	borrowed
 uk	калька	calque
 uk	можливо	guess
+uk	паралелі	aside
 uk	пор.	compare
 uk	походження неясне	uncertain
 uk	походять	descendant

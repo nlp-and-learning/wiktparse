@@ -165,7 +165,8 @@ w tekście bez szablonu (`text_forms`: ro „Din latină ''[[aqua]]''”, scn �
 latinu "[[gallus]]"”, lt „<= [[gaminti]]”; język to ten z nazwy języka w języku
 danej wiki tuż przed formą, z szablonu języka, z formy przed nią w łańcuchu,
 w ostatku język wpisu; frazy relacji `gloss`, it „cioè”, oznaczają znaczenie,
-nie formę), puste szablony braku
+nie formę; frazy relacji `aside`, uk „у точній паралелі”, zdanie obok
+etymologii, analogię, której formy nie są pozycjami), puste szablony braku
 etymologii (en `{{rfe}}`; `=…` cały tekst). Sposób wspólny dla kilku wiki to
 profil z `res/wiktionary/etymology_profiles.json` (`en`: szablony en.wikt,
 przejęte przez si, bn, ja, zh, ms…), który wiki bierze przez

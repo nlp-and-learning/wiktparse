@@ -96,6 +96,8 @@ public:
                 continue;
             if (f[2] == "guess")
                 etymologyWords_[f[0]]["doubt_words"].push_back(f[1]);
+            else if (f[2] == "aside") // (a sentence beside the etymology: uk "у точній паралелі")
+                etymologyWords_[f[0]]["aside_words"].push_back(f[1]);
             else
                 etymologyWords_[f[0]]["words"][f[1]] = f[2];
         }
@@ -133,13 +135,18 @@ public:
         // (the phrases of all wikis, "*": "<", "←"; then the wiki's own)
         for (const std::string &key : {std::string("*"), wiki})
             if (auto it = etymologyWords_.find(key); it != etymologyWords_.end() && config.contains("etymology")) {
-                auto doubt = config["etymology"].value("doubt_words", json::array());
+                // (lists joined, not replaced)
+                std::map<std::string, json> lists;
+                for (const char *list : {"doubt_words", "aside_words"})
+                    lists[list] = config["etymology"].value(list, json::array());
                 mergeInto(config["etymology"], it->second);
-                for (const auto &w : it->second.value("doubt_words", json::array()))
-                    if (!std::ranges::contains(doubt, w))
-                        doubt.push_back(w);
-                if (!doubt.empty())
-                    config["etymology"]["doubt_words"] = doubt;
+                for (auto &[list, words] : lists) {
+                    for (const auto &w : it->second.value(list, json::array()))
+                        if (!std::ranges::contains(words, w))
+                            words.push_back(w);
+                    if (!words.empty())
+                        config["etymology"][list] = words;
+                }
             }
         // Other forms of language markers, prepared once: {"language": merged without aliases}
         if (config["language"].contains("also")) {
@@ -2336,6 +2343,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
         std::vector<std::string> outerRelations; // the relation of the words before a bracket
         bool wordsHere = false;                  // words of a relation in the last text read
         bool doubt = false;                      // words of a guess in this sentence
+        bool aside = false;                      // words of a sentence beside the etymology in this one
         bool uncertainHere = false;              // words of an uncertain origin in the last text read
         int last = -1;               // the last item
         size_t at = 0;
@@ -2354,10 +2362,17 @@ std::string etymologyChain(const std::string &text, const json &config, const st
             wordsHere = false;
             // words of a guess in the sentence (etymology.doubt_words: en "Another proposal is…"), the
             // last place of one (by the end of the sentence before it below)
-            size_t lastDoubt = std::string::npos;
-            for (const auto &w : part(spec, "doubt_words"))
-                if (auto at = lower.rfind(w.get<std::string>()); at != std::string::npos)
-                    lastDoubt = lastDoubt == std::string::npos ? at : std::max(lastDoubt, at);
+            auto lastWordOf = [&](const char *list) {
+                size_t lastAt = std::string::npos;
+                for (const auto &w : part(spec, list))
+                    if (auto at = lower.rfind(w.get<std::string>()); at != std::string::npos)
+                        lastAt = lastAt == std::string::npos ? at : std::max(lastAt, at);
+                return lastAt;
+            };
+            const size_t lastDoubt = lastWordOf("doubt_words");
+            // words of a sentence beside the etymology (etymology.aside_words: uk "у точній паралелі до
+            // того як {{lang|pt|vermelho}}…"), its forms no items
+            const size_t lastAside = lastWordOf("aside_words");
             size_t lastEnd = std::string::npos; // of a sentence
             // the words that end last, of them the longest ("borrowed from", not "from")
             size_t best = std::string::npos, bestEnd = 0, bestSize = 0;
@@ -2403,12 +2418,18 @@ std::string etymologyChain(const std::string &text, const json &config, const st
                 doubt = lastDoubt != std::string::npos && lastDoubt > lastEnd;
             else if (lastDoubt != std::string::npos)
                 doubt = true;
+            if (lastEnd != std::string::npos)
+                aside = lastAside != std::string::npos && lastAside > lastEnd;
+            else if (lastAside != std::string::npos)
+                aside = true;
         };
         std::string lastRelation;
         int lastOf = -1;
         // (summary: of a chain template, which closes no chain, the written one may follow)
         auto add = [&](std::string relation, const std::string &lang, const std::string &form, int of,
                        bool summary = false) {
+            if (aside) // (a sentence beside the etymology: its forms no items, its text stays in the etymology)
+                return;
             std::string line = relation;
             for (const auto &field : {lang, form}) // (uncertain: neither, attested: no language)
                 if (!field.empty())
@@ -2436,7 +2457,7 @@ std::string etymologyChain(const std::string &text, const json &config, const st
         // (also "+" and a word or two, ro "''a [[vorbi]]'' + sufixul ''[[-areț]]''")
         auto joinPart = [&](std::string_view between, const std::string &lang, const std::string &form) {
             const auto joint = trim(std::string(between));
-            if (last < 0 || !joint.starts_with('+') || joint.find_first_of(".,;:()<>\"'[]{}", 1) != std::string::npos ||
+            if (last < 0 || aside || !joint.starts_with('+') || joint.find_first_of(".,;:()<>\"'[]{}", 1) != std::string::npos ||
                 std::ranges::count(joint, ' ') > 2)
                 return false;
             auto &item = items[static_cast<size_t>(last)];

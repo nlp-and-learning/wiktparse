@@ -13,7 +13,22 @@
   },
   "pos": {
     "form": "heading",
-    "example": "====Noun===="
+    "example": "====Noun====",
+    "names": {
+      "jbo": {
+        "Root": "Gismu (Root)",
+        "Gismu": "Gismu (Root)",
+        "Predicate": "Brivla (Predicate)",
+        "Brivla": "Brivla (Predicate)",
+        "Lujvo": "Lujvo (Compound word)",
+        "Lujvo | Compound Word": "Lujvo (Compound word)",
+        "Particle": "Cmavo (Particle)",
+        "Cmavo": "Cmavo (Particle)",
+        "Affix": "Rafsi (Affix)",
+        "Rafsi": "Rafsi (Affix)",
+        "Rafsi | Affix or Combining Form": "Rafsi (Affix)"
+      }
+    }
   },
   "sections": {
     "form": "heading"

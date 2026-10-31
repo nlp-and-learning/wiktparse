@@ -3163,6 +3163,18 @@ private:
         json e = {{"pos", c["section"] == "Part of speech" ? json() : c["section"]}};
         const auto heading = c.value("heading", std::string());
         e["pos_written"] = heading;
+        // pos.names of a language: its own names of its parts of speech, by the heading as written, else
+        // by the part of speech (en Appendix:Lojban: "Lujvo" -> "Lujvo (Compound word)", "Root" ->
+        // "Gismu (Root)"; not of the Root of another language, en Reconstruction ine-pro)
+        if (const auto &code = (*language_)["code"]; code.is_string())
+            if (const auto names = config_.value("pos", json::object()).value("names", json::object()).value(code.get<std::string>(), json::object());
+                !names.empty()) {
+                if (auto it = names.find(heading); it != names.end())
+                    e["pos"] = *it;
+                else if (e["pos"].is_string())
+                    if (auto by = names.find(e["pos"].get<std::string>()); by != names.end())
+                        e["pos"] = *by;
+            }
         std::string group = scopes_[scope].group;
         std::string grammar;
         json also = json::array();

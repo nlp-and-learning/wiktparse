@@ -1376,7 +1376,7 @@ const std::set<std::string> partsOfSpeech = {
         "inflected form", "noun form", "verb form", "adjective form", "adverb form", "pronoun form", "participle form",
         "romanization", "part of speech" /* kk ===Сөз табы===: the part of speech as a line, the senses */,
         "expression", "determinative" /* en ===Phrase===, ===Determiner=== by their Wikidata labels */,
-        "predicate" /* en Appendix:Lojban ===Predicate===: a brivla */};
+        "predicate" /* en Appendix:Lojban ===Predicate===: a brivla */, "compound word" /* a lujvo */};
 const std::set<std::string> relations = {
         "synonyms", "antonyms", "hypernyms", "hyponyms", "meronyms", "holonyms", "troponyms", "coordinate terms",
         "derived terms", "related terms", "compounds", "descendants", "anagrams", "idioms", "proverbs",
@@ -1491,9 +1491,19 @@ public:
         // First letter only ("Derived terms")
         if (size_t pos = 0; !section.empty() && wikilib::unicode::decode_utf8(section, pos))
             section = wikilib::unicode::to_upper(section.substr(0, pos)) + section.substr(pos);
-        std::string kind = partsOfSpeech.contains(lower) ? "pos" : relations.contains(lower) ? "relation" : "section";
-        if (auto k = kinds_.find(lower); kind == "section" && k != kinds_.end())
-            kind = k->second;
+        auto kindOf = [&](const std::string &name) -> std::string {
+            if (partsOfSpeech.contains(name))
+                return "pos";
+            if (relations.contains(name))
+                return "relation";
+            auto k = kinds_.find(name);
+            return k != kinds_.end() ? k->second : "section";
+        };
+        std::string kind = kindOf(lower);
+        // (a name with a note in brackets, of the kind of the note: en Lojban "Gismu (Root)", "Lujvo
+        // (Compound word)" parts of speech)
+        if (const auto open = lower.rfind(" ("); kind == "section" && open != std::string::npos && lower.ends_with(")"))
+            kind = kindOf(lower.substr(open + 2, lower.size() - open - 3));
         return SectionName{section, kind};
     }
 
@@ -3163,18 +3173,6 @@ private:
         json e = {{"pos", c["section"] == "Part of speech" ? json() : c["section"]}};
         const auto heading = c.value("heading", std::string());
         e["pos_written"] = heading;
-        // pos.names of a language: its own names of its parts of speech, by the heading as written, else
-        // by the part of speech (en Appendix:Lojban: "Lujvo" -> "Lujvo (Compound word)", "Root" ->
-        // "Gismu (Root)"; not of the Root of another language, en Reconstruction ine-pro)
-        if (const auto &code = (*language_)["code"]; code.is_string())
-            if (const auto names = config_.value("pos", json::object()).value("names", json::object()).value(code.get<std::string>(), json::object());
-                !names.empty()) {
-                if (auto it = names.find(heading); it != names.end())
-                    e["pos"] = *it;
-                else if (e["pos"].is_string())
-                    if (auto by = names.find(e["pos"].get<std::string>()); by != names.end())
-                        e["pos"] = *by;
-            }
         std::string group = scopes_[scope].group;
         std::string grammar;
         json also = json::array();

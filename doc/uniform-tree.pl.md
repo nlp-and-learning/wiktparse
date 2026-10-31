@@ -84,7 +84,7 @@ tak jak w wiki).
 
 | pole | znaczenie |
 |---|---|
-| `pos` | część mowy, angielska nazwa sekcji z wiktsections.sqlite (`Noun`, `Verb`, `Proper noun`, `Han character`); języka o własnych klasach słów jego własne nazwy (konfiguracja `pos.names` języka: en Lojban `Gismu (Root)`, `Brivla (Predicate)`, `Lujvo (Compound word)`, `Cmavo (Particle)`, `Rafsi (Affix)`); `null`, gdy wiki jej nie podaje |
+| `pos` | część mowy, angielska nazwa sekcji z wiktsections.sqlite (`Noun`, `Verb`, `Proper noun`, `Han character`); `null`, gdy wiki jej nie podaje |
 | `pos_also` | dalsze części mowy tego samego nagłówka lub linii (de `{{Wortart|Substantiv|Deutsch}}, {{n}}, {{Wortart|Toponym|Deutsch}}`: `pos` `Noun`, `pos_also` `["Toponym"]`) |
 | `pos_written` | część mowy tak, jak zapisana (`''rzeczownik, rodzaj żeński''`, `{{S|nom|fr|num=2}}`, `{{-ana-|mg}}`) |
 | `group` | własny numer wpisu lub jego grupy wpisów w wiki: en `Etymology 2`, es `Etimología 2`, fr `num=2`, ru `{{з|II}}` (miejsce homografu, gdy szablon nie ma numeru), pl `2` z `(2.1)` |

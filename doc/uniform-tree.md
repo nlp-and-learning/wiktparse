@@ -84,7 +84,7 @@ latter with `pos_written` "czasownik zwrotny…", as the wiki has them).
 
 | field | meaning |
 |---|---|
-| `pos` | the part of speech, an English section name of wiktsections.sqlite (`Noun`, `Verb`, `Proper noun`, `Han character`); of a language of word classes of its own, its own names (configuration `pos.names` of the language: en Lojban `Gismu (Root)`, `Brivla (Predicate)`, `Lujvo (Compound word)`, `Cmavo (Particle)`, `Rafsi (Affix)`); `null` when the wiki gives none |
+| `pos` | the part of speech, an English section name of wiktsections.sqlite (`Noun`, `Verb`, `Proper noun`, `Han character`); `null` when the wiki gives none |
 | `pos_also` | further parts of speech of the same heading or line (de `{{Wortart|Substantiv|Deutsch}}, {{n}}, {{Wortart|Toponym|Deutsch}}`: `pos` `Noun`, `pos_also` `["Toponym"]`) |
 | `pos_written` | the part of speech as written (`''rzeczownik, rodzaj żeński''`, `{{S|nom|fr|num=2}}`, `{{-ana-|mg}}`) |
 | `group` | the wiki's own number of the entry or of its group of entries: en `Etymology 2`, es `Etimología 2`, fr `num=2`, ru `{{з|II}}` (the place of the homograph when the template has no number), pl `2` of `(2.1)` |

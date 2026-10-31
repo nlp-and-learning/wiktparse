@@ -1243,7 +1243,7 @@ su	Tingkatan basa	Usage notes	section
 my	အင်္ဂလိပ်	Translations	section
 tcy	ನಾಮಪದೊಲು	Noun	section
 tcy	(ಆ) ನುಡಿಕಟ್ಟುಲು	Idioms	relation
-ast	-rel-	Related terms	relation
+ast	rel	Related terms	relation
 ast	forma verbu	Verb form	section
 ast	forma axetivu	Adjective form	section
 ast	forma sustantivu	Noun form	section
@@ -1331,6 +1331,236 @@ en	Lujvo	Lujvo (Compound word)	section
 en	Brivla	Brivla (Predicate)	section
 en	Gismu	Gismu (Root)	section
 en	Cmavo	Cmavo (Particle)	section
+ast	Ver tamién	See also	section
+sd	[[Image:Noia 64 apps xeyes.png|30px]]  ڏسندا	See also	section
+sd	[[Image:Noia 64 apps xeyes.png|30px]] حوالو ڏسندا	References	section
+sd	هم اکر	Anagrams	relation
+sd	اسم خاص	Proper noun	section
+sd	هم معنيٰ لفظ	Synonyms	relation
+he	מקור	Etymology	section
+he	הערות שוליים	References	section
+he	נטיות הפעלים	Conjugation	section
+he	סימוכין	References	section
+he	פרשנים מפרשים	Notes	section
+he	ביטויים קרובים	Related terms	relation
+si	ආශ්‍රිත පද	Related terms	relation
+si	ආශ්‍රිත යෙදුම්	Related terms	relation
+si	ක්‍රියා පදය	Verb	section
+si	නාම ප්‍රකෘතිය	Root	section
+si	වැඩිදුර් කියවීම සඳහා	Further reading	section
+si	ව්‍යුත්පන්න පද	Derived terms	relation
+si	අකුර	Letter	section
+si	භාවිත සටහන්	Usage notes	section
+mr	भाषांतर	Translations	section
+mr	हिन्दी	Translations	section
+mr	इंग्रजी	Translations	section
+mr	व्याकरणिक वैशिष्ट्ये	Grammar	section
+mr	व्याकरणिक वैशिष्ट्य	Grammar	section
+mr	व्याकरण	Grammar	section
+mr	समान अर्थ	Synonyms	relation
+mr	समानार्थी शब्द	Synonyms	relation
+mr	रूपवैशिष्ट्ये	Inflection	section
+mr	रुपवैशिष्ट्ये	Inflection	section
+mr	उत्पत्ति	Etymology	section
+mr	व्युत्पत्ती	Etymology	section
+mr	व्युत्पत्ती / शब्दाची माहिती	Etymology	section
+mr	अधिकची माहिती	Notes	section
+mr	उपयोग	Usage notes	section
+diq	Sıfet	Adjective	section
+diq	Zemir	Pronoun	section
+diq	Nameyê xısusiyi	Proper noun	section
+diq	Gurenayış	Conjugation	section
+diq	Amar	Numeral	section
+ky	Морфологиялык жана синтаксистик касиеттери	Morphology	section
+wa	vierbire	Verb	section
+wa	mots d’ aplacaedje	Derived terms	relation
+wa	NP	Proper noun	section
+wa	Addj	Adjective	section
+wa	waitîz eto	See also	section
+th	อักษรจีน	Han character	section
+zu	Amagama asuselwa kulo	Derived terms	relation
+zu	Amabizo amqondofana	Synonyms	relation
+zu	Amagama ahlobene	Related terms	relation
+zu	Inkomba	References	section
+zu	Isiphawulo	Adjective	section
+zu	Ibizonto	Noun	section
+zu	Ibizomuntu	Noun	section
+zu	Isenzo	Verb	section
+zgh	ⵜⴰⵙⵏⴰⵥⵖⵓⵔⵜ	Etymology	section
+zgh	ⵉⵙⵓⴳⴰⵎ	References	section
+yue	轉寫	Transliteration	section
+yue	辭典	References	section
+yue	辭源	Etymology	section
+yue	詞源	Etymology	section
+yue	解乜	Definitions	section
+ug	تەلەپپۇز	Pronunciation	section
+ug	ئوقۇلۇشلىرى	Pronunciation	section
+ug	سۆزلەر	Derived terms	relation
+ug	بەلگە	Symbol	section
+ug	پايدىلانمىلار	References	section
+ug	مەسىلەن	Examples	section
+ug	مۇناسىۋەتلىك	Related terms	relation
+ug	مەنىداش	Synonyms	relation
+gor	Verba	Verb	section
+gor	Adjektiva	Adjective	section
+gor	Nama diri	Proper noun	section
+blk	အာႏကွိုꩻ	References	section
+blk	Translate	Translations	section
+blk	ကြိယာႏဝိသေသန	Adverb	section
+blk	အငေါဝ်းထန်ႏ	Pronunciation	section
+blk	နာမ်ႏဆဲင်ႏတဖြာꩻ	Proper noun	section
+blk	ဂဏန်ꩻ	Numeral	section
+blk	အိန်းကလေတ်	Translations	section
+tg	Гипонимҳо	Hyponyms	relation
+tg	Фразеологизмҳо ва ибораҳои услуб	Idioms	relation
+tg	Пайдошавӣ	Etymology	section
+tg	Этимология	Etymology	section
+tg	Адабиёт	References	section
+tg	Хусусиятҳои сарфиву наҳвӣ	Morphology	section
+ks	دٔپِتھ	Proverbs	relation
+ks	شَکٕل	Alternative forms	section
+ks	اَچھُر	Letter	section
+gom	विरोध्दर्थ	Antonyms	relation
+gom	Bhaxantor	Translations	section
+gom	[[Hindi]]	Translations	section
+gom	[[Inglix]]	Translations	section
+gom	Moratthi	Translations	section
+gom	Uchchar	Pronunciation	section
+gom	उतराची जात 1	Part of speech	section
+sq	Numër	Numeral	section
+gn	Ambue ñe'ẽme	Translations	section
+gn	He'isejojáva	Synonyms	relation
+gn	Ñe’êtéva ñemosusû	Inflection	section
+gn	Ñe’ẽtéva ñemosusũ :	Inflection	section
+gn	Ehechave	See also	section
+wo	Italiano	Translations	section
+wo	Français	Translations	section
+wo	Wolof	Translations	section
+tpi	Lukim tu	See also	section
+tpi	Mak	Symbol	section
+tn	Sekai	Examples	section
+tn	Letshwao	Symbol	section
+tn	Bona gape	See also	section
+am	ተመሳሳይ	Synonyms	relation
+am	ምልክት	Symbol	section
+am	ተዛማጅ ምልክቶች	Related terms	relation
+am	ግሥ	Verb	section
+am	ሥርው	Etymology	section
+ia	Referentias	References	section
+ia	linguas fonte principal	Translations	section
+ia	linguas fonte secundari	Translations	section
+ia	Traductiones	Translations	section
+ia	Antonymos	Antonyms	relation
+ia	Nomine proprie	Proper noun	section
+ia	Parolas derivate	Derived terms	relation
+simple	Other spellings	Alternative forms	section
+sk	Slovné spojenia	Collocations	relation
+sk	Stupňovanie	Inflection	section
+sk	Frázy a idiómy	Idioms	relation
+sk	Varianty zápisu	Alternative forms	section
+lv	Skatīt arī	See also	section
+lv	Atvasinājumi	Derived terms	relation
+an	Se beiga tamién	See also	section
+an	Se beigan también	See also	section
+an	Bariant dialeutal	Dialectal forms	section
+kw	Gwelowgh inwedh	See also	section
+kw	Arwodh	Symbol	section
+kw	Lytherenansow erel	Alternative forms	section
+km	នាមអសាធារណ៍	Proper noun	section
+km	'''ឯកសារយោង'''	References	section
+km	ន័យដូច	Synonyms	relation
+ig	Omumaatu	Examples	section
+ig	French	Translations	section
+ig	German	Translations	section
+ig	English	Translations	section
+ig	Beeke	Translations	section
+ig	Olu mba	Dialectal forms	section
+ss	Luphawu	Symbol	section
+ss	Letifananako	Related terms	relation
+ss	Bona	See also	section
+rw	Ikimenyetso	Symbol	section
+rw	Reba kandi	See also	section
+rw	prononciation	Pronunciation	section
+rw	synonym	Synonyms	relation
+rw	Hanzi	Han character	section
+qu	Sanacha	Symbol	section
+dv	ނިށާން	Symbol	section
+dv	ގުޅުންހުރި ނިޝާންތަކެވެ	Related terms	relation
+ti	ትእምርቲ	Symbol	section
+shy	Isem	Noun	section
+ms	Tulisan Jawi	Alternative forms	section
+ms	Bacaan lanjut	Further reading	section
+ms	Hanzi	Han character	section
+iu	ᓈᓴᐅᑦ	Numeral	section
+ie	Vide anc	See also	section
+ie	Derivates	Derived terms	relation
+pnb	[[انگریزی]]	Translations	section
+pnb	[[ادھارن]]	Examples	section
+pnb	[[اتہ پتہ]]	References	section
+pnb	[[گن ناں]]	Adjective	section
+cs	přepis	Transliteration	section
+gv	Lettraghey elley	Alternative forms	section
+bjn	Kata dasar	Root	section
+hr	drugi projekti	See also	section
+hr	[[padež|Padeži]]	Declension	section
+hr	[[imenica|Imenica]]	Noun	section
+hif	Nishaan	Symbol	section
+mt	der	Derived terms	relation
+mt	desc	Descendants	relation
+roa_rup	Ved shi	See also	section
+roa_rup	Tzi va s-dzâcâ	Definitions	section
+fy	Namme	Proper noun	section
+zh_min_nan	Tho̍k-im	Pronunciation	section
+zh_min_nan	Hàn-jī	Han character	section
+ckb	نموونە	Examples	section
+lo	ໂຕຢ່າງການໃຊ້	Examples	section
+lo	ຄຳສັບກ່ຽວຂ້ອງ	Related terms	relation
+et	Välislingid	External links	section
+min	Bacoan tambahan	Further reading	section
+fa	مترادف‌ها	Synonyms	relation
+scn	prisenti	Conjugation	section
+scn	mpirativu	Conjugation	section
+scn	passatu	Conjugation	section
+scn	mpirfettu ndi.	Conjugation	section
+scn	mpirfettu cung.	Conjugation	section
+scn	futuru	Conjugation	section
+scn	cundiziunali	Conjugation	section
+scn	girunniu	Conjugation	section
+scn	participiu	Conjugation	section
+tt	Фразеологизмнар	Idioms	relation
+tt	Аңлатма	Definitions	section
+uk	Морфологічні та синтаксичні властивості	Morphology	section
+pa	ਕ੍ਰਿਆ ਵਿਸ਼ੇਸ਼ਣ	Adverb	section
+pa	ਸੰਯੁਕਤ ਕ੍ਰਿਆ (conjunct verb)	Verb	section
+tcy	ಸಮಾನಾರ್ತೊ	Synonyms	relation
+tcy	ಕ್ರಿಯಾವಿಶೇಷಣೊಲು	Adverb	section
+tcy	ನಾಮವಿಶೇಷಣೊಲು	Adjective	section
+tcy	ಗಾದೆ ಪಾತೆರೊ	Proverbs	relation
+tcy	ಸಮ್ಮಂದೊದ ಪದೊ	Related terms	relation
+tcy	ಗಳಸುನ	Examples	section
+ln	Bobóngoli	Translations	section
+ln	Elembo	Symbol	section
+ln	Talá mpe	See also	section
+kl	Nutserneri	Translations	section
+shn	ဢၼၵရမ်ႇ	Anagrams	relation
+br	[[stummoù|Stummoù]] [[all]]	Alternative forms	section
+mk	Табела со форми на глаголот	Conjugation	section
+mk	Изведени зборови	Derived terms	relation
+mk	Деклинација на именката по падежи	Declension	section
+mk	Деклинација на придавката	Declension	section
+mk	Менување на придавката по падежи	Declension	section
+mk	Изрази	Idioms	relation
+mk	Извори	References	section
+mk	Поврзани термини	Related terms	relation
+mk	Симбол	Symbol	section
+mk	def	Definitions	section
+sr	Скраћенице	Abbreviations	relation
+sr	Изрази	Idioms	relation
+sr	падежи	Declension	section
+vi	pron	Pronunciation	section
+vi	n	Noun	section
+vi	ref	References	section
+vi	etym	Etymology	section
 lmo	locverb	Phrase	section
 lmo	locnom	Phrase	section
 lmo	locavv	Phrase	section

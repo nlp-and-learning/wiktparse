@@ -1,6 +1,7 @@
 {
   "wiki": "mk",
   "language": {
+    "fallback_native": true,
     "lookup": "{name} јазик",
     "aliases": {
       "Македонски": "mk",

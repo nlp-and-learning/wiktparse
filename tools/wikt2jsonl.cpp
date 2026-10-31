@@ -1529,7 +1529,8 @@ std::pair<std::string, int> sectionKey(std::string text) {
         // ang {{Wordcynn|Tōgeīecendlic}}, az {{Söztipi|İsim|Azərbaycan dili}})
         // (eo {{Vortospeco|substantiva formo|eo}}, ka {{ლემა|ნაბრუნები ფორმა|ქართული}})
         static const std::set<std::string> byParameter = {"S", "Wortart", "-pos-", "H", "ĐM", "Söztopary",
-                                                          "słowna družina", "ⵟ", "Wordcynn", "Söztipi", "Vortospeco", "ლემა"};
+                                                          "słowna družina", "ⵟ", "Wordcynn", "Söztipi", "Vortospeco", "ლემა",
+                                                          "section" /* vi {{section|pron}} */};
         if (byParameter.contains(t->name)) {
             if (auto v = t->get(size_t{1}))
                 text = std::string(*v);
@@ -1581,8 +1582,10 @@ class LanguageEntry {
 public:
     using LanguageCode = std::function<std::string(const std::string &)>;
 
-    LanguageEntry(const json &config, const SectionNames &names, LanguageCode languageCode, int languageLevel)
-        : config_(config), names_(names), languageCode_(std::move(languageCode)) {
+    // title: of the page (a heading that is it: the definitions of the word, mad)
+    LanguageEntry(const json &config, const SectionNames &names, LanguageCode languageCode, int languageLevel,
+                  std::string title = "")
+        : config_(config), names_(names), languageCode_(std::move(languageCode)), title_(std::move(title)) {
         root_ = node(std::nullopt, "", "", languageLevel, 0);
         stack_.push_back(&root_);
     }
@@ -1738,6 +1741,7 @@ private:
     const json &config_;
     const SectionNames &names_;
     LanguageCode languageCode_;
+    std::string title_; // of the page
     json root_;
     int exampleDepth_ = 0; // templates the last example leaves open
 
@@ -1788,6 +1792,14 @@ private:
         // he ==הָלַךְ==: a heading of this level is the entry word, its definitions below
         if (!name && level == num(config_, "/senses/entry_level", 0))
             name = SectionName{"Definitions", "section"};
+        // a heading of no known name that is the title of the page (mad ===abbo=== over "# kasambu'"):
+        // the definitions of the word below it
+        if (!name && !title_.empty()) {
+            static const std::regex markup(R"('{2,}|\[\[(?:[^\]|]*\|)?|\]\])");
+            const std::string plain = trim(std::regex_replace(raw.size() < 500 ? raw : std::string(), markup, ""));
+            if (!plain.empty() && wikilib::unicode::to_lower(plain) == wikilib::unicode::to_lower(title_))
+                name = SectionName{"Definitions", "section"};
+        }
         // ru == {{з|ударение=за́мок}} ==: a homograph, its sections below
         if (!name && !key.empty() && key == str(config_, "/homographs/template"))
             name = SectionName{"Homograph", "section"};
@@ -2169,7 +2181,9 @@ std::vector<std::pair<std::string, std::string>> lineTerms(std::string rest) {
                         terms.emplace_back(name, termValue(piece));
         }
     }
-    std::erase_if(terms, [](const auto &p) { return noTerm(p.second); });
+    // (no links of a namespace, mk "[[Категорија:Именки]]": a category, a file)
+    static const std::regex namespaced(R"(^[^\s:]{2,}:\S)");
+    std::erase_if(terms, [](const auto &p) { return noTerm(p.second) || std::regex_search(p.second, namespaced); });
     return terms;
 }
 
@@ -3911,7 +3925,7 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
                     if (auto it = config[aliases].find(lang); it != config[aliases].end())
                         code = it->get<std::string>();
                 return code;
-            }, wikt2jsonl_heading(line) ? wikt2jsonl_heading(line)->level : 1);
+            }, wikt2jsonl_heading(line) ? wikt2jsonl_heading(line)->level : 1, title);
             if (keepLine && !markersOnly)
                 entry->line(line, offset);
             stats.sections++;

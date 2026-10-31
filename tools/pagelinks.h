@@ -188,6 +188,55 @@ inline size_t mergeUniformSubpage(json &page, const json &subpage) {
     return merged;
 }
 
+// Thesaurus pages (en "Thesaurus:water", zh, hu, id, si "Thesaurus:", pt "Wikisaurus:", sr "Тезаурус:", es
+// "Tesauro:"): the title of their page of the word, empty of another page
+inline const std::vector<std::string> thesaurusPrefixes = {"Thesaurus:", "Wikisaurus:", "Тезаурус:", "Tesauro:"};
+inline std::string thesaurusBase(const std::string &title) {
+    for (const auto &prefix : thesaurusPrefixes)
+        if (title.starts_with(prefix) && title.size() > prefix.size() && title.find('/', prefix.size()) == std::string::npos)
+            return title.substr(prefix.size());
+    return {};
+}
+
+// The relations of a thesaurus page into its page of the word of the uniform tree: of each entry of the
+// thesaurus, into the first entry of its language and part of speech on the page (of none such a new
+// entry of them, not lost), each relation with "thesaurus": the title of the thesaurus page; the number
+// of entries merged. The languages of the thesaurus not on the page are left (the page stays then)
+inline size_t mergeThesaurus(json &page, const json &thesaurus) {
+    size_t merged = 0;
+    const std::string title = thesaurus.value("title", "");
+    for (const auto &thesaurusLanguage : thesaurus.value("languages", json::array()))
+        for (const auto &from : thesaurusLanguage.value("entries", json::array())) {
+            if (!from.contains("relations"))
+                continue;
+            json *language = nullptr, *to = nullptr;
+            for (auto &l : page["languages"])
+                if (l.value("code", json()) == thesaurusLanguage.value("code", json())) {
+                    language = &l;
+                    break;
+                }
+            if (!language)
+                continue;
+            if (auto entries = language->find("entries"); entries != language->end())
+                for (auto &e : *entries)
+                    if (e.value("pos", json()) == from.value("pos", json())) {
+                        to = &e;
+                        break;
+                    }
+            if (!to) {
+                (*language)["entries"].push_back({{"pos", from.value("pos", json())}});
+                to = &(*language)["entries"].back();
+            }
+            for (const auto &[name, items] : from["relations"].items())
+                for (auto item : items) {
+                    item["thesaurus"] = title;
+                    (*to)["relations"][name].push_back(std::move(item));
+                }
+            ++merged;
+        }
+    return merged;
+}
+
 // Every reference to the translations of other pages ("see" of wikt2jsonl)
 inline void eachSee(json &node, const std::function<void(json &)> &f) { eachOf(node, "see", f); }
 
@@ -338,11 +387,11 @@ struct Pairs {
 
 struct LinkCount {
     size_t translations = 0, page = 0, home = 0, both = 0, none = 0, noLang = 0, noTerm = 0, subpages = 0, see = 0,
-           seeFound = 0, en = 0, etymologyItems = 0, etymologyLinked = 0;
+           seeFound = 0, en = 0, etymologyItems = 0, etymologyLinked = 0, thesauri = 0;
     void add(const LinkCount &c) {
         translations += c.translations, page += c.page, home += c.home, both += c.both, none += c.none;
         noLang += c.noLang, noTerm += c.noTerm, subpages += c.subpages, see += c.see, seeFound += c.seeFound, en += c.en;
-        etymologyItems += c.etymologyItems, etymologyLinked += c.etymologyLinked;
+        etymologyItems += c.etymologyItems, etymologyLinked += c.etymologyLinked, thesauri += c.thesauri;
     }
 };
 

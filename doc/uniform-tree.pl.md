@@ -247,7 +247,10 @@ języka.
    najpierw tekst, rozbiór według rodzaju później.
 2. Strony tezaurusa (en `Thesaurus:water`): osobne wpisy czy relacje hasła
    głównego – dołączane do hasła głównego jako jego relacje, tak jak podstrony
-   tłumaczeń (jeszcze nie zrobione).
+   tłumaczeń (`wikt2jsonl --uniform --dump`): do wpisu jego języka i części
+   mowy, każda relacja z `thesaurus` (tytuł) i `gloss` (jej znaczenie, en
+   `{{ws sense|en|…}}`); strona tezaurusa, której słowo ma stronę ze wszystkimi
+   jej językami, nie jest zapisywana osobno.
 3. Tłumaczenia należące do kilku wpisów (en `====Translations====` pod
    `===Etymology N===` obok jego części mowy, rzadkie): do jednego wpisu czy
    do każdego – do jednego, jak w tabeli.

@@ -249,7 +249,10 @@ language.
    text first, parsed per kind later.
 2. Thesaurus pages (en `Thesaurus:water`): entries of their own, or relations
    of the main entry – merged into the main entry as its relations, as
-   translation subpages are merged (not done yet).
+   translation subpages are merged (`wikt2jsonl --uniform --dump`): into the
+   entry of its language and part of speech, each relation with `thesaurus`
+   (the title) and `gloss` (its sense, en `{{ws sense|en|…}}`); a thesaurus
+   page whose word has a page with all its languages is not written apart.
 3. Translations belonging to several entries (en `====Translations====`
    under `===Etymology N===` beside its parts of speech, rare): to one entry,
    or to each – to one, as in the table.

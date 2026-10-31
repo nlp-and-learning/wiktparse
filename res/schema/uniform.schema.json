@@ -252,6 +252,14 @@
         "qualifier": {
           "type": "string",
           "description": "Label of the line or term as written (pl {{zdrobn}}, ru прилагательные=, en <q:archaic>)"
+        },
+        "gloss": {
+          "type": "string",
+          "description": "The gloss of the sense of a thesaurus page the relation stands under (en {{ws sense|en|substance whose molecular formula is H₂O}})"
+        },
+        "thesaurus": {
+          "type": "string",
+          "description": "The thesaurus page the relation comes from, merged into the entry (Thesaurus:water)"
         }
       }
     },

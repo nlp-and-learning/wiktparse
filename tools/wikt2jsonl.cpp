@@ -1767,10 +1767,19 @@ private:
         // ru == {{з|ударение=за́мок}} ==: a homograph, its sections below
         if (!name && !key.empty() && key == str(config_, "/homographs/template"))
             name = SectionName{"Homograph", "section"};
+        // en Thesaurus ===={{ws sense|en|substance whose molecular formula is H₂O}}====: a sense, its
+        // gloss that of the relations below
+        std::string gloss;
+        if (auto t = !name ? onlyTemplate(trim(raw)) : std::nullopt; t && t->name == "ws sense") {
+            name = SectionName{"Sense", "section"};
+            gloss = trim(std::string(t->get(size_t{2}).value_or("")));
+        }
         if (!name)
             unknown_.push_back(key);
         std::string kind = !name ? "" : name->section == "Etymology" ? "etymology" : name->kind;
         json n = node(name ? std::optional(name->section) : std::nullopt, kind, raw, level, index);
+        if (!gloss.empty())
+            n["gloss"] = gloss;
         if (templateLine)
             n["template"] = true;
         push(std::move(n));
@@ -2038,8 +2047,10 @@ bool noTerm(const std::string &term) {
 // The terms of a line of a relation section with the label before them:
 // "[[warownia]], [[twierdza]]", "{{zdrobn}} [[zameczek]] {{m}}", en "{{col|en|a|b}}", "* {{l|en|x}}",
 // fr "{{lien|x|fr}}", ru "{{родств-блок|прилагательные=за́мковый}}" (by its parameters as labels)
+// en Thesaurus "{{ws|en|hydro}} {{qualifier|rare}}": a term of {{ws}}, a qualifier after it
 std::vector<std::pair<std::string, std::string>> lineTerms(std::string rest) {
-    static const std::set<std::string> linkTemplates = {"l", "link", "l-self", "ll", "m", "L", "lien"};
+    static const std::set<std::string> linkTemplates = {"l", "link", "l-self", "ll", "m", "L", "lien", "ws"};
+    static const std::set<std::string> qualifierTemplates = {"q", "qualifier", "qual", "i", "qf", "lb", "lbl"};
     static const std::regex listTemplate(R"(^(col[1-9u]?|col-auto|(der|rel|desc)[2-5]?(-u)?)$)");
     std::vector<std::pair<std::string, std::string>> terms; // label, term
     std::string label;
@@ -2056,6 +2067,11 @@ std::vector<std::pair<std::string, std::string>> lineTerms(std::string rest) {
         while (!rest.empty() && (rest[0] == ' ' || rest[0] == ':'))
             rest.erase(0, 1);
     }
+    // a qualifier after the terms, of a line of no label before them (en Thesaurus "{{qualifier|rare}}")
+    if (label.empty())
+        for (const auto &t : wikilib::templates::find_invocations(rest))
+            if (qualifierTemplates.contains(t.name) && t.location.begin.offset > 0)
+                label += (label.empty() ? "" : " ") + rest.substr(t.location.begin.offset, t.location.length());
     for (const auto &[term, genders] : linkPieces(rest))
         terms.emplace_back(label, term);
     for (const auto &t : wikilib::templates::find_invocations(rest)) {
@@ -2957,6 +2973,7 @@ private:
     std::map<const json *, NodeInfo> info_;
     int lastEntry_ = -1;
     int homographs_ = 0;
+    std::string senseGloss_; // of the en Thesaurus sense being filled
 
     std::string kind(const json &node) const {
         if (!node.contains("section") || !node["section"].is_string())
@@ -3153,6 +3170,8 @@ private:
     }
 
     void addRelation(size_t e, const std::string &name, json item) {
+        if (!senseGloss_.empty() && !item.contains("gloss")) // (en Thesaurus: the gloss of its sense)
+            item["gloss"] = senseGloss_;
         auto &list = entries_[e]["relations"][name];
         if (!std::ranges::contains(list, item))
             list.push_back(std::move(item));
@@ -3471,7 +3490,12 @@ private:
             } else {
                 shared(c, scope);
             }
+            // (a sense of en Thesaurus: its gloss of the relations below it)
+            const std::string glossBefore = senseGloss_;
+            if (section(c) == "Sense")
+                senseGloss_ = c.value("gloss", std::string());
             fill(c);
+            senseGloss_ = glossBefore;
             if (kind(c) == "pos") // (after its children: their senses, pl Definitions)
                 restOfPos(c, static_cast<size_t>(owner));
         }
@@ -4122,25 +4146,33 @@ int main(int argc, char *argv[]) {
                     fromDumps ? wikilib::dump::parallel_worker_count(
                                         WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki), threads)
                               : 1;
-            // Translation subpages of the wiki (en water/translations), read from the dump before the pages
-            // (of samples those of their titles): base title -> the subpage in the uniform tree
-            std::map<std::string, json> subpages;
+            // Translation subpages (en water/translations) and thesaurus pages (en Thesaurus:water) of the
+            // wiki, read from the dump before the pages (of samples those of their titles): the title of
+            // the page of the word -> the subpage, the thesaurus page in the uniform tree
+            std::map<std::string, json> subpages, thesauri;
             if (linking)
                 try {
                     std::set<std::string> sampleTitles;
                     if (!fromDumps)
                         for (const auto &page : readJson(input / wiki / "meta.json"))
                             sampleTitles.insert(page["title"].get<std::string>());
+                    auto baseOf = [](const std::string &t) {
+                        auto base = pagelinks::subpageBase(t);
+                        return base.empty() ? pagelinks::thesaurusBase(t) : base;
+                    };
                     auto pages = WikiDump::wiktionary(wiki).extractMatching([&](const std::string &t) {
-                        const auto base = pagelinks::subpageBase(t);
+                        const auto base = baseOf(t);
                         return !base.empty() && (fromDumps || sampleTitles.contains(base));
                     });
+                    auto path = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki);
+                    wikilib::dump::DumpReader reader(path);
+                    const auto site = reader.read_site_info();
                     Stats scratch;
                     for (const auto &[title, text] : pages)
-                        if (auto line = convertPage(wiki, config, names, sectionNames, title, 0,
+                        if (auto line = convertPage(wiki, config, names, sectionNames, title, site ? site->namespace_of(title) : 0,
                                                     withDecodedEntities(wikilib::markup::strip_comments(text)), scratch);
                             !line["sections"].empty())
-                            subpages[pagelinks::subpageBase(title)] = written(line);
+                            (pagelinks::subpageBase(title).empty() ? thesauri : subpages)[baseOf(title)] = written(line);
                 } catch (const std::exception &) {
                     // (samples of a wiki of no dump here: no subpages)
                 }
@@ -4157,8 +4189,18 @@ int main(int argc, char *argv[]) {
                     for (const auto &s : page["languages"])
                         if (s.contains("code") && s["code"].is_string() && pairs.has(wiki, base, s["code"].get<std::string>()))
                             return std::nullopt;
+                // (a thesaurus page whose page of the word has all its languages: merged there)
+                if (const auto base = pagelinks::thesaurusBase(title); !base.empty() && !pairs.sections.empty() &&
+                                                                       !page["languages"].empty() &&
+                                                                       std::ranges::all_of(page["languages"], [&](const json &s) {
+                                                                           return s.contains("code") && s["code"].is_string() &&
+                                                                                  pairs.has(wiki, base, s["code"].get<std::string>());
+                                                                       }))
+                    return std::nullopt;
                 if (auto it = subpages.find(title); it != subpages.end())
                     linkCounts[worker].subpages += pagelinks::mergeUniformSubpage(page, it->second) > 0;
+                if (auto it = thesauri.find(title); it != thesauri.end())
+                    linkCounts[worker].thesauri += pagelinks::mergeThesaurus(page, it->second) > 0;
                 if (!pairs.sections.empty()) {
                     pagelinks::linkPage(page, wiki, pairs, linkCounts[worker]);
                     // the items of its etymology chains to the pages of their words (gem-pro *watōr:
@@ -4249,9 +4291,9 @@ int main(int argc, char *argv[]) {
                     links.add(linkCounts[w]);
                     glosses.add(glossCounts[w]);
                 }
-                std::cout << std::format("{}: subpages {}, translations {} of a page here {}, home {}, en {}; glosses {} "
+                std::cout << std::format("{}: subpages {}, thesauri {}, translations {} of a page here {}, home {}, en {}; glosses {} "
                                          "linked {}, translations of a sense {} of {}; etymology items {} of a page {}",
-                                         wiki, links.subpages, links.translations, links.page, links.home, links.en,
+                                         wiki, links.subpages, links.thesauri, links.translations, links.page, links.home, links.en,
                                          glosses.glosses, glosses.linked, glosses.withSense, glosses.translations,
                                          links.etymologyItems, links.etymologyLinked)
                           << std::endl;

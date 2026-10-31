@@ -108,6 +108,10 @@
           "type": "string",
           "description": "Heading, template line or italic line as written"
         },
+        "gloss": {
+          "type": "string",
+          "description": "Of a Sense of a thesaurus page (en {{ws sense|en|substance whose molecular formula is H₂O}}): its gloss"
+        },
         "level": {
           "type": "integer",
           "description": "Heading level; template lines one below the last heading"

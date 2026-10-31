@@ -55,7 +55,9 @@
 
 #include "dump/WikiDump.h"
 #include "util/textUtils.h"
+#include "glosslink.h"
 #include "jsonl_blocks.h"
+#include "pagelinks.h"
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -3851,6 +3853,8 @@ int main(int argc, char *argv[]) {
         fs::path configDir = WIKTPARSE_RES_DIR "/wiktionary";
         std::vector<std::string> wikis;
         bool fromDumps = false, markersOnly = false, uniformTree = false, force = false;
+        std::vector<fs::path> extraFiles; // --extra: links of glosses by embeddings and LLMs
+        fs::path languagesDir;            // --languages: the <wiki>.languages of every wiki
         Compression compression = Compression::none;
         int level = 0; // 0: of the format (bz2 9, zstd 9)
         size_t threads = 8;
@@ -3871,6 +3875,10 @@ int main(int argc, char *argv[]) {
                 markersOnly = true;
             else if (arg == "--force")
                 force = true;
+            else if (arg == "--extra" && i + 1 < argc)
+                extraFiles.emplace_back(argv[++i]);
+            else if (arg == "--languages" && i + 1 < argc)
+                languagesDir = argv[++i];
             else if (arg == "--bz2")
                 compression = Compression::bz2;
             else if (arg == "--zstd")
@@ -3885,6 +3893,13 @@ int main(int argc, char *argv[]) {
                              "       --dump: all pages of the dumps, each wiki read in N threads (default 8); a wiki\n"
                              "              whose output is complete (its .idx ends with EOF=) is left as it is,\n"
                              "              --force: all again; a wiki that fails is told, the others go on\n"
+                             "       --uniform --dump: before the pages, the languages of the pages of every dump into\n"
+                             "              <wiki>.languages (title, tab, codes; again when the dump is newer or\n"
+                             "              --force); the pages then with their translation subpages merged, their\n"
+                             "              translations linked to pages (page, home, en) and their glosses to senses\n"
+                             "              (sense_ids; --extra file.tsv... of glossrekey.py)\n"
+                             "       --languages DIR: the <wiki>.languages of every wiki (of --dump: the output), for\n"
+                             "              the links of samples\n"
                              "       --markers-only: only language markers and stats, no JSONL\n"
                              "       --bz2, --zstd: <wiki>.jsonl.bz2 or .jsonl.zst in blocks of 100 lines or 512 KB\n"
                              "              with <wiki>.jsonl.idx; --level: bz2 1-9, zstd 1-22 (9);\n"
@@ -3928,10 +3943,10 @@ int main(int argc, char *argv[]) {
         std::string header = "wiki\tprofile\tpages\twith_sections\tsections\twith_code\tsenses\ttranslations\tnative_sections\tnative_senses\tnative_translations\tseconds";
         statsFile << header << '\n';
         std::cout << header << '\n';
-        auto convertWiki = [&](const std::string &wiki) {
+        // The configuration of a wiki with the language names of its Lua module, if any (zh
+        // "Module:Languages/canonical names": ["阿歐語"] = "aou"; its entries become aliases)
+        auto languageConfig = [&](const std::string &wiki) {
             json config = configs.of(wiki);
-            // zh: a Lua module of the wiki maps language names to codes
-            // ("Module:Languages/canonical names": ["阿歐語"] = "aou"); its entries become aliases
             if (auto module = str(config, "/language/names_module"); !module.empty()) {
                 auto pages = WikiDump::wiktionary(wiki).extractMatching([&](const std::string &t) { return t == module; });
                 if (auto it = pages.find(module); it != pages.end()) {
@@ -3947,6 +3962,97 @@ int main(int argc, char *argv[]) {
                     std::cout << wiki << ": " << added << " language names from " << module << std::endl;
                 }
             }
+            return config;
+        };
+
+        // The languages of the pages of every dump (--uniform --dump), for the links of translations
+        // to pages: <wiki>.languages, again when the dump is newer (or --force); then read
+        const bool linking = uniformTree && !markersOnly;
+        if (linking && fromDumps && languagesDir.empty())
+            languagesDir = output;
+        pagelinks::Pairs pairs;
+        if (linking && !languagesDir.empty()) {
+            std::vector<std::string> all = fromDumps
+                    ? WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, "en").available_languages()
+                    : std::vector<std::string>{};
+            if (!fromDumps)
+                for (const auto &entry : fs::directory_iterator(languagesDir))
+                    if (entry.path().extension() == ".languages")
+                        all.push_back(entry.path().stem().string());
+            const auto languagesStarted = std::chrono::steady_clock::now();
+            for (const auto &wiki : all) {
+                const fs::path file = languagesDir / (wiki + ".languages");
+                if (fromDumps) {
+                    // (again of another dump: its first line, the dump's name and size, differs)
+                    const auto dump = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki).dump_path();
+                    if (force || !pagelinks::Pairs::ofDump(file, dump))
+                        try {
+                            json config = languageConfig(wiki);
+                            if (config.value("skip", false))
+                                continue;
+                            const SectionNames sectionNames("wiktsections.sqlite", wiki);
+                            auto path = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki);
+                            wikilib::dump::DumpReader reader(path);
+                            auto site = reader.read_site_info();
+                            if (!site)
+                                throw std::runtime_error(reader.error());
+                            const size_t workers = wikilib::dump::parallel_worker_count(path, threads);
+                            std::vector<std::vector<std::pair<std::string, std::vector<std::string>>>> found(workers);
+                            std::vector<Stats> scratch(workers);
+                            // (pages of no language marker of wikis of one language: of the wiki's, gu, ig)
+                            const bool fallback = config["language"].value("fallback_native", false);
+                            const auto native = nativeCodes(wiki, config);
+                            auto error = wikilib::dump::process_parallel(
+                                    path, threads,
+                                    [&](size_t worker, const std::string &title, std::string_view content,
+                                        const wikilib::dump::PageLocation &) {
+                                        if (!convertedNamespace(*site, site->namespace_of(title)))
+                                            return true;
+                                        auto line = convertPage(wiki, config, names, sectionNames, title,
+                                                                site->namespace_of(title),
+                                                                withDecodedEntities(wikilib::markup::strip_comments(content)),
+                                                                scratch[worker], true);
+                                        std::vector<std::string> codes;
+                                        for (const auto &s : line["sections"])
+                                            if (s.contains("code") && s["code"].is_string() &&
+                                                !std::ranges::contains(codes, s["code"].get<std::string>()))
+                                                codes.push_back(s["code"].get<std::string>());
+                                        if (codes.empty() && fallback && !native.empty())
+                                            codes.push_back(*native.begin());
+                                        if (!codes.empty())
+                                            found[worker].emplace_back(title, std::move(codes));
+                                        return true;
+                                    },
+                                    [](const wikilib::dump::DumpReader::ProcessProgress &) {});
+                            if (!error.empty())
+                                throw std::runtime_error(error);
+                            std::map<std::string, std::vector<std::string>> codes;
+                            for (auto &f : found)
+                                for (auto &[title, list] : f)
+                                    codes[title] = std::move(list);
+                            fs::create_directories(languagesDir);
+                            pagelinks::Pairs::save(file, dump, codes);
+                            std::cout << std::format("{}: languages of {} pages ({:.0f} s)", wiki, codes.size(),
+                                                     std::chrono::duration<double>(std::chrono::steady_clock::now() - languagesStarted).count())
+                                      << std::endl;
+                        } catch (const std::exception &e) {
+                            std::cerr << wiki << ": languages: " << e.what() << std::endl;
+                            continue;
+                        }
+                }
+                if (fs::exists(file))
+                    pairs.load(wiki, file);
+            }
+            pairs.finish();
+            std::cout << std::format("languages: {} wikis, {} (title, language) pairs", pairs.sections.size(), pairs.size())
+                      << std::endl;
+        }
+        const glosslink::Extras extras = glosslink::readExtras(extraFiles);
+        if (!extraFiles.empty())
+            std::cout << std::format("{} links of glosses by embeddings and LLMs", extras.size()) << std::endl;
+
+        auto convertWiki = [&](const std::string &wiki) {
+            json config = languageConfig(wiki);
             // pl: a template of the wiki maps the abbreviations of languages of its etymologies to names
             // (Szablon:etym/język: "|niem=Język niemiecki"); they become codes (etymology.language_names)
             if (auto page = str(config, "/etymology/language_switch"); !page.empty()) {
@@ -4007,6 +4113,51 @@ int main(int argc, char *argv[]) {
                     fromDumps ? wikilib::dump::parallel_worker_count(
                                         WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki), threads)
                               : 1;
+            // Translation subpages of the wiki (en water/translations), read from the dump before the pages
+            // (of samples those of their titles): base title -> the subpage in the uniform tree
+            std::map<std::string, json> subpages;
+            if (linking)
+                try {
+                    std::set<std::string> sampleTitles;
+                    if (!fromDumps)
+                        for (const auto &page : readJson(input / wiki / "meta.json"))
+                            sampleTitles.insert(page["title"].get<std::string>());
+                    auto pages = WikiDump::wiktionary(wiki).extractMatching([&](const std::string &t) {
+                        const auto base = pagelinks::subpageBase(t);
+                        return !base.empty() && (fromDumps || sampleTitles.contains(base));
+                    });
+                    Stats scratch;
+                    for (const auto &[title, text] : pages)
+                        if (auto line = convertPage(wiki, config, names, sectionNames, title, 0,
+                                                    withDecodedEntities(wikilib::markup::strip_comments(text)), scratch);
+                            !line["sections"].empty())
+                            subpages[pagelinks::subpageBase(title)] = written(line);
+                } catch (const std::exception &) {
+                    // (samples of a wiki of no dump here: no subpages)
+                }
+            std::vector<pagelinks::LinkCount> linkCounts(workers);
+            std::vector<glosslink::Count> glossCounts(workers);
+            // A page of the uniform tree before it is written: its translation subpage merged into the entry
+            // of its part of speech, its translations linked to pages (of the languages of every wiki) and
+            // its glosses to its senses; none of a subpage that went into its base page
+            auto finished = [&](json page, size_t worker) -> std::optional<json> {
+                if (!linking)
+                    return page;
+                const std::string title = page["title"].get<std::string>();
+                if (const auto base = pagelinks::subpageBase(title); !base.empty() && !pairs.sections.empty())
+                    for (const auto &s : page["languages"])
+                        if (s.contains("code") && s["code"].is_string() && pairs.has(wiki, base, s["code"].get<std::string>()))
+                            return std::nullopt;
+                if (auto it = subpages.find(title); it != subpages.end())
+                    linkCounts[worker].subpages += pagelinks::mergeUniformSubpage(page, it->second) > 0;
+                if (!pairs.sections.empty())
+                    pagelinks::linkPage(page, wiki, pairs, linkCounts[worker]);
+                for (auto &s : page["languages"])
+                    glosslink::linkUniform(s, title, glossCounts[worker],
+                                           s.contains("code") && s["code"].is_string() ? s["code"].get<std::string>() : "None",
+                                           extras);
+                return page;
+            };
             std::optional<JsonlWriter> out;
             if (!markersOnly)
                 // (the compressed output of a dump: some 0.6 of the dump; pl 109 of 181 MB)
@@ -4034,7 +4185,8 @@ int main(int argc, char *argv[]) {
                                                     json::array({location.block, location.index}));
                             // Pages without a recognized language are left out
                             if (out && !line["sections"].empty())
-                                out->add(worker, written(line).dump(-1, ' ', false, json::error_handler_t::replace), title);
+                                if (auto page = finished(written(line), worker))
+                                    out->add(worker, page->dump(-1, ' ', false, json::error_handler_t::replace), title);
                             return true;
                         },
                         [&](const wikilib::dump::DumpReader::ProcessProgress &p) {
@@ -4057,7 +4209,8 @@ int main(int argc, char *argv[]) {
                                         markersOnly,
                                         page.value("source", json()));
                 if (out && !line["sections"].empty()) // pages without a recognized language are left out
-                    out->add(0, written(line).dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
+                    if (auto finishedPage = finished(written(line), 0))
+                        out->add(0, finishedPage->dump(-1, ' ', false, json::error_handler_t::replace), page["title"]);
             }
             if (out)
                 out->close(); // (its last blocks: in the time of the wiki)
@@ -4071,6 +4224,19 @@ int main(int argc, char *argv[]) {
                 markersFile << wiki << '\t' << str(config, "/language/form") << '\t' << marker << '\t' << value.first
                             << '\t' << value.second << '\t' << stats.markerExamples[marker] << '\n';
             std::cout << row << std::endl;
+            if (linking) {
+                pagelinks::LinkCount links;
+                glosslink::Count glosses;
+                for (size_t w = 0; w < workers; ++w) {
+                    links.add(linkCounts[w]);
+                    glosses.add(glossCounts[w]);
+                }
+                std::cout << std::format("{}: subpages {}, translations {} of a page here {}, home {}, en {}; glosses {} "
+                                         "linked {}, translations of a sense {} of {}",
+                                         wiki, links.subpages, links.translations, links.page, links.home, links.en,
+                                         glosses.glosses, glosses.linked, glosses.withSense, glosses.translations)
+                          << std::endl;
+            }
         };
         std::vector<std::string> failed;
         for (const auto &wiki : wikis) {

@@ -105,6 +105,16 @@ dump_dir = ~/dump
   With `--dump`, a wiki whose output is complete (its `.idx` ends with `EOF=`)
   is left as it is, so that a run broken off goes on where it stopped
   (`--force`: all again); a wiki that fails is reported and the others go on.
+  `--uniform --dump` does the later passes too, so that one run gives the
+  final pages: first the languages of the pages of every dump into
+  `<wiki>.languages` (a line a page: its title, a tab, the codes of its
+  sections, after a line of the dump's name and size; made again only of
+  another dump, some 5 minutes for all), then each page with its translation
+  subpage merged, its translations linked to pages (`page`, `home`, `en`, as
+  `wiktlink`) and its glosses to senses (`sense_ids`, as `wiktglos`, with the
+  `--extra` files of `tools/glossrekey.py`). Of samples `--languages DIR`
+  takes the `.languages` of a run on the dumps; their subpages come from the
+  dumps.
 - `wiktbrowse [file.jsonl | file.jsonl.bz2]` – browser of JSONL files (wikt2jsonl
   output, also any JSONL such as wiktNeeded), a separate project in `browser/`
   (Qt6 and qcodeedit: the sibling `../qcodeedit` when present, otherwise

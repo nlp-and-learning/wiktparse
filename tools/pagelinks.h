@@ -179,7 +179,7 @@ inline size_t mergeUniformSubpage(json &page, const json &subpage) {
                 for (const auto &t : from.value(key, json::array()))
                     (*to)[key].push_back(t);
             json source = {{"title", subpage.value("title", "")}};
-            if (subpage.contains("source"))
+            if (subpage.contains("source") && !subpage["source"].is_null())
                 source["source"] = subpage["source"];
             (*to)["subpages"].push_back(std::move(source));
             ++merged;
@@ -190,9 +190,11 @@ inline size_t mergeUniformSubpage(json &page, const json &subpage) {
 // Every reference to the translations of other pages ("see" of wikt2jsonl)
 inline void eachSee(json &node, const std::function<void(json &)> &f) { eachOf(node, "see", f); }
 
-// The (title, language) pairs of the pages of every wiki, as hashes, sorted: whether a wiki has a page
-// of a term with a section of its language. Of a pass over the output (wiktlink) or of the language
-// pass of wikt2jsonl, saved per wiki as <wiki>.pairs (the hashes as 64-bit numbers)
+// The (title, language) pairs of the pages of every wiki: whether a wiki has a page of a term with a
+// section of its language; in memory as hashes, sorted (some 55 million of all wikis: 440 MB). Of a
+// pass over the output (wiktlink) or of the language pass of wikt2jsonl, saved per wiki as the text
+// <wiki>.languages: a line a page, its title, a tab, the codes of its sections ("Wasser\tde,nds,lb"),
+// after a first line of the dump it is of, "# <file name>\t<size>": of another dump it is made again
 struct Pairs {
     std::map<std::string, std::vector<uint64_t>> sections; // wiki -> its keys
     std::map<std::string, std::string> homeWiki;            // language code -> the Wiktionary of it
@@ -202,15 +204,43 @@ struct Pairs {
         keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
         sections[wiki] = std::move(keys);
     }
-    static void save(const fs::path &file, const std::vector<uint64_t> &keys) {
-        std::ofstream out(file, std::ios::binary);
-        out.write(reinterpret_cast<const char *>(keys.data()), static_cast<std::streamsize>(keys.size() * sizeof(uint64_t)));
+    // The first line of a file of the languages of a dump: the dump's file name and size
+    static std::string dumpLine(const fs::path &dump) {
+        std::error_code error;
+        return "# " + dump.filename().string() + '\t' + std::to_string(fs::file_size(dump, error));
+    }
+    // A file of the languages of this dump (its first line that of the dump)
+    static bool ofDump(const fs::path &file, const fs::path &dump) {
+        std::ifstream in(file);
+        std::string first;
+        return std::getline(in, first) && first == dumpLine(dump);
+    }
+    // title -> codes, in title order, after the line of the dump
+    static void save(const fs::path &file, const fs::path &dump, const std::map<std::string, std::vector<std::string>> &codes) {
+        std::ofstream out(file);
+        out << dumpLine(dump) << '\n';
+        for (const auto &[title, list] : codes) {
+            out << title << '\t';
+            for (size_t i = 0; i < list.size(); ++i)
+                out << (i ? "," : "") << list[i];
+            out << '\n';
+        }
     }
     void load(const std::string &wiki, const fs::path &file) {
-        std::ifstream in(file, std::ios::binary | std::ios::ate);
-        std::vector<uint64_t> keys(static_cast<size_t>(in.tellg()) / sizeof(uint64_t));
-        in.seekg(0);
-        in.read(reinterpret_cast<char *>(keys.data()), static_cast<std::streamsize>(keys.size() * sizeof(uint64_t)));
+        std::ifstream in(file);
+        std::vector<uint64_t> keys;
+        for (std::string line; std::getline(in, line);) {
+            const auto tab = line.rfind('\t');
+            if (tab == std::string::npos || line.starts_with("# "))
+                continue;
+            const std::string title = line.substr(0, tab);
+            for (size_t from = tab + 1; from < line.size();) {
+                const auto comma = std::min(line.find(',', from), line.size());
+                if (comma > from)
+                    keys.push_back(key(title, line.substr(from, comma - from)));
+                from = comma + 1;
+            }
+        }
         add(wiki, std::move(keys));
     }
     // The Wiktionary of each language, of the wikis known (cmn: zh.wiktionary)

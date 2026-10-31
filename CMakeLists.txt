@@ -59,7 +59,7 @@ add_executable(wikt2jsonl tools/wikt2jsonl.cpp)
 target_compile_definitions(wikt2jsonl PRIVATE WIKTPARSE_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res")
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(ZSTD REQUIRED IMPORTED_TARGET libzstd)
-target_link_libraries(wikt2jsonl wiktdump SQLite::SQLite3 PkgConfig::ZSTD)
+target_link_libraries(wikt2jsonl wiktdump defglos SQLite::SQLite3 PkgConfig::ZSTD)
 
 # Phase 2 on the wikt2jsonl output: translations linked to pages (in the wiki, in the language's wiki)
 find_package(BZip2 REQUIRED)

@@ -1,0 +1,62 @@
+# Headings of sections whose meaning was not sure, reviewed (tools/sectionreview.py): status
+# uncertain (not mapped in wiktionary_section_names.tsv), mapped (looked up, then mapped there),
+# not_section (a number, a page name, a language).
+wiki	heading	occurrences	example	status	guess	note
+am	ትርጉም	118	{{PAGENAME}}<br> አማርኛ ቋንቋ {| class="wikitable mw-collapsible mw-collapsed"" ! colspan=2|በሌላ ቋንቋዎች |- |Afrikaans: [[Amhar	mapped	Translations	en.wikt ትርጉም: translation, interpretation
+am	ፊደል	81	{{H書き方}} 	mapped	Spelling	en.wikt ፊደል: letter, character; alphabet, script
+am	መንበብ	61	*<small>(''[[on’yomi]]'')</small> [[IPA]] <sup>[https://en.wikipedia.org/wiki/Japanese_phonology (ቁልፍ)]</sup>: [t͡ɕɨːdo̞	uncertain	reading (kanji on’yomi)	(looked up in en.wikt and its wiki: not found)
+blk	အငဝ်းထန်ႏ	398	* {{audio|en|LL-Q1860 (eng)-Vealhurl-abaisance.wav|အငေါဝ်း (အိန်ကလန်အခဝ်နဝ်)}} 	mapped	Pronunciation	en.wikt and blk.wikt အငဝ်းထန်ႏ: pronunciation
+blk	အရွီးခိုႏ	164	{{bor|en|la|dēfīnītus}}ဗꩻ။ 	uncertain	etymology	{{bor|…}} under it (looked up in en.wikt and its wiki: not found)
+blk	အငွေါဝ်းထန်ႏ	157	*{{audio|en|En-uk-afternoon.ogg|a=RP}} *{{audio|en|en-us-afternoon.ogg|a=US}} 	mapped	Pronunciation	a spelling of အငဝ်းထန်ႏ (pronunciation)
+blk	ချာႏဘာႏသာႏ	85	{{VN |my=[[တွက်ချက်သူ]] }} 	mapped	Translations	blk.wikt: a verb of translating from a language into another
+blk	နာမဝိသေသန	74	{{en-adj}} *[[နပ်ဆင်ႏသား]] 	uncertain	adjective	Burmese word for adjective; {{en-adj}} (looked up in en.wikt and its wiki: not found)
+blk	ကြိယာႏ	70	{{head|en|ကြိယာႏပုဒ်}} # {{infl of|en|abide||ed-form}} 	uncertain	verb	{{head|en|ကြိယာႏပုဒ်}} (looked up in en.wikt and its wiki: not found)
+blk	အခရာႏပီ လိတ်ဖြုံႏကွာႏ	65	* [[ကဲဉ်းအာအာ]], [[ကဲဉ်းအာ]] 	uncertain	related words?	(looked up in en.wikt and its wiki: not found)
+blk	နပ်တွက်ဗျာႏ	46	* လဲင်ႏ 	uncertain	?	(looked up in en.wikt and its wiki: not found)
+hsb	Wšitke	38	{{p-nalěwo}} * {{cs}}: [1] {{p|cs|Bernardina}} {{f}}, {{p|cs|Bernadeta}} {{f}} * {{nds}}: [1] {{p|nds|Berendje}}, {{p|nd	uncertain	translations (all)?	(looked up in en.wikt and its wiki: not found)
+hsb	Zapadosłowjanske předmjena	19	{{p-nalěwo}} * {{cs}}: [1] {{p|cs|Bernardina}} {{f}}, {{p|cs|Bernadeta}} {{f}} * {{dsb}}: [1] * {{hsb}}: [1] {{p|hsb|Ber	uncertain	West Slavic given names (translations)	(looked up in en.wikt and its wiki: not found)
+jbo	daivla	89	{{en-daivla|astronomies}} # le [[kesyske]] {{klesi|en : saske}} 	uncertain	a class of word?	{{en-daivla|…}} # … (looked up in en.wikt and its wiki: not found)
+jbo	fasnyvla	31	{{en-fasnyvla|abbreviates|abbreviating|abbreviated}} # [[tordu]] [[binxo]] [[gasnu]] 	uncertain	a class of word (verb forms?)	(looked up in en.wikt and its wiki: not found)
+jbo	vlakra	28	[[cidja|cidj(a)]] + [[r]] + [[curry]] 	uncertain	etymology (word root)?	(looked up in en.wikt and its wiki: not found)
+jbo	skivla	23	{{en-skivla}} # [[porto]] 	uncertain	a class of word?	(looked up in en.wikt and its wiki: not found)
+jbo	mitsmuvla	22	* [[cara]] * [[rostro]] 	uncertain	synonyms?	(looked up in en.wikt and its wiki: not found)
+ka	{{PAGENAME}}	194	[[ფაილი:2006-02-13 Drop-impact.jpg|მინი]] 	not_section	the page name as a heading	
+kcg	Tai	154	* [[A̱gwam A̱tyap]] 	uncertain	see also? (a list of links)	(looked up in en.wikt and its wiki: not found)
+kcg	Bwoi mi̱ bwoi	81	* [[a̱nu-a̱baan]] * [[shyui-a̱baan]] * [[ti̱n-da̱baan]] 	uncertain	related or derived words	(looked up in en.wikt and its wiki: not found)
+kcg	Bu nwuan	74	* [[A̱bijeje]] * [[a̱byifa̱taa]] 	uncertain	related words?	(looked up in en.wikt and its wiki: not found)
+kcg	Vak lyuut ghyang	38	* A̱dod 	uncertain	?	(looked up in en.wikt and its wiki: not found)
+ks	گرَٛنٛد	380	{{de-numeral|ipa=ˈaxtʊntˌfʏnft͡sɪç}} # [[اَرٕوَنٛزاہ]]۔ 	uncertain	part of speech / grammar	{{de-numeral}} # … under it (looked up in en.wikt and its wiki: not found)
+mad	Sambhâdhân	895	Kabbhi 	uncertain	meaning? definition?	text under it short words ("Kabbhi") (looked up in en.wikt and its wiki: not found)
+mni	{{꯱}}	352	 # ꯃꯁꯤꯡ ꯇꯤꯟꯁꯤꯟꯅꯕ ꯈꯨꯗꯝ ꯫ ---- 	not_section	number 1 (of a sense or etymology)	Meitei digits
+mni	{{꯳}}	67	 # ꯄꯤꯊꯣꯛꯄ, ꯑꯩꯒꯤ ꯈꯥꯛꯇꯕ ꯫ ---- 	not_section	number 3	
+mni	{{꯵}}	27	# ꯀꯅꯥꯅꯣ ꯍꯥꯏꯅ ꯈꯪꯗꯕ ꯃꯤ ꯍꯪꯕ ꯫ ---- 	not_section	number 5	
+mni	ꯃꯁꯤꯁꯨ ꯌꯦꯡꯉꯨ	12	{{ꯊꯄꯤ ꯈꯨꯗꯝꯁꯤꯡ}} 	uncertain	see also?	(looked up in en.wikt and its wiki: not found)
+mni	ꯈꯨꯗꯝ	12	#(ꯈꯦꯟꯆꯣꯡꯂꯣꯟ, ꯑꯄꯣꯛꯂꯣꯟ) [[ꯊꯥ]] #(ꯃꯤꯇ꯭ꯔꯪ ꯄꯣꯠꯇꯤꯟꯂꯣꯜ) ꯒ꯭ꯔꯍꯒꯤ ꯙꯥꯇꯨ [[ꯂꯨꯄꯥ]] 	uncertain	example?	(looked up in en.wikt and its wiki: not found)
+or	ସଂସ୍କୃତ - ବିଶେଷଣ -	17	 :୧. ଜଡ଼ —୧. Inext. :୨. ଶୀତଳ —୨. cold. ------------------ [[ଶ୍ରେଣୀ:ବଟ ତିଆରି ୩]] 	uncertain	Sanskrit - adjective: origin and part of speech in one heading	a heading of two parts (looked up in en.wikt and its wiki: not found)
+sat	ᱟᱹᱭᱟᱹᱛ	35	 * ᱚᱠᱚᱭ ᱛᱟᱵᱮ ᱨᱮ ᱢᱮᱱᱟᱭᱟ ᱾ 	uncertain	example?	(looked up in en.wikt and its wiki: not found)
+sat	English	26	* Cause, Reason 	not_section	a language: translations into English	
+sat	ᱵᱟᱹᱲᱛᱤ ᱡᱚᱱᱚᱲ	25	{{ᱣᱤᱠᱤᱯᱤᱰᱤᱭᱟ}} 	uncertain	more links (Wikipedia)	(looked up in en.wikt and its wiki: not found)
+shy	{{S|buḍ}}	942	: {{ébauche-buḍ|shy}} 	uncertain	etymology (stub)?	holds {{ébauche-buḍ|shy}} (looked up in en.wikt and its wiki: not found)
+shy	{{S|Agdawal}}	244	# {{lien|axxam|shy}} 	uncertain	related words? definitions?	"# {{lien|axxam|shy}}" (looked up in en.wikt and its wiki: not found)
+shy	{{S|Buḍ}}	55	: {{ébauche-buḍ|shy}} 	uncertain	etymology (stub)?	as {{S|buḍ}} (looked up in en.wikt and its wiki: not found)
+shy	Cuf	36	{{table:uk/shy}} [[Taggayt:Ukan s tacawit]] 	uncertain	translations (table)?	{{table:uk/shy}} (looked up in en.wikt and its wiki: not found)
+shy	Asfti	34	 {| class="wikitable" |+ Asfti:Amyag: abel {{iliɣ}} |- ! Izri ilaw !! Izri ibaw !! Urmir s ad !! Urmir illaw !! Urmir us	uncertain	conjugation table?	wikitable of Amyag (looked up in en.wikt and its wiki: not found)
+so	synonym	14	*[[berisamaad]], [[guunyo]], [[hanti]], [[barwaaqo]], [[badhaadh]] 	uncertain	synonyms	English word, 14 times (looked up in en.wikt and its wiki: not found)
+so	Sifo	13	'''dadka''' 	mapped	Adjective	en.wikt sifo: (grammar) adjective
+so	Meeleeye	11	'''in''' 	uncertain	adverb?	(looked up in en.wikt and its wiki: not found)
+so	Falka	8	'''in''' 	uncertain	verb?	(looked up in en.wikt and its wiki: not found)
+so	Fal-kaab	7	'''in''' 	uncertain	adverb or auxiliary?	(looked up in en.wikt and its wiki: not found)
+sr	{{Радикал}}	108	: [[...]] {{Тетрада|[[...]]|...ரீ 	uncertain	radical (of a Chinese character)	(looked up in en.wikt and its wiki: not found)
+sr	{{ХСК ниво}}	107	:... 	uncertain	HSK level (of Chinese)	(looked up in en.wikt and its wiki: not found)
+sr	{{Категорије}}	101	{{Регистар|прен.|Преносно значење}} 	uncertain	categories, registers	{{Регистар|прен.|…}} (looked up in en.wikt and its wiki: not found)
+sr	{{Сличности}}	60	: [[Категорија:Енглеско мушко име]] 	uncertain	similar words?	(looked up in en.wikt and its wiki: not found)
+tg	Хусусиятҳои семантикӣ	44	{{илл|lang=id|}} 	uncertain	semantic properties (be/ru: Semantics)	mostly empty (looked up in en.wikt and its wiki: not found)
+tt	Script	38	''Cyrillic Tatar'' 	uncertain	the word in other scripts	(looked up in en.wikt and its wiki: not found)
+ug	{{سۆز|ug|ئىسىم}}	90	{{ئۇيغۇرچە سۆز|سۇ|سۇلار}} [[ھۆججەت:Stilles Mineralwasser.jpg|thumb|سۇ]] '''سۇ''' # {{چۈشەندۈرۈشى يوق|ug}} #* مىسال جۈملە	uncertain	part of speech in parameter 2 (ئىسىم noun)	en.wikt سۆز: word; the part of speech is its parameter 2 (ئىسىم noun)
+wa	{{H|Or}}	198	{{Orto | -ue = S100 | -owe = G201 p. 217, R11 (metans po « rifondowe ») | -ouwe = G201 p. 217 | -ouye = G201 p. 217 | -o	uncertain	spelling (Orto)?	{{Orto …}} (looked up in en.wikt and its wiki: not found)
+wa	{{H|ratourneures}}	88	(likide po boere) # {{r|esse tot e-n ene aiwe}} : esse tot e [[souweur]]. #* El fåt vey souwer a grossès gotes – il '''e	uncertain	idioms with their explanations and examples	no relation: read as one, its explanations were lost (looked up in en.wikt and its wiki: not found)
+wa	{{H|Sp}}	81	* {{WM}}, {{BA}}, payis d’ [[Waime]] (tos les mots) ; {{miers|1|99}} * {{WL}} (djusse po ene piceye di mots come « [[dam	uncertain	where spoken?	(looked up in en.wikt and its wiki: not found)
+wa	{{H|sipårdaedje}}	73	[[El Ronsåt]], [[Reve]] 	uncertain	hyphenation?	text of place names (looked up in en.wikt and its wiki: not found)
+wa	{{H|ortografeye}}	57	<section begin="orto"/> (måjhon & måjhone) {{Orto | mâhô = E211 | mâhon = E1,E21,E34,E200,E212b, G201 | mahon = G201 | m	mapped	Spelling	en.wikt and wa.wikt ortografeye: spelling, orthography
+zgh	{{ⵟ|ⵉⵏⵓⴼⴰⵖ}}	249	{{(}} * ⵉⵙⵓⵍ ⵉⵔⴰ ⴰⵙⵏⴼⵍⵓⵍ {{)}} 	uncertain	?	"{{(}} * ⵉⵙⵓⵍ ⵉⵔⴰ ⴰⵙⵏⴼⵍⵓⵍ {{)}}" (looked up in en.wikt and its wiki: not found)
+zgh	{{ⵟ|ⴰⵏⴰⵎⴽ}}	71	'''{{PAGENAME}}''' {{ⴰⵙⵓⵙⵔⵓ|{{PAGENAME}}}} # ⴰⵙⵎⴰⵍ ⵏ ⴽⵔⴰ ⵢⴰⵥⵏ #* ⵜⵉⴳⵎⵎⵉ ⴰⴷ, ⵓⵔ ⴷⵉⴳⵙ ⵉⵣⴷⵉⵖ ⵢⴰⵏ. 	mapped	Definitions	en.wikt ⴰⵏⴰⵎⴽ: meaning

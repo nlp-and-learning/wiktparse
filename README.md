@@ -202,6 +202,13 @@ dump_dir = ~/dump
   link files of embeddings and LLMs, which name a node of the tree of headings
   by its path, keyed by its part of speech instead, for `wiktglos` on the
   uniform tree; reads only the blocks of their titles.
+- `tools/sectionreview.py [-d section_names_review.sqlite] [--export TSV] [--import TSV] [--lookup [wiki...]]` –
+  the headings of sections whose meaning was not sure, reviewed once so as
+  not to be looked into again (SQLite, exported to
+  `res/wiktionary_section_review.tsv`: status uncertain, mapped,
+  not_section, a guess, a note); `--lookup` looks each heading up as a word
+  of its language in en.wiktionary and in its own wiki (`jsonl_uniform`, by
+  the index of the blocks).
 - `tools/jsonlpick.py [-s samples100] [-i jsonl_senses] [-o jsonl100] [wiki...]` –
   the pages of a sample taken from a block output (`wikt2jsonl --dump`,
   `wiktlink`, `wiktglos`) into plain `<wiki>.jsonl` in the order of the sample,

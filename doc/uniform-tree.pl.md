@@ -180,6 +180,14 @@ etymologię z co najmniej 40 słowami poza szablonami, linkami i przypisami, z
 łańcuchem lub bez (en *dog*, jej hipotezy): dla czytającego prozę, modelu,
 później.
 
+`etymology_pages` łączy pozycje łańcucha ze stronami ich słów, numer pozycji
+z `<wiki>:<tytuł>`: tej samej wiki, w ostatku Wikisłownika języka słowa, w
+ostatku en.wiktionary (`wikt2jsonl --uniform --dump`, z języków wszystkich
+dumpów): en *water* `{"5": "en:Reconstruction:Proto-Germanic/watōr", …}`.
+Słowo zrekonstruowane (`*watōr`) łączy się ze swoją stroną rekonstrukcji;
+taka strona jest zwykłym wpisem, jej językiem prajęzyk (gem-pro), a `lemma`
+to jej forma zapisana tak jak w łańcuchach (`*watōr`).
+
 ## Co gdzie trafia
 
 Każda część sekcji językowej trafia tam, do czego należy:

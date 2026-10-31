@@ -3562,8 +3562,13 @@ json page(const json &converted, const json &config, const SectionNames &names, 
     json languages = json::array();
     for (const auto &language : converted["sections"])
         languages.push_back(Builder(config, names, languageCode).language(language));
-    return {{"wiki", converted["wiki"]}, {"title", converted["title"]}, {"ns", converted["ns"]},
-            {"source", converted["source"]}, {"languages", std::move(languages)}};
+    json page = {{"wiki", converted["wiki"]}, {"title", converted["title"]}, {"ns", converted["ns"]},
+                 {"source", converted["source"]}, {"languages", std::move(languages)}};
+    // A reconstructed word: its form ("Reconstruction:Proto-Germanic/watōr": "*watōr"), as the items of
+    // etymology chains write it (from gem-pro *watōr)
+    if (const auto form = pagelinks::reconstructionForm(converted["title"].get<std::string>()); !form.empty())
+        page["lemma"] = "*" + form;
+    return page;
 }
 
 } // namespace uniform
@@ -4150,8 +4155,17 @@ int main(int argc, char *argv[]) {
                             return std::nullopt;
                 if (auto it = subpages.find(title); it != subpages.end())
                     linkCounts[worker].subpages += pagelinks::mergeUniformSubpage(page, it->second) > 0;
-                if (!pairs.sections.empty())
+                if (!pairs.sections.empty()) {
                     pagelinks::linkPage(page, wiki, pairs, linkCounts[worker]);
+                    // the items of its etymology chains to the pages of their words (gem-pro *watōr:
+                    // en Reconstruction:Proto-Germanic/watōr)
+                    for (auto &s : page["languages"]) {
+                        pagelinks::linkEtymology(s, wiki, pairs, linkCounts[worker]);
+                        if (s.contains("entries"))
+                            for (auto &e : s["entries"])
+                                pagelinks::linkEtymology(e, wiki, pairs, linkCounts[worker]);
+                    }
+                }
                 for (auto &s : page["languages"])
                     glosslink::linkUniform(s, title, glossCounts[worker],
                                            s.contains("code") && s["code"].is_string() ? s["code"].get<std::string>() : "None",
@@ -4232,9 +4246,10 @@ int main(int argc, char *argv[]) {
                     glosses.add(glossCounts[w]);
                 }
                 std::cout << std::format("{}: subpages {}, translations {} of a page here {}, home {}, en {}; glosses {} "
-                                         "linked {}, translations of a sense {} of {}",
+                                         "linked {}, translations of a sense {} of {}; etymology items {} of a page {}",
                                          wiki, links.subpages, links.translations, links.page, links.home, links.en,
-                                         glosses.glosses, glosses.linked, glosses.withSense, glosses.translations)
+                                         glosses.glosses, glosses.linked, glosses.withSense, glosses.translations,
+                                         links.etymologyItems, links.etymologyLinked)
                           << std::endl;
             }
         };

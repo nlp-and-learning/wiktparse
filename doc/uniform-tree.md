@@ -181,6 +181,15 @@ configuration). `etymology_prose` marks one of 40 words and more besides its
 templates, links and notes, with a chain or not (en *dog*, its guesses): for a
 reader of prose, a model, later.
 
+`etymology_pages` links the items of the chain to the pages of their words,
+item number to `<wiki>:<title>`, of the wiki itself, else of the Wiktionary of
+the word's language, else of en.wiktionary (`wikt2jsonl --uniform --dump`, of
+the languages of every dump): en *water*
+`{"5": "en:Reconstruction:Proto-Germanic/watōr", …}`. A reconstructed word
+(`*watōr`) is linked to its page of reconstruction; such a page is an entry
+like any other, its language the proto-language (gem-pro), with `lemma` its
+form as the chains write it (`*watōr`).
+
 ## Where things go
 
 Every part of a language section goes to what it belongs to:

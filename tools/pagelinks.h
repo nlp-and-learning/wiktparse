@@ -10,6 +10,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -190,6 +191,22 @@ inline size_t mergeUniformSubpage(json &page, const json &subpage) {
 // Every reference to the translations of other pages ("see" of wikt2jsonl)
 inline void eachSee(json &node, const std::function<void(json &)> &f) { eachOf(node, "see", f); }
 
+// Pages of reconstructed words, of a proto-language (en "Reconstruction:Proto-Germanic/watōr", gem-pro;
+// fr "Reconstruction:indo-européen commun/…", de "Rekonstruktion:…"): their form without "*" ("watōr"),
+// empty of another page
+inline const std::vector<std::string> reconstructionPrefixes = {"Reconstruction:", "Rekonstruktion:"};
+inline std::string reconstructionForm(const std::string &title) {
+    for (const auto &prefix : reconstructionPrefixes)
+        if (title.starts_with(prefix))
+            if (const auto slash = title.find('/', prefix.size()); slash != std::string::npos && slash + 1 < title.size()) {
+                std::string form = title.substr(slash + 1);
+                while (form.starts_with('*'))
+                    form.erase(0, 1);
+                return form;
+            }
+    return {};
+}
+
 // The (title, language) pairs of the pages of every wiki: whether a wiki has a page of a term with a
 // section of its language; in memory as hashes, sorted (some 55 million of all wikis: 440 MB). Of a
 // pass over the output (wiktlink) or of the language pass of wikt2jsonl, saved per wiki as the text
@@ -198,6 +215,8 @@ inline void eachSee(json &node, const std::function<void(json &)> &f) { eachOf(n
 struct Pairs {
     std::map<std::string, std::vector<uint64_t>> sections; // wiki -> its keys
     std::map<std::string, std::string> homeWiki;            // language code -> the Wiktionary of it
+    // wiki -> (form without "*", code) -> the title of its page of a reconstructed word
+    std::map<std::string, std::unordered_map<uint64_t, std::string>> reconstructions;
 
     void add(const std::string &wiki, std::vector<uint64_t> keys) {
         std::ranges::sort(keys);
@@ -234,10 +253,14 @@ struct Pairs {
             if (tab == std::string::npos || line.starts_with("# "))
                 continue;
             const std::string title = line.substr(0, tab);
+            const std::string form = reconstructionForm(title);
             for (size_t from = tab + 1; from < line.size();) {
                 const auto comma = std::min(line.find(',', from), line.size());
-                if (comma > from)
+                if (comma > from) {
                     keys.push_back(key(title, line.substr(from, comma - from)));
+                    if (!form.empty())
+                        reconstructions[wiki][key(form, line.substr(from, comma - from))] = title;
+                }
                 from = comma + 1;
             }
         }
@@ -309,12 +332,74 @@ struct Pairs {
 
 struct LinkCount {
     size_t translations = 0, page = 0, home = 0, both = 0, none = 0, noLang = 0, noTerm = 0, subpages = 0, see = 0,
-           seeFound = 0, en = 0;
+           seeFound = 0, en = 0, etymologyItems = 0, etymologyLinked = 0;
     void add(const LinkCount &c) {
         translations += c.translations, page += c.page, home += c.home, both += c.both, none += c.none;
         noLang += c.noLang, noTerm += c.noTerm, subpages += c.subpages, see += c.see, seeFound += c.seeFound, en += c.en;
+        etymologyItems += c.etymologyItems, etymologyLinked += c.etymologyLinked;
     }
 };
+
+// The items of an etymology chain linked to the pages of their words ("etymology_pages" of a node with
+// "etymology_chain": item number -> "<wiki>:<title>"): of a reconstructed word ("*watōr") its page of
+// reconstruction (en "Reconstruction:Proto-Germanic/watōr"), else a page of the word with a section of
+// its language; of this wiki, else of the Wiktionary of the language, else of en.wiktionary. Items of
+// no word (uncertain, attested) and compounds are left
+inline void linkEtymology(json &node, const std::string &wiki, const Pairs &pairs, LinkCount &c) {
+    const auto chain = node.find("etymology_chain");
+    if (chain == node.end() || !chain->is_string())
+        return;
+    json links = json::object();
+    for (size_t from = 0; from < chain->get_ref<const std::string &>().size();) {
+        const auto &text = chain->get_ref<const std::string &>();
+        const auto end = std::min(text.find('\n', from), text.size());
+        std::string line = text.substr(from, end - from);
+        from = end + 1;
+        // "4. from gem-pro *watōr [2] ?"
+        const auto dot = line.find(". ");
+        if (dot == std::string::npos)
+            continue;
+        const std::string number = line.substr(0, dot);
+        line = line.substr(dot + 2);
+        if (line.ends_with(" ?"))
+            line.resize(line.size() - 2);
+        if (const auto of = line.rfind(" ["); of != std::string::npos && line.ends_with("]"))
+            line.resize(of);
+        const auto space = line.find(' '), second = line.find(' ', space == std::string::npos ? space : space + 1);
+        if (space == std::string::npos || second == std::string::npos)
+            continue;
+        const std::string relation = line.substr(0, space), lang = line.substr(space + 1, second - space - 1);
+        const std::string form = line.substr(second + 1);
+        if (relation == "compound" || form.empty())
+            continue;
+        ++c.etymologyItems;
+        auto pageOf = [&](const std::string &target) -> std::string {
+            if (form.starts_with('*')) {
+                const auto it = pairs.reconstructions.find(target);
+                if (it == pairs.reconstructions.end())
+                    return {};
+                for (const auto &f : {form.substr(1), withoutMarks(form.substr(1))})
+                    if (auto r = it->second.find(key(f, lang)); r != it->second.end())
+                        return r->second;
+                return {};
+            }
+            return pairs.find(target, form, lang);
+        };
+        std::vector<std::string> targets{wiki};
+        if (auto home = pairs.homeWiki.find(lang); home != pairs.homeWiki.end() && home->second != wiki)
+            targets.push_back(home->second);
+        if (wiki != "en")
+            targets.emplace_back("en");
+        for (const auto &target : targets)
+            if (const auto title = pageOf(target); !title.empty()) {
+                links[number] = target + ":" + title;
+                ++c.etymologyLinked;
+                break;
+            }
+    }
+    if (!links.empty())
+        node["etymology_pages"] = std::move(links);
+}
 
 // The translations of a page of a wiki linked: "page" (the wiki has a page of the term with a section of
 // its language), "home" (the Wiktionary of the language has one), "en" (en.wiktionary has one),

@@ -1509,8 +1509,9 @@ std::pair<std::string, int> sectionKey(std::string text) {
         // wa {{H|sustantif|wa}}, vi {{ĐM|pron}}
         // (tk {{Söztopary|Idioma|Türkmençe}}, hsb {{słowna družina|werb|hornjoserbšćina}}, zgh {{ⵟ|ⵉⵙⵎ|zgh}},
         // ang {{Wordcynn|Tōgeīecendlic}}, az {{Söztipi|İsim|Azərbaycan dili}})
+        // (eo {{Vortospeco|substantiva formo|eo}}, ka {{ლემა|ნაბრუნები ფორმა|ქართული}})
         static const std::set<std::string> byParameter = {"S", "Wortart", "-pos-", "H", "ĐM", "Söztopary",
-                                                          "słowna družina", "ⵟ", "Wordcynn", "Söztipi"};
+                                                          "słowna družina", "ⵟ", "Wordcynn", "Söztipi", "Vortospeco", "ლემა"};
         if (byParameter.contains(t->name)) {
             if (auto v = t->get(size_t{1}))
                 text = std::string(*v);
@@ -2115,7 +2116,8 @@ std::vector<std::pair<std::string, std::string>> lineTerms(std::string rest) {
 // (a list template over several lines as one line: en "{{col|en\n|above-water|…\n|Agnes Water|…}}"; not
 // a template of the layout of the lines of a list, et "{{Tulbad|\n*[[arhiivraamatukogu]]\n…}}"; ru
 // "{{родств-блок|\n|прилагательные=…}}")
-std::vector<json> relationItems(const std::string &text) {
+// unread: the lines of no term, kept as text (wa "# {{r|Croupet des olivîs}} : …", a template of no term)
+std::vector<json> relationItems(const std::string &text, std::string *unread = nullptr) {
     static const std::regex listStart(R"(^\s*\{\{\s*(col[1-9u]?|col-auto|(der|rel|desc)[2-5]?(-u)?|родств[^|{}]*)\s*(\||$))");
     std::vector<json> items;
     int place = 0;
@@ -2147,21 +2149,31 @@ std::vector<json> relationItems(const std::string &text) {
             rest = trim(mark->rest);
         }
         const auto terms = lineTerms(rest);
-        // the rest of a line of one term, of words besides it (mk "* [[monastère]] '''(им.)''' манастир":
-        // "(им.) манастир"), its note
+        if (terms.empty() && unread && std::ranges::any_of(rest, [](unsigned char ch) { return std::isalpha(ch) || ch >= 0x80; }))
+            *unread += t + '\n';
+        // the rest of a line, its words besides its terms: of a line of one term its note (mk "*
+        // [[monastère]] '''(им.)''' манастир": "(им.) манастир"); of a line of more terms and three
+        // words and more besides them the line is kept as text too (an explanation, wa "# [[s’ è fote]] :
+        // èn nén prinde [[asteme]] …")
         std::string note;
-        if (terms.size() == 1 && rest.size() < 2000) {
-            // (no references, sr "<ref name='…'>": also one going on in the next line, no tags)
+        if (!terms.empty() && rest.size() < 2000) {
+            // (no tags: of a reference, sr "<ref name='…'>Речник …</ref>", its text stays)
             static const std::regex links(R"(\[\[(?:[^\]|]*\|)?([^\]]*)\]\])"), markup(R"('{2,}|\{\{[^{}]*\}\})"),
-                    references(R"(<ref[^>]*/>|<ref[^>]*>.*?</ref>|<ref.*$|<[^>]*>)");
+                    references(R"(<[^>]*>)");
             note = std::regex_replace(std::regex_replace(std::regex_replace(rest, references, ""), links, "$1"), markup, "");
-            if (const auto at = note.find(terms.front().second); at != std::string::npos)
-                note.erase(at, terms.front().second.size());
+            for (const auto &[label, term] : terms)
+                if (const auto at = note.find(term); at != std::string::npos)
+                    note.erase(at, term.size());
             note = trim(note);
             while (!note.empty() && std::string_view("-–—:,;").find(note.front()) != std::string_view::npos)
                 note = trim(note.substr(1));
             if (!std::ranges::any_of(note, [](unsigned char ch) { return std::isalpha(ch) || ch >= 0x80; }))
                 note.clear();
+            if (terms.size() > 1) {
+                if (unread && std::ranges::count(trim(note), ' ') >= 2)
+                    *unread += t + '\n';
+                note.clear();
+            }
         }
         for (const auto &[label, term] : terms) {
             json item = {{"term", term}};
@@ -3438,10 +3450,13 @@ private:
         else if (name == "Examples") {
             if (auto rest = examples(text(c), {e}); !rest.empty())
                 append(entries_[e]["sections"], name, rest);
-        } else if (kind(c) == "relation" && !languageNotes.contains(name))
-            for (auto &item : relationItems(text(c)))
+        } else if (kind(c) == "relation" && !languageNotes.contains(name)) {
+            std::string unread; // (its lines of no term: text of the section)
+            for (auto &item : relationItems(text(c), &unread))
                 addRelation(e, name, std::move(item));
-        else
+            if (!unread.empty())
+                append(entries_[e]["sections"], name, unread);
+        } else
             append(entries_[e]["sections"], name.empty() ? c.value("heading", std::string()) : name, text(c));
     }
 
@@ -3497,7 +3512,15 @@ private:
             return;
         }
         if (kind(c) == "relation") {
-            for (auto &item : relationItems(text(c))) {
+            std::string unread; // (its lines of no term: text of the entries, else of the language)
+            const auto items = relationItems(text(c), &unread);
+            if (!unread.empty()) {
+                if (among.size() == 1)
+                    append(entries_[among.front()]["sections"], name, unread);
+                else
+                    append((*language_)["notes"], name, unread);
+            }
+            for (auto &item : items) {
                 std::vector<size_t> targets;
                 if (item.contains("sense"))
                     targets = entriesOfIds(expandIds(item["sense"]), among);

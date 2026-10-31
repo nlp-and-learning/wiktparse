@@ -1862,6 +1862,45 @@ private:
             n["section"] = *found;
     }
 
+    // The lines of a text of translations of which something was not read: of letters left when the
+    // language before the first colon, templates, markup and the terms and transliterations read are
+    // taken out (no lines of a template alone, {{trans-top|…}}, nor of the markup of tables)
+    static std::string unreadLines(const std::string &text, const std::vector<Translation> &found) {
+        static const std::regex tags(R"(<[^>]*>)"), links(R"(\[\[(?:[^\]|]*\|)?([^\]]*)\]\])"),
+                templates(R"(\{\{[^{}]*\}\})"), word(R"((?:[^\W\d_]|[\x80-\xff]){2,})");
+        std::string out;
+        for (const auto &line : splitLines(text)) {
+            const auto t = trim(line);
+            if (t.empty() || t.size() > 2000 || onlyTemplate(t) || t.starts_with("{|") || t.starts_with("|") ||
+                t.starts_with("!"))
+                continue;
+            // (list marks before the language: en "*: Cantonese: {{tt|yue|…}}")
+            std::string s = t;
+            while (!s.empty() && (s.front() == '*' || s.front() == ':' || s.front() == '#' || s.front() == ' '))
+                s.erase(0, 1);
+            // (the line a template of a table begins, de "{{Ü-Tabelle|1|G=…|Ü-Liste=", ru "{{перев-блок|…",
+            // cs "# {{Překlady |"; a line of categories, zu "[[Category:…]]")
+            static const std::regex categories(R"((\s*\[\[[^\]\[|:]+:[^\]\[]*\]\])+\s*)");
+            if ((s.starts_with("{{") && std::ranges::count(s, '{') > std::ranges::count(s, '}')) ||
+                std::regex_match(s, categories))
+                continue;
+            for (std::string before; before != s;) { // (templates inside templates)
+                before = s;
+                s = std::regex_replace(s, templates, " ");
+            }
+            s = std::regex_replace(std::regex_replace(s, tags, " "), links, "$1");
+            if (const auto colon = s.find(':'); colon != std::string::npos && colon < 60)
+                s = s.substr(colon + 1);
+            for (const auto &tr : found)
+                for (const std::string *piece : {&tr.term, &tr.tr, &tr.gloss})
+                    for (size_t at; !piece->empty() && (at = s.find(*piece)) != std::string::npos;)
+                        s.erase(at, piece->size());
+            if (std::regex_search(s, word))
+                out += t + '\n';
+        }
+        return out;
+    }
+
     void finishNode(json &n, Stats &stats) {
         if (n["section"] == "Part of speech")
             resolvePartOfSpeech(n);
@@ -1874,10 +1913,12 @@ private:
             found = translations(config_, n["text"].get<std::string>());
         else if (n["kind"] == "pos" && !hasTranslationSection)
             found = translations(config_, n["text"].get<std::string>(), false);
+        std::vector<Translation> kept; // (of the text: those written, not those left out below)
         for (const auto &t : found) {
             std::string code = languageCode_(t.lang);
             if (t.generic && code.empty())
                 continue;
+            kept.push_back(t);
             json item = {{"lang", code.empty() ? json() : json(code)}, {"term", t.term}};
             if (!t.sense.empty())
                 item["sense"] = t.sense;
@@ -1914,10 +1955,13 @@ private:
         if (n["section"] == "Translations" && n["translations"].empty())
             if (auto see = seeAlso(n.value("text", std::string())); !see.empty())
                 n["see"] = see;
-        // (of a part of speech the rest of the text stays: its headword line, inflection templates)
-        // (of translations read, their text; of a Translations section of no translations read, jbo
-        // "{{bau|en}} : [[anime]]", the text stays)
-        if (!n["translations"].empty() || trim(n.value("text", std::string())).empty())
+        // (of translations read, the lines of which something was not read stay: a line of no translation,
+        // gom "* [[इंग्लीश]]: rice", a transliteration in brackets, az "<big>[[தண்ணீர்]]</big> (taṇṇīr)"; of
+        // a part of speech also its headword line, inflection templates; of a Translations section of no
+        // translations read, jbo "{{bau|en}} : [[anime]]", all the text)
+        if (!kept.empty())
+            n["text"] = unreadLines(n.value("text", std::string()), kept);
+        if (trim(n.value("text", std::string())).empty())
             n.erase("text");
         for (auto &c : n["children"])
             finishNode(c, stats);

@@ -188,7 +188,11 @@ the languages of every dump): en *water*
 `{"5": "en:Reconstruction:Proto-Germanic/watōr", …}`. A reconstructed word
 (`*watōr`) is linked to its page of reconstruction; such a page is an entry
 like any other, its language the proto-language (gem-pro), with `lemma` its
-form as the chains write it (`*watōr`).
+form as the chains write it (`*watōr`). Pages of reconstruction: of a
+namespace `<ns>:<language>/<form>` of a proto-language (code `-pro`: en
+`Reconstruction:`, ja `付録:`, fa `بازساخت:`, vi `Từ tái tạo:`; en, zh, fr
+`Reconstruction:` of any language), or of the main namespace `*<form>` of a
+proto-language (ru `*voda`, es, sv).
 
 ## Where things go
 

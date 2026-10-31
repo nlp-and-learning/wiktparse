@@ -191,20 +191,23 @@ inline size_t mergeUniformSubpage(json &page, const json &subpage) {
 // Every reference to the translations of other pages ("see" of wikt2jsonl)
 inline void eachSee(json &node, const std::function<void(json &)> &f) { eachOf(node, "see", f); }
 
-// Pages of reconstructed words, of a proto-language (en "Reconstruction:Proto-Germanic/watōr", gem-pro;
-// fr "Reconstruction:indo-européen commun/…", de "Rekonstruktion:…"): their form without "*" ("watōr"),
-// empty of another page
-inline const std::vector<std::string> reconstructionPrefixes = {"Reconstruction:", "Rekonstruktion:"};
-inline std::string reconstructionForm(const std::string &title) {
-    for (const auto &prefix : reconstructionPrefixes)
-        if (title.starts_with(prefix))
-            if (const auto slash = title.find('/', prefix.size()); slash != std::string::npos && slash + 1 < title.size()) {
-                std::string form = title.substr(slash + 1);
-                while (form.starts_with('*'))
-                    form.erase(0, 1);
-                return form;
-            }
-    return {};
+// Pages of reconstructed words: their form without "*" ("watōr"), empty of another page. A page of a
+// namespace "<ns>:<language>/<form>" of a section of a proto-language (a code "-pro": en
+// "Reconstruction:Proto-Germanic/watōr", ja "付録:…", fa "بازساخت:…", vi "Từ tái tạo:…"), of en, zh, fr
+// "Reconstruction:" of any language (en "Reconstruction:Latin/…" of Vulgar Latin); a page of the main
+// namespace "*<form>" of a proto-language (ru "*(j)azъ", sla-pro; es, sv)
+inline std::string reconstructionForm(const std::string &title, const std::vector<std::string> &codes) {
+    const bool proto = std::ranges::any_of(codes, [](const std::string &c) { return c.ends_with("-pro"); });
+    std::string form;
+    const auto colon = title.find(':'), slash = title.find('/');
+    if (colon != std::string::npos && slash != std::string::npos && colon < slash && slash + 1 < title.size() &&
+        (proto || title.starts_with("Reconstruction:") || title.starts_with("Rekonstruktion:")))
+        form = title.substr(slash + 1);
+    else if (proto && title.starts_with('*') && colon == std::string::npos)
+        form = title;
+    while (form.starts_with('*'))
+        form.erase(0, 1);
+    return form;
 }
 
 // The (title, language) pairs of the pages of every wiki: whether a wiki has a page of a term with a
@@ -253,15 +256,18 @@ struct Pairs {
             if (tab == std::string::npos || line.starts_with("# "))
                 continue;
             const std::string title = line.substr(0, tab);
-            const std::string form = reconstructionForm(title);
+            std::vector<std::string> codes;
             for (size_t from = tab + 1; from < line.size();) {
                 const auto comma = std::min(line.find(',', from), line.size());
-                if (comma > from) {
-                    keys.push_back(key(title, line.substr(from, comma - from)));
-                    if (!form.empty())
-                        reconstructions[wiki][key(form, line.substr(from, comma - from))] = title;
-                }
+                if (comma > from)
+                    codes.push_back(line.substr(from, comma - from));
                 from = comma + 1;
+            }
+            const std::string form = reconstructionForm(title, codes);
+            for (const auto &code : codes) {
+                keys.push_back(key(title, code));
+                if (!form.empty())
+                    reconstructions[wiki][key(form, code)] = title;
             }
         }
         add(wiki, std::move(keys));

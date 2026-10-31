@@ -3566,7 +3566,11 @@ json page(const json &converted, const json &config, const SectionNames &names, 
                  {"source", converted["source"]}, {"languages", std::move(languages)}};
     // A reconstructed word: its form ("Reconstruction:Proto-Germanic/watōr": "*watōr"), as the items of
     // etymology chains write it (from gem-pro *watōr)
-    if (const auto form = pagelinks::reconstructionForm(converted["title"].get<std::string>()); !form.empty())
+    std::vector<std::string> codes;
+    for (const auto &language : page["languages"])
+        if (language.contains("code") && language["code"].is_string())
+            codes.push_back(language["code"].get<std::string>());
+    if (const auto form = pagelinks::reconstructionForm(converted["title"].get<std::string>(), codes); !form.empty())
         page["lemma"] = "*" + form;
     return page;
 }

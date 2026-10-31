@@ -186,7 +186,11 @@ ostatku en.wiktionary (`wikt2jsonl --uniform --dump`, z języków wszystkich
 dumpów): en *water* `{"5": "en:Reconstruction:Proto-Germanic/watōr", …}`.
 Słowo zrekonstruowane (`*watōr`) łączy się ze swoją stroną rekonstrukcji;
 taka strona jest zwykłym wpisem, jej językiem prajęzyk (gem-pro), a `lemma`
-to jej forma zapisana tak jak w łańcuchach (`*watōr`).
+to jej forma zapisana tak jak w łańcuchach (`*watōr`). Strony rekonstrukcji:
+z przestrzeni `<ns>:<język>/<forma>` z sekcją prajęzyka (kod `-pro`: en
+`Reconstruction:`, ja `付録:`, fa `بازساخت:`, vi `Từ tái tạo:`; en, zh, fr
+`Reconstruction:` dowolnego języka) albo z przestrzeni głównej `*<forma>`
+z sekcją prajęzyka (ru `*voda`, es, sv).
 
 ## Co gdzie trafia
 

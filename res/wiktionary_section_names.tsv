@@ -1557,10 +1557,19 @@ mk	def	Definitions	section
 sr	Скраћенице	Abbreviations	relation
 sr	Изрази	Idioms	relation
 sr	падежи	Declension	section
-vi	pron	Pronunciation	section
 vi	n	Noun	section
-vi	ref	References	section
-vi	etym	Etymology	section
+or	ବି	Noun	section
+or	ବିଣ	Adjective	section
+or	କ୍ରି	Verb	section
+or	କ୍ରିୟାପଦ	Verb	section
+or	କ୍ରି.ବିଶେଷଣ	Adverb	section
+or	କ୍ରି. ବିଶେଷଣ	Adverb	section
+or	ସର୍ବନାମ	Pronoun	section
+or	ସର୍ବ	Pronoun	section
+or	ପ୍ରବଚନ	Proverb	section
+or	ବାକ୍ୟ	Phrase	section
+ha	Nau’in kalma	Part of speech	section
+ha	Misallai	Examples	section
 lmo	locverb	Phrase	section
 lmo	locnom	Phrase	section
 lmo	locavv	Phrase	section

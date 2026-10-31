@@ -1453,6 +1453,37 @@ public:
             if (it == names_.end())
                 it = names_.find(wikilib::unicode::to_lower(trim(key.substr(0, bar))));
         }
+        if (it == names_.end() && key.size() < 300 && !compound) {
+            // a heading of parts by " - " or a dash, of origin, part of speech, gender: by its part of
+            // speech, else a part known (or "ସଂସ୍କୃତ - ବିଶେଷ୍ୟ - ସ୍ତ୍ରୀ.": Sanskrit - noun - feminine)
+            static const std::regex dash(R"(\s+[-–—]\s*|\s*[—–]\s*|\s+-$)"), bracket(R"(\([^()]*\)?|\[|\]|')");
+            if (std::regex_search(key, dash)) {
+                std::optional<SectionName> other;
+                for (std::sregex_token_iterator part(key.begin(), key.end(), dash, -1), end; part != end; ++part) {
+                    std::string p = trim(std::regex_replace(part->str(), bracket, " "));
+                    while (!p.empty() && p.back() == '.')
+                        p.pop_back();
+                    if (p.empty() || p == key)
+                        continue;
+                    if (auto n = find(p, 1); n && n->kind == "pos")
+                        return n;
+                    else if (n && !other)
+                        other = n;
+                }
+                if (other)
+                    return other;
+            }
+            // a part of speech in brackets, by an abbreviation (am "binary (adj)", ha "''Aikatau (v)''"),
+            // or before a number (rw "Verb X": the form X of an Arabic verb)
+            const std::string plain = trim(std::regex_replace(key, std::regex("'{2,}"), ""));
+            if (const auto open = plain.rfind('('); open != std::string::npos && plain.ends_with(")") && open > 0)
+                if (auto n = find(plain.substr(open + 1, plain.size() - open - 2), 1); n && n->kind == "pos")
+                    return n;
+            static const std::regex numbered(R"(^(\S+)\s+(?:[IVX]+|\d+)$)");
+            if (std::smatch m; std::regex_match(plain, m, numbered))
+                if (auto n = find(m[1].str(), 1); n && n->kind == "pos")
+                    return n;
+        }
         if (const auto dash = key.find('-'); compound && it == names_.end() && dash != std::string::npos) {
             static const std::regex code(R"(^[A-Za-z]{2,3}$)");
             const auto first = key.substr(0, dash), last = key.substr(key.rfind('-') + 1);
@@ -1799,6 +1830,13 @@ private:
             const std::string plain = trim(std::regex_replace(raw.size() < 500 ? raw : std::string(), markup, ""));
             if (!plain.empty() && wikilib::unicode::to_lower(plain) == wikilib::unicode::to_lower(title_))
                 name = SectionName{"Definitions", "section"};
+            // a phrase that begins with the title, of two to six words and no digits (kbd ===Псы гъэва===
+            // of псы, its meaning below): an entry of a phrase
+            const auto lowerPlain = wikilib::unicode::to_lower(plain), lowerTitle = wikilib::unicode::to_lower(title_);
+            if (const auto words = std::ranges::count(plain, ' ') + 1;
+                !name && lowerPlain.starts_with(lowerTitle + " ") && words >= 2 && words <= 6 &&
+                std::ranges::none_of(plain, [](unsigned char ch) { return std::isdigit(ch); }))
+                name = SectionName{"Phrase", "pos"};
         }
         // ru == {{з|ударение=за́мок}} ==: a homograph, its sections below
         if (!name && !key.empty() && key == str(config_, "/homographs/template"))

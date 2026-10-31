@@ -113,7 +113,12 @@ dump_dir = ~/dump
   another dump, some 5 minutes for all), then each page with its translation
   subpage merged, its translations linked to pages (`page`, `home`, `en`, as
   `wiktlink`) and its glosses to senses (`sense_ids`, as `wiktglos`, with the
-  `--extra` files of `tools/glossrekey.py`). Of samples `--languages DIR`
+  `--extra` files of `tools/glossrekey.py`). Glossary pages of
+  `res/wiktionary_glossaries.tsv` (am `computer glossary A…Z`: a heading a
+  term, a `#` line a translation) are read first too: their translations go
+  to the entries of their terms (`glossary` the page), the glossary pages are
+  written as entries of their terms, the terms of no entry are listed in
+  `<output>/<wiki>.glossary_unused.tsv`. Of samples `--languages DIR`
   takes the `.languages` of a run on the dumps; their subpages come from the
   dumps.
 - `wiktbrowse [file.jsonl | file.jsonl.bz2]` – browser of JSONL files (wikt2jsonl

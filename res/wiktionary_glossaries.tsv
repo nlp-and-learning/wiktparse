@@ -1,0 +1,8 @@
+# Glossary pages of a wiki: bilingual lists of terms (a heading a term, a "#" line under it a
+# translation), read before the pages (wikt2jsonl --uniform --dump): their translations go to the
+# entries of the terms, the pages of the glossary are written as entries of their terms, the terms of
+# no entry are listed in <output>/<wiki>.glossary_unused.tsv.
+# wiki, the beginning of the titles of its pages (case not minded), the language of the terms, of the
+# translations
+wiki	title	terms	translations
+am	computer glossary	en	am

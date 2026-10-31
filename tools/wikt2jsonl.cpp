@@ -4168,6 +4168,15 @@ int main(int argc, char *argv[]) {
                     manualSectionNames[f[0]].emplace_back(wikilib::unicode::to_lower(f[1]), f[2]);
             }
         }
+        // Glossary pages (res/wiktionary_glossaries.tsv): wiki -> the beginning of their titles, the language
+        // of their terms, of their translations
+        struct Glossary {
+            std::string prefix, terms, translations;
+        };
+        std::map<std::string, std::vector<Glossary>> glossaries;
+        for (const auto &line : readLines((configDir.parent_path() / "wiktionary_glossaries.tsv").string()))
+            if (auto f = split(line, '\t'); f.size() >= 4 && f[0] != "wiki" && !f[0].starts_with("#"))
+                glossaries[f[0]].push_back({wikilib::unicode::to_lower(f[1]), f[2], f[3]});
         LanguageNames names(dbFile);
         fs::create_directories(output);
         // The rows of stats.tsv and markers.tsv of a run before, by wiki: of the wikis left as they are
@@ -4384,6 +4393,58 @@ int main(int argc, char *argv[]) {
                 } catch (const std::exception &) {
                     // (samples of a wiki of no dump here: no subpages)
                 }
+            // Glossary pages of the wiki (res/wiktionary_glossaries.tsv: am "computer glossary A"…), read from
+            // the dump before the pages: a heading a term (a part of speech in brackets, "binary (adj)"), a
+            // "#" line under it a translation; the term, lowercase -> its translations of each page
+            struct GlossaryTerm {
+                std::string term, pos, page;
+                std::vector<std::string> translations;
+                const Glossary *of = nullptr;
+            };
+            std::map<std::string, std::vector<GlossaryTerm>> glossaryTerms;
+            std::map<std::string, std::vector<GlossaryTerm>> glossaryPages; // a page of the glossary -> its terms
+            std::set<std::string> glossaryUsed; // (lowercase terms)
+            std::mutex glossaryMutex;
+            auto glossaryOf = [&](const std::string &title) -> const Glossary * {
+                if (auto it = glossaries.find(wiki); it != glossaries.end())
+                    for (const auto &g : it->second)
+                        if (wikilib::unicode::to_lower(title).starts_with(g.prefix))
+                            return &g;
+                return nullptr;
+            };
+            if (linking && glossaries.contains(wiki))
+                try {
+                    auto pages = WikiDump::wiktionary(wiki).extractMatching([&](const std::string &t) { return glossaryOf(t) != nullptr; });
+                    static const std::regex headingLine(R"(^(=+)\s*(.*?)\s*\1\s*$)"), bracket(R"(^(.*?)\s*\(([^()]*)\)\s*$)"),
+                            markup(R"('{2,}|<[^>]*>)");
+                    for (const auto &[title, text] : pages) {
+                        std::vector<GlossaryTerm> terms;
+                        for (const auto &line : uniform::textLines(withDecodedEntities(wikilib::markup::strip_comments(text)))) {
+                            std::smatch m;
+                            if (std::regex_match(line, m, headingLine)) {
+                                std::string term = trim(std::regex_replace(m[2].str(), markup, "")), pos;
+                                if (std::smatch b; std::regex_match(term, b, bracket))
+                                    if (auto n = sectionNames.find(b[2].str(), 1); n && n->kind == "pos") {
+                                        pos = n->section;
+                                        term = trim(b[1].str());
+                                    }
+                                terms.push_back({term, pos, title, {}, glossaryOf(title)});
+                            } else if (line.starts_with('#') && !line.starts_with("#:") && !line.starts_with("#*") && !terms.empty()) {
+                                const auto translation = trim(std::regex_replace(line.substr(1), markup, ""));
+                                if (std::ranges::any_of(translation, [](unsigned char ch) { return std::isalpha(ch) || ch >= 0x80; }))
+                                    terms.back().translations.push_back(translation);
+                            }
+                        }
+                        std::erase_if(terms, [](const GlossaryTerm &t) { return t.translations.empty() || t.term.empty(); });
+                        for (const auto &t : terms)
+                            glossaryTerms[wikilib::unicode::to_lower(t.term)].push_back(t);
+                        glossaryPages[title] = std::move(terms);
+                    }
+                    std::cout << std::format("{}: glossary of {} pages, {} terms", wiki, glossaryPages.size(), glossaryTerms.size())
+                              << std::endl;
+                } catch (const std::exception &e) {
+                    std::cerr << wiki << ": glossary: " << e.what() << std::endl;
+                }
             std::vector<pagelinks::LinkCount> linkCounts(workers);
             std::vector<glosslink::Count> glossCounts(workers);
             // A page of the uniform tree before it is written: its translation subpage merged into the entry
@@ -4393,6 +4454,50 @@ int main(int argc, char *argv[]) {
                 if (!linking)
                     return page;
                 const std::string title = page["title"].get<std::string>();
+                // a page of a glossary: its terms as entries of their language with their translations (its
+                // headings were taken for languages)
+                if (auto it = glossaryPages.find(title); it != glossaryPages.end() && !it->second.empty()) {
+                    json entries = json::array();
+                    for (const auto &t : it->second) {
+                        json e = {{"pos", t.pos.empty() ? json() : json(t.pos)}, {"headword", t.term}};
+                        for (const auto &tr : t.translations)
+                            e["translations"].push_back({{"lang", t.of->translations}, {"term", tr}});
+                        entries.push_back(std::move(e));
+                    }
+                    page["languages"] = json::array({{{"code", it->second.front().of->terms},
+                                                      {"language", it->second.front().of->terms},
+                                                      {"native", false},
+                                                      {"entries", std::move(entries)}}});
+                }
+                // a term of a glossary: its translations to the entry of its part of speech, else the first,
+                // of the language of the terms; none already there; "glossary" the page of it
+                else if (auto it = glossaryTerms.find(wikilib::unicode::to_lower(title)); it != glossaryTerms.end())
+                    for (const auto &t : it->second)
+                        for (auto &s : page["languages"]) {
+                            if (s.value("code", json()) != t.of->terms || !s.contains("entries") || s["entries"].empty())
+                                continue;
+                            json *to = &s["entries"][0];
+                            for (auto &e : s["entries"])
+                                if (!t.pos.empty() && e.value("pos", json()) == t.pos) {
+                                    to = &e;
+                                    break;
+                                }
+                            for (const auto &tr : t.translations) {
+                                const json item = {{"lang", t.of->translations}, {"term", tr}};
+                                const bool there = to->contains("translations") &&
+                                                   std::ranges::any_of((*to)["translations"], [&](const json &x) {
+                                                       return x.value("lang", json()) == item["lang"] && x.value("term", json()) == item["term"];
+                                                   });
+                                if (!there) {
+                                    json added = item;
+                                    added["glossary"] = t.page;
+                                    (*to)["translations"].push_back(std::move(added));
+                                }
+                            }
+                            std::lock_guard lock(glossaryMutex);
+                            glossaryUsed.insert(wikilib::unicode::to_lower(t.term));
+                            break;
+                        }
                 if (const auto base = pagelinks::subpageBase(title); !base.empty() && !pairs.sections.empty())
                     for (const auto &s : page["languages"])
                         if (s.contains("code") && s["code"].is_string() && pairs.has(wiki, base, s["code"].get<std::string>()))
@@ -4482,6 +4587,24 @@ int main(int argc, char *argv[]) {
             }
             if (out)
                 out->close(); // (its last blocks: in the time of the wiki)
+            // the terms of its glossaries of no entry: term, its page, its translations
+            if (!glossaryTerms.empty()) {
+                std::ofstream unused(output / (wiki + ".glossary_unused.tsv"));
+                unused << "term\tpage\ttranslations\n";
+                size_t n = 0;
+                for (const auto &[key, terms] : glossaryTerms)
+                    if (!glossaryUsed.contains(key))
+                        for (const auto &t : terms) {
+                            unused << t.term << '\t' << t.page << '\t';
+                            for (size_t i = 0; i < t.translations.size(); ++i)
+                                unused << (i ? " | " : "") << t.translations[i];
+                            unused << '\n';
+                            ++n;
+                        }
+                std::cout << std::format("{}: glossary terms {}, of entries {}, not used {} ({})", wiki, glossaryTerms.size(),
+                                         glossaryUsed.size(), n, (output / (wiki + ".glossary_unused.tsv")).string())
+                          << std::endl;
+            }
             auto row = std::format("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.1f}", wiki, config.value("profile", ""),
                                    stats.pages, stats.pagesWithSections, stats.sections, stats.sectionsWithCode, stats.senses,
                                    stats.translations, stats.nativeSections, stats.nativeSenses, stats.nativeTranslations,

@@ -319,6 +319,10 @@
           "type": "string",
           "description": "Gloss of the sense of the translation table (en {{trans-top|domestic species}})"
         },
+        "glossary": {
+          "type": "string",
+          "description": "The glossary page the translation comes from (res/wiktionary_glossaries.tsv: am computer glossary A)"
+        },
         "gender": {
           "type": "array",
           "items": {"type": "string"},

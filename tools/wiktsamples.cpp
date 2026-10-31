@@ -58,7 +58,7 @@ const std::vector<Concept> concepts = {
         {"water", "Q283"}, {"dog", "Q144"}, {"house", "Q3947"}, {"red", "Q3142"}, {"go", ""}};
 
 size_t mainPages = 5; // -n
-size_t otherPages = 1; // --other: pages outside the main namespace
+size_t otherPages = 1; // --other: pages of each namespace outside the main one
 size_t fallbackCandidates = 200; // titles spread over the index, at least 4 per page
 
 // Translations of the first table: en.wikt code -> terms in order
@@ -296,8 +296,11 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
     const auto specialNs = specialNamespaces(*site);
     const auto &thesaurusPrefixes = specialNs.thesaurus;
     std::vector<std::string> allTitles; // main namespace
-    std::map<std::string, std::vector<std::string>> firstByPrefix; // a few, the first may be a redirect
+    // Pages of a namespace of others: twice --other of all its titles, spread over them (some may be
+    // redirects); before, the first 20 only, of the beginning of the index
+    std::map<std::string, std::vector<std::string>> firstByPrefix;
     {
+        std::map<std::string, std::vector<std::string>> byPrefix;
         auto chunker = IndexChunker::from_file(path.index_path().string(), 0);
         for (IndexChunk chunk; chunker.next_chunk(chunk);)
             for (auto &entry : chunk.entries) {
@@ -306,11 +309,20 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
                     continue;
                 }
                 for (const auto &prefix : specialNs.all)
-                    if (entry.title.starts_with(prefix) && firstByPrefix[prefix].size() < 20)
-                        firstByPrefix[prefix].push_back(entry.title);
+                    if (entry.title.starts_with(prefix))
+                        byPrefix[prefix].push_back(entry.title);
             }
         if (!chunker.error().empty())
             throw std::runtime_error(wiki + ": " + std::string(chunker.error()));
+        const size_t want = std::max<size_t>(20, 2 * otherPages);
+        for (auto &[prefix, titles] : byPrefix) {
+            auto &picked = firstByPrefix[prefix];
+            if (titles.size() <= want)
+                picked = std::move(titles);
+            else
+                for (size_t i = 0; i < want; ++i)
+                    picked.push_back(titles[i * titles.size() / want]);
+        }
     }
     std::set<std::string> fallback;
     const size_t step = std::max<size_t>(1, allTitles.size() / fallbackCandidates);
@@ -407,21 +419,24 @@ std::vector<Chosen> samplesOf(const std::string &wiki, const std::vector<std::st
             for (const auto &prefix : thesaurusPrefixes)
                 specials.emplace_back(prefix + c.title, "thesaurus page of " + c.title);
         }
-    // Pages of the namespaces in turn, so that several namespaces are shown
-    for (size_t round = 0; round < 10; ++round)
+    // Pages of the namespaces in turn, so that several namespaces are shown; --other of each namespace
+    size_t rounds = 0;
+    for (const auto &[prefix, titles] : firstByPrefix)
+        rounds = std::max(rounds, titles.size());
+    for (size_t round = 0; round < rounds; ++round)
         for (const auto &prefix : specialNs.all)
             if (auto it = firstByPrefix.find(prefix); it != firstByPrefix.end() && round < it->second.size())
                 specials.emplace_back(it->second[round], "page of " + prefix);
-    size_t taken = 0;
+    std::map<std::string, size_t> taken; // by the reason: of a namespace, of a concept
     for (const auto &[title, reason] : specials) {
-        if (taken >= otherPages)
-            break;
+        if (taken[reason.starts_with("page of ") ? reason : "concept"] >= otherPages)
+            continue;
         if (auto it = pages.find(title); it != pages.end() && !used.contains(title)) {
             Chosen c = it->second;
             c.reason = reason;
             used.insert(title);
             chosen.push_back(std::move(c));
-            ++taken;
+            ++taken[reason.starts_with("page of ") ? reason : "concept"];
         }
     }
     return chosen;

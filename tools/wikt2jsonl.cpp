@@ -1442,6 +1442,9 @@ public:
     // Headword templates (shn {{shn-noun}}, om {{En-noun}}): a part of speech after a code only
     [[nodiscard]] std::optional<SectionName> find(const std::string &key, int compound = 0) const {
         auto it = names_.find(wikilib::unicode::to_lower(trim(key)));
+        // a name with a note in brackets: also without it (gu "નામ (સ્ત્રીલિંગ)": નામ, a noun, feminine)
+        if (const auto open = key.rfind(" ("); it == names_.end() && open != std::string::npos && trim(key).ends_with(")"))
+            it = names_.find(wikilib::unicode::to_lower(trim(key.substr(0, open))));
         if (const auto dash = key.find('-'); compound && it == names_.end() && dash != std::string::npos) {
             static const std::regex code(R"(^[A-Za-z]{2,3}$)");
             const auto first = key.substr(0, dash), last = key.substr(key.rfind('-') + 1);
@@ -1504,8 +1507,10 @@ std::pair<std::string, int> sectionKey(std::string text) {
             text = text.substr(0, all.front().location.length()); // de "{{Wortart|Substantiv|Deutsch}}, {{n}}"
     if (auto t = onlyTemplate(trim(text))) {
         // wa {{H|sustantif|wa}}, vi {{ĐM|pron}}
-        // (tk {{Söztopary|Idioma|Türkmençe}})
-        static const std::set<std::string> byParameter = {"S", "Wortart", "-pos-", "H", "ĐM", "Söztopary"};
+        // (tk {{Söztopary|Idioma|Türkmençe}}, hsb {{słowna družina|werb|hornjoserbšćina}}, zgh {{ⵟ|ⵉⵙⵎ|zgh}},
+        // ang {{Wordcynn|Tōgeīecendlic}}, az {{Söztipi|İsim|Azərbaycan dili}})
+        static const std::set<std::string> byParameter = {"S", "Wortart", "-pos-", "H", "ĐM", "Söztopary",
+                                                          "słowna družina", "ⵟ", "Wordcynn", "Söztipi"};
         if (byParameter.contains(t->name)) {
             if (auto v = t->get(size_t{1}))
                 text = std::string(*v);
@@ -1909,8 +1914,9 @@ private:
             if (auto see = seeAlso(n.value("text", std::string())); !see.empty())
                 n["see"] = see;
         // (of a part of speech the rest of the text stays: its headword line, inflection templates)
-        if (!n["translations"].empty() || n["section"] == "Translations" ||
-            trim(n.value("text", std::string())).empty())
+        // (of translations read, their text; of a Translations section of no translations read, jbo
+        // "{{bau|en}} : [[anime]]", the text stays)
+        if (!n["translations"].empty() || trim(n.value("text", std::string())).empty())
             n.erase("text");
         for (auto &c : n["children"])
             finishNode(c, stats);
@@ -2140,12 +2146,31 @@ std::vector<json> relationItems(const std::string &text) {
             sense = mark->written;
             rest = trim(mark->rest);
         }
-        for (const auto &[label, term] : lineTerms(rest)) {
+        const auto terms = lineTerms(rest);
+        // the rest of a line of one term, of words besides it (mk "* [[monastère]] '''(им.)''' манастир":
+        // "(им.) манастир"), its note
+        std::string note;
+        if (terms.size() == 1 && rest.size() < 2000) {
+            // (no references, sr "<ref name='…'>": also one going on in the next line, no tags)
+            static const std::regex links(R"(\[\[(?:[^\]|]*\|)?([^\]]*)\]\])"), markup(R"('{2,}|\{\{[^{}]*\}\})"),
+                    references(R"(<ref[^>]*/>|<ref[^>]*>.*?</ref>|<ref.*$|<[^>]*>)");
+            note = std::regex_replace(std::regex_replace(std::regex_replace(rest, references, ""), links, "$1"), markup, "");
+            if (const auto at = note.find(terms.front().second); at != std::string::npos)
+                note.erase(at, terms.front().second.size());
+            note = trim(note);
+            while (!note.empty() && std::string_view("-–—:,;").find(note.front()) != std::string_view::npos)
+                note = trim(note.substr(1));
+            if (!std::ranges::any_of(note, [](unsigned char ch) { return std::isalpha(ch) || ch >= 0x80; }))
+                note.clear();
+        }
+        for (const auto &[label, term] : terms) {
             json item = {{"term", term}};
             if (!sense.empty())
                 item["sense"] = sense;
             if (!label.empty())
                 item["qualifier"] = label;
+            if (!note.empty())
+                item["note"] = note;
             items.push_back(std::move(item));
         }
     }
@@ -3400,9 +3425,13 @@ private:
         if (c.contains("lexeme"))
             entries_[e]["lexeme"] = c["lexeme"];
         routeMedia(nodeMedia(c), info_[&c].scope, e);
-        if (name == "Translations" || name == "Definitions" || text(c).empty())
+        // (the text of Translations of none read, jbo "{{bau|en}} : [[anime]]", stays as it is; the
+        // lines of Definitions that are no senses as "Text")
+        if (text(c).empty())
             return;
-        if (name == "Etymology")
+        if (name == "Definitions")
+            append(entries_[e]["sections"], "Text", text(c));
+        else if (name == "Etymology")
             append(entries_[e], "etymology", text(c));
         else if (name == "Pronunciation")
             append(entries_[e], "pronunciation", text(c));
@@ -3446,7 +3475,8 @@ private:
             for (auto e : among)
                 entries_[e]["lexeme"] = c["lexeme"];
         routeMedia(nodeMedia(c), scope);
-        if (name == "Translations" || name == "Definitions" || text(c).empty())
+        // (the text of Translations of none read and of Definitions that is no senses stays, below)
+        if (text(c).empty())
             return;
         posFromTemplate(text(c), among);
         if (name == "Etymology" || name == "Pronunciation") {
@@ -3571,8 +3601,8 @@ private:
     }
 
     // The text of a part of speech besides its headword and senses (wikt2jsonl keeps there what is no
-    // sense line): its lines of prose are the entry's "Text" (tl "''(pambalana, di-tiyak)''"), so that
-    // nothing of it is lost; of an entry of no senses of a wiki of definitions without "#"
+    // sense line): its lines are the entry's "Text" (tl "''(pambalana, di-tiyak)''"), so that nothing of
+    // it is lost; of an entry of no senses of a wiki of definitions without "#"
     // (senses.plain_lines: rw "Amazi ni kimwe…") its definitions, a long line of prose taken as the
     // headword too
     void restOfPos(const json &c, size_t e) {
@@ -3601,9 +3631,18 @@ private:
             }
             return;
         }
+        // (all its lines but the headword's, files and categories: also templates, hsb "{{info\n|woznamy=…
+        // |synonymy=…\n}}")
         std::string rest;
-        for (const auto &line : prose)
-            rest += line + '\n';
+        for (const auto &line : textLines(text(c))) {
+            const auto t = trim(line);
+            if (t.empty() || head.contains(t) || t == "----")
+                continue;
+            if (t.starts_with("[[")) // [[File:…]], [[Category:…]]
+                if (const auto colon = t.find(':'); colon != std::string::npos && colon < t.find_first_of("|]") && colon > 2)
+                    continue;
+            rest += t + '\n';
+        }
         if (!rest.empty())
             append(entry["sections"], "Text", rest);
     }

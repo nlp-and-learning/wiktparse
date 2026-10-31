@@ -260,6 +260,10 @@
         "thesaurus": {
           "type": "string",
           "description": "The thesaurus page the relation comes from, merged into the entry (Thesaurus:water)"
+        },
+        "note": {
+          "type": "string",
+          "description": "The rest of a line of one term, its words besides the term (mk * [[monastère]] '''(им.)''' манастир: (им.) манастир)"
         }
       }
     },

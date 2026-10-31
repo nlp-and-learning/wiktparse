@@ -1122,6 +1122,102 @@ lmo	prov	Proverbs	relation
 lmo	sin	Synonyms	relation
 vec	prov	Proverbs	relation
 vec	sin	Synonyms	relation
+sr	Примери	Examples	section
+sr	Облици	Inflection	section
+sr	Изведене речи	Derived terms	relation
+sr	Асоцијације	Related terms	relation
+sr	Хомофони	Homophones	section
+sr	Хомографи	Homographs	section
+mk	Синоними	Synonyms	relation
+mk	Антоними	Antonyms	relation
+mk	Сродни поими	Related terms	relation
+mk	Изведени термини	Derived terms	relation
+mk	Изведени поими	Derived terms	relation
+mk	Наводи	References	section
+mk	Читање и изговор	Pronunciation	section
+mk	Превод на други јазици	Translations	section
+gom	Sobdxastr	Etymology	section
+gom	Sobdxastr (Sobdachem mull)	Etymology	section
+gom	Somanorth	Synonyms	relation
+gom	Virudhorth	Antonyms	relation
+gom	Bhaxontor	Translations	section
+gom	Lipiantoronn	Transliteration	section
+gom	Her rup	Alternative forms	section
+gom	हेर रूप	Alternative forms	section
+ang	Rihtstefn	Pronunciation	section
+ang	Fruma	Etymology	section
+ang	Wordstǣr	Etymology	section
+ang	Word mid gelīcum Sweotolungum	Synonyms	relation
+ang	Sēo ēac	See also	section
+ang	Declīnung	Declension	section
+ang	Bīnama	Pronoun	section
+ang	Tōgeīecendlic	Adjective	section
+am	[[:መደብ:ስም| ስም]]	Noun	section
+am	አነጋገር	Pronunciation	section
+am	አባባል\አጠራር\አነጋገር	Pronunciation	section
+am	ተጠቃሽ መረጃዎች	References	section
+am	ተጠቃሽ መረጃ	References	section
+az	İsim	Noun	section
+az	Xüsusi isim	Proper noun	section
+az	Sifət	Adjective	section
+az	Feil	Verb	section
+shy	Alaɣi	Pronunciation	section
+shy	iliɣen	References	section
+shy	Amyag	Verb	section
+jbo	xelfanva	Translations	section
+jbo	ba'urtadji	Pronunciation	section
+jbo	selsitna	References	section
+tg	Синонимҳо	Synonyms	relation
+tg	Антонимҳо	Antonyms	relation
+tg	Гиперонимҳо	Hypernyms	relation
+tg	Калимаҳои алоқаманд	Related terms	relation
+tt	Substantive	Noun	section
+tt	Inflective	Declension	section
+tt	Sinonim	Synonyms	relation
+tt	Alernativ script	Alternative forms	section
+ne	सन्दर्भ सामग्रीहरू	References	section
+ne	सन्दर्भ	References	section
+ne	प्रयोग	Examples	section
+ne	वैकल्पिक हिज्जे	Alternative forms	section
+ne	वैकल्पिक रूपहरू	Alternative forms	section
+gu	અનુવાદ	Translations	section
+el	μορφή επιθέτου	Adjective form	section
+el	μορφή ρήματος	Verb form	section
+el	μορφή ουσιαστικού	Noun form	section
+el	μορφή μετοχής	Participle form	section
+eu	Zenbatzailea	Numeral	section
+eu	Hitz eratorriak	Derived terms	relation
+eu	Adberbioa	Adverb	section
+eu	Antonimoak	Antonyms	relation
+eu	Ikus, gainera	See also	section
+hsb	werb	Verb	section
+hsb	adjektiw	Adjective	section
+hsb	substantiw	Noun	section
+hsb	Noty	Notes	section
+zgh	ⵉⵙⵎ	Noun	section
+zgh	ⵜⵉⵙⵓⵖⴰⵍ	Translations	section
+zgh	ⴰⵙⵓⵙⵔⵓ	Pronunciation	section
+zgh	ⵉⵙⴰⵖⵓⵍⵏ	References	section
+zgh	ⴰⴽⵏⵉⵡⵏ	Synonyms	relation
+zgh	ⵥⵕ ⴰⵡⴷ	See also	section
+zgh	ⵜⴰⵙⵏⴰⵥⵖⵓⵕⵜ	Etymology	section
+si	ක්‍රියා පද	Verb	section
+si	නාම විශේෂණ පදය	Adjective	section
+si	සංඥා නාම පදය	Proper noun	section
+si	මූලාශ්‍ර	References	section
+si	වෙනත් ආකාර	Alternative forms	section
+si	වරනැඟීම	Inflection	section
+si	ව්‍යුත්පන්න යෙදුම්	Derived terms	relation
+si	අමතර අවධානයට	See also	section
+sg	palî	Verb	section
+kcg	Yei	Pronunciation	section
+kcg	Bwoi a̱lyoot	Etymology	section
+kcg	Ya̱fang	References	section
+kcg	A̱ya̱fang	References	section
+mni	ꯈꯣꯟꯊꯣꯛ	Pronunciation	section
+mni	ꯑꯇꯩ ꯂꯣꯟꯁꯤꯡꯗ	Translations	section
+guw	Hogbe yiylọ	Pronunciation	section
+guw	Xogbe yiylɔ	Pronunciation	section
 lmo	locverb	Phrase	section
 lmo	locnom	Phrase	section
 lmo	locavv	Phrase	section

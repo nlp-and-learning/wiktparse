@@ -4092,7 +4092,7 @@ int main(int argc, char *argv[]) {
         fs::path input = "samples100", output = "jsonl", dbFile = "wiktlangs.sqlite";
         fs::path configDir = WIKTPARSE_RES_DIR "/wiktionary";
         std::vector<std::string> wikis;
-        bool fromDumps = false, markersOnly = false, uniformTree = false, force = false;
+        bool fromDumps = false, markersOnly = false, uniformTree = false, force = false, forceLanguages = false;
         std::vector<fs::path> extraFiles; // --extra: links of glosses by embeddings and LLMs
         fs::path languagesDir;            // --languages: the <wiki>.languages of every wiki
         Compression compression = Compression::none;
@@ -4115,6 +4115,8 @@ int main(int argc, char *argv[]) {
                 markersOnly = true;
             else if (arg == "--force")
                 force = true;
+            else if (arg == "--force-languages")
+                forceLanguages = true;
             else if (arg == "--extra" && i + 1 < argc)
                 extraFiles.emplace_back(argv[++i]);
             else if (arg == "--languages" && i + 1 < argc)
@@ -4134,8 +4136,9 @@ int main(int argc, char *argv[]) {
                              "              whose output is complete (its .idx ends with EOF=) is left as it is,\n"
                              "              --force: all again; a wiki that fails is told, the others go on\n"
                              "       --uniform --dump: before the pages, the languages of the pages of every dump into\n"
-                             "              <wiki>.languages (title, tab, codes; again when the dump is newer or\n"
-                             "              --force); the pages then with their translation subpages merged, their\n"
+                             "              jsonl_languages/<wiki>.languages (title, tab, codes; again of another dump\n"
+                             "              or --force-languages, not of --force); the pages then with their\n"
+                             "              translation subpages merged, their\n"
                              "              translations linked to pages (page, home, en) and their glosses to senses\n"
                              "              (sense_ids; --extra file.tsv... of glossrekey.py)\n"
                              "       --languages DIR: the <wiki>.languages of every wiki (of --dump: jsonl_languages), for\n"
@@ -4235,7 +4238,8 @@ int main(int argc, char *argv[]) {
                 if (fromDumps) {
                     // (again of another dump: its first line, the dump's name and size, differs)
                     const auto dump = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki).dump_path();
-                    if (force || !pagelinks::Pairs::ofDump(file, dump))
+                    // (--force makes the pages again, not these: --force-languages)
+                    if (forceLanguages || !pagelinks::Pairs::ofDump(file, dump))
                         try {
                             json config = languageConfig(wiki);
                             if (config.value("skip", false))

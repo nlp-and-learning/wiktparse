@@ -110,7 +110,8 @@ dump_dir = ~/dump
   `jsonl_languages/<wiki>.languages`, a directory of their own that stays
   when the output is made again (a line a page: its title, a tab, the codes of its
   sections, after a line of the dump's name and size; made again only of
-  another dump, some 5 minutes for all), then each page with its translation
+  another dump or with `--force-languages`, not with `--force`, some 5
+  minutes for all), then each page with its translation
   subpage merged, its translations linked to pages (`page`, `home`, `en`, as
   `wiktlink`) and its glosses to senses (`sense_ids`, as `wiktglos`, with the
   `--extra` files of `tools/glossrekey.py`). Glossary pages of

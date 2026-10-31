@@ -1375,7 +1375,8 @@ const std::set<std::string> partsOfSpeech = {
         "kanji", "hanja", "syllable", "punctuation mark", "diacritical mark", "number", "adnominal", "verbal noun",
         "inflected form", "noun form", "verb form", "adjective form", "adverb form", "pronoun form", "participle form",
         "romanization", "part of speech" /* kk ===Сөз табы===: the part of speech as a line, the senses */,
-        "expression", "determinative" /* en ===Phrase===, ===Determiner=== by their Wikidata labels */};
+        "expression", "determinative" /* en ===Phrase===, ===Determiner=== by their Wikidata labels */,
+        "predicate" /* en Appendix:Lojban ===Predicate===: a brivla */};
 const std::set<std::string> relations = {
         "synonyms", "antonyms", "hypernyms", "hyponyms", "meronyms", "holonyms", "troponyms", "coordinate terms",
         "derived terms", "related terms", "compounds", "descendants", "anagrams", "idioms", "proverbs",
@@ -1445,6 +1446,13 @@ public:
         // a name with a note in brackets: also without it (gu "નામ (સ્ત્રીલિંગ)": નામ, a noun, feminine)
         if (const auto open = key.rfind(" ("); it == names_.end() && open != std::string::npos && trim(key).ends_with(")"))
             it = names_.find(wikilib::unicode::to_lower(trim(key.substr(0, open))));
+        // a name of two, the wiki's and another, by " | ": either (en Appendix:Lojban "Vlakra | Etymology",
+        // "Rafsi | Affix or Combining Form")
+        if (const auto bar = key.find(" | "); it == names_.end() && bar != std::string::npos) {
+            it = names_.find(wikilib::unicode::to_lower(trim(key.substr(bar + 3))));
+            if (it == names_.end())
+                it = names_.find(wikilib::unicode::to_lower(trim(key.substr(0, bar))));
+        }
         if (const auto dash = key.find('-'); compound && it == names_.end() && dash != std::string::npos) {
             static const std::regex code(R"(^[A-Za-z]{2,3}$)");
             const auto first = key.substr(0, dash), last = key.substr(key.rfind('-') + 1);

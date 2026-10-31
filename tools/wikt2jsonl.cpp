@@ -1914,12 +1914,15 @@ private:
             n.erase("text");
         for (auto &c : n["children"])
             finishNode(c, stats);
-        // Sections with nothing in them (pl {{składnia}} with no text) and sections with no known
-        // name (listed in unknown_headings) are left out; known sections under an unknown one stay
+        // Sections with nothing in them (pl {{składnia}} with no text) are left out; a section of no
+        // known name (listed in unknown_headings) stays with its heading as written when it has text
+        // of its own (sr ===Примери===, gom Somanorth), else it is left out, the known sections under
+        // it stay
         auto &children = n["children"];
         for (size_t i = children.size(); i-- > 0;) {
             json &c = children[i];
-            if (!c.contains("section")) {
+            if (!c.contains("section") && !c.contains("text") && !c.contains("senses") && !c.contains("translations") &&
+                !c.contains("see") && !c.contains("media")) {
                 json lifted = c.value("children", json::array());
                 children.erase(i);
                 for (size_t j = 0; j < lifted.size(); ++j)

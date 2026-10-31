@@ -2079,8 +2079,17 @@ std::vector<std::pair<std::string, std::string>> lineTerms(std::string rest) {
             if (auto v = t.get(size_t{t.name == "lien" ? 1u : 2u}))
                 terms.emplace_back(label, termValue(std::string(*v)));
         } else if (std::regex_match(t.name, listTemplate)) {
-            for (size_t i = 2; auto v = t.get(i); ++i)
-                terms.emplace_back(label, termValue(std::string(*v)));
+            // (an item of a link template: its term, en "{{l|en|water mold}} ({{taxfmt|Oomycetes|class}})")
+            for (size_t i = 2; auto v = t.get(i); ++i) {
+                std::string term = termValue(std::string(*v));
+                for (const auto &inner : wikilib::templates::find_invocations(std::string(*v)))
+                    if (linkTemplates.contains(inner.name))
+                        if (auto w = inner.get(size_t{inner.name == "lien" ? 1u : 2u})) {
+                            term = termValue(std::string(*w));
+                            break;
+                        }
+                terms.emplace_back(label, term);
+            }
         } else if (t.name.starts_with("родств")) {
             for (const auto &[name, value] : t.parameters)
                 if (!name.empty() && !std::isdigit(static_cast<unsigned char>(name[0])) && name != "полн")
@@ -2094,10 +2103,29 @@ std::vector<std::pair<std::string, std::string>> lineTerms(std::string rest) {
 
 // Items of a relation section: {term, sense, qualifier}; the sense of a mark, or of ru "#" lines
 // by their place (the n-th line of sense n)
+// (a list template over several lines as one line: en "{{col|en\n|above-water|…\n|Agnes Water|…}}"; not
+// a template of the layout of the lines of a list, et "{{Tulbad|\n*[[arhiivraamatukogu]]\n…}}"; ru
+// "{{родств-блок|\n|прилагательные=…}}")
 std::vector<json> relationItems(const std::string &text) {
+    static const std::regex listStart(R"(^\s*\{\{\s*(col[1-9u]?|col-auto|(der|rel|desc)[2-5]?(-u)?|родств[^|{}]*)\s*(\||$))");
     std::vector<json> items;
     int place = 0;
+    std::vector<std::string> lines;
+    int depth = 0;
     for (const auto &line : textLines(text)) {
+        const bool inside = depth > 0;
+        if (inside)
+            lines.back() += '\n' + line;
+        else
+            lines.push_back(line);
+        if (!inside && !std::regex_search(line, listStart))
+            continue;
+        for (size_t i = 0; i + 1 < line.size(); ++i)
+            if (line[i] == line[i + 1] && (line[i] == '{' || line[i] == '}'))
+                depth += line[i++] == '{' ? 1 : -1;
+        depth = std::max(depth, 0);
+    }
+    for (const auto &line : lines) {
         const auto t = trim(line);
         if (t.empty())
             continue;

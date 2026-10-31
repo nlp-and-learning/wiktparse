@@ -3959,7 +3959,7 @@ int main(int argc, char *argv[]) {
                              "              --force); the pages then with their translation subpages merged, their\n"
                              "              translations linked to pages (page, home, en) and their glosses to senses\n"
                              "              (sense_ids; --extra file.tsv... of glossrekey.py)\n"
-                             "       --languages DIR: the <wiki>.languages of every wiki (of --dump: the output), for\n"
+                             "       --languages DIR: the <wiki>.languages of every wiki (of --dump: jsonl_languages), for\n"
                              "              the links of samples\n"
                              "       --markers-only: only language markers and stats, no JSONL\n"
                              "       --bz2, --zstd: <wiki>.jsonl.bz2 or .jsonl.zst in blocks of 100 lines or 512 KB\n"
@@ -4029,8 +4029,9 @@ int main(int argc, char *argv[]) {
         // The languages of the pages of every dump (--uniform --dump), for the links of translations
         // to pages: <wiki>.languages, again when the dump is newer (or --force); then read
         const bool linking = uniformTree && !markersOnly;
+        // (a directory of their own, not of the output: they stay when the output is made again)
         if (linking && fromDumps && languagesDir.empty())
-            languagesDir = output;
+            languagesDir = "jsonl_languages";
         pagelinks::Pairs pairs;
         if (linking && !languagesDir.empty()) {
             std::vector<std::string> all = fromDumps

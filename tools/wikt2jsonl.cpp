@@ -3046,6 +3046,8 @@ public:
 
     json language(const json &in) {
         json out = {{"code", in["code"]}, {"language", in["language"]}, {"native", in["native"]}};
+        if (in.contains("categories") && in["categories"].is_array() && !in["categories"].empty())
+            out["categories"] = in["categories"];
         language_ = &out;
         scopes_ = {Scope{}};
         const json root = {{"children", in.value("sections", json::array())}};
@@ -3795,6 +3797,8 @@ json page(const json &converted, const json &config, const SectionNames &names, 
         languages.push_back(Builder(config, names, languageCode).language(language));
     json page = {{"wiki", converted["wiki"]}, {"title", converted["title"]}, {"ns", converted["ns"]},
                  {"source", converted["source"]}, {"languages", std::move(languages)}};
+    if (converted.contains("categories")) // (of the page, before any language section)
+        page["categories"] = converted["categories"];
     // A reconstructed word: its form ("Reconstruction:Proto-Germanic/watōr": "*watōr"), as the items of
     // etymology chains write it (from gem-pro *watōr)
     std::vector<std::string> codes;
@@ -3839,11 +3843,43 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
         return code;
     };
     const bool requireCode = byName && !implicit && config["language"].value("require_code", true);
+    // Categories of the page, as written ([[Kategoria:Język polski - rzeczowniki]]: "Język polski -
+    // rzeczowniki"): of a language section its own, before any the page's; the names of the namespace of
+    // the wiki (category_names, of the dump) and "Category"
+    std::set<std::string> categoryNames{"category"};
+    for (const auto &n : config.value("category_names", json::array()))
+        categoryNames.insert(wikilib::unicode::to_lower(n.get<std::string>()));
+    json pageCategories = json::array();
+    auto categoriesOf = [&](const std::string &line, json &into) {
+        for (size_t open = line.find("[["); open != std::string::npos; open = line.find("[[", open + 2)) {
+            const auto close = line.find("]]", open + 2);
+            if (close == std::string::npos)
+                break;
+            const auto inner = line.substr(open + 2, close - open - 2);
+            const auto colon = inner.find(':');
+            if (colon == std::string::npos || !categoryNames.contains(wikilib::unicode::to_lower(trim(inner.substr(0, colon)))))
+                continue;
+            const auto name = trim(inner.substr(colon + 1, inner.find('|') == std::string::npos ? std::string::npos
+                                                                                                  : inner.find('|') - colon - 1));
+            if (!name.empty() && std::ranges::find(into, json(name)) == into.end())
+                into.push_back(name);
+        }
+    };
     std::istringstream in(text);
     bool first = true;
     size_t offset = 0, next = 0;
     for (std::string line; std::getline(in, line); offset = next) {
         next = offset + line.size() + 1;
+        if (line.find("[[") != std::string::npos && !markersOnly) {
+            json found = json::array();
+            categoriesOf(line, found);
+            if (!found.empty()) {
+                json &into = current ? (*current)["categories"] : pageCategories;
+                for (auto &c : found)
+                    if (!into.is_array() || std::ranges::find(into, c) == into.end())
+                        into.push_back(std::move(c));
+            }
+        }
         auto marker = implicit ? (first ? std::optional(native.front()) : std::nullopt) : languageMarker(config, line);
         first = false;
         // A code marker that is no code is no language: E {{-noun-}} besides {{-scn-}}, ga {{-fuaim-}}
@@ -3984,7 +4020,10 @@ json convertPage(const std::string &wiki, const json &config, LanguageNames &nam
     }
     stats.pages++;
     stats.pagesWithSections += !sections.empty();
-    return {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"source", source}, {"sections", sections}};
+    json result = {{"wiki", wiki}, {"title", title}, {"ns", ns}, {"source", source}, {"sections", sections}};
+    if (!pageCategories.empty())
+        result["categories"] = std::move(pageCategories);
+    return result;
 }
 
 // Named HTML entities beyond those of wikilib (res/html_entities.tsv: &euml; ë, &larr; ←, &alpha; α)
@@ -4076,6 +4115,26 @@ using jsonlblocks::JsonlWriter;
 // Pages converted from dumps: the main namespace (with translation subpages)
 // and content namespaces 100-199 (thesaurus, reconstructions, appendices),
 // no talk pages, no portals
+// The title a redirect goes to: a page that begins with "#<word> [[target]]" (#REDIRECT, pl #PATRZ, ru
+// #перенаправление, any wiki's word: no entry begins so), without a section of it (#…); none of another page
+std::optional<std::string> redirectTarget(std::string_view content) {
+    const auto start = content.find_first_not_of(" \t\r\n");
+    if (start == std::string_view::npos || content[start] != '#' || start + 1 >= content.size() || content[start + 1] == ' ')
+        return std::nullopt;
+    const std::string head(content.substr(start, std::min<size_t>(content.size() - start, 400)));
+    static const std::regex redirect(R"(^#[^\s\[\]#:]+\s*:?\s*\[\[\s*:?([^\]|]+?)\s*(?:\|[^\]]*)?\]\])");
+    std::smatch m;
+    if (!std::regex_search(head, m, redirect))
+        return std::nullopt;
+    std::string target = m[1].str();
+    if (const auto hash = target.find('#'); hash != std::string::npos)
+        target.erase(hash);
+    target = trim(target);
+    if (target.empty())
+        return std::nullopt;
+    return target;
+}
+
 bool convertedNamespace(const wikilib::dump::SiteInfo &site, int ns) {
     if (ns == 0)
         return true;
@@ -4238,8 +4297,10 @@ int main(int argc, char *argv[]) {
                 if (fromDumps) {
                     // (again of another dump: its first line, the dump's name and size, differs)
                     const auto dump = WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki).dump_path();
-                    // (--force makes the pages again, not these: --force-languages)
-                    if (forceLanguages || !pagelinks::Pairs::ofDump(file, dump))
+                    // (--force makes the pages again, not these: --force-languages; again also of no
+                    // redirects of the dump, <wiki>.redirects)
+                    const fs::path redirectsFile = languagesDir / (wiki + ".redirects");
+                    if (forceLanguages || !pagelinks::Pairs::ofDump(file, dump) || !pagelinks::Pairs::ofDump(redirectsFile, dump))
                         try {
                             json config = languageConfig(wiki);
                             if (config.value("skip", false))
@@ -4252,6 +4313,7 @@ int main(int argc, char *argv[]) {
                                 throw std::runtime_error(reader.error());
                             const size_t workers = wikilib::dump::parallel_worker_count(path, threads);
                             std::vector<std::vector<std::pair<std::string, std::vector<std::string>>>> found(workers);
+                            std::vector<std::vector<std::pair<std::string, std::string>>> redirects(workers);
                             std::vector<Stats> scratch(workers);
                             // (pages of no language marker of wikis of one language: of the wiki's, gu, ig)
                             const bool fallback = config["language"].value("fallback_native", false);
@@ -4262,6 +4324,10 @@ int main(int argc, char *argv[]) {
                                         const wikilib::dump::PageLocation &) {
                                         if (!convertedNamespace(*site, site->namespace_of(title)))
                                             return true;
+                                        if (auto target = redirectTarget(content)) {
+                                            redirects[worker].emplace_back(title, *target);
+                                            return true;
+                                        }
                                         auto line = convertPage(wiki, config, names, sectionNames, title,
                                                                 site->namespace_of(title),
                                                                 withDecodedEntities(wikilib::markup::strip_comments(content)),
@@ -4286,7 +4352,18 @@ int main(int argc, char *argv[]) {
                                     codes[title] = std::move(list);
                             fs::create_directories(languagesDir);
                             pagelinks::Pairs::save(file, dump, codes);
-                            std::cout << std::format("{}: languages of {} pages ({:.0f} s)", wiki, codes.size(),
+                            // the redirects: title of a redirect, tab, the title it goes to
+                            std::map<std::string, std::string> targets;
+                            for (auto &r : redirects)
+                                for (auto &[from, to] : r)
+                                    targets[from] = std::move(to);
+                            {
+                                std::ofstream out(redirectsFile);
+                                out << pagelinks::Pairs::dumpLine(dump) << '\n';
+                                for (const auto &[from, to] : targets)
+                                    out << from << '\t' << to << '\n';
+                            }
+                            std::cout << std::format("{}: languages of {} pages, {} redirects ({:.0f} s)", wiki, codes.size(), targets.size(),
                                                      std::chrono::duration<double>(std::chrono::steady_clock::now() - languagesStarted).count())
                                       << std::endl;
                         } catch (const std::exception &e) {
@@ -4307,6 +4384,15 @@ int main(int argc, char *argv[]) {
 
         auto convertWiki = [&](const std::string &wiki) {
             json config = languageConfig(wiki);
+            // the names of the namespace of categories of the wiki (pl Kategoria, ru Категория), of its dump
+            try {
+                wikilib::dump::DumpReader reader(WikiDump::dumpPath(wikilib::dump::WikiProject::Wiktionary, wiki));
+                if (const auto site = reader.read_site_info())
+                    if (const auto *n = site->find_namespace(14))
+                        config["category_names"] = json::array({n->name, n->canonical_name});
+            } catch (const std::exception &) {
+                // (samples of a wiki of no dump here: "Category" only)
+            }
             // pl: a template of the wiki maps the abbreviations of languages of its etymologies to names
             // (Szablon:etym/język: "|niem=Język niemiecki"); they become codes (etymology.language_names)
             if (auto page = str(config, "/etymology/language_switch"); !page.empty()) {
@@ -4449,6 +4535,27 @@ int main(int argc, char *argv[]) {
                 } catch (const std::exception &e) {
                     std::cerr << wiki << ": glossary: " << e.what() << std::endl;
                 }
+            // Redirects of the wiki (<wiki>.redirects of the language pass): the page they go to -> their titles,
+            // of a chain the last page (A -> B -> C: A of C); the titles of a page written, to tell those of
+            // no page at the end
+            std::map<std::string, std::vector<std::string>> redirectsTo;
+            std::map<std::string, std::string> redirectOf;
+            std::set<std::string> redirectTargetsWritten;
+            if (linking && !languagesDir.empty()) {
+                for (const auto &line : readLines((languagesDir / (wiki + ".redirects")).string()))
+                    if (const auto tab = line.find('\t'); tab != std::string::npos && !line.starts_with("# "))
+                        redirectOf[line.substr(0, tab)] = line.substr(tab + 1);
+                for (const auto &[from, to] : redirectOf) {
+                    std::string target = to;
+                    for (int step = 0; step < 10; ++step) // (no loops)
+                        if (auto it = redirectOf.find(target); it != redirectOf.end() && it->second != target)
+                            target = it->second;
+                        else
+                            break;
+                    redirectsTo[target].push_back(from);
+                }
+            }
+            std::mutex redirectMutex;
             std::vector<pagelinks::LinkCount> linkCounts(workers);
             std::vector<glosslink::Count> glossCounts(workers);
             // A page of the uniform tree before it is written: its translation subpage merged into the entry
@@ -4458,6 +4565,12 @@ int main(int argc, char *argv[]) {
                 if (!linking)
                     return page;
                 const std::string title = page["title"].get<std::string>();
+                // the titles of the redirects to it (A, B, C of D: once, on D)
+                if (auto it = redirectsTo.find(title); it != redirectsTo.end()) {
+                    page["redirects"] = it->second;
+                    std::lock_guard lock(redirectMutex);
+                    redirectTargetsWritten.insert(title);
+                }
                 // a page of a glossary: its terms as entries of their language with their translations (its
                 // headings were taken for languages)
                 if (auto it = glossaryPages.find(title); it != glossaryPages.end() && !it->second.empty()) {
@@ -4591,6 +4704,25 @@ int main(int argc, char *argv[]) {
             }
             if (out)
                 out->close(); // (its last blocks: in the time of the wiki)
+            // the redirects to no page written (a page of no language, of another namespace, missing): title,
+            // the page it goes to
+            if (!redirectsTo.empty() && fromDumps) { // (of samples most pages are not there)
+                std::ofstream unresolved(output / (wiki + ".redirects_unresolved.tsv"));
+                unresolved << "redirect\ttarget\n";
+                size_t n = 0, on = 0;
+                for (const auto &[target, froms] : redirectsTo) {
+                    if (redirectTargetsWritten.contains(target)) {
+                        on += froms.size();
+                        continue;
+                    }
+                    for (const auto &from : froms)
+                        unresolved << from << '\t' << target << '\n';
+                    n += froms.size();
+                }
+                std::cout << std::format("{}: redirects {} on their pages, {} to no page ({})", wiki, on, n,
+                                         (output / (wiki + ".redirects_unresolved.tsv")).string())
+                          << std::endl;
+            }
             // the terms of its glossaries of no entry: term, its page, its translations
             if (!glossaryTerms.empty()) {
                 std::ofstream unused(output / (wiki + ".glossary_unused.tsv"));

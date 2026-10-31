@@ -22,6 +22,11 @@
       "type": "integer",
       "description": "Namespace number of the page"
     },
+    "categories": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "The categories of the page before any language section, as written, without the namespace"
+    },
     "sections": {
       "type": "array",
       "description": "Language sections in page order",
@@ -67,6 +72,11 @@
         "native": {
           "type": "boolean",
           "description": "The section is in the wiki's own language"
+        },
+        "categories": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "The categories of the section as written, without the namespace ([[Kategoria:Język polski - rzeczowniki]]: Język polski - rzeczowniki)"
         },
         "text": {
           "type": "string",

@@ -74,8 +74,8 @@ dump_dir = ~/dump
   Wiktionary (the words for water, dog, house, red and go, taken from English
   Wiktionary translation tables; otherwise pages with the most headings) and
   one page of another namespace, with `meta.json`; see `samples/README.md`.
-  `--other N` adds N pages of other namespaces (thesaurus, reconstructions,
-  appendices, in turn). `-n 10 --other 5 -o samples10` is for reading by hand;
+  `--other N` adds N pages of each other namespace (thesaurus, reconstructions,
+  appendices, spread over its titles). `-n 10 --other 5 -o samples10` is for reading by hand;
   `-n 100 -o samples100` writes 100 main namespace pages per wiki spread over
   the index (about 15 thousand pages, 66 MB) for testing converters without
   the dumps. Run it in the build directory; samples are not versioned.
@@ -119,7 +119,14 @@ dump_dir = ~/dump
   term, a `#` line a translation) are read first too: their translations go
   to the entries of their terms (`glossary` the page), the glossary pages are
   written as entries of their terms, the terms of no entry are listed in
-  `<output>/<wiki>.glossary_unused.tsv`. Of samples `--languages DIR`
+  `<output>/<wiki>.glossary_unused.tsv`. The language pass gathers the
+  redirects too (`jsonl_languages/<wiki>.redirects`: title, tab, the title
+  it goes to): a page gets `redirects`, the titles that go to it (of a chain
+  the last page), the redirect pages are not written; those to no page
+  written are listed in `<output>/<wiki>.redirects_unresolved.tsv`.
+  Categories (`[[Category:…]]` in the wiki's name of the namespace) are kept
+  as written, `categories` of a language section (before any, of the page);
+  those added by templates are not seen. Of samples `--languages DIR`
   takes the `.languages` of a run on the dumps; their subpages come from the
   dumps.
 - `wiktbrowse [file.jsonl | file.jsonl.bz2]` – browser of JSONL files (wikt2jsonl

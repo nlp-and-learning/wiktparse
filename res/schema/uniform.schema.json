@@ -13,6 +13,16 @@
     "title": {
       "type": "string"
     },
+    "categories": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "The categories of the page before any language section, as written, without the namespace"
+    },
+    "redirects": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "The titles of the redirects to this page (#REDIRECT [[…]]; of a chain the last page), whose pages are not written"
+    },
     "lemma": {
       "type": "string",
       "description": "The form of a page of a reconstructed word, as etymology chains write it: Reconstruction:Proto-Germanic/watōr -> *watōr (its language the proto-language, gem-pro)"
@@ -59,6 +69,11 @@
         "native": {
           "type": "boolean",
           "description": "The section is in the wiki's own language"
+        },
+        "categories": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "The categories of the section as written, without the namespace ([[Kategoria:Język polski - rzeczowniki]]: Język polski - rzeczowniki)"
         },
         "pronunciation": {
           "type": "string",
